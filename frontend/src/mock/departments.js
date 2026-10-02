@@ -19,10 +19,10 @@ export const departments = [
 export const accountabilityPeriod = 'Last 8 weeks'
 
 export const waitingLongest = [
-  { title: 'Broken drain cover, Canal Road', department: 'Water Supply', days: 21 },
-  { title: 'Potholes along Mill Road', department: 'Roads & Highways', days: 18, reopened: true },
-  { title: 'Streetlight out on Park Avenue', department: 'Electricity', days: 14 },
-  { title: 'Garbage pile behind the bus stop', department: 'Waste Management', days: 12 },
+  { title: 'Broken drain cover by Chaktai Khal', department: 'Water Supply', days: 21 },
+  { title: 'Potholes along Tiger Pass Road', department: 'Roads & Highways', days: 18, reopened: true },
+  { title: 'Streetlight out on Jamal Khan Road', department: 'Electricity', days: 14 },
+  { title: 'Garbage pile behind the Bahaddarhat bus stand', department: 'Waste Management', days: 12 },
 ]
 
 // Made up to add up to 228 received and 176 resolved. Compare with the Figma chart.
