@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react'
 import clsx from 'clsx'
 import AdminLayout from '../../components/layout/AdminLayout'
 import StaircaseIcon from '../../components/ui/StaircaseIcon'
-import { getDepartmentSummary } from '../../services/api'
+import IssueTable from './IssueTable'
+import { getDepartmentIssues } from '../../services/api'
 
 const DEPARTMENT = 'Roads & Highways'
 
@@ -31,11 +32,27 @@ function StatCard({ label, value, level, iconClass, dark }) {
 }
 
 export default function DepartmentPanel() {
-  const [summary, setSummary] = useState(null)
+  const [issues, setIssues] = useState([])
+  const [selectedId, setSelectedId] = useState(null)
 
   useEffect(() => {
-    getDepartmentSummary(DEPARTMENT).then(setSummary)
+    getDepartmentIssues(DEPARTMENT).then(setIssues)
   }, [])
+
+  function startWork(id) {
+    setIssues((list) =>
+      list.map((issue) =>
+        issue.id === id ? { ...issue, status: 'in-progress' } : issue,
+      ),
+    )
+    setSelectedId(id)
+  }
+
+  const open = issues.filter((i) => i.status === 'open').length
+  const inProgress = issues.filter(
+    (i) => i.status === 'in-progress' && i.verification !== 'awaiting',
+  ).length
+  const awaiting = issues.filter((i) => i.verification === 'awaiting').length
 
   return (
     <AdminLayout variant="department" active="Assigned issues" department={DEPARTMENT}>
@@ -48,22 +65,22 @@ export default function DepartmentPanel() {
         </p>
 
         <div className="mt-6 grid grid-cols-3 gap-4">
-          <StatCard
-            label="Open"
-            value={summary?.open ?? '–'}
-            level={1}
-            iconClass="text-amber-dark"
-          />
+          <StatCard label="Open" value={open} level={1} iconClass="text-amber-dark" />
           <StatCard
             label="In progress"
-            value={summary?.inProgress ?? '–'}
+            value={inProgress}
             level={2}
             iconClass="text-slate"
           />
-          <StatCard
-            label="Awaiting admin check"
-            value={summary?.awaiting ?? '–'}
-            dark
+          <StatCard label="Awaiting admin check" value={awaiting} dark />
+        </div>
+
+        <div className="mt-6">
+          <IssueTable
+            issues={issues}
+            selectedId={selectedId}
+            onSelect={setSelectedId}
+            onStart={startWork}
           />
         </div>
       </div>
