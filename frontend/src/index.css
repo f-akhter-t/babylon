@@ -33,3 +33,8 @@
     @apply bg-page font-body;
   }
 }
+
+button:not(:disabled),
+[role='button'] {
+  cursor: pointer;
+}
