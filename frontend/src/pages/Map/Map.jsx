@@ -9,16 +9,19 @@ import { useIssues } from './useIssues'
 import { useStoredIds } from './useStoredIds'
 import { useListKeys } from './useListKeys'
 import { useUnreadCount } from './useUnreadCount'
+import { useViewer } from './useViewer'
 
 const NO_FILTERS = { category: 'All', status: 'All', q: '' }
 
 export default function Map() {
   const { category, status, search, selectedId, update } = useMapFilters()
   const { issues, allIssues, loading, error, retry } = useIssues({ category, status, search })
-  const [votedIds, toggleVote] = useStoredIds('babylon:voted')
-  const [followedIds, toggleFollow] = useStoredIds('babylon:followed')
+  const viewer = useViewer()
+  // Each account has its own votes and follows.
+  const [votedIds, toggleVote] = useStoredIds(viewer.storageKey('voted'))
+  const [followedIds, toggleFollow] = useStoredIds(viewer.storageKey('followed'))
   // Following an issue adds 1 to the navbar bell, unfollowing takes 1 away.
-  const unread = useUnreadCount(followedIds.length)
+  const unread = useUnreadCount(viewer.canAct ? followedIds.length : 0)
   const [cursors] = useState(cursorVariables) // built once
 
   // Add this citizen's own vote and follow on top of the data.
@@ -50,7 +53,8 @@ export default function Map() {
       style={cursors}
       className={clsx('flex min-h-dvh flex-col font-body lg:h-dvh', CURSOR_CLASSES)}
     >
-      <Navbar variant="citizen" unread={unread} />
+      {/* With a login, the Navbar uses it. Without one, show the logged-out version. */}
+      <Navbar variant={viewer.session ? viewer.role : 'logged-out'} unread={unread} />
       <main className="flex flex-1 flex-col lg:min-h-0 lg:flex-row">
         <IssuesSidebar
           className="order-2 lg:order-1"
@@ -74,6 +78,7 @@ export default function Map() {
           allIssues={withMine(allIssues)}
           selectedId={selectedId}
           onSelect={select}
+          viewer={viewer}
           onToggleVote={toggleVote}
           onToggleFollow={toggleFollow}
           onUpvoteInstead={upvoteInstead}
