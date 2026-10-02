@@ -1,18 +1,18 @@
 import { CameraIcon, PinIcon } from './HomeIcons'
 
 const chip =
-  'inline-flex items-center gap-2 rounded-full border border-forest/20 bg-white px-4 py-2 text-sm font-semibold text-navy'
+  'inline-flex h-11 items-center gap-2 rounded-full border border-forest/20 bg-white px-4 text-sm font-bold text-navy'
 
 export default function StepChips() {
   return (
-    <div className="flex gap-2">
+    <div className="flex flex-wrap gap-2">
       <span className={chip}>
         <CameraIcon className="size-4 text-forest" /> Photo
       </span>
       <span className={chip}>
         <PinIcon className="size-4 text-forest" /> Pin
       </span>
-      <span className="rounded-full bg-forest px-4 py-2 text-sm font-semibold text-white">
+      <span className="inline-flex h-11 items-center rounded-full bg-forest px-4 text-sm font-bold text-mint">
         Roads
       </span>
     </div>

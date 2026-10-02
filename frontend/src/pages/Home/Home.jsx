@@ -28,7 +28,7 @@ export default function Home() {
       <main>
         <HeroSection issue={data?.featured} />
         <StatsRow stats={data?.stats} />
-        <HowItWorksSection />
+        <HowItWorksSection example={data?.fixed?.[0]} />
         <FixedThisWeekSection issues={data?.fixed ?? []} />
       </main>
       <Footer />
