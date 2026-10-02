@@ -3,6 +3,7 @@
 // because every function is already async.
 
 import { issues as rawIssues } from '../mock/issues'
+import { heroSlides } from '../mock/heroSlides'
 import {
   CATEGORY_DEPARTMENT,
   departments,
@@ -54,6 +55,10 @@ export async function getIssueById(id) {
 }
 
 // ---------- Home ----------
+
+export async function getHeroSlides() {
+  return heroSlides
+}
 
 export async function getFixedThisWeek() {
   return all.filter((issue) => issue.status === 'resolved').slice(0, 3)
