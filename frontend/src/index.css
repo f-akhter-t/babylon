@@ -1,1 +1,35 @@
 @import "tailwindcss";
+
+@theme {
+  /* Colors: from the plan. Mint is #E3F1E8, not the Figma's #DFF8EB. */
+  --color-navy: #011638;
+  --color-forest: #214E34;
+  --color-slate: #364156;
+  --color-mint: #E3F1E8;
+  --color-mint-deep: #C4E3D1;
+  --color-brand: #5BD6A0;
+  --color-amber: #FFB547;
+  --color-amber-dark: #E39F2E;
+  --color-muted: #6B7890;
+  --color-page: #CDCDCD;
+  --color-map-land: #F2EFE9;
+  --color-map-park: #CDEBC0;
+  --color-map-water: #AAD3DF;
+
+  /* Fonts */
+  --font-heading: "Bricolage Grotesque", sans-serif;
+  --font-body: "Figtree", sans-serif;
+
+  /* Corner radii: 14, 18, 22, 24, 32 px */
+  --radius-chip: 14px;
+  --radius-tile: 18px;
+  --radius-card: 22px;
+  --radius-panel: 24px;
+  --radius-hero: 32px;
+}
+
+@layer base {
+  body {
+    @apply bg-page font-body;
+  }
+}
