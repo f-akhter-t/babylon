@@ -8,6 +8,7 @@ import Alerts from './pages/Alerts/Alerts'
 import DepartmentPanel from './pages/DepartmentPanel/DepartmentPanel'
 import VerifyResolutions from './pages/VerifyResolutions/VerifyResolutions'
 import Accountability from './pages/Accountability/Accountability'
+import Styleguide from './pages/Styleguide/Styleguide'
 
 export default function App() {
   return (
@@ -21,6 +22,7 @@ export default function App() {
       <Route path="/department" element={<DepartmentPanel />} />
       <Route path="/admin/verify" element={<VerifyResolutions />} />
       <Route path="/admin/accountability" element={<Accountability />} />
+      <Route path="/styleguide" element={<Styleguide />} />
     </Routes>
   )
 }
