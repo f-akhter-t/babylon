@@ -2,10 +2,10 @@ import { useEffect, useState } from 'react'
 import Navbar from '../../components/layout/Navbar'
 import Footer from '../../components/layout/Footer'
 import {
-  getIssueById,
   getStats,
   getFixedThisWeek,
   getHeroSlides,
+  getHeroCategories,
 } from '../../services/api'
 import HeroSlider from './HeroSlider'
 import StatsRow from './StatsRow'
@@ -17,9 +17,9 @@ export default function Home() {
 
   useEffect(() => {
     let ignore = false
-    Promise.all([getStats(), getFixedThisWeek(), getIssueById(1), getHeroSlides()]).then(
-      ([stats, fixed, featured, slides]) => {
-        if (!ignore) setData({ stats, fixed, featured, slides })
+    Promise.all([getStats(), getFixedThisWeek(), getHeroSlides(), getHeroCategories()]).then(
+      ([stats, fixed, slides, categories]) => {
+        if (!ignore) setData({ stats, fixed, slides, categories })
       },
     )
     return () => {
@@ -31,11 +31,7 @@ export default function Home() {
     <div className="font-body">
       <Navbar variant="logged-out" />
       <main>
-        <HeroSlider
-          slides={data?.slides}
-          issue={data?.featured}
-          fixedIssue={data?.fixed?.[0]}
-        />
+        <HeroSlider slides={data?.slides} categories={data?.categories} />
         <StatsRow stats={data?.stats} />
         <HowItWorksSection example={data?.fixed?.[0]} />
         <FixedThisWeekSection issues={data?.fixed ?? []} />

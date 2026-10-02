@@ -96,7 +96,7 @@ export default function Navbar({
   )
 
   return (
-    <header className="border-b border-slate bg-navy font-body">
+    <header className="sticky top-0 z-[1100] border-b border-slate bg-navy font-body">
       <div className="flex h-17 items-center gap-10 px-5 md:px-8">
         <Logo />
 
