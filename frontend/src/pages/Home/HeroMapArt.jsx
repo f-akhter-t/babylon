@@ -6,20 +6,20 @@ import { CheckIcon } from './HomeIcons'
 
 // x and y are percentages of the map frame. y is the tip of the pin.
 const pins = [
-  { status: 'resolved', x: 15, y: 52 },
-  { status: 'in-progress', x: 33, y: 70 },
-  { status: 'open', x: 53, y: 65 },
-  { status: 'resolved', x: 77, y: 42 },
-  { status: 'in-progress', x: 91, y: 25 },
-  { status: 'open', x: 87, y: 52 },
+  { status: 'resolved', x: 15, y: 58 },
+  { status: 'in-progress', x: 33, y: 74 },
+  { status: 'open', x: 53, y: 69 },
+  { status: 'resolved', x: 77, y: 47 },
+  { status: 'in-progress', x: 91, y: 29 },
+  { status: 'open', x: 87, y: 56 },
 ]
 
 export default function HeroMapArt({ issue }) {
   return (
-    <div className="relative h-[440px] w-full">
+    <div className="relative mx-auto aspect-[620/440] w-full max-w-[620px] xl:mx-0">
       {/* Two colored layers behind the map */}
-      <div className="absolute inset-0 -translate-x-11 translate-y-11 rounded-hero bg-forest" />
-      <div className="absolute inset-0 -translate-x-5 translate-y-5 rounded-hero bg-slate" />
+      <div className="absolute inset-0 -translate-x-2 translate-y-2 rounded-hero bg-forest md:-translate-x-6 md:translate-y-6 xl:-translate-x-11 xl:translate-y-11" />
+      <div className="absolute inset-0 -translate-x-1 translate-y-1 rounded-hero bg-slate md:-translate-x-3 md:translate-y-3 xl:-translate-x-5.5 xl:translate-y-5.5" />
 
       {/* Map frame */}
       <div className="absolute inset-0 overflow-hidden rounded-hero border-4 border-mint">
@@ -29,11 +29,11 @@ export default function HeroMapArt({ issue }) {
       {pins.map((pin, i) => (
         <MapPin key={i} {...pin} />
       ))}
-      {issue && <MapPin status={issue.status} x={41} y={52} selected />}
+      {issue && <MapPin status={issue.status} x={41} y={57} selected />}
 
       {/* Popup for the selected pin. Data comes from the issue list. */}
       {issue && (
-        <div className="absolute left-[41%] top-[17%] z-10 w-60 -translate-x-1/2 rounded-tile bg-white px-4 py-3 shadow-lg">
+        <div className="absolute left-[41%] top-[20%] z-10 w-[220px] -translate-x-1/2 rounded-tile bg-white px-4 py-3 shadow-lg sm:w-[250px]">
           <p className="text-sm font-bold text-navy">{issue.title}</p>
           <div className="mt-2 flex items-center justify-between">
             <StatusPill status={issue.status} />
@@ -43,8 +43,8 @@ export default function HeroMapArt({ issue }) {
         </div>
       )}
 
-      {/* Floating status card (sample text, matches the alert in mock/user.js) */}
-      <div className="absolute -left-16 top-2 z-20 flex w-64 items-center gap-3 rounded-tile bg-mint px-4 py-3 shadow-lg">
+      {/* Floating status card. Hidden on phones, where there is no room. */}
+      <div className="absolute -top-6 left-0 z-20 hidden w-64 items-center gap-3 rounded-tile bg-mint px-4 py-3 shadow-lg md:flex xl:-left-16 xl:top-2">
         <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-slate text-mint">
           <StaircaseIcon level={2} />
         </span>
@@ -56,11 +56,11 @@ export default function HeroMapArt({ issue }) {
         </div>
       </div>
 
-      <div className="absolute -bottom-4 -right-4 z-20 flex items-center gap-2 rounded-full bg-brand px-4 py-2.5 shadow-lg">
-        <span className="flex size-6 items-center justify-center rounded-full bg-navy text-brand">
-          <CheckIcon className="size-3.5" />
+      <div className="absolute bottom-2 right-2 z-20 flex h-12 items-center gap-2.5 rounded-full bg-brand pl-3.5 pr-5 shadow-lg xl:-bottom-5.5 xl:-right-7">
+        <span className="flex size-7 items-center justify-center rounded-full bg-navy text-brand">
+          <CheckIcon className="size-4" />
         </span>
-        <span className="text-sm font-semibold text-navy">Fix verified by admin</span>
+        <span className="text-[15px] font-extrabold text-navy">Fix verified by admin</span>
       </div>
     </div>
   )

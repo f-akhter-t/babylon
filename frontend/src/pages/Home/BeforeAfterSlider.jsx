@@ -2,10 +2,18 @@ import { useRef, useState } from 'react'
 import clsx from 'clsx'
 import { ChevronsIcon } from './HomeIcons'
 
-export default function BeforeAfterSlider({ interactive = true, className }) {
+export default function BeforeAfterSlider({
+  before,
+  after,
+  alt = '',
+  interactive = true,
+  className,
+}) {
   const box = useRef(null)
   const dragging = useRef(false)
   const [pos, setPos] = useState(50) // divider position, 0 to 100
+  const [broken, setBroken] = useState(false) // a photo failed to load
+  const showPhotos = Boolean(before && after) && !broken
 
   function moveTo(clientX) {
     const rect = box.current.getBoundingClientRect()
@@ -41,21 +49,43 @@ export default function BeforeAfterSlider({ interactive = true, className }) {
         className,
       )}
     >
+      {showPhotos && (
+        <img
+          src={before}
+          alt={alt ? `${alt}, before` : ''}
+          draggable={false}
+          loading="lazy"
+          onError={() => setBroken(true)}
+          className="absolute inset-0 size-full object-cover"
+        />
+      )}
+
       {/* After photo, clipped to the right of the divider */}
       <div
         className="absolute inset-0 bg-forest"
         style={{ clipPath: `inset(0 0 0 ${pos}%)` }}
-      />
+      >
+        {showPhotos && (
+          <img
+            src={after}
+            alt={alt ? `${alt}, after` : ''}
+            draggable={false}
+            loading="lazy"
+            onError={() => setBroken(true)}
+            className="size-full object-cover"
+          />
+        )}
+      </div>
 
-      <span className="absolute bottom-3 left-3 rounded-full bg-navy px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-white">
+      <span className="absolute bottom-3.5 left-3.5 rounded-full bg-navy px-3 py-1.5 text-[11px] font-extrabold uppercase tracking-[0.06em] text-mint">
         Before
       </span>
-      <span className="absolute bottom-3 right-3 rounded-full bg-brand px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-navy">
+      <span className="absolute bottom-3.5 right-3.5 rounded-full bg-brand px-3 py-1.5 text-[11px] font-extrabold uppercase tracking-[0.06em] text-navy">
         After
       </span>
 
       <div
-        className="absolute inset-y-0 w-0.5 -translate-x-1/2 bg-white"
+        className="absolute inset-y-0 w-1 -translate-x-1/2 bg-mint"
         style={{ left: `${pos}%` }}
       >
         {interactive && (
@@ -67,7 +97,7 @@ export default function BeforeAfterSlider({ interactive = true, className }) {
             aria-valuemax={100}
             aria-valuenow={Math.round(pos)}
             onKeyDown={handleKeyDown}
-            className="absolute left-1/2 top-1/2 flex size-9 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border-2 border-navy bg-mint text-navy"
+            className="absolute left-1/2 top-1/2 flex size-10 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border-[3px] border-navy bg-mint text-navy"
           >
             <ChevronsIcon className="size-4" />
           </div>

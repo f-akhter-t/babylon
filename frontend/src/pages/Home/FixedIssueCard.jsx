@@ -1,30 +1,36 @@
 import { Link } from 'react-router-dom'
+import clsx from 'clsx'
 import StaircaseIcon from '../../components/ui/StaircaseIcon'
 import BeforeAfterSlider from './BeforeAfterSlider'
 
-export default function FixedIssueCard({ issue }) {
+export default function FixedIssueCard({ issue, className }) {
   const days = issue.fixedInDays
 
   return (
-    <article className="overflow-hidden rounded-card bg-mint">
-      <BeforeAfterSlider className="h-40" />
+    <article className={clsx('overflow-hidden rounded-card bg-mint', className)}>
+      <BeforeAfterSlider
+        before={issue.beforeImg}
+        after={issue.afterImg}
+        alt={issue.title}
+        className="h-[164px]"
+      />
 
-      <div className="p-5">
-        <h3 className="min-h-14 font-heading text-xl font-extrabold leading-tight text-navy">
+      <div className="p-[22px]">
+        <h3 className="min-h-[54px] font-heading text-2xl font-extrabold leading-[1.12] tracking-[-0.015em] text-navy">
           <Link to={`/issues/${issue.id}`} className="hover:underline">
             {issue.title}
           </Link>
         </h3>
-        <p className="mt-1 text-sm text-slate">
+        <p className="mt-2.5 text-sm font-medium text-slate">
           {issue.location} · {issue.category}
         </p>
 
-        <div className="mt-4 flex items-center justify-between">
-          <span className="inline-flex items-center gap-2 rounded-full bg-mint-deep px-3 py-1 text-sm font-semibold text-navy">
+        <div className="mt-3.5 flex flex-wrap items-center justify-between gap-2">
+          <span className="inline-flex h-8 items-center gap-2 whitespace-nowrap rounded-full bg-mint-deep px-3.5 text-[13px] font-bold text-forest">
             <StaircaseIcon level={3} className="text-forest" />
             Verified by admin
           </span>
-          <span className="text-sm font-semibold text-navy">
+          <span className="whitespace-nowrap text-sm font-bold text-navy">
             Fixed in {days} {days === 1 ? 'day' : 'days'}
           </span>
         </div>
