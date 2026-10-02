@@ -13,7 +13,9 @@ const SINGLE = 'rounded-chip border border-navy/20 shadow-md hover:shadow-lg'
 
 // Zoom in, zoom out, "back to my area" and "drop a pin". Lives inside the
 // map so it can use useMap() to control it.
-export default function MapControls({ dropping, onToggleDrop }) {
+// report: 'link' (citizen: the pin button works) | 'login' (guest: the
+// button asks them to log in) | 'none' (staff: no pin button)
+export default function MapControls({ report, dropping, onToggleDrop }) {
   const map = useMap()
   const ref = useRef(null)
 
@@ -56,16 +58,18 @@ export default function MapControls({ dropping, onToggleDrop }) {
         <LocateIcon />
       </button>
 
-      <button
-        type="button"
-        aria-label="Drop a pin to report an issue"
-        aria-pressed={dropping}
-        title="Drop a pin to report an issue"
-        onClick={onToggleDrop}
-        className={clsx(TILE, SINGLE, dropping ? ACTIVE : IDLE)}
-      >
-        <PinIcon />
-      </button>
+      {report !== 'none' && (
+        <button
+          type="button"
+          aria-label="Drop a pin to report an issue"
+          aria-pressed={report === 'link' ? dropping : undefined}
+          title="Drop a pin to report an issue"
+          onClick={onToggleDrop}
+          className={clsx(TILE, SINGLE, dropping ? ACTIVE : IDLE)}
+        >
+          <PinIcon />
+        </button>
+      )}
     </div>
   )
 }

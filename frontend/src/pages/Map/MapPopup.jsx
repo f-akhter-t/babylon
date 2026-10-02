@@ -1,20 +1,17 @@
 import { useEffect, useRef } from 'react'
 import { Popup } from 'react-leaflet'
-import clsx from 'clsx'
-import Button from '../../components/ui/Button'
 import StatusPill from '../../components/ui/StatusPill'
 import PriorityBadge from '../../components/ui/PriorityBadge'
 import { formatDaysAgo } from '../../utils/format'
-import { ArrowDownIcon, ArrowUpIcon, BellIcon } from './MapIcons'
 import PopupPhoto from './PopupPhoto'
+import PopupActions from './PopupActions'
 import { POPUP_CLASSES } from './popupStyles'
 import { animate, RISE_IN, SPRING } from './motion'
 
 // Shown only while an issue is selected. React decides when it is open,
 // so the popup, the pin and the card always agree.
 // Votes and follows live in Map.jsx, so the list updates too.
-export default function MapPopup({ issue, onClose, onToggleVote, onToggleFollow }) {
-  const { voted, votes, followed } = issue
+export default function MapPopup({ issue, viewer, onClose, onToggleVote, onToggleFollow }) {
   const contentRef = useRef(null)
 
   // Grow the white card in from just above the pin when it opens.
@@ -59,40 +56,12 @@ export default function MapPopup({ issue, onClose, onToggleVote, onToggleFollow 
           </div>
         </div>
 
-        <div className="flex gap-2">
-          <Button
-            onClick={() => onToggleVote(issue.id)}
-            // "!" so the red wins over the button's own green background
-            className={clsx('flex-1', voted && 'bg-danger! hover:bg-danger/90!')}
-          >
-            {/* After voting, the same button takes the vote back. */}
-            {voted ? <ArrowDownIcon size={16} /> : <ArrowUpIcon size={16} />}
-            {voted ? 'Downvote' : 'Upvote'} · {votes}
-          </Button>
-          <button
-            type="button"
-            onClick={() => onToggleFollow(issue.id)}
-            aria-pressed={followed}
-            aria-label={followed ? 'Unfollow this issue' : 'Follow this issue'}
-            title={followed ? 'Following: click to unfollow' : 'Follow for status updates'}
-            className={clsx(
-              'flex size-11 shrink-0 items-center justify-center rounded-full border-2 border-navy transition motion-safe:active:scale-90',
-              followed ? 'bg-navy text-brand' : 'text-navy hover:bg-navy/10',
-            )}
-          >
-            <BellIcon size={18} className={clsx(followed && 'fill-current')} />
-          </button>
-          {/* text-navy! beats Leaflet's blue link colour */}
-          <Button variant="outline" to={`/issues/${issue.id}`} className="text-navy!">
-            Details
-          </Button>
-        </div>
-
-        {followed && (
-          <span className="-mt-1 text-xs font-medium text-forest">
-            Following. You will get alerts when this issue changes.
-          </span>
-        )}
+        <PopupActions
+          issue={issue}
+          viewer={viewer}
+          onToggleVote={onToggleVote}
+          onToggleFollow={onToggleFollow}
+        />
       </div>
     </Popup>
   )
