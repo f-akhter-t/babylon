@@ -1,7 +1,6 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import clsx from 'clsx'
 import Navbar from '../../components/layout/Navbar'
-import { getUnreadAlertCount } from '../../services/api'
 import IssuesSidebar from './IssuesSidebar'
 import IssueMap from './IssueMap'
 import { CURSOR_CLASSES, cursorVariables } from './cursors'
@@ -9,6 +8,7 @@ import { useMapFilters } from './useMapFilters'
 import { useIssues } from './useIssues'
 import { useStoredIds } from './useStoredIds'
 import { useListKeys } from './useListKeys'
+import { useUnreadCount } from './useUnreadCount'
 
 const NO_FILTERS = { category: 'All', status: 'All', q: '' }
 
@@ -17,7 +17,8 @@ export default function Map() {
   const { issues, allIssues, loading, error, retry } = useIssues({ category, status, search })
   const [votedIds, toggleVote] = useStoredIds('babylon:voted')
   const [followedIds, toggleFollow] = useStoredIds('babylon:followed')
-  const [unread, setUnread] = useState(0)
+  // Following an issue adds 1 to the navbar bell, unfollowing takes 1 away.
+  const unread = useUnreadCount(followedIds.length)
   const [cursors] = useState(cursorVariables) // built once
 
   // Add this citizen's own vote and follow on top of the data.
@@ -43,16 +44,6 @@ export default function Map() {
   }
 
   useListKeys(shownIssues, selectedId, select)
-
-  useEffect(() => {
-    let ignore = false
-    getUnreadAlertCount().then((count) => {
-      if (!ignore) setUnread(count)
-    })
-    return () => {
-      ignore = true
-    }
-  }, [])
 
   return (
     <div

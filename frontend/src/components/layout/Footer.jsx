@@ -13,7 +13,8 @@ const columns = [
   {
     title: 'Account',
     links: [
-      { label: 'Log in', to: '/' }, // TODO: no login screen in the design yet
+      { label: 'Log in', to: '/login' },
+      { label: 'Sign up', to: '/signup' },
       { label: 'My reports', to: '/my-reports' },
       { label: 'Alerts', to: '/my-reports' },
     ],
@@ -30,27 +31,27 @@ const columns = [
 
 export default function Footer() {
   return (
-    <footer className="flex flex-col gap-10 bg-navy px-5 py-10 font-body text-mint md:px-10 xl:flex-row xl:items-start xl:justify-between xl:px-18">
+    <footer className="flex justify-between bg-navy px-10 py-12 font-body text-white">
       <div>
         <Logo />
-        <p className="mt-3 text-[15px] text-page">Report. Track. Resolve.</p>
-        <p className="mt-3 text-[13px] text-page">
+        <p className="mt-3 text-white/80">Report. Track. Resolve.</p>
+        <p className="mt-2 text-sm text-white/60">
           Map data © OpenStreetMap contributors
         </p>
       </div>
 
-      <div className="flex flex-wrap gap-x-12 gap-y-8 xl:gap-18">
+      <div className="flex gap-16">
         {columns.map((column) => (
           <div key={column.title}>
-            <h3 className="text-xs font-bold uppercase tracking-[0.12em] text-brand">
+            <h3 className="text-xs font-semibold uppercase tracking-widest text-brand">
               {column.title}
             </h3>
-            <ul className="mt-3 flex flex-col gap-3">
+            <ul className="mt-3 space-y-2">
               {column.links.map((link) => (
                 <li key={link.label}>
                   <Link
                     to={link.to}
-                    className="text-[15px] font-semibold leading-tight text-mint transition-colors hover:text-brand"
+                    className="font-medium text-white transition-colors hover:text-brand"
                   >
                     {link.label}
                   </Link>
