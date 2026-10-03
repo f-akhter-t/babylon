@@ -33,8 +33,24 @@ export default function Home() {
       <main>
         <HeroSlider slides={data?.slides} categories={data?.categories} />
         <StatsRow stats={data?.stats} />
-        <HowItWorksSection example={data?.fixed?.[0]} />
-        <FixedThisWeekSection issues={data?.fixed ?? []} />
+
+        <div className="relative isolate overflow-hidden pb-16">
+          <img
+            src="/images/street-night.jpg"
+            alt=""
+            aria-hidden="true"
+            loading="lazy"
+            className="absolute inset-0 -z-10 h-full w-full object-cover object-center"
+          />
+          <div className="absolute inset-0 -z-10 bg-page/85" />
+
+          <HowItWorksSection example={data?.fixed?.[0]} />
+          <FixedThisWeekSection issues={data?.fixed ?? []} />
+
+          <p className="absolute bottom-3 right-5 font-body text-xs text-navy/60">
+            Photo: Arif Hossain / Unsplash
+          </p>
+        </div>
       </main>
       <Footer />
     </div>
