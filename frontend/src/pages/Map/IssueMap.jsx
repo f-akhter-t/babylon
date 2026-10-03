@@ -7,9 +7,8 @@ import PinLayer from './PinLayer'
 import FlyToSelected from './FlyToSelected'
 import MapPopup from './MapPopup'
 import MapControls from './MapControls'
-import MapLegend from './MapLegend'
+import MapOverlays from './MapOverlays'
 import DropPin from './DropPin'
-import Button from '../../components/ui/Button'
 
 const ATTRIBUTION =
   '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
@@ -19,6 +18,7 @@ export default function IssueMap({
   allIssues,
   selectedId,
   onSelect,
+  viewer,
   onToggleVote,
   onToggleFollow,
   onUpvoteInstead,
@@ -27,7 +27,19 @@ export default function IssueMap({
   // Undefined when nothing is selected, or when a filter hid the selected issue.
   const selected = issues.find((issue) => issue.id === selectedId)
   const [dropping, setDropping] = useState(false) // "drop a pin" mode is on
+  const [loginPrompt, setLoginPrompt] = useState(false) // "Log in to report" box
   const stopDropping = useCallback(() => setDropping(false), [])
+  const closeLoginPrompt = useCallback(() => setLoginPrompt(false), [])
+
+  // Citizens can report; guests are asked to log in; staff accounts can't report.
+  let report = 'none'
+  if (viewer.canAct) report = 'link'
+  else if (viewer.isGuest) report = 'login'
+
+  const toggleDrop = () => {
+    if (report === 'link') setDropping((on) => !on)
+    else setLoginPrompt(true)
+  }
 
   return (
     // isolate keeps Leaflet's own z-index values inside this box.
@@ -49,6 +61,7 @@ export default function IssueMap({
           <MapPopup
             key={selected.id}
             issue={selected}
+            viewer={viewer}
             onClose={() => onSelect(null)}
             onToggleVote={onToggleVote}
             onToggleFollow={onToggleFollow}
@@ -58,7 +71,7 @@ export default function IssueMap({
         {/* allIssues, not the filtered list: a duplicate is a duplicate
             even if the filters hide it. */}
         <DropPin
-          active={dropping}
+          active={dropping && report === 'link'}
           issues={allIssues}
           onUpvoteInstead={onUpvoteInstead}
           onPlaced={() => {
@@ -68,36 +81,17 @@ export default function IssueMap({
           onStop={stopDropping}
         />
 
-        <MapControls dropping={dropping} onToggleDrop={() => setDropping((on) => !on)} />
+        <MapControls report={report} dropping={dropping} onToggleDrop={toggleDrop} />
       </MapContainer>
 
-      {dropping && (
-        <div className="absolute left-1/2 top-20 z-1000 flex -translate-x-1/2 items-center gap-2 whitespace-nowrap rounded-full bg-navy py-1.5 pl-4 pr-1.5 text-sm font-semibold text-white shadow-xl lg:top-4">
-          Click the map to drop a pin
-          <button
-            type="button"
-            onClick={stopDropping}
-            className="rounded-full px-3 py-1 text-brand transition-colors hover:bg-white/10"
-          >
-            Cancel
-          </button>
-        </div>
-      )}
-
-      {/* These sit over the map but outside it, so they don't need Leaflet. */}
-      <MapLegend className="absolute bottom-7 left-4 right-4 z-1000 sm:right-auto lg:bottom-4" />
-
-      {/* Phones only: there the navbar hides its Report button inside the menu.
-          On desktop the navbar's button is enough. */}
-      <Button
-        to="/report"
-        variant="dark"
-        size="lg"
-        className="absolute right-4 top-4 z-1000 shadow-xl transition hover:shadow-2xl motion-safe:hover:-translate-y-0.5 lg:hidden"
-      >
-        <span aria-hidden="true" className="text-xl leading-none text-brand">+</span>
-        Report an issue
-      </Button>
+      <MapOverlays
+        dropping={dropping}
+        onStopDropping={stopDropping}
+        report={report}
+        showLoginPrompt={loginPrompt}
+        onOpenLoginPrompt={() => setLoginPrompt(true)}
+        onCloseLoginPrompt={closeLoginPrompt}
+      />
     </div>
   )
 }
