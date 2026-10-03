@@ -1,8 +1,13 @@
 import { useEffect, useState } from 'react'
 import Navbar from '../../components/layout/Navbar'
 import Footer from '../../components/layout/Footer'
-import { getIssueById, getStats, getFixedThisWeek } from '../../services/api'
-import HeroSection from './HeroSection'
+import {
+  getStats,
+  getFixedThisWeek,
+  getHeroSlides,
+  getHeroCategories,
+} from '../../services/api'
+import HeroSlider from './HeroSlider'
 import StatsRow from './StatsRow'
 import HowItWorksSection from './HowItWorksSection'
 import FixedThisWeekSection from './FixedThisWeekSection'
@@ -12,9 +17,9 @@ export default function Home() {
 
   useEffect(() => {
     let ignore = false
-    Promise.all([getStats(), getFixedThisWeek(), getIssueById(1)]).then(
-      ([stats, fixed, featured]) => {
-        if (!ignore) setData({ stats, fixed, featured })
+    Promise.all([getStats(), getFixedThisWeek(), getHeroSlides(), getHeroCategories()]).then(
+      ([stats, fixed, slides, categories]) => {
+        if (!ignore) setData({ stats, fixed, slides, categories })
       },
     )
     return () => {
@@ -26,7 +31,7 @@ export default function Home() {
     <div className="font-body">
       <Navbar variant="logged-out" />
       <main>
-        <HeroSection issue={data?.featured} />
+        <HeroSlider slides={data?.slides} categories={data?.categories} />
         <StatsRow stats={data?.stats} />
         <HowItWorksSection example={data?.fixed?.[0]} />
         <FixedThisWeekSection issues={data?.fixed ?? []} />

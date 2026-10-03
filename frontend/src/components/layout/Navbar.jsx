@@ -56,7 +56,7 @@ export default function Navbar({
   }
 
   return (
-    <header className="flex items-center gap-8 border-b border-white/10 bg-navy px-10 py-3 font-body">
+    <header className="sticky top-0 z-[1100] flex items-center gap-8 border-b border-white/10 bg-navy px-10 py-3 font-body">
       <Logo />
 
       <nav className="flex items-center gap-2">
