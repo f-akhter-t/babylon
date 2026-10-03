@@ -10,6 +10,7 @@
   --color-brand: #5BD6A0;
   --color-amber: #FFB547;
   --color-amber-dark: #E39F2E;
+  --color-danger: #A82E2E; /* Downvote and other "take back" actions */
   --color-muted: #6B7890;
   --color-page: #CDCDCD;
   --color-map-land: #F2EFE9;
@@ -32,4 +33,9 @@
   body {
     @apply bg-page font-body;
   }
+}
+
+button:not(:disabled),
+[role='button'] {
+  cursor: pointer;
 }

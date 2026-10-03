@@ -5,21 +5,29 @@ const variants = {
   primary: 'bg-forest text-white hover:bg-forest/90',
   brand: 'bg-brand text-navy hover:bg-brand/90',
   dark: 'bg-navy text-white hover:bg-navy/90',
-  outline: 'border border-navy text-navy hover:bg-navy/10',
-  'outline-light': 'border border-white/60 text-white hover:bg-white/10',
+  outline: 'border-2 border-navy text-navy hover:bg-navy/10',
+  'outline-light': 'border-2 border-mint text-mint hover:bg-white/10',
+}
+
+const sizes = {
+  md: 'px-5 py-3 text-sm font-semibold',
+  lg: 'h-[58px] gap-2.5 px-7.5 text-[17px] font-bold',
+  nav: 'h-11 px-5.5 text-base font-bold',
 }
 
 export default function Button({
   variant = 'primary',
+  size = 'md',
   to,
   className,
   children,
   ...props
 }) {
   const classes = clsx(
-    'inline-flex items-center justify-center gap-2 rounded-full px-5 py-3',
-    'font-body text-sm font-semibold transition active:scale-95',
+    'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-full',
+    'font-body transition active:scale-95',
     'disabled:cursor-not-allowed disabled:opacity-50 disabled:active:scale-100',
+    sizes[size],
     variants[variant],
     className,
   )

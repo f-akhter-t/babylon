@@ -13,7 +13,8 @@ const columns = [
   {
     title: 'Account',
     links: [
-      { label: 'Log in', to: '/' }, // TODO: no login screen in the design yet
+      { label: 'Log in', to: '/login' },
+      { label: 'Sign up', to: '/signup' },
       { label: 'My reports', to: '/my-reports' },
       { label: 'Alerts', to: '/my-reports' },
     ],

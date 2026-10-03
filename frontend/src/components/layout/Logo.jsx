@@ -2,19 +2,21 @@ import { Link } from 'react-router-dom'
 
 export default function Logo() {
   return (
-    <Link to="/" className="flex items-center gap-3 text-mint">
-      <svg viewBox="0 0 24 28" width="22" height="26" aria-hidden="true">
+    <Link to="/" className="flex items-center gap-2.5 text-mint">
+      <svg viewBox="0 0 32 32" width="34" height="34" fill="none" aria-hidden="true">
         <path
-          d="M12 26s9-8.2 9-15A9 9 0 0 0 3 11c0 6.8 9 15 9 15Z"
-          fill="none"
+          d="M16 29C16 29 25 21 25 13.5A9 9 0 0 0 7 13.5C7 21 16 29 16 29Z"
           stroke="currentColor"
           strokeWidth="2"
+          strokeLinejoin="round"
         />
-        <rect x="8" y="13" width="2" height="3" fill="currentColor" />
-        <rect x="11" y="11" width="2" height="5" fill="currentColor" />
-        <rect x="14" y="9" width="2" height="7" fill="currentColor" />
+        <rect x="11.5" y="15" width="3" height="3" className="fill-brand" />
+        <rect x="15" y="12.5" width="3" height="5.5" fill="currentColor" />
+        <rect x="18.5" y="10" width="3" height="8" fill="currentColor" />
       </svg>
-      <span className="font-heading text-2xl font-extrabold">Babylon</span>
+      <span className="font-heading text-[28px] font-extrabold tracking-[-0.02em]">
+        Babylon
+      </span>
     </Link>
   )
 }

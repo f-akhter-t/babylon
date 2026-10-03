@@ -1,7 +1,9 @@
-import { Link, NavLink } from 'react-router-dom'
+import { useState } from 'react'
+import { Link, NavLink, useNavigate } from 'react-router-dom'
 import clsx from 'clsx'
 import Logo from './Logo'
 import Button from '../ui/Button'
+import { getSession, logout } from '../../services/auth'
 
 const citizenLinks = [
   { label: 'Map', to: '/map' },
@@ -9,11 +11,29 @@ const citizenLinks = [
   { label: 'My reports', to: '/my-reports' },
 ]
 
+const departmentLinks = [{ label: 'Department panel', to: '/department' }]
+
 const adminLinks = [
   { label: 'Department panel', to: '/department' },
   { label: 'Verify resolutions', to: '/admin/verify' },
   { label: 'Accountability', to: '/admin/accountability' },
 ]
+
+const linksByVariant = {
+  admin: adminLinks,
+  department: departmentLinks,
+}
+
+function initialsFor(name, fallback) {
+  const letters = (name ?? '')
+    .split(/\s+/)
+    .filter((word) => /^[A-Za-z]/.test(word))
+    .slice(0, 2)
+    .map((word) => word[0])
+    .join('')
+    .toUpperCase()
+  return letters || fallback
+}
 
 export default function Navbar({
   variant = 'logged-out',
@@ -21,7 +41,19 @@ export default function Navbar({
   unread = 0,
   initials = 'NR',
 }) {
-  const links = variant === 'admin' ? adminLinks : citizenLinks
+  const navigate = useNavigate()
+  const [session, setSession] = useState(getSession)
+
+  // A real login decides which navbar to show. Without a login, the page decides.
+  const current = session?.role ?? variant
+  const links = linksByVariant[current] ?? citizenLinks
+  const canReport = current !== 'admin' && current !== 'department'
+
+  function handleLogout() {
+    logout()
+    setSession(null)
+    navigate('/')
+  }
 
   return (
     <header className="flex items-center gap-8 border-b border-white/10 bg-navy px-10 py-3 font-body">
@@ -45,23 +77,31 @@ export default function Navbar({
       </nav>
 
       <div className="ml-auto flex items-center gap-4">
-        {variant === 'logged-out' && (
-          <button
-            type="button"
-            className="text-sm font-semibold text-white hover:text-brand"
-          >
-            Log in
-          </button>
+        {current === 'logged-out' && (
+          <>
+            <Link
+              to="/login"
+              className="text-sm font-semibold text-white transition-colors hover:text-brand"
+            >
+              Log in
+            </Link>
+            <Link
+              to="/signup"
+              className="text-sm font-semibold text-white/80 transition-colors hover:text-brand"
+            >
+              Sign up
+            </Link>
+          </>
         )}
 
-        {variant !== 'admin' && showReport && (
+        {canReport && showReport && (
           <Button to="/report" variant="brand">
             <span aria-hidden="true" className="text-lg leading-none">+</span>
             Report an issue
           </Button>
         )}
 
-        {variant === 'citizen' && (
+        {current === 'citizen' && (
           <Link
             to="/my-reports"
             aria-label={`Alerts, ${unread} new`}
@@ -89,10 +129,23 @@ export default function Navbar({
           </Link>
         )}
 
-        {variant !== 'logged-out' && (
-          <span className="flex h-10 w-10 items-center justify-center rounded-full bg-forest text-sm font-semibold text-white">
-            {initials}
+        {current !== 'logged-out' && (
+          <span
+            title={session?.name}
+            className="flex h-10 w-10 items-center justify-center rounded-full bg-forest text-sm font-semibold text-white"
+          >
+            {session ? initialsFor(session.name, initials) : initials}
           </span>
+        )}
+
+        {session && (
+          <button
+            type="button"
+            onClick={handleLogout}
+            className="rounded-full border border-white/20 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-white/10"
+          >
+            Log out
+          </button>
         )}
       </div>
     </header>
