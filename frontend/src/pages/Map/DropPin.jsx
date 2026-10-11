@@ -1,11 +1,13 @@
 import { useEffect, useRef, useState } from 'react'
-import { Marker, Popup, useMap, useMapEvents } from 'react-leaflet'
+import { Marker, useMap, useMapEvents } from 'react-leaflet'
 import { draftPinIcon } from './statusPin'
-import { POPUP_CLASSES } from './popupStyles'
+import PopupShell from './PopupShell'
 import { animate, DROP_IN, SPRING } from './motion'
 import DraftCard from './DraftCard'
 import RegionNotice from './RegionNotice'
 import { isInRegion } from './region'
+
+const DRAFT_WIDTH = { min: 270, max: 300 }
 
 // "Drop a pin" mode: while active, the next click on the map places a
 // draggable pin. Its popup warns about nearby duplicates, then links to
@@ -92,17 +94,14 @@ export default function DropPin({ active, issues, onPlaced, onStop, onUpvoteInst
           },
         }}
       />
+      {/* key: a new spot gets a fresh popup, so it picks its side again */}
       {!dragging && (
-        <Popup
-          position={spot}
-          offset={[0, -40]}
-          minWidth={270}
-          maxWidth={300}
-          closeButton={false}
-          closeOnClick={false}
-          autoClose={false}
-          autoPan={false}
-          className={POPUP_CLASSES}
+        <PopupShell
+          key={`${spot.lat},${spot.lng}`}
+          lat={spot.lat}
+          lng={spot.lng}
+          width={DRAFT_WIDTH}
+          pinHeight={48}
         >
           <DraftCard
             spot={spot}
@@ -113,7 +112,7 @@ export default function DropPin({ active, issues, onPlaced, onStop, onUpvoteInst
               onUpvoteInstead(issue)
             }}
           />
-        </Popup>
+        </PopupShell>
       )}
     </>
   )
