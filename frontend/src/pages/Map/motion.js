@@ -25,3 +25,19 @@ export const RISE_IN = [
   { opacity: 0, transform: 'translateY(8px) scale(0.97)' },
   { opacity: 1, transform: 'none' },
 ]
+
+// Map popups slide out from their pin's side; the phone card slides up.
+export const SLIDE_IN = {
+  right: [
+    { opacity: 0, transform: 'translateX(-12px) scale(0.97)' },
+    { opacity: 1, transform: 'none' },
+  ],
+  left: [
+    { opacity: 0, transform: 'translateX(12px) scale(0.97)' },
+    { opacity: 1, transform: 'none' },
+  ],
+  dock: [
+    { opacity: 0, transform: 'translateY(16px)' },
+    { opacity: 1, transform: 'none' },
+  ],
+}

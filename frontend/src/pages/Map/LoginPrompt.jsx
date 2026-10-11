@@ -24,7 +24,7 @@ export default function LoginPrompt({ action, onClose, className }) {
   // Pop in, and move keyboard focus to "Log in".
   useEffect(() => {
     animate(boxRef.current, RISE_IN, { duration: 300, easing: SPRING })
-    loginRef.current?.focus()
+    loginRef.current?.focus({ preventScroll: true }) // don't let the browser shift the map
   }, [])
 
   // Escape closes only this box. Listening in the "capture" phase runs first,
