@@ -1,0 +1,50 @@
+import { useState } from 'react'
+import BeforeAfterSlider from '../Home/BeforeAfterSlider'
+import { CameraIcon } from '../Map/MapIcons'
+
+const FRAME = 'relative h-64 overflow-hidden rounded-panel bg-slate shadow-lg shadow-navy/10 sm:h-80 lg:h-88'
+
+// Fixed issues: a before/after slider (the same one as on Home).
+// Others: the citizen's "before" photo. If it fails to load, a slate
+// placeholder (same idea as PopupPhoto on the map).
+export default function IssuePhoto({ issue }) {
+  const [failed, setFailed] = useState(false)
+
+  if (issue.afterImg) {
+    return (
+      <figure>
+        <BeforeAfterSlider
+          before={issue.beforeImg}
+          after={issue.afterImg}
+          alt={issue.title}
+          className={FRAME}
+        />
+        <figcaption className="mt-2 text-center text-xs text-slate">
+          Drag the handle, or use the arrow keys, to compare before and after.
+        </figcaption>
+      </figure>
+    )
+  }
+
+  return (
+    <figure className={FRAME}>
+      {issue.beforeImg && !failed ? (
+        <img
+          src={issue.beforeImg}
+          alt={`Photo of ${issue.title}`}
+          onError={() => setFailed(true)}
+          className="size-full object-cover"
+        />
+      ) : (
+        <div className="flex size-full items-center justify-center gap-2 text-sm font-medium text-white">
+          <CameraIcon size={20} />
+          Citizen photo
+          <span className="sr-only">(not available)</span>
+        </div>
+      )}
+      <figcaption className="absolute bottom-4 left-4 rounded-full bg-navy px-3 py-1 text-xs font-bold uppercase tracking-wider text-white">
+        Before
+      </figcaption>
+    </figure>
+  )
+}

@@ -1,6 +1,6 @@
-// Small line icons used on the Map page.
+// Small line icons used on the Map page (and the Issue detail page).
 
-function Icon({ size = 18, className, children }) {
+export function Icon({ size = 18, className, children }) {
   return (
     <svg
       viewBox="0 0 24 24"
