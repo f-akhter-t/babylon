@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import StaircaseIcon from '../../components/ui/StaircaseIcon'
+import useCountUp from '../Home/useCountUp'
 import VerifyBadge from './VerifyBadge'
+import CompletenessMeter from './CompletenessMeter'
 import { getCurrentUser } from '../../services/api'
 
 function initialsFor(name) {
@@ -13,8 +15,10 @@ function initialsFor(name) {
 }
 
 // Points and level come from the same rule as the Alerts page (60 per report).
+// The points count up and the bar fills from empty when the card appears.
 export default function SummaryCard({ profile }) {
   const [user, setUser] = useState(null)
+  const { ref: pointsRef, value: pointsShown } = useCountUp(user?.points, { duration: 1200 })
 
   useEffect(() => {
     let ignore = false
@@ -56,7 +60,10 @@ export default function SummaryCard({ profile }) {
               {`Level ${user.level} · ${user.role}`}
             </p>
           </div>
-          <p className="mt-2 font-heading text-5xl font-extrabold leading-none">{user.points}</p>
+          <p ref={pointsRef} className="mt-2 font-heading text-5xl font-extrabold leading-none">
+            <span aria-hidden="true">{Math.round(pointsShown)}</span>
+            <span className="sr-only">{`${user.points} points`}</span>
+          </p>
           <p className="mt-1 font-body text-sm text-mint/80">
             {user.reports === 1 ? 'points from 1 report' : `points from ${user.reports} reports`}
           </p>
@@ -70,7 +77,7 @@ export default function SummaryCard({ profile }) {
           >
             <div
               className="h-full rounded-full bg-brand transition-all duration-500"
-              style={{ width: `${progress}%` }}
+              style={{ width: `${progress}%`, animation: 'barFill 1.1s ease-out 0.3s both' }}
             />
           </div>
           <p className="mt-2 font-body text-xs text-mint/70">
@@ -87,7 +94,11 @@ export default function SummaryCard({ profile }) {
         </div>
       )}
 
-      <ul className="flex flex-col gap-2 border-t border-mint/15 pt-4 font-body text-sm">
+      <div className="border-t border-mint/15 pt-4">
+        <CompletenessMeter profile={profile} />
+      </div>
+
+      <ul className="flex flex-col gap-2 font-body text-sm">
         <li className="flex items-center justify-between gap-3">
           <span>Mobile number</span>
           <VerifyBadge status={profile.phoneVerified ? 'verified' : 'not-verified'} onDark />
