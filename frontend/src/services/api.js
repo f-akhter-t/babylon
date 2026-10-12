@@ -2,7 +2,7 @@
 // Later, each function becomes a fetch() call. Pages will not change,
 // because every function is already async.
 
-import { issues as rawIssues } from '../mock/issues'
+import { issues as rawIssues, MAP_CENTER } from '../mock/issues'
 import { heroSlides, heroSearchCategories } from '../mock/heroSlides'
 import {
   CATEGORY_DEPARTMENT,
@@ -12,15 +12,53 @@ import {
   weeklyReports,
 } from '../mock/departments'
 import { currentUser, alerts, earnPoints } from '../mock/user'
+import { distanceInMeters } from '../utils/geo'
 
 // The ONE ranking rule: priority first, then votes.
 const PRIORITY_ORDER = ['urgent', 'high', 'reopened', 'medium', 'fix-verified']
 
 // Department comes from the category, decided in one place.
-const all = rawIssues.map((issue) => ({
+const withDepartment = (issue) => ({
   ...issue,
   department: CATEGORY_DEPARTMENT[issue.category],
-}))
+})
+
+const all = rawIssues.map(withDepartment)
+
+// ---------- Reports made on this device ----------
+// There is no backend yet, so a report a citizen submits is kept in the
+// browser (localStorage) and added to the same list as the mock issues.
+// When Express arrives, createIssue becomes a POST and this block goes away.
+
+const SUBMITTED_KEY = 'babylon.submittedIssues'
+
+function loadSubmitted() {
+  try {
+    const raw = window.localStorage.getItem(SUBMITTED_KEY)
+    return raw ? JSON.parse(raw) : []
+  } catch {
+    return []
+  }
+}
+
+function saveSubmitted(list) {
+  try {
+    window.localStorage.setItem(SUBMITTED_KEY, JSON.stringify(list))
+  } catch {
+    // storage full or blocked: the report still shows until the page reloads
+  }
+}
+
+const submitted = loadSubmitted()
+all.push(...submitted.map(withDepartment))
+
+function makeTitle(description) {
+  const firstSentence = description.split(/[.!?\n]/)[0].trim()
+  if (!firstSentence) return 'New report'
+  const title =
+    firstSentence.length > 70 ? `${firstSentence.slice(0, 67).trimEnd()}…` : firstSentence
+  return title.charAt(0).toUpperCase() + title.slice(1)
+}
 
 function rankIssues(list) {
   return [...list]
@@ -52,6 +90,57 @@ export async function getIssues({ category = 'All', status = 'All', search = '' 
 
 export async function getIssueById(id) {
   return all.find((issue) => String(issue.id) === String(id)) ?? null
+}
+
+// A citizen's new report. location is { lat, lng, label, ward }.
+// photoUrl is a (small) data URL of the photo. Severity is a placeholder
+// ('medium') until the AI severity engine exists.
+export async function createIssue({ category, description, photoUrl, location }) {
+  const user = await getCurrentUser()
+  const today = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
+
+  const issue = {
+    id: `new-${Date.now()}`,
+    title: makeTitle(description),
+    category,
+    status: 'open',
+    priority: 'medium',
+    verification: 'none',
+    votes: 1,
+    location: location.label,
+    ward: location.ward ?? '',
+    distanceM: Math.round(
+      distanceInMeters(MAP_CENTER, [location.lat, location.lng]),
+    ),
+    lat: location.lat,
+    lng: location.lng,
+    daysAgo: 0,
+    reportedOn: today,
+    sentOn: today,
+    beforeImg: photoUrl,
+    reporter: user?.name ?? 'You',
+    description,
+  }
+
+  submitted.push(issue)
+  saveSubmitted(submitted)
+  all.push(withDepartment(issue))
+  return issue
+}
+
+// Adds one vote. Returns the new count, or null if the issue cannot be voted on.
+// Votes on the mock issues last until the page reloads.
+export async function upvoteIssue(id) {
+  const issue = all.find((item) => String(item.id) === String(id))
+  if (!issue || issue.status === 'resolved') return null
+  issue.votes += 1
+
+  const saved = submitted.find((item) => String(item.id) === String(id))
+  if (saved) {
+    saved.votes = issue.votes
+    saveSubmitted(submitted)
+  }
+  return issue.votes
 }
 
 // ---------- Home ----------
