@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Navigate } from 'react-router-dom'
+import clsx from 'clsx'
 import AdminLayout from '../../components/layout/AdminLayout'
 import FormNotice from '../Profile/FormNotice'
 import IdentityQueueCard, { QueueSkeleton } from './IdentityQueueCard'
@@ -28,6 +29,7 @@ function IdentityReviewPage() {
   const [notice, setNotice] = useState(null) // { tone, text }
   const [focusPanel, setFocusPanel] = useState(false)
   const panelRef = useRef(null)
+  const listRef = useRef(null)
 
   const load = useCallback(() => {
     let ignore = false
@@ -64,6 +66,14 @@ function IdentityReviewPage() {
       window.removeEventListener('storage', refresh)
     }
   }, [load])
+
+  // Keep the chosen card visible inside the scrolling queue, for example after
+  // an approval moves on to a card further down.
+  useEffect(() => {
+    listRef.current
+      ?.querySelector('[aria-current="true"]')
+      ?.scrollIntoView({ block: 'nearest', inline: 'nearest' })
+  }, [selectedKey, queue])
 
   const selected = queue?.find((item) => keyOf(item) === selectedKey) ?? null
   // The chosen card left the queue without this page doing it: someone else
@@ -133,7 +143,7 @@ function IdentityReviewPage() {
         </div>
 
         {queue === null ? (
-          <div className="mt-6 grid grid-cols-1 items-start gap-6 lg:grid-cols-[300px_minmax(0,1fr)]">
+          <div className="mt-6 grid grid-cols-1 items-start gap-6 lg:grid-cols-[250px_minmax(0,1fr)]">
             <div>
               <p className="font-body text-sm font-bold text-muted">Loading the queue…</p>
               <div className="mt-3">
@@ -158,16 +168,25 @@ function IdentityReviewPage() {
             </div>
           </div>
         ) : (
-          <div className="mt-6 grid grid-cols-1 items-start gap-6 lg:grid-cols-[300px_minmax(0,1fr)]">
-            <div>
-              <p className="font-body text-sm font-bold text-muted">
+          <div className="mt-6 grid grid-cols-1 items-start gap-6 lg:grid-cols-[250px_minmax(0,1fr)]">
+            {/* The queue scrolls on its own: sideways above the panel on small
+                screens, and as a column that stays in view on large ones. */}
+            <div className="min-w-0 lg:sticky lg:top-6">
+              <p id="identity-queue-label" className="font-body text-sm font-bold text-muted">
                 {queue.length === 1
                   ? 'One submission is waiting, oldest first.'
                   : `${queue.length} submissions are waiting, oldest first.`}
               </p>
-              <ul className="mt-3 flex flex-col gap-3">
+              <ul
+                ref={listRef}
+                aria-labelledby="identity-queue-label"
+                className={clsx(
+                  'relative mt-3 flex snap-x gap-3 overflow-x-auto p-1 pb-3',
+                  'lg:max-h-[calc(100dvh-13rem)] lg:snap-none lg:flex-col lg:overflow-x-hidden lg:overflow-y-auto lg:pb-1',
+                )}
+              >
                 {queue.map((item) => (
-                  <li key={keyOf(item)}>
+                  <li key={keyOf(item)} className="w-56 shrink-0 snap-start lg:w-auto">
                     <IdentityQueueCard
                       submission={item}
                       selected={selected ? keyOf(selected) === keyOf(item) : false}
