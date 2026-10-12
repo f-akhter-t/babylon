@@ -2,10 +2,29 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import Navbar from '../../components/layout/Navbar'
 import Footer from '../../components/layout/Footer'
+import AnimatedBackground from '../../components/ui/AnimatedBackground'
 import ReportForm from './ReportForm'
 import LocationPicker from './LocationPicker'
 import { createIssue } from '../../services/api'
 import { resizeImage } from '../../utils/resizeImage'
+
+const pageStyle = `
+  @keyframes pageRise {
+    from { opacity: 0; transform: translateY(14px); }
+    to { opacity: 1; transform: none; }
+  }
+  @keyframes toastIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    * {
+      animation-duration: 0.001ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.001ms !important;
+    }
+  }
+`
 
 export default function Report() {
   const [toast, setToast] = useState(null)
@@ -28,19 +47,31 @@ export default function Report() {
   }
 
   return (
-    <div className="min-h-screen bg-page">
+    <>
+      <style>{pageStyle}</style>
+      <AnimatedBackground />
       <Navbar variant="citizen" />
 
-      <main className="px-6 py-8 md:px-10">
+      <main className="relative min-h-[70vh] px-6 py-8 md:px-10">
         <div className="mx-auto max-w-6xl">
           <Link
             to="/map"
-            className="inline-flex items-center gap-1 font-body text-sm font-semibold text-navy/70 transition hover:text-navy focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest/50"
+            className="group inline-flex items-center gap-1 font-body text-sm font-semibold text-navy/70 transition hover:text-navy focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest/50"
+            style={{ animation: 'pageRise 0.45s ease-out both' }}
           >
-            <span aria-hidden="true">‹</span> Back to maps
+            <span
+              aria-hidden="true"
+              className="inline-block transition-transform duration-200 group-hover:-translate-x-1"
+            >
+              ‹
+            </span>{' '}
+            Back to maps
           </Link>
 
-          <div className="mt-3 flex flex-wrap items-baseline gap-x-4 gap-y-1">
+          <div
+            className="mt-3 flex flex-wrap items-baseline gap-x-4 gap-y-1"
+            style={{ animation: 'pageRise 0.5s ease-out 0.05s both' }}
+          >
             <h1 className="font-heading text-4xl font-extrabold text-navy md:text-5xl">
               Report an issue
             </h1>
@@ -62,10 +93,11 @@ export default function Report() {
         <div
           role="status"
           className="fixed bottom-6 left-1/2 z-[1200] -translate-x-1/2 rounded-full bg-navy px-5 py-2.5 font-body text-sm font-semibold text-white shadow-lg"
+          style={{ animation: 'toastIn 0.25s ease-out' }}
         >
           {toast}
         </div>
       )}
-    </div>
+    </>
   )
 }

@@ -21,10 +21,16 @@ const MATCH_RADIUS_M = 120 // an open issue this close counts as a possible dupl
 // Colours come from the Tailwind theme (text-navy, fill-brand, ...), not hex values.
 const pinIcon = L.divIcon({
   className: 'report-pin',
-  html: `<svg viewBox="0 0 40 52" class="h-[52px] w-10 text-navy drop-shadow-md" aria-hidden="true">
-    <path class="fill-current" d="M20 0C9 0 0 8.7 0 19.5 0 33 20 52 20 52s20-19 20-32.5C40 8.7 31 0 20 0z"/>
-    <circle cx="20" cy="19" r="8" class="fill-brand"/>
-  </svg>`,
+  html: `<div class="pin-wrap">
+    <span class="pin-pulse"></span>
+    <span class="pin-shadow"></span>
+    <div class="pin-body">
+      <svg viewBox="0 0 40 52" class="h-[52px] w-10 text-navy drop-shadow-md" aria-hidden="true">
+        <path class="fill-current" d="M20 0C9 0 0 8.7 0 19.5 0 33 20 52 20 52s20-19 20-32.5C40 8.7 31 0 20 0z"/>
+        <circle cx="20" cy="19" r="8" class="fill-brand"/>
+      </svg>
+    </div>
+  </div>`,
   iconSize: [40, 52],
   iconAnchor: [20, 52],
   tooltipAnchor: [0, -52],
@@ -32,10 +38,15 @@ const pinIcon = L.divIcon({
 
 const matchIcon = L.divIcon({
   className: 'report-pin',
-  html: `<svg viewBox="0 0 40 52" class="h-10 w-[31px] text-amber drop-shadow" aria-hidden="true">
-    <path class="fill-current" d="M20 0C9 0 0 8.7 0 19.5 0 33 20 52 20 52s20-19 20-32.5C40 8.7 31 0 20 0z"/>
-    <circle cx="20" cy="19" r="7" class="fill-navy"/>
-  </svg>`,
+  html: `<div class="pin-wrap">
+    <span class="pin-pulse match-pulse"></span>
+    <div class="pin-body">
+      <svg viewBox="0 0 40 52" class="h-10 w-[31px] text-amber drop-shadow" aria-hidden="true">
+        <path class="fill-current" d="M20 0C9 0 0 8.7 0 19.5 0 33 20 52 20 52s20-19 20-32.5C40 8.7 31 0 20 0z"/>
+        <circle cx="20" cy="19" r="7" class="fill-navy"/>
+      </svg>
+    </div>
+  </div>`,
   iconSize: [31, 40],
   iconAnchor: [15, 40],
 })
@@ -52,6 +63,63 @@ const pickerStyle = `
     padding: 6px 12px;
   }
   .drag-hint.leaflet-tooltip-top::before { border-top-color: var(--color-navy); }
+
+  @keyframes pickerIn {
+    from { opacity: 0; transform: translateY(18px); }
+    to { opacity: 1; transform: none; }
+  }
+  @keyframes pickerPop {
+    from { opacity: 0; transform: translateY(10px) scale(0.97); }
+    to { opacity: 1; transform: none; }
+  }
+  @keyframes pinPulse {
+    0% { transform: scale(0.5); opacity: 0.5; }
+    100% { transform: scale(3); opacity: 0; }
+  }
+  @keyframes pinDrop {
+    0% { transform: translateY(-20px); }
+    55% { transform: translateY(0) scaleY(0.9); }
+    100% { transform: translateY(0); }
+  }
+
+  /* the pin: lifts on hover, floats while dragged, bounces when it lands */
+  .report-pin { background: transparent; border: 0; }
+  .report-pin .pin-wrap { position: relative; width: 100%; height: 100%; }
+  .report-pin .pin-body {
+    position: absolute;
+    inset: 0;
+    transform-origin: 50% 100%;
+    transition: transform 0.2s ease-out;
+  }
+  .report-pin:hover .pin-body { transform: translateY(-4px); }
+  .report-pin.is-dragging .pin-body { transform: translateY(-12px) scale(1.1); }
+  .report-pin .pin-body.pin-drop { animation: pinDrop 0.45s ease-out; }
+  .report-pin .pin-shadow {
+    position: absolute;
+    left: 50%;
+    bottom: -2px;
+    width: 18px;
+    height: 6px;
+    margin-left: -9px;
+    border-radius: 9999px;
+    background: color-mix(in srgb, var(--color-navy) 30%, transparent);
+    filter: blur(2px);
+    transition: transform 0.2s, opacity 0.2s;
+  }
+  .report-pin.is-dragging .pin-shadow { transform: scale(0.6); opacity: 0.5; }
+  .report-pin .pin-pulse {
+    position: absolute;
+    left: 50%;
+    bottom: -7px;
+    width: 14px;
+    height: 14px;
+    margin-left: -7px;
+    border-radius: 9999px;
+    background: var(--color-forest);
+    animation: pinPulse 1.8s ease-out infinite;
+  }
+  .report-pin .match-pulse { background: var(--color-amber); }
+  .report-pin.is-dragging .pin-pulse { display: none; }
 `
 
 // Moves the map when the pin is set from search or "Use my location".
@@ -163,18 +231,27 @@ export default function LocationPicker({ category, onChange, onToast }) {
 
   const eventHandlers = useMemo(
     () => ({
-      dragstart() {
+      dragstart(e) {
         setHintVisible(false)
+        e.target.getElement()?.classList.add('is-dragging')
       },
-      dragend() {
-        const marker = markerRef.current
-        if (!marker) return
-        const { lat, lng } = marker.getLatLng()
+      dragend(e) {
+        e.target.getElement()?.classList.remove('is-dragging')
+        const { lat, lng } = e.target.getLatLng()
         setPosition({ lat, lng })
       },
     }),
     [],
   )
+
+  // a little bounce each time the pin lands somewhere new
+  useEffect(() => {
+    const body = markerRef.current?.getElement()?.querySelector('.pin-body')
+    if (!body) return
+    body.classList.remove('pin-drop')
+    void body.offsetWidth // restart the animation
+    body.classList.add('pin-drop')
+  }, [position.lat, position.lng])
 
   async function handleSearch(e) {
     e.preventDefault()
@@ -243,7 +320,8 @@ export default function LocationPicker({ category, onChange, onToast }) {
   return (
     <section
       aria-label="Choose the location"
-      className="relative isolate min-h-[560px] overflow-hidden rounded-card bg-mint"
+      className="relative isolate min-h-[560px] overflow-hidden rounded-card bg-mint shadow-sm transition-shadow duration-300 hover:shadow-xl"
+      style={{ animation: 'pickerIn 0.55s ease-out 0.2s both' }}
     >
       <style>{pickerStyle}</style>
 
@@ -318,16 +396,31 @@ export default function LocationPicker({ category, onChange, onToast }) {
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search street or landmark"
             aria-label="Search street or landmark"
-            className="w-full rounded-full border border-navy/15 bg-white py-2.5 pl-10 pr-4 font-body text-sm text-navy shadow-sm placeholder:text-muted focus:border-forest focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest/40"
+            className="w-full rounded-full border border-navy/15 bg-white py-2.5 pl-10 pr-4 font-body text-sm text-navy shadow-sm transition placeholder:text-muted hover:border-forest/50 focus:border-forest focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest/40"
           />
         </div>
         <button
           type="button"
           onClick={handleLocate}
           disabled={locating}
-          className="shrink-0 rounded-full border border-navy/15 bg-white px-4 py-2.5 font-body text-sm font-semibold text-navy shadow-sm transition hover:bg-mint disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest/50"
+          className="group shrink-0 rounded-full border border-navy/15 bg-white px-4 py-2.5 font-body text-sm font-semibold text-navy shadow-sm transition hover:-translate-y-0.5 hover:bg-mint hover:shadow-md active:scale-95 disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest/50"
         >
-          {locating ? 'Locating…' : 'Use my location'}
+          <span className="inline-flex items-center gap-1.5">
+            <svg
+              viewBox="0 0 24 24"
+              className={`h-4 w-4 text-forest transition-transform duration-300 group-hover:scale-110 ${locating ? 'animate-pulse' : ''}`}
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              aria-hidden="true"
+            >
+              <circle cx="12" cy="12" r="7" />
+              <circle cx="12" cy="12" r="2" />
+              <path d="M12 2v3M12 19v3M2 12h3M19 12h3" />
+            </svg>
+            {locating ? 'Locating…' : 'Use my location'}
+          </span>
         </button>
         <span className="sr-only" aria-live="polite">
           {searching ? 'Searching' : ''}
@@ -346,7 +439,11 @@ export default function LocationPicker({ category, onChange, onToast }) {
       {/* duplicate match + selected location */}
       <div className="pointer-events-none absolute inset-x-4 bottom-4 z-[1000] flex flex-col items-stretch gap-3 md:flex-row md:items-end md:justify-between">
         {match ? (
-          <div className="pointer-events-auto max-w-sm rounded-2xl border-2 border-amber-dark bg-white p-4 shadow-lg">
+          <div
+            key={match.issue.id}
+            className="pointer-events-auto max-w-sm rounded-2xl border-2 border-amber-dark bg-white p-4 shadow-lg transition hover:-translate-y-0.5 hover:shadow-xl"
+            style={{ animation: 'pickerPop 0.35s ease-out both' }}
+          >
             <div className="flex items-center gap-2">
               <StaircaseIcon level={1} className="h-5 w-5 text-amber-dark" />
               <h3 className="font-heading text-base font-extrabold text-navy">
@@ -361,14 +458,14 @@ export default function LocationPicker({ category, onChange, onToast }) {
               <button
                 type="button"
                 onClick={handleUpvote}
-                className="rounded-full bg-forest px-4 py-2 font-body text-sm font-bold text-white transition hover:bg-forest/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest/60 focus-visible:ring-offset-2"
+                className="rounded-full bg-forest px-4 py-2 font-body text-sm font-bold text-white transition hover:-translate-y-0.5 hover:bg-forest/90 hover:shadow-md active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest/60 focus-visible:ring-offset-2"
               >
                 ↑ Upvote it instead
               </button>
               <button
                 type="button"
                 onClick={handleDismiss}
-                className="rounded-full border-2 border-amber-dark px-4 py-2 font-body text-sm font-bold text-navy transition hover:bg-amber/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest/50"
+                className="rounded-full border-2 border-amber-dark px-4 py-2 font-body text-sm font-bold text-navy transition hover:-translate-y-0.5 hover:bg-amber/20 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest/50"
               >
                 Mine is different
               </button>
@@ -380,10 +477,14 @@ export default function LocationPicker({ category, onChange, onToast }) {
 
         <div
           aria-live="polite"
-          className="pointer-events-auto rounded-2xl bg-white px-4 py-3 shadow-lg md:ml-auto"
+          className="pointer-events-auto rounded-2xl bg-white px-4 py-3 shadow-lg transition hover:-translate-y-0.5 hover:shadow-xl md:ml-auto"
         >
           <p className="font-body text-xs text-muted">Selected location</p>
-          <p className="font-body text-sm font-bold text-navy">
+          <p
+            key={label}
+            className="font-body text-sm font-bold text-navy"
+            style={{ animation: 'pickerPop 0.3s ease-out both' }}
+          >
             {label}
             {ward ? `, ${ward}` : ''}
           </p>
