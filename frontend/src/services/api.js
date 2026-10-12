@@ -12,6 +12,7 @@ import {
   weeklyReports,
 } from '../mock/departments'
 import { earnPoints } from '../mock/user'
+import { sampleIdentitySubmissions } from '../mock/identitySubmissions'
 import { distanceInMeters } from '../utils/geo'
 import { getAccountName, getSession, renameAccount } from './auth'
 import {
@@ -19,6 +20,7 @@ import {
   checkIdPhoto,
   checkNid,
   checkPhone,
+  checkRejectReason,
   normalizeNid,
   normalizePhone,
 } from '../utils/profileRules'
@@ -538,4 +540,79 @@ export async function submitIdentity(email, { nid, photo }) {
     },
   })
   return buildProfile(email)
+}
+
+// ---------- Admin: identity checks ----------
+// The queue lists every account whose identity is waiting for review, plus a
+// few sample submissions (src/mock/) so the demo queue is never empty.
+// Real decisions are saved on the citizen's profile, so their Profile page and
+// the navbar badge update. Sample decisions live only in this module, so the
+// sidebar badge and the queue always agree, and a reload starts the demo again.
+// Like the Profile page, the queue never sees the full NID number or the photo.
+
+const sampleSubmissions = sampleIdentitySubmissions.map(({ submittedDaysAgo, ...item }) => ({
+  ...item,
+  sample: true,
+  submittedAt: new Date(Date.now() - submittedDaysAgo * 86400000 - 2 * 3600000).toISOString(),
+}))
+const sampleDecisions = new Map() // sample id -> 'verified' | 'rejected'
+
+const profileQueueId = (email) => `profile:${email}`
+
+function pendingSubmissions() {
+  const real = Object.entries(readProfiles())
+    .filter(([, stored]) => stored.identity?.status === 'pending')
+    .map(([email, stored]) => ({
+      id: profileQueueId(email),
+      email,
+      name: getAccountName(email) ?? email,
+      nidLast4: stored.identity.nidLast4,
+      submittedAt: stored.identity.submittedAt,
+      sample: false,
+    }))
+  const samples = sampleSubmissions.filter((item) => !sampleDecisions.has(item.id))
+  // Oldest first, so whoever has waited longest is checked first.
+  return [...real, ...samples].sort((a, b) => a.submittedAt.localeCompare(b.submittedAt))
+}
+
+export async function getIdentityQueue() {
+  await wait(400)
+  return pendingSubmissions()
+}
+
+export async function getIdentityQueueCount() {
+  return pendingSubmissions().length
+}
+
+// submission is an item from getIdentityQueue().
+// decision: 'approve' | 'reject'. A reject needs a reason, which the citizen sees.
+// Throws if someone already reviewed it (for example in another tab), or if
+// the citizen has sent a new submission since this one was listed.
+export async function reviewIdentity(submission, { decision, reason = '' }) {
+  await wait()
+  if (decision === 'reject' && checkRejectReason(reason)) {
+    throw new Error('Please write a reason for the citizen.')
+  }
+  const status = decision === 'approve' ? 'verified' : 'rejected'
+  const stillPending = pendingSubmissions().some(
+    (item) => item.id === submission.id && item.submittedAt === submission.submittedAt,
+  )
+  if (!stillPending) throw new Error('This submission was already reviewed.')
+
+  if (submission.sample) {
+    sampleDecisions.set(submission.id, status)
+    window.dispatchEvent(new Event(PROFILE_EVENT))
+    return { ...submission, status }
+  }
+
+  const { identity } = buildProfile(submission.email)
+  writeProfile(submission.email, {
+    identity: {
+      ...identity,
+      status,
+      reason: status === 'rejected' ? reason.trim() : '',
+      reviewedAt: new Date().toISOString(),
+    },
+  })
+  return { ...submission, status }
 }

@@ -9,6 +9,7 @@ import Profile from './pages/Profile/Profile'
 import DepartmentPanel from './pages/DepartmentPanel/DepartmentPanel'
 import VerifyResolutions from './pages/VerifyResolutions/VerifyResolutions'
 import Accountability from './pages/Accountability/Accountability'
+import IdentityReview from './pages/IdentityReview/IdentityReview'
 import Styleguide from './pages/Styleguide/Styleguide'
 import Login from './pages/Auth/Login'
 import Signup from './pages/Auth/Signup'
@@ -26,6 +27,7 @@ export default function App() {
       <Route path="/department" element={<DepartmentPanel />} />
       <Route path="/admin/verify" element={<VerifyResolutions />} />
       <Route path="/admin/accountability" element={<Accountability />} />
+      <Route path="/admin/identity" element={<IdentityReview />} />
       <Route path="/styleguide" element={<Styleguide />} />
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<Signup />} />
