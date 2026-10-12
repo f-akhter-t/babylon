@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import clsx from 'clsx'
 import AuthShell, { Field, RoleTabs } from './AuthShell'
-import { homePathFor, signup } from '../../services/auth'
+import { homePathFor, signup, startSetup } from '../../services/auth'
 import { departments } from '../../mock/departments'
 
 export default function Signup() {
@@ -39,7 +39,12 @@ export default function Signup() {
     setBusy(true)
     try {
       const user = await signup({ name, email, password, role, department })
-      navigate(homePathFor(user.role))
+      if (user.role === 'citizen') {
+        startSetup(user.email) // first-time profile setup
+        navigate('/profile')
+      } else {
+        navigate(homePathFor(user.role))
+      }
     } catch (err) {
       setError(err.message)
     } finally {

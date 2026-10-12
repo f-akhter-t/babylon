@@ -16,7 +16,8 @@ function initialsFor(name) {
 
 // Points and level come from the same rule as the Alerts page (60 per report).
 // The points count up and the bar fills from empty when the card appears.
-export default function SummaryCard({ profile }) {
+// showMeter: false during first-time setup, where the welcome block shows it.
+export default function SummaryCard({ profile, showMeter = true }) {
   const [user, setUser] = useState(null)
   const { ref: pointsRef, value: pointsShown } = useCountUp(user?.points, { duration: 1200 })
 
@@ -94,9 +95,13 @@ export default function SummaryCard({ profile }) {
         </div>
       )}
 
-      <div className="border-t border-mint/15 pt-4">
-        <CompletenessMeter profile={profile} />
-      </div>
+      {showMeter ? (
+        <div className="border-t border-mint/15 pt-4">
+          <CompletenessMeter profile={profile} />
+        </div>
+      ) : (
+        <div aria-hidden="true" className="border-t border-mint/15" />
+      )}
 
       <ul className="flex flex-col gap-2 font-body text-sm">
         <li className="flex items-center justify-between gap-3">
