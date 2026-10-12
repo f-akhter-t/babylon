@@ -40,9 +40,9 @@ export default function IdentityQueueCard({ submission, selected, onSelect }) {
       onClick={() => onSelect(submission)}
       aria-current={selected ? 'true' : undefined}
       className={clsx(
-        'w-full rounded-card border-2 bg-mint p-4 text-left transition-colors',
+        'group w-full cursor-pointer rounded-card border-2 p-4 text-left transition-colors',
         'focus:outline-none focus-visible:ring-2 focus-visible:ring-brand',
-        selected ? 'border-brand' : 'border-transparent hover:border-brand/50',
+        selected ? 'border-brand bg-white' : 'border-transparent bg-mint hover:border-brand hover:bg-white',
       )}
     >
       <span className="flex items-start justify-between gap-2">
@@ -57,6 +57,29 @@ export default function IdentityQueueCard({ submission, selected, onSelect }) {
       <span className="mt-3 flex flex-wrap items-center justify-between gap-x-3 gap-y-1 font-body text-sm text-navy">
         <MaskedNid last4={submission.nidLast4} className="font-semibold tracking-wider" />
         <span className="text-slate">{`Sent on ${formatDate(submission.submittedAt)}`}</span>
+      </span>
+      {/* Says what a click does, so the cards read as buttons and not as plain info. */}
+      <span
+        className={clsx(
+          'mt-3 flex items-center gap-1.5 border-t border-navy/10 pt-3 font-body text-sm font-bold',
+          selected ? 'text-forest' : 'text-navy group-hover:text-forest',
+        )}
+      >
+        {selected ? 'Reviewing now' : 'Review'}
+        {!selected && (
+          <svg
+            viewBox="0 0 24 24"
+            className="h-4 w-4"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.4"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+          >
+            <path d="M5 12h14M13 6l6 6-6 6" />
+          </svg>
+        )}
       </span>
     </button>
   )
