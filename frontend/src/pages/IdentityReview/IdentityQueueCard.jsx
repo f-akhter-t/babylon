@@ -41,8 +41,8 @@ export default function IdentityQueueCard({ submission, selected, onSelect }) {
       aria-current={selected ? 'true' : undefined}
       className={clsx(
         'w-full rounded-card border-2 bg-mint p-4 text-left transition-colors',
-        'focus:outline-none focus-visible:ring-2 focus-visible:ring-forest',
-        selected ? 'border-navy' : 'border-transparent hover:border-navy/30',
+        'focus:outline-none focus-visible:ring-2 focus-visible:ring-brand',
+        selected ? 'border-brand' : 'border-transparent hover:border-brand/50',
       )}
     >
       <span className="flex items-start justify-between gap-2">

@@ -15,6 +15,23 @@ const keyOf = (submission) => `${submission.id}|${submission.submittedAt}`
 
 const ALREADY_REVIEWED = 'This submission was already reviewed.'
 
+// The submissions list, in its own section beside (or above) the review panel.
+// Its list scrolls inside the section: sideways on small screens, down on large ones.
+function QueueSection({ label, children }) {
+  return (
+    <section
+      aria-labelledby="identity-queue-heading"
+      className="min-w-0 overflow-hidden rounded-panel bg-navy p-4 lg:w-72 lg:shrink-0"
+    >
+      <h2 id="identity-queue-heading" className="px-1 font-heading text-xl font-extrabold text-mint">
+        Submissions
+      </h2>
+      <p className="mt-1 px-1 font-body text-sm text-mint/70">{label}</p>
+      <div className="mt-4">{children}</div>
+    </section>
+  )
+}
+
 // Only admins review identities. Everyone else goes to the login page.
 export default function IdentityReview() {
   const viewer = useViewer()
@@ -143,15 +160,12 @@ function IdentityReviewPage() {
         </div>
 
         {queue === null ? (
-          <div className="mt-6 grid grid-cols-1 items-start gap-6 lg:grid-cols-[250px_minmax(0,1fr)]">
-            <div>
-              <p className="font-body text-sm font-bold text-muted">Loading the queue…</p>
-              <div className="mt-3">
-                <QueueSkeleton />
-              </div>
-            </div>
+          <div className="mt-6 flex flex-col gap-6 lg:flex-row lg:items-start">
+            <QueueSection label="Loading the queue…">
+              <QueueSkeleton />
+            </QueueSection>
             <div
-              className="hidden h-96 rounded-panel bg-mint motion-safe:animate-pulse lg:block"
+              className="hidden h-96 min-w-0 flex-1 rounded-panel bg-mint motion-safe:animate-pulse lg:block"
               aria-hidden="true"
             />
           </div>
@@ -168,25 +182,24 @@ function IdentityReviewPage() {
             </div>
           </div>
         ) : (
-          <div className="mt-6 grid grid-cols-1 items-start gap-6 lg:grid-cols-[250px_minmax(0,1fr)]">
-            {/* The queue scrolls on its own: sideways above the panel on small
-                screens, and as a column that stays in view on large ones. */}
-            <div className="min-w-0 lg:sticky lg:top-6">
-              <p id="identity-queue-label" className="font-body text-sm font-bold text-muted">
-                {queue.length === 1
+          <div className="mt-6 flex flex-col gap-6 lg:flex-row lg:items-start">
+            <QueueSection
+              label={
+                queue.length === 1
                   ? 'One submission is waiting, oldest first.'
-                  : `${queue.length} submissions are waiting, oldest first.`}
-              </p>
+                  : `${queue.length} submissions are waiting, oldest first.`
+              }
+            >
               <ul
                 ref={listRef}
-                aria-labelledby="identity-queue-label"
+                aria-labelledby="identity-queue-heading"
                 className={clsx(
-                  'relative mt-3 flex snap-x gap-3 overflow-x-auto p-1 pb-3',
-                  'lg:max-h-[calc(100dvh-13rem)] lg:snap-none lg:flex-col lg:overflow-x-hidden lg:overflow-y-auto lg:pb-1',
+                  'relative flex gap-3 overflow-x-auto p-1 pb-3',
+                  'lg:max-h-160 lg:flex-col lg:overflow-x-hidden lg:overflow-y-auto lg:pb-1',
                 )}
               >
                 {queue.map((item) => (
-                  <li key={keyOf(item)} className="w-56 shrink-0 snap-start lg:w-auto">
+                  <li key={keyOf(item)} className="w-56 shrink-0 lg:w-auto">
                     <IdentityQueueCard
                       submission={item}
                       selected={selected ? keyOf(selected) === keyOf(item) : false}
@@ -195,9 +208,9 @@ function IdentityReviewPage() {
                   </li>
                 ))}
               </ul>
-            </div>
+            </QueueSection>
 
-            <div ref={panelRef} className="scroll-mt-4">
+            <div ref={panelRef} className="min-w-0 flex-1 scroll-mt-4">
               {selected ? (
                 <IdentityReviewPanel
                   key={keyOf(selected)}
@@ -210,7 +223,7 @@ function IdentityReviewPage() {
                   {reviewedElsewhere && (
                     <FormNotice tone="error">{ALREADY_REVIEWED}</FormNotice>
                   )}
-                  <p>Choose a submission from the queue to review it.</p>
+                  <p>Choose a submission from the list to review it.</p>
                 </div>
               )}
             </div>
