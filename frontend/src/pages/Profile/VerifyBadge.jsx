@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import clsx from 'clsx'
 
 const tones = {
@@ -10,11 +11,20 @@ const tones = {
 
 // A small status label for the phone and identity sections.
 // Pass onDark when it sits on a navy background.
+// It pops once when the status changes (not when the page first opens).
 export default function VerifyBadge({ status, onDark = false }) {
   const tone = tones[status] ?? tones['not-verified']
+  const [shown, setShown] = useState(status)
+  const [pops, setPops] = useState(0)
+  if (shown !== status) {
+    setShown(status)
+    setPops((count) => count + 1)
+  }
 
   return (
     <span
+      key={pops}
+      style={pops ? { animation: 'badgePop 0.45s cubic-bezier(0.2, 1.4, 0.4, 1)' } : undefined}
       className={clsx(
         'inline-flex items-center gap-1.5 rounded-full px-3 py-1 font-body text-xs font-bold',
         onDark ? tone.dark : tone.light,

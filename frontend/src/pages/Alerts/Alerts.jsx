@@ -73,6 +73,14 @@ export default function Alerts() {
                 {user.name} · {user.role}
               </p>
             )}
+            {user && (
+              <Link
+                to="/profile"
+                className="font-body text-sm font-semibold text-forest underline-offset-4 hover:underline"
+              >
+                Edit profile
+              </Link>
+            )}
           </div>
 
           {!userEmail ? (
