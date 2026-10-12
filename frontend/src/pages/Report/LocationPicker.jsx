@@ -141,8 +141,8 @@ function ClickToPlace({ onPlace }) {
   return null
 }
 
-export default function LocationPicker({ category, onChange, onToast }) {
-  const [position, setPosition] = useState(START)
+export default function LocationPicker({ category, onChange, onToast, initial }) {
+  const [position, setPosition] = useState(() => initial ?? START)
   const [placeName, setPlaceName] = useState('')
   const [issues, setIssues] = useState([])
   const [dismissed, setDismissed] = useState([])
