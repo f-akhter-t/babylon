@@ -8,6 +8,8 @@
 //   checked it yet. The status stays 'in-progress' until the admin approves.
 // Department is added in api.js from the category (one rule, one place).
 // Places are real spots in Chattogram. distanceM is measured from MAP_CENTER.
+// reporterEmail links an issue to the account that filed it (the demo citizen
+// for issues 1 and 6). reporter is only the name shown on screen.
 // beforeImg is the citizen's photo (every issue). afterImg only exists once fixed.
 // Open and in-progress photos live in public/images/reports/.
 
@@ -35,6 +37,7 @@ export const issues = [
     sentOn: '25 Sep',
     beforeImg: '/images/reports/wasa-circle-pothole.jpg',
     reporter: 'Nadia R.',
+    reporterEmail: 'citizen@babylon.test',
     description:
       'Large pothole in the left lane, about half a metre wide. Rickshaws and CNGs swerve to avoid it, especially after dark.',
     seenBefore: 'A pothole here was marked resolved in August.',
@@ -148,6 +151,7 @@ export const issues = [
     beforeImg: '/images/fixed/water-pipe-before.jpg',
     afterImg: '/images/fixed/water-pipe-after.jpg',
     reporter: 'Nadia R.',
+    reporterEmail: 'citizen@babylon.test',
     description: 'A water pipe burst near the school gate and flooded the road.',
   },
   {
