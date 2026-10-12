@@ -1,5 +1,6 @@
 import clsx from 'clsx'
 import { Link } from 'react-router-dom'
+import { usePendingIdentityCount } from '../../hooks/usePendingIdentityCount'
 
 const variants = {
   department: {
@@ -20,6 +21,7 @@ const variants = {
       { label: 'Reopened issues', to: '/admin/verify', count: 1, tone: 'amber' },
       { label: 'Accountability', to: '/admin/accountability' },
       { label: 'All issues' },
+      { label: 'Identity checks', to: '/admin/identity', liveCount: true },
     ],
   },
 }
@@ -68,6 +70,7 @@ export default function AdminLayout({
   children,
 }) {
   const config = variants[variant]
+  const pendingIdentity = usePendingIdentityCount()
 
   return (
     <div className="flex min-h-screen bg-page font-body">
@@ -90,7 +93,7 @@ export default function AdminLayout({
           {config.items.map((item) => (
             <NavItem
               key={item.label}
-              item={item}
+              item={item.liveCount ? { ...item, count: pendingIdentity } : item}
               isActive={item.label === active}
               onSelect={onSelect}
             />
