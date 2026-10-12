@@ -195,6 +195,18 @@ export async function getHeroCategories() {
 export async function getFixedThisWeek() {
   return all.filter((issue) => issue.status === 'resolved').slice(0, 3)
 }
+// Newest reports first. Used by the ticker on Home.
+export async function getRecentActivity(limit = 8) {
+  return [...all]
+    .sort((a, b) => ageMs(a) - ageMs(b))
+    .slice(0, limit)
+    .map((issue) => ({
+      id: issue.id,
+      title: issue.title,
+      status: issue.status,
+      time: timeAgo(issue),
+    }))
+}
 
 export async function getStats() {
   const received = sum(departments, 'assigned')

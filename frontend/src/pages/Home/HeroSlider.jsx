@@ -4,6 +4,7 @@ import SliderDots from '../../components/ui/SliderDots'
 import HeroSlide from './HeroSlide'
 import HeroVideo from './HeroVideo'
 import HeroSearchCard from './HeroSearchCard'
+import useVideoAllowed from './useVideoAllowed'
 
 // Clips are 8 seconds long, so each slide stays 8 seconds.
 const SLIDE_MS = 8000
@@ -17,6 +18,7 @@ export default function HeroSlider({ slides = [], categories = [] }) {
   // True while the mouse is over the hero or focus is inside it.
   const [hold, setHold] = useState(false)
   const count = slides.length
+  const videoAllowed = useVideoAllowed()
 
   useEffect(() => {
     if (userPaused || hold || count < 2) return
@@ -26,29 +28,37 @@ export default function HeroSlider({ slides = [], categories = [] }) {
   }, [userPaused, hold, count, index])
 
   // Keeps the navy block in place while data loads.
-  if (count === 0) return <section className="min-h-[720px] bg-navy" />
+  if (count === 0) return <section className="min-h-[560px] bg-navy md:min-h-[720px]" />
 
   return (
     <section
       aria-roledescription="carousel"
       aria-label="Babylon highlights"
       className="relative isolate overflow-hidden bg-navy"
-      onMouseEnter={() => setHold(true)}
-      onMouseLeave={() => setHold(false)}
+      onPointerEnter={(e) => e.pointerType === 'mouse' && setHold(true)}
+      onPointerLeave={(e) => e.pointerType === 'mouse' && setHold(false)}
       onFocus={() => setHold(true)}
-      onBlur={() => setHold(false)}
+      onBlur={(e) => {
+        if (!e.currentTarget.contains(e.relatedTarget)) setHold(false)
+      }}
     >
       {/* Video layers sit behind everything. The overlay is darker on the left,
           where the text is. Change the /90 and /50 numbers to adjust it. */}
       <div className="absolute inset-0 -z-10">
         {slides.map((slide, i) => (
-          <HeroVideo key={slide.id} video={slide.video} active={i === index} paused={userPaused} />
+          <HeroVideo
+            key={slide.id}
+            video={slide.video}
+            active={i === index}
+            paused={userPaused}
+            allowed={videoAllowed}
+          />
         ))}
-        <div className="absolute inset-0 bg-navy/50 md:bg-transparent md:bg-linear-to-r md:from-navy/75 md:via-navy/35 md:to-navy/5" />
+        <div className="absolute inset-0 bg-navy/70 md:bg-transparent md:bg-linear-to-r md:from-navy/75 md:via-navy/35 md:to-navy/5" />
       </div>
 
       <div className="px-5 pb-24 pt-8 md:px-10 md:pt-12 xl:px-18">
-        <div className="grid grid-cols-1 gap-12 xl:grid-cols-[1fr_400px] xl:items-center">
+        <div className="grid grid-cols-1 gap-10 lg:grid-cols-[1fr_380px] lg:items-center xl:grid-cols-[1fr_400px]">
           {/* Text slides share one grid cell, so the height of the tallest one
               is kept and nothing jumps. */}
           <div className="grid">
@@ -64,7 +74,7 @@ export default function HeroSlider({ slides = [], categories = [] }) {
                   i === index ? 'opacity-100' : 'opacity-0',
                 )}
               >
-                <HeroSlide slide={slide} as={i === 0 ? 'h1' : 'h2'} />
+                <HeroSlide slide={slide} active={i === index} as={i === 0 ? 'h1' : 'h2'} />
               </div>
             ))}
           </div>
@@ -77,7 +87,7 @@ export default function HeroSlider({ slides = [], categories = [] }) {
           <button
             type="button"
             onClick={() => setUserPaused((p) => !p)}
-            className="text-sm font-semibold text-mint underline-offset-4 hover:underline"
+            className="min-h-11 px-2 text-sm font-semibold text-mint underline-offset-4 hover:underline"
           >
             {userPaused ? 'Play slides' : 'Pause slides'}
           </button>

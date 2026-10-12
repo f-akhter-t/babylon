@@ -7,7 +7,14 @@ export default function FixedIssueCard({ issue, className }) {
   const days = issue.fixedInDays
 
   return (
-    <article className={clsx('overflow-hidden rounded-card bg-mint', className)}>
+    <article
+      className={clsx(
+        'overflow-hidden rounded-card bg-mint transition-[transform,box-shadow] duration-300',
+        'hover:-translate-y-1 hover:shadow-xl hover:shadow-navy/15 focus-within:shadow-xl',
+        'motion-reduce:transition-none motion-reduce:hover:translate-y-0',
+        className,
+      )}
+    >
       <BeforeAfterSlider
         before={issue.beforeImg}
         after={issue.afterImg}

@@ -43,9 +43,10 @@ export default function BeforeAfterSlider({
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
       onPointerUp={() => (dragging.current = false)}
+      onPointerCancel={() => (dragging.current = false)}
       className={clsx(
         'relative select-none overflow-hidden bg-slate',
-        interactive && 'cursor-ew-resize touch-none',
+        interactive && 'cursor-ew-resize touch-pan-y',
         className,
       )}
     >

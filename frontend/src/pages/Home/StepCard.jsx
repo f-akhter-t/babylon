@@ -31,14 +31,21 @@ export default function StepCard({ number, level, tone, title, text, className, 
   return (
     <article
       className={clsx(
-        'flex flex-col justify-between gap-6 rounded-panel p-7',
+        'lift group flex flex-col justify-between gap-6 rounded-panel p-7',
         t.card,
         className,
       )}
     >
       <div className="flex items-start justify-between">
-        <StaircaseIcon level={level} className={clsx('h-9 w-10', t.icon)} />
-        <span className={clsx('font-heading text-5xl font-extrabold', t.number)}>
+        <span className="inline-block transition-transform duration-300 group-hover:-translate-y-1 group-hover:scale-110">
+          <StaircaseIcon level={level} className={clsx('h-9 w-10', t.icon)} />
+        </span>
+        <span
+          className={clsx(
+            'font-heading text-5xl font-extrabold transition-transform duration-300 group-hover:scale-110',
+            t.number,
+          )}
+        >
           {number}
         </span>
       </div>
