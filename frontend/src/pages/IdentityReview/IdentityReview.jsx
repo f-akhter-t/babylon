@@ -7,13 +7,19 @@ import IdentityQueueCard, { QueueSkeleton } from './IdentityQueueCard'
 import IdentityReviewPanel from './IdentityReviewPanel'
 import { useViewer } from '../Map/useViewer'
 import { useDocumentTitle } from '../IssueDetail/useDocumentTitle'
-import { getIdentityQueue, PROFILE_EVENT, reviewIdentity } from '../../services/api'
+import {
+  ALREADY_REVIEWED,
+  getIdentityQueue,
+  PROFILE_EVENT,
+  reviewIdentity,
+} from '../../services/api'
 
 // A submission is the same one only while its date matches, so a citizen who
 // sends again after a rejection shows up as a fresh card.
 const keyOf = (submission) => `${submission.id}|${submission.submittedAt}`
 
-const ALREADY_REVIEWED = 'This submission was already reviewed.'
+const PHOTO_NOT_DELETED =
+  'The card photo could not be deleted yet. It will be removed automatically the next time this queue loads.'
 
 // The submissions list, in its own section beside (or above) the review panel.
 // Its list scrolls inside the section: sideways on small screens, down on large ones.
@@ -112,8 +118,9 @@ function IdentityReviewPage() {
 
   async function decide(submission, decision, reason) {
     setNotice(null)
+    let result
     try {
-      await reviewIdentity(submission, { decision, reason })
+      result = await reviewIdentity(submission, { decision, reason })
     } catch (err) {
       if (err.message === ALREADY_REVIEWED) {
         setSelectedKey(keyOf(submission))
@@ -131,12 +138,13 @@ function IdentityReviewPage() {
     setQueue(rest)
     setSelectedKey(next ? keyOf(next) : null)
     setFocusPanel(Boolean(next))
+    const done =
+      decision === 'approve'
+        ? `Approved. ${submission.name} is now verified.`
+        : `Rejected. ${submission.name} will see your reason on their profile.`
     setNotice({
       tone: 'success',
-      text:
-        decision === 'approve'
-          ? `Approved. ${submission.name} is now verified.`
-          : `Rejected. ${submission.name} will see your reason on their profile.`,
+      text: result.photoDeleted ? done : `${done} ${PHOTO_NOT_DELETED}`,
     })
   }
 

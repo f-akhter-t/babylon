@@ -8,10 +8,12 @@ import IdentityTimeline from './IdentityTimeline'
 import PhotoDropzone from './PhotoDropzone'
 import { submitIdentity } from '../../services/api'
 import { checkIdPhoto, checkNid, normalizeNid } from '../../utils/profileRules'
+import { canReadImage, UNREADABLE_PHOTO } from '../../utils/idPhoto'
 import { formatDate } from '../../utils/format'
 
-// The full NID number and the photo live only in this component's state.
-// They are cleared after submitting and never written to browser storage.
+// The full NID number lives only in this component's state and is never
+// stored; the profile keeps its last 4 digits. The card photo is kept by
+// submitIdentity only until an admin reviews it, then deleted.
 export default function IdentityCard({ profile, onDirtyChange, announce }) {
   const [sent, setSent] = useState(null) // identity returned by the last submit
   // Until the profile reloads, show what was just sent instead of the old status.
@@ -30,6 +32,7 @@ export default function IdentityCard({ profile, onDirtyChange, announce }) {
   const [notice, setNotice] = useState(null) // { tone, text }
   const [focusRequest, setFocusRequest] = useState(0)
   const statusRef = useRef(null)
+  const pickRef = useRef(0) // the latest photo choice wins if two are checked at once
 
   const formOpen =
     identity.status === 'not-submitted' || (identity.status === 'rejected' && resubmitting)
@@ -54,11 +57,19 @@ export default function IdentityCard({ profile, onDirtyChange, announce }) {
     if (focusRequest) statusRef.current?.focus()
   }, [focusRequest])
 
-  function handleFile(file) {
+  async function handleFile(file) {
     if (!file) return
     const problem = checkIdPhoto(file)
     if (problem) {
       setPhotoError(problem)
+      return
+    }
+    // A HEIC photo or a renamed file can pass the type check but not open.
+    const pick = ++pickRef.current
+    const readable = await canReadImage(file)
+    if (pick !== pickRef.current) return
+    if (!readable) {
+      setPhotoError(UNREADABLE_PHOTO)
       return
     }
     setPhotoError('')
@@ -113,6 +124,7 @@ export default function IdentityCard({ profile, onDirtyChange, announce }) {
             <p className="mt-1 text-slate">
               {`NID ending in ${identity.nidLast4}, sent on ${formatDate(identity.submittedAt)}. A review usually takes 1 to 2 working days.`}
             </p>
+            <p className="mt-1 text-slate">Your card photo is deleted as soon as the review is done.</p>
           </div>
         )}
 
@@ -181,8 +193,8 @@ export default function IdentityCard({ profile, onDirtyChange, announce }) {
             </div>
 
             <p className="font-body text-xs text-muted">
-              Only the last 4 digits of your NID and the review status are kept on this device. The
-              full number and the photo are not stored.
+              Your full NID number is never stored. Only its last 4 digits and the review status are
+              kept. Your card photo is kept only until an admin reviews it, then deleted.
             </p>
 
             <div className="flex flex-wrap items-center gap-3">
