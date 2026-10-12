@@ -11,11 +11,32 @@ import {
   waitingLongest,
   weeklyReports,
 } from '../mock/departments'
-import { currentUser, alerts, earnPoints } from '../mock/user'
+import { earnPoints } from '../mock/user'
 import { distanceInMeters } from '../utils/geo'
 
 // The ONE ranking rule: priority first, then votes.
 const PRIORITY_ORDER = ['urgent', 'high', 'reopened', 'medium', 'fix-verified']
+
+// ---------- Points and levels ----------
+export const POINTS_PER_REPORT = 60
+
+export const LEVELS = [
+  { level: 1, name: 'Newcomer', min: 0 },
+  { level: 2, name: 'Reporter', min: 120 },
+  { level: 3, name: 'Watcher', min: 300 },
+  { level: 4, name: 'Guardian', min: 600 },
+  { level: 5, name: 'Champion', min: 1000 },
+]
+
+function getLevel(points) {
+  const current = [...LEVELS].reverse().find((l) => points >= l.min)
+  const next = LEVELS.find((l) => l.min > points)
+  return {
+    level: current.level,
+    role: current.name,
+    nextTierAt: next ? next.min : null, // null = top tier
+  }
+}
 
 // Department comes from the category, decided in one place.
 const withDepartment = (issue) => ({
@@ -93,14 +114,15 @@ export async function getIssueById(id) {
 }
 
 // A citizen's new report. location is { lat, lng, label, ward }.
+// reporter is the logged-in account's name (pass session.name).
 // photoUrl is a (small) data URL of the photo. Severity is a placeholder
 // ('medium') until the AI severity engine exists.
-export async function createIssue({ category, description, photoUrl, location }) {
-  const user = await getCurrentUser()
+export async function createIssue({ category, description, photoUrl, location, reporter }) {
   const today = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
 
   const issue = {
     id: `new-${Date.now()}`,
+    createdAt: Date.now(), // used for "2 min ago" in the alerts
     title: makeTitle(description),
     category,
     status: 'open',
@@ -118,7 +140,7 @@ export async function createIssue({ category, description, photoUrl, location })
     reportedOn: today,
     sentOn: today,
     beforeImg: photoUrl,
-    reporter: user?.name ?? 'You',
+    reporter: reporter || 'You',
     description,
   }
 
@@ -222,20 +244,123 @@ export async function getAccountability() {
 }
 
 // ---------- Citizen (Alerts and points) ----------
+// Everything here belongs to the logged-in account only.
+// No name = no data. Points = 60 per report this account filed.
 
-export async function getCurrentUser() {
-  return currentUser
+function ageMs(issue) {
+  return issue.createdAt ? Date.now() - issue.createdAt : (issue.daysAgo ?? 0) * 86400000
+}
+
+function timeAgo(issue) {
+  const mins = Math.floor(ageMs(issue) / 60000)
+  if (mins < 1) return 'Just now'
+  if (mins < 60) return `${mins} min ago`
+  const hours = Math.floor(mins / 60)
+  if (hours < 24) return `${hours} hour${hours === 1 ? '' : 's'} ago`
+  const days = Math.floor(hours / 24)
+  return days === 1 ? 'Yesterday' : `${days} days ago`
+}
+
+function ownReports(userName) {
+  return all.filter((issue) => issue.reporter === userName)
+}
+
+export async function getCurrentUser(name) {
+  if (!name) return null
+  const reports = ownReports(name).length
+  const points = reports * POINTS_PER_REPORT
+  return { name, reports, points, ...getLevel(points) }
 }
 
 export async function getEarnPoints() {
   return earnPoints
 }
 
-// group: 'All' | 'status' | 'nearby' | 'reopened'
-export async function getAlerts(group = 'All') {
-  return alerts.filter((alert) => group === 'All' || alert.group === group)
+// One alert describing the latest state of one of the user's own reports.
+function alertForIssue(issue) {
+  const base = { id: `own-${issue.id}`, issueId: issue.id, time: timeAgo(issue), unread: false }
+
+  if (issue.priority === 'reopened' || issue.verification === 'reopened') {
+    return {
+      ...base,
+      group: 'reopened',
+      type: 'reopened',
+      title: 'A fixed problem came back',
+      message: `${issue.title} was reopened and sent to the admin.`,
+    }
+  }
+  if (issue.status === 'resolved') {
+    return {
+      ...base,
+      group: 'status',
+      type: 'resolved',
+      title: 'Resolved and verified',
+      message: `${issue.title}. The admin checked the after-photo.`,
+    }
+  }
+  if (issue.status === 'in-progress') {
+    return {
+      ...base,
+      group: 'status',
+      type: 'status',
+      title: 'Your report is now In progress',
+      message: `${issue.title}. A repair crew is scheduled.`,
+    }
+  }
+  return {
+    ...base,
+    group: 'status',
+    type: 'status',
+    title: `Your report was sent to ${issue.department ?? 'the department'}`,
+    message: `${issue.title}. Waiting for work to start.`,
+  }
 }
 
-export async function getUnreadAlertCount() {
-  return alerts.filter((alert) => alert.unread).length
+// Open issues by other people, same category as one of the user's reports, within 500 m.
+async function getNearbyAlerts(userName) {
+  const mine = ownReports(userName)
+  const seen = new Set()
+  const result = []
+
+  for (const own of mine) {
+    for (const other of all) {
+      if (
+        other.reporter === userName ||
+        other.status !== 'open' ||
+        other.category !== own.category ||
+        seen.has(other.id)
+      ) {
+        continue
+      }
+      const meters = Math.round(distanceInMeters([own.lat, own.lng], [other.lat, other.lng]))
+      if (meters > 500) continue
+      seen.add(other.id)
+      result.push({
+        id: `nearby-${other.id}`,
+        group: 'nearby',
+        type: 'nearby',
+        title: 'Similar report nearby',
+        message: `${other.title}, ${meters} m from you. Upvote instead of reporting again.`,
+        issueId: other.id,
+        time: timeAgo(other),
+        unread: false,
+      })
+    }
+  }
+  return result.slice(0, 3)
+}
+
+// group: 'All' | 'status' | 'nearby' | 'reopened'
+export async function getAlerts(group = 'All', name) {
+  if (!name) return []
+  const own = ownReports(name)
+    .sort((a, b) => ageMs(a) - ageMs(b))
+    .map(alertForIssue)
+  const nearby = await getNearbyAlerts(name)
+  return [...own, ...nearby].filter((alert) => group === 'All' || alert.group === group)
+}
+
+export async function getUnreadAlertCount(name) {
+  if (!name) return 0
+  return (await getAlerts('All', name)).length
 }
