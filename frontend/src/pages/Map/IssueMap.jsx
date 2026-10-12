@@ -25,7 +25,7 @@ export default function IssueMap({
   className,
 }) {
   // Undefined when nothing is selected, or when a filter hid the selected issue.
-  const selected = issues.find((issue) => issue.id === selectedId)
+  const selected = issues.find((issue) => String(issue.id) === selectedId)
   const [dropping, setDropping] = useState(false) // "drop a pin" mode is on
   const [loginPrompt, setLoginPrompt] = useState(false) // "Log in to report" box
   const stopDropping = useCallback(() => setDropping(false), [])

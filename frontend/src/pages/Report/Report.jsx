@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import Navbar from '../../components/layout/Navbar'
 import Footer from '../../components/layout/Footer'
 import AnimatedBackground from '../../components/ui/AnimatedBackground'
@@ -30,6 +30,15 @@ export default function Report() {
   const [toast, setToast] = useState(null)
   const [category, setCategory] = useState('')
   const [location, setLocation] = useState(null) // { lat, lng, label, ward } from the map
+  const [searchParams] = useSearchParams()
+
+  // A pin dropped on the Map page arrives here as /report?lat=…&lng=…
+  const paramLat = parseFloat(searchParams.get('lat'))
+  const paramLng = parseFloat(searchParams.get('lng'))
+  const pinnedFromMap =
+    Number.isFinite(paramLat) && Number.isFinite(paramLng)
+      ? { lat: paramLat, lng: paramLng }
+      : null
 
   useEffect(() => {
     if (!toast) return
@@ -82,7 +91,12 @@ export default function Report() {
 
           <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
             <ReportForm onSubmit={handleSubmit} onCategoryChange={setCategory} />
-            <LocationPicker category={category} onChange={setLocation} onToast={setToast} />
+            <LocationPicker
+              category={category}
+              onChange={setLocation}
+              onToast={setToast}
+              initial={pinnedFromMap}
+            />
           </div>
         </div>
       </main>
