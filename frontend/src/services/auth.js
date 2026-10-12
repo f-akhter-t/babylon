@@ -3,6 +3,7 @@
 
 const USERS_KEY = 'babylon-users'
 const SESSION_KEY = 'babylon-session'
+const NAMES_KEY = 'babylon-names' // names changed on the Profile page, by email
 
 export const ROLES = [
   { id: 'citizen', label: 'Citizen' },
@@ -41,9 +42,18 @@ function allUsers() {
   return [...DEMO_USERS, ...readStored()]
 }
 
+function readNames() {
+  try {
+    return JSON.parse(localStorage.getItem(NAMES_KEY)) ?? {}
+  } catch {
+    return {}
+  }
+}
+
 function publicUser({ password, ...user }) {
   void password
-  return user
+  const renamed = readNames()[user.email.toLowerCase()]
+  return renamed ? { ...user, name: renamed } : user
 }
 
 export function homePathFor(role) {
@@ -92,4 +102,23 @@ export async function signup({ name, email, password, role, department }) {
 
 export function logout() {
   localStorage.removeItem(SESSION_KEY)
+}
+
+// The name shown for an account, including a change made on the Profile page.
+export function getAccountName(email) {
+  if (!email) return null
+  const user = allUsers().find((u) => u.email.toLowerCase() === email.toLowerCase())
+  return user ? publicUser(user).name : null
+}
+
+// Saves a new display name. The email stays the same, so reports, votes
+// and follows still belong to the account.
+export function renameAccount(email, name) {
+  const key = email.toLowerCase()
+  localStorage.setItem(NAMES_KEY, JSON.stringify({ ...readNames(), [key]: name }))
+
+  const session = getSession()
+  if (session?.email.toLowerCase() === key) {
+    localStorage.setItem(SESSION_KEY, JSON.stringify({ ...session, name }))
+  }
 }
