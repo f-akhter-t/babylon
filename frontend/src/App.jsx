@@ -5,6 +5,7 @@ import IssueDetail from './pages/IssueDetail/IssueDetail'
 import Report from './pages/Report/Report'
 import Feed from './pages/Feed/Feed'
 import Alerts from './pages/Alerts/Alerts'
+import Profile from './pages/Profile/Profile'
 import DepartmentPanel from './pages/DepartmentPanel/DepartmentPanel'
 import VerifyResolutions from './pages/VerifyResolutions/VerifyResolutions'
 import Accountability from './pages/Accountability/Accountability'
@@ -21,6 +22,7 @@ export default function App() {
       <Route path="/report" element={<Report />} />
       <Route path="/feed" element={<Feed />} />
       <Route path="/my-reports" element={<Alerts />} />
+      <Route path="/profile" element={<Profile />} />
       <Route path="/department" element={<DepartmentPanel />} />
       <Route path="/admin/verify" element={<VerifyResolutions />} />
       <Route path="/admin/accountability" element={<Accountability />} />

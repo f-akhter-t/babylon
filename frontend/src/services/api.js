@@ -13,6 +13,15 @@ import {
 } from '../mock/departments'
 import { earnPoints } from '../mock/user'
 import { distanceInMeters } from '../utils/geo'
+import { getAccountName, getSession, renameAccount } from './auth'
+import {
+  checkDetails,
+  checkIdPhoto,
+  checkNid,
+  checkPhone,
+  normalizeNid,
+  normalizePhone,
+} from '../utils/profileRules'
 
 // The ONE ranking rule: priority first, then votes.
 const PRIORITY_ORDER = ['urgent', 'high', 'reopened', 'medium', 'fix-verified']
@@ -81,6 +90,13 @@ function makeTitle(description) {
   return title.charAt(0).toUpperCase() + title.slice(1)
 }
 
+// The reporter's current name, so a name changed on the Profile page
+// shows on their older reports too.
+function present(issue) {
+  const name = getAccountName(issue.reporterEmail)
+  return name ? { ...issue, reporter: name } : { ...issue }
+}
+
 function rankIssues(list) {
   return [...list]
     .sort(
@@ -88,7 +104,7 @@ function rankIssues(list) {
         PRIORITY_ORDER.indexOf(a.priority) - PRIORITY_ORDER.indexOf(b.priority) ||
         b.votes - a.votes,
     )
-    .map((issue, index) => ({ ...issue, rank: index + 1 }))
+    .map((issue, index) => ({ ...present(issue), rank: index + 1 }))
 }
 
 const sum = (list, key) => list.reduce((total, item) => total + item[key], 0)
@@ -110,11 +126,13 @@ export async function getIssues({ category = 'All', status = 'All', search = '' 
 }
 
 export async function getIssueById(id) {
-  return all.find((issue) => String(issue.id) === String(id)) ?? null
+  const issue = all.find((item) => String(item.id) === String(id))
+  return issue ? present(issue) : null
 }
 
 // A citizen's new report. location is { lat, lng, label, ward }.
-// reporter is the logged-in account's name (pass session.name).
+// reporter is the logged-in account's name (pass session.name). The owner is
+// the logged-in account's email, read here the way a backend reads its login.
 // photoUrl is a (small) data URL of the photo. Severity is a placeholder
 // ('medium') until the AI severity engine exists.
 export async function createIssue({ category, description, photoUrl, location, reporter }) {
@@ -141,6 +159,7 @@ export async function createIssue({ category, description, photoUrl, location, r
     sentOn: today,
     beforeImg: photoUrl,
     reporter: reporter || 'You',
+    reporterEmail: getSession()?.email ?? null,
     description,
   }
 
@@ -244,8 +263,8 @@ export async function getAccountability() {
 }
 
 // ---------- Citizen (Alerts and points) ----------
-// Everything here belongs to the logged-in account only.
-// No name = no data. Points = 60 per report this account filed.
+// Everything here belongs to the logged-in account only, found by its email
+// (pass session.email). No email = no data. Points = 60 per report this account filed.
 
 function ageMs(issue) {
   return issue.createdAt ? Date.now() - issue.createdAt : (issue.daysAgo ?? 0) * 86400000
@@ -261,15 +280,21 @@ function timeAgo(issue) {
   return days === 1 ? 'Yesterday' : `${days} days ago`
 }
 
-function ownReports(userName) {
-  return all.filter((issue) => issue.reporter === userName)
+// Reports saved before reporterEmail existed only have the reporter's name.
+function isOwnReport(issue, email) {
+  if (issue.reporterEmail) return issue.reporterEmail.toLowerCase() === email.toLowerCase()
+  return String(issue.id).startsWith('new-') && issue.reporter === getAccountName(email)
 }
 
-export async function getCurrentUser(name) {
-  if (!name) return null
-  const reports = ownReports(name).length
+function ownReports(email) {
+  return all.filter((issue) => isOwnReport(issue, email)).map(present)
+}
+
+export async function getCurrentUser(email) {
+  if (!email) return null
+  const reports = ownReports(email).length
   const points = reports * POINTS_PER_REPORT
-  return { name, reports, points, ...getLevel(points) }
+  return { name: getAccountName(email), reports, points, ...getLevel(points) }
 }
 
 export async function getEarnPoints() {
@@ -317,15 +342,15 @@ function alertForIssue(issue) {
 }
 
 // Open issues by other people, same category as one of the user's reports, within 500 m.
-async function getNearbyAlerts(userName) {
-  const mine = ownReports(userName)
+async function getNearbyAlerts(email) {
+  const mine = ownReports(email)
   const seen = new Set()
   const result = []
 
   for (const own of mine) {
     for (const other of all) {
       if (
-        other.reporter === userName ||
+        isOwnReport(other, email) ||
         other.status !== 'open' ||
         other.category !== own.category ||
         seen.has(other.id)
@@ -351,16 +376,154 @@ async function getNearbyAlerts(userName) {
 }
 
 // group: 'All' | 'status' | 'nearby' | 'reopened'
-export async function getAlerts(group = 'All', name) {
-  if (!name) return []
-  const own = ownReports(name)
+export async function getAlerts(group = 'All', email) {
+  if (!email) return []
+  const own = ownReports(email)
     .sort((a, b) => ageMs(a) - ageMs(b))
     .map(alertForIssue)
-  const nearby = await getNearbyAlerts(name)
+  const nearby = await getNearbyAlerts(email)
   return [...own, ...nearby].filter((alert) => group === 'All' || alert.group === group)
 }
 
-export async function getUnreadAlertCount(name) {
-  if (!name) return 0
-  return (await getAlerts('All', name)).length
+export async function getUnreadAlertCount(email) {
+  if (!email) return 0
+  return (await getAlerts('All', email)).length
+}
+// ---------- Citizen profile ----------
+// Kept in this browser per account (by email) until the backend exists.
+// Privacy rule, even in the mock: the full NID number and the NID photo are
+// never stored. Only the last 4 digits and the review status are kept.
+//
+// identity.status: 'not-submitted' | 'pending' | 'verified' | 'rejected'
+// A citizen counts as Verified once identity.status is 'verified'.
+
+const PROFILES_KEY = 'babylon.profiles'
+export const PROFILE_EVENT = 'babylon:profile' // fired on window after every change
+
+export const DEMO_OTP = '123456' // nothing is really sent, so the code is fixed
+export const OTP_RESEND_SECONDS = 30
+export const OTP_ATTEMPTS = 3
+const OTP_VALID_MS = 10 * 60 * 1000
+
+const EMPTY_IDENTITY = { status: 'not-submitted', nidLast4: '', submittedAt: null, reason: '' }
+
+// A short pause, so loading and saving states show like they would online.
+const wait = (ms = 500) => new Promise((resolve) => setTimeout(resolve, ms))
+
+function readProfiles() {
+  try {
+    return JSON.parse(window.localStorage.getItem(PROFILES_KEY)) ?? {}
+  } catch {
+    return {}
+  }
+}
+
+function writeProfile(email, changes) {
+  const key = email.toLowerCase()
+  const profiles = readProfiles()
+  profiles[key] = { ...profiles[key], ...changes }
+  try {
+    window.localStorage.setItem(PROFILES_KEY, JSON.stringify(profiles))
+  } catch {
+    throw new Error('We could not save on this device. Please try again.')
+  }
+  window.dispatchEvent(new Event(PROFILE_EVENT))
+}
+
+function buildProfile(email) {
+  const stored = readProfiles()[email.toLowerCase()] ?? {}
+  const identity = { ...EMPTY_IDENTITY, ...stored.identity }
+  return {
+    email,
+    name: getAccountName(email) ?? '',
+    address: stored.address ?? '',
+    ward: stored.ward ?? '',
+    phone: stored.phone ?? '', // only set once the number is verified
+    phoneVerified: Boolean(stored.phone),
+    identity,
+    isVerified: identity.status === 'verified',
+  }
+}
+
+export async function getProfile(email) {
+  if (!email) return null
+  await wait(300)
+  return buildProfile(email)
+}
+
+// details: { name, address, ward }. Checked again here, like a backend would.
+export async function saveProfile(email, details) {
+  await wait()
+  const errors = checkDetails(details)
+  if (Object.values(errors).some(Boolean)) {
+    throw new Error('Some details are not valid. Please check the form.')
+  }
+  const name = details.name.trim()
+  if (name !== getAccountName(email)) renameAccount(email, name)
+  writeProfile(email, { address: details.address.trim(), ward: details.ward })
+  return buildProfile(email)
+}
+
+// Phone check with a one-time code. Held in memory, like a server would.
+const otps = {}
+
+// Returns { phone, resendIn } once a code is "sent".
+export async function requestOtp(email, phoneInput) {
+  await wait()
+  if (checkPhone(phoneInput)) throw new Error('Please enter a valid mobile number first.')
+  const phone = normalizePhone(phoneInput)
+  const key = email.toLowerCase()
+
+  const previous = otps[key]
+  const secondsSince = previous ? (Date.now() - previous.sentAt) / 1000 : Infinity
+  if (previous?.phone === phone && secondsSince < OTP_RESEND_SECONDS) {
+    const left = Math.ceil(OTP_RESEND_SECONDS - secondsSince)
+    throw new Error(`Please wait ${left} seconds before asking for a new code.`)
+  }
+
+  otps[key] = { phone, sentAt: Date.now(), attemptsLeft: OTP_ATTEMPTS }
+  return { phone, resendIn: OTP_RESEND_SECONDS }
+}
+
+// Returns { status: 'verified', profile } | { status: 'wrong', attemptsLeft }
+//       | { status: 'locked' } | { status: 'expired' }
+export async function verifyOtp(email, code) {
+  await wait()
+  const key = email.toLowerCase()
+  const otp = otps[key]
+  if (!otp || Date.now() - otp.sentAt > OTP_VALID_MS) return { status: 'expired' }
+  if (otp.attemptsLeft <= 0) return { status: 'locked' }
+
+  if (code.trim() !== DEMO_OTP) {
+    otp.attemptsLeft -= 1
+    return otp.attemptsLeft > 0
+      ? { status: 'wrong', attemptsLeft: otp.attemptsLeft }
+      : { status: 'locked' }
+  }
+
+  delete otps[key]
+  writeProfile(email, { phone: otp.phone })
+  return { status: 'verified', profile: buildProfile(email) }
+}
+
+// nid is the full number and photo is a File. Neither is kept: the review
+// queue only gets the last 4 digits and the date.
+export async function submitIdentity(email, { nid, photo }) {
+  await wait(700)
+  if (checkNid(nid) || checkIdPhoto(photo)) {
+    throw new Error('Please check your NID number and photo.')
+  }
+  const { identity } = buildProfile(email)
+  if (identity.status === 'pending' || identity.status === 'verified') {
+    throw new Error('Your identity is already submitted.')
+  }
+  writeProfile(email, {
+    identity: {
+      status: 'pending',
+      nidLast4: normalizeNid(nid).slice(-4),
+      submittedAt: new Date().toISOString(),
+      reason: '',
+    },
+  })
+  return buildProfile(email)
 }

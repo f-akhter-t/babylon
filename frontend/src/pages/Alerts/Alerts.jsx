@@ -19,18 +19,19 @@ export default function Alerts() {
   const viewer = useViewer()
 
   // Only citizens have reports and points. Guests, departments and admins get no data.
-  const userName = viewer.canAct ? (viewer.session?.name ?? null) : null
+  // Reports belong to the account's email, so a changed name keeps them.
+  const userEmail = viewer.canAct ? (viewer.session?.email ?? null) : null
 
   const [group, setGroup] = useState('All')
-  const [alerts, setAlerts] = useState([])
-  const [loading, setLoading] = useState(true)
+  // Remember which filter the list belongs to, so a new filter shows "loading" again.
+  const [result, setResult] = useState({ key: null, alerts: [] })
   const [user, setUser] = useState(null)
   const [earnPoints, setEarnPoints] = useState([])
   const [unread, setUnread] = useState(0)
 
   useEffect(() => {
     let active = true
-    Promise.all([getCurrentUser(userName), getEarnPoints(), getUnreadAlertCount(userName)]).then(
+    Promise.all([getCurrentUser(userEmail), getEarnPoints(), getUnreadAlertCount(userEmail)]).then(
       ([currentUser, points, unreadCount]) => {
         if (!active) return
         setUser(currentUser)
@@ -41,21 +42,21 @@ export default function Alerts() {
     return () => {
       active = false
     }
-  }, [userName])
+  }, [userEmail])
 
+  const listKey = `${group}|${userEmail}`
   useEffect(() => {
     let active = true
-    setLoading(true)
-    getAlerts(group, userName).then((list) => {
-      if (active) {
-        setAlerts(list)
-        setLoading(false)
-      }
+    getAlerts(group, userEmail).then((list) => {
+      if (active) setResult({ key: listKey, alerts: list })
     })
     return () => {
       active = false
     }
-  }, [group, userName])
+  }, [group, userEmail, listKey])
+
+  const loading = result.key !== listKey
+  const alerts = loading ? [] : result.alerts
 
   return (
     <>
@@ -74,7 +75,7 @@ export default function Alerts() {
             )}
           </div>
 
-          {!userName ? (
+          {!userEmail ? (
             <div className="mt-8 rounded-card bg-mint px-6 py-10 text-center">
               <p className="font-heading text-xl font-extrabold text-navy">
                 {viewer.isGuest
