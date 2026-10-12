@@ -9,12 +9,14 @@ import LoginPrompt from './LoginPrompt'
 //   Citizens: the buttons work.
 //   Guests: the same buttons, but clicking opens "Log in to …".
 //   Department and admin accounts: only Details, with a short note.
+// followLabel: show the word "Follow" next to the bell (Issue detail page).
 export default function PopupActions({
   issue,
   viewer,
   onToggleVote,
   onToggleFollow,
   showDetails = true,
+  followLabel = false,
 }) {
   const [prompt, setPrompt] = useState(null) // 'upvote' | 'follow' | null
   const { voted, votes, followed } = issue
@@ -41,14 +43,19 @@ export default function PopupActions({
               type="button"
               onClick={follow}
               aria-pressed={viewer.canAct ? followed : undefined}
-              aria-label={followed ? 'Unfollow this issue' : 'Follow this issue'}
+              // With a visible word, that word is the name; without one, aria-label is.
+              aria-label={
+                followLabel ? undefined : followed ? 'Unfollow this issue' : 'Follow this issue'
+              }
               title={followed ? 'Following: click to unfollow' : 'Follow for status updates'}
               className={clsx(
-                'flex size-11 shrink-0 items-center justify-center rounded-full border-2 border-navy transition motion-safe:active:scale-90',
+                'flex h-11 shrink-0 items-center justify-center gap-2 rounded-full border-2 border-navy transition motion-safe:active:scale-90',
+                followLabel ? 'px-5 text-sm font-semibold' : 'w-11',
                 followed ? 'bg-navy text-brand' : 'text-navy hover:bg-navy/10',
               )}
             >
               <BellIcon size={18} className={clsx(followed && 'fill-current')} />
+              {followLabel && (followed ? 'Following' : 'Follow')}
             </button>
           </>
         )}
