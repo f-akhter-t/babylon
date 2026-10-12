@@ -5,7 +5,8 @@ import Footer from '../../components/layout/Footer'
 import AnimatedBackground from '../../components/ui/AnimatedBackground'
 import ReportForm from './ReportForm'
 import LocationPicker from './LocationPicker'
-import { createIssue } from '../../services/api'
+import { useViewer } from '../Map/useViewer' // CHANGE 1
+import { createIssue, POINTS_PER_REPORT } from '../../services/api' // CHANGE 1
 import { resizeImage } from '../../utils/resizeImage'
 
 const pageStyle = `
@@ -27,6 +28,7 @@ const pageStyle = `
 `
 
 export default function Report() {
+  const viewer = useViewer() // CHANGE 2
   const [toast, setToast] = useState(null)
   const [category, setCategory] = useState('')
   const [location, setLocation] = useState(null) // { lat, lng, label, ward } from the map
@@ -51,8 +53,14 @@ export default function Report() {
   async function handleSubmit({ photo, category: chosen, description }) {
     if (!location) throw new Error('Pick a location on the map first.')
     const photoUrl = await resizeImage(photo)
-    await createIssue({ category: chosen, description, photoUrl, location })
-    setToast('Report submitted. You can see it in the issue feed.')
+    await createIssue({
+      category: chosen,
+      description,
+      photoUrl,
+      location,
+      reporter: viewer.session?.name, // CHANGE 3
+    })
+    setToast(`Report submitted. You earned ${POINTS_PER_REPORT} points.`) // CHANGE 3
   }
 
   return (
