@@ -141,7 +141,19 @@ function ClickToPlace({ onPlace }) {
   return null
 }
 
-export default function LocationPicker({ category, onChange, onToast, initial }) {
+// Optional, for editing a report (the Report page leaves them out):
+//   excludeId: the issue being edited, never counted as a match or as "nearest".
+//   showMatches: false hides the "Looks like a match nearby" card.
+//   initialPlace: { label, ward } shown while the pin is still at `initial`.
+export default function LocationPicker({
+  category,
+  onChange,
+  onToast,
+  initial,
+  excludeId,
+  showMatches = true,
+  initialPlace,
+}) {
   const [position, setPosition] = useState(() => initial ?? START)
   const [placeName, setPlaceName] = useState('')
   const [issues, setIssues] = useState([])
@@ -193,19 +205,20 @@ export default function LocationPicker({ category, onChange, onToast, initial })
   const nearest = useMemo(() => {
     let best = null
     for (const issue of issues) {
-      if (typeof issue.lat !== 'number') continue
+      if (typeof issue.lat !== 'number' || String(issue.id) === String(excludeId)) continue
       const distance = distanceInMeters(markerPosition, [issue.lat, issue.lng])
       if (!best || distance < best.distance) best = { issue, distance }
     }
     return best
-  }, [issues, markerPosition])
+  }, [issues, markerPosition, excludeId])
 
   // A possible duplicate: an unresolved issue right next to the pin
   // (same category, once the citizen has picked one).
   const match = useMemo(() => {
+    if (!showMatches) return null
     let best = null
     for (const issue of issues) {
-      if (typeof issue.lat !== 'number') continue
+      if (typeof issue.lat !== 'number' || String(issue.id) === String(excludeId)) continue
       if (issue.status === 'resolved' || dismissed.includes(issue.id)) continue
       if (category && issue.category !== category) continue
       const distance = distanceInMeters(markerPosition, [issue.lat, issue.lng])
@@ -214,11 +227,17 @@ export default function LocationPicker({ category, onChange, onToast, initial })
       }
     }
     return best
-  }, [issues, dismissed, category, markerPosition])
+  }, [issues, dismissed, category, markerPosition, showMatches, excludeId])
 
-  const label =
+  const atInitial =
+    Boolean(initialPlace && initial) && position.lat === initial.lat && position.lng === initial.lng
+  let label =
     placeName || (nearest && nearest.distance <= 500 ? nearest.issue.location : '') || 'Dropped pin'
-  const ward = nearest && nearest.distance <= 2500 ? nearest.issue.ward : ''
+  let ward = nearest && nearest.distance <= 2500 ? nearest.issue.ward : ''
+  if (atInitial) {
+    label = initialPlace.label
+    ward = initialPlace.ward ?? ''
+  }
 
   useEffect(() => {
     onChange?.({ lat: position.lat, lng: position.lng, label, ward })

@@ -2,7 +2,7 @@
 // Later, each function becomes a fetch() call. Pages will not change,
 // because every function is already async.
 
-import { issues as rawIssues, MAP_CENTER } from '../mock/issues'
+import { CATEGORIES, issues as rawIssues, MAP_CENTER } from '../mock/issues'
 import { heroSlides, heroSearchCategories } from '../mock/heroSlides'
 import {
   CATEGORY_DEPARTMENT,
@@ -83,6 +83,24 @@ function saveSubmitted(list) {
 
 const submitted = loadSubmitted()
 all.push(...submitted.map(withDepartment))
+
+// Changes a citizen made to their own report (see updateIssue), by issue id.
+// Kept apart from the reports themselves, so mock issues can be edited too.
+const EDITS_KEY = 'babylon.issueEdits'
+
+function loadEdits() {
+  try {
+    return JSON.parse(window.localStorage.getItem(EDITS_KEY)) ?? {}
+  } catch {
+    return {}
+  }
+}
+
+const edits = loadEdits()
+for (const [id, changes] of Object.entries(edits)) {
+  const index = all.findIndex((issue) => String(issue.id) === id)
+  if (index !== -1) all[index] = withDepartment({ ...all[index], ...changes })
+}
 
 function makeTitle(description) {
   const firstSentence = description.split(/[.!?\n]/)[0].trim()
@@ -184,6 +202,110 @@ export async function upvoteIssue(id) {
     saveSubmitted(submitted)
   }
   return issue.votes
+}
+
+// ---------- Editing a report ----------
+// The citizen who filed a report may change its title, description, category,
+// photo and pin while it is still Open. Votes, follows and status are never
+// part of an edit. Every rule is checked again here, like a backend would.
+
+export const TITLE_MIN = 5
+export const TITLE_MAX = 70
+const DESCRIPTION_MIN = 10
+const DESCRIPTION_MAX = 500
+const EDIT_CATEGORIES = [...CATEGORIES, 'Other']
+export const LOCKED_MESSAGE = 'Work has started, so this report is locked.'
+
+function findIssue(id) {
+  return all.find((item) => String(item.id) === String(id))
+}
+
+function editError(code, message) {
+  return Object.assign(new Error(message), { code })
+}
+
+// Another tab may have moved a report on since this page loaded, so the
+// edit checks read its status again from storage.
+function refreshStatus(issue) {
+  const stored = loadSubmitted().find((item) => String(item.id) === String(issue.id))
+  if (!stored) return
+  const saved = submitted.find((item) => String(item.id) === String(issue.id))
+  for (const target of [issue, saved]) {
+    if (!target) continue
+    target.status = stored.status
+    target.priority = stored.priority
+    target.verification = stored.verification
+  }
+}
+
+// 'ok' | 'not-owner' | 'locked'. email is the logged-in citizen's (session.email).
+export function canEditIssue(issue, email) {
+  if (!issue || !email || !isOwnReport(issue, email)) return 'not-owner'
+  return issue.status === 'open' ? 'ok' : 'locked'
+}
+
+// The issue with its latest status, for the Edit page. null if the id is unknown.
+export async function getIssueForEdit(id) {
+  const issue = findIssue(id)
+  if (!issue) return null
+  refreshStatus(issue)
+  return present(issue)
+}
+
+// changes: { title, description, category, photoUrl, location }.
+// photoUrl: a new (small) data URL, or undefined to keep the photo.
+// location: { lat, lng, label, ward }, or undefined to keep the pin.
+// Throws an Error with code 'not-found' | 'forbidden' | 'locked' | 'invalid' | 'storage'.
+export async function updateIssue(id, changes) {
+  await wait()
+  const issue = findIssue(id)
+  if (!issue) throw editError('not-found', 'This issue no longer exists.')
+
+  const session = getSession()
+  if (session?.role !== 'citizen' || !isOwnReport(issue, session.email)) {
+    throw editError('forbidden', 'Only the citizen who reported this issue can edit it.')
+  }
+  refreshStatus(issue)
+  if (issue.status !== 'open') throw editError('locked', LOCKED_MESSAGE)
+
+  const title = (changes.title ?? '').trim()
+  const description = (changes.description ?? '').trim()
+  const { category, photoUrl, location } = changes
+  const valid =
+    title.length >= TITLE_MIN &&
+    title.length <= TITLE_MAX &&
+    description.length >= DESCRIPTION_MIN &&
+    description.length <= DESCRIPTION_MAX &&
+    EDIT_CATEGORIES.includes(category) &&
+    photoUrl !== null &&
+    (!location || (Number.isFinite(location.lat) && Number.isFinite(location.lng)))
+  if (!valid) throw editError('invalid', 'Some details are not valid. Please check the form.')
+
+  const key = String(issue.id)
+  const edit = { ...edits[key], title, description, category, editedAt: new Date().toISOString() }
+  if (photoUrl) edit.beforeImg = photoUrl
+  if (location) {
+    Object.assign(edit, {
+      lat: location.lat,
+      lng: location.lng,
+      location: location.label,
+      ward: location.ward ?? '',
+      distanceM: Math.round(distanceInMeters(MAP_CENTER, [location.lat, location.lng])),
+    })
+  }
+
+  try {
+    window.localStorage.setItem(EDITS_KEY, JSON.stringify({ ...edits, [key]: edit }))
+  } catch {
+    throw editError(
+      'storage',
+      'We could not save your changes on this device because its storage is full. Try a smaller photo.',
+    )
+  }
+  edits[key] = edit
+  const index = all.indexOf(issue)
+  all[index] = withDepartment({ ...issue, ...edit })
+  return present(all[index])
 }
 
 // ---------- Home ----------

@@ -2,6 +2,7 @@ import { Routes, Route } from 'react-router-dom'
 import Home from './pages/Home/Home'
 import Map from './pages/Map/Map'
 import IssueDetail from './pages/IssueDetail/IssueDetail'
+import IssueEdit from './pages/IssueEdit/IssueEdit'
 import Report from './pages/Report/Report'
 import Feed from './pages/Feed/Feed'
 import Alerts from './pages/Alerts/Alerts'
@@ -20,6 +21,7 @@ export default function App() {
       <Route path="/" element={<Home />} />
       <Route path="/map" element={<Map />} />
       <Route path="/issues/:id" element={<IssueDetail />} />
+      <Route path="/issues/:id/edit" element={<IssueEdit />} />
       <Route path="/report" element={<Report />} />
       <Route path="/feed" element={<Feed />} />
       <Route path="/my-reports" element={<Alerts />} />
