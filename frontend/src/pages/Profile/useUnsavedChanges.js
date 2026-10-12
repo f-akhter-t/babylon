@@ -4,6 +4,13 @@ import { confirmLeave, setLeaveGuard } from '../../utils/leaveGuard'
 // Marks the extra history entry that catches the browser's Back button.
 const GUARD_KEY = 'babylonUnsaved'
 
+// True while the extra history entry is still on top. A page that leaves right
+// after saving waits for it to go first (the next popstate), so Back never
+// returns to the form.
+export function hasGuardEntry() {
+  return Boolean(window.history.state?.[GUARD_KEY])
+}
+
 // Back steps this hook takes by itself (to remove its extra entry). They must
 // not ask the person anything, even if the page has new changes by then.
 const ownBackSteps = new WeakSet()
