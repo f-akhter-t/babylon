@@ -3,7 +3,7 @@ import { Link, NavLink, useNavigate } from 'react-router-dom'
 import clsx from 'clsx'
 import Logo from './Logo'
 import Button from '../ui/Button'
-import { getSession, logout } from '../../services/auth'
+import { getSession, homePathFor, logout } from '../../services/auth'
 import { useProfile } from '../../hooks/useProfile'
 import { confirmLeave } from '../../utils/leaveGuard'
 
@@ -24,6 +24,12 @@ const adminLinks = [
 const linksByVariant = {
   admin: adminLinks,
   department: departmentLinks,
+}
+
+// Staff avatars open their own panel. The path comes from homePathFor, like the login redirect.
+const staffAvatarLabels = {
+  department: 'Open your department panel',
+  admin: 'Open the admin panel',
 }
 
 function initialsFor(name, fallback) {
@@ -67,9 +73,9 @@ function BellLink({ unread }) {
   )
 }
 
-// With `to`, the avatar is a link (citizens: their profile).
-// `verified` adds a small check on the corner.
-function Avatar({ name, text, to, verified }) {
+// With `to`, the avatar is a link (citizens: their profile, staff: their panel).
+// `label` is the link's accessible name. `verified` adds a small check on the corner.
+function Avatar({ name, text, to, label, verified }) {
   const circle =
     'flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-forest text-sm font-semibold text-white'
   const check = verified && (
@@ -97,7 +103,7 @@ function Avatar({ name, text, to, verified }) {
       <Link
         to={to}
         title={name}
-        aria-label={verified ? 'Your profile, verified' : 'Your profile'}
+        aria-label={label}
         className={clsx(circle, 'relative transition hover:ring-2 hover:ring-brand')}
       >
         {text}
@@ -132,6 +138,17 @@ export default function Navbar({
   const isCitizen = session?.role === 'citizen'
   const displayName = isCitizen ? profile.name || session.name : session?.name
   const avatarText = session ? initialsFor(displayName, initials) : initials
+  // The avatar link follows the real login, never the page's variant, so guests get none.
+  const staffLabel = staffAvatarLabels[session?.role]
+  let avatarTo
+  let avatarLabel
+  if (isCitizen) {
+    avatarTo = '/profile'
+    avatarLabel = profile.isVerified ? 'Your profile, verified' : 'Your profile'
+  } else if (staffLabel) {
+    avatarTo = homePathFor(session.role)
+    avatarLabel = staffLabel
+  }
 
   function handleLogout() {
     if (!confirmLeave()) return // unsaved changes on this page: stay
@@ -198,7 +215,8 @@ export default function Navbar({
             <Avatar
               name={displayName}
               text={avatarText}
-              to={isCitizen ? '/profile' : undefined}
+              to={avatarTo}
+              label={avatarLabel}
               verified={isCitizen && profile.isVerified}
             />
           )}

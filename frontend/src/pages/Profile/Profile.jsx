@@ -8,7 +8,7 @@ import { useStoredIds } from '../Map/useStoredIds'
 import { useUnreadCount } from '../Map/useUnreadCount'
 import { useDocumentTitle } from '../IssueDetail/useDocumentTitle'
 import { useProfile } from '../../hooks/useProfile'
-import { endSetup, isInSetup } from '../../services/auth'
+import { endSetup, homePathFor, isInSetup } from '../../services/auth'
 import { useUnsavedChanges } from './useUnsavedChanges'
 import { formRise, pageRise, profileStyle } from './profileMotion'
 import PersonalDetailsCard from './PersonalDetailsCard'
@@ -44,10 +44,11 @@ function useFirstTimeSetup(email) {
   return firstTime
 }
 
-// Only citizens have a profile. Everyone else goes to the login page.
+// Only citizens have a profile. Guests go to the login page, staff to their own panel.
 export default function Profile() {
   const viewer = useViewer()
-  if (!viewer.canAct) return <Navigate to="/login" replace />
+  if (viewer.isGuest) return <Navigate to="/login" replace />
+  if (!viewer.canAct) return <Navigate to={homePathFor(viewer.role)} replace />
   return <ProfilePage viewer={viewer} />
 }
 
