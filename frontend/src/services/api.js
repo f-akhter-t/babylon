@@ -14,6 +14,14 @@ import {
 import { earnPoints } from '../mock/user'
 import { sampleIdentitySubmissions } from '../mock/identitySubmissions'
 import { distanceInMeters } from '../utils/geo'
+import { prepareIdPhoto } from '../utils/idPhoto'
+import {
+  deleteOtherPhotos,
+  deletePhoto,
+  deleteStalePhotos,
+  readPhoto,
+  savePhoto,
+} from './identityPhotos'
 import { getAccountName, getSession, renameAccount } from './auth'
 import {
   checkDetails,
@@ -527,8 +535,11 @@ export async function getUnreadAlertCount(email) {
 }
 // ---------- Citizen profile ----------
 // Kept in this browser per account (by email) until the backend exists.
-// Privacy rule, even in the mock: the full NID number and the NID photo are
-// never stored. Only the last 4 digits and the review status are kept.
+// Privacy rule, even in the mock: the full NID number is never stored. Only
+// its last 4 digits and the review status are kept here. The NID card photo
+// is kept only while the submission is Pending, in its own store
+// (services/identityPhotos.js, never in this profile), and is deleted when
+// the admin approves or rejects, or replaced when the citizen sends again.
 //
 // identity.status: 'not-submitted' | 'pending' | 'verified' | 'rejected'
 // A citizen counts as Verified once identity.status is 'verified'.
@@ -642,25 +653,57 @@ export async function verifyOtp(email, code) {
   return { status: 'verified', profile: buildProfile(email) }
 }
 
-// nid is the full number and photo is a File. Neither is kept: the review
-// queue only gets the last 4 digits and the date.
+const ALREADY_SUBMITTED = 'Your identity is already submitted.'
+const PHOTO_STORAGE_BLOCKED =
+  'We could not keep your card photo on this device, so your identity was not sent. Private windows and some browser settings block site storage. Please allow it and try again.'
+const PHOTO_STORAGE_FULL =
+  'This device has no space left for your card photo, so your identity was not sent. Free some space and try again.'
+
+function identitySent(email) {
+  const { status } = buildProfile(email).identity
+  return status === 'pending' || status === 'verified'
+}
+
+// nid is the full number and photo is a File. The full number is never kept:
+// the profile only gets the last 4 digits. The photo is made smaller and saved
+// in its own store FIRST; only then does the profile say Pending (and the
+// profile event fire), so a Pending submission always has its photo.
+// Throws a whole-sentence message; nothing changes on the profile then.
 export async function submitIdentity(email, { nid, photo }) {
   await wait(700)
   if (checkNid(nid) || checkIdPhoto(photo)) {
     throw new Error('Please check your NID number and photo.')
   }
-  const { identity } = buildProfile(email)
-  if (identity.status === 'pending' || identity.status === 'verified') {
-    throw new Error('Your identity is already submitted.')
+  if (identitySent(email)) throw new Error(ALREADY_SUBMITTED)
+
+  const blob = await prepareIdPhoto(photo)
+  const submittedAt = new Date().toISOString()
+  try {
+    await savePhoto(email, submittedAt, blob)
+  } catch (err) {
+    throw new Error(err.code === 'storage-full' ? PHOTO_STORAGE_FULL : PHOTO_STORAGE_BLOCKED, {
+      cause: err,
+    })
   }
-  writeProfile(email, {
-    identity: {
-      status: 'pending',
-      nidLast4: normalizeNid(nid).slice(-4),
-      submittedAt: new Date().toISOString(),
-      reason: '',
-    },
-  })
+
+  try {
+    if (identitySent(email)) throw new Error(ALREADY_SUBMITTED) // sent from another tab meanwhile
+    writeProfile(email, {
+      identity: {
+        status: 'pending',
+        nidLast4: normalizeNid(nid).slice(-4),
+        submittedAt,
+        reason: '',
+      },
+    })
+  } catch (err) {
+    // Not Pending, so the photo must not stay. If this delete fails too, the
+    // stale-photo cleanup removes it when the admin queue next loads.
+    await deletePhoto(email, submittedAt).catch(() => {})
+    throw err
+  }
+  // A new submission replaces the photo of any earlier one.
+  await deleteOtherPhotos(email, submittedAt).catch(() => {})
   return buildProfile(email)
 }
 
@@ -670,7 +713,8 @@ export async function submitIdentity(email, { nid, photo }) {
 // Real decisions are saved on the citizen's profile, so their Profile page and
 // the navbar badge update. Sample decisions live only in this module, so the
 // sidebar badge and the queue always agree, and a reload starts the demo again.
-// Like the Profile page, the queue never sees the full NID number or the photo.
+// The queue never sees the full NID number. The card photo of a real
+// submission is read separately (getIdentityPhoto) and deleted after review.
 
 const sampleSubmissions = sampleIdentitySubmissions.map(({ submittedDaysAgo, ...item }) => ({
   ...item,
@@ -678,6 +722,12 @@ const sampleSubmissions = sampleIdentitySubmissions.map(({ submittedDaysAgo, ...
   submittedAt: new Date(Date.now() - submittedDaysAgo * 86400000 - 2 * 3600000).toISOString(),
 }))
 const sampleDecisions = new Map() // sample id -> 'verified' | 'rejected'
+
+export const ALREADY_REVIEWED = 'This submission was already reviewed.'
+export const NO_PHOTO_TO_APPROVE =
+  'No card photo was saved with this submission, so it cannot be approved. Reject it and ask the citizen to send it again.'
+const PHOTO_UNREADABLE_FOR_REVIEW =
+  'The card photo could not be loaded on this device, so this submission cannot be approved yet. Please try again.'
 
 const profileQueueId = (email) => `profile:${email}`
 
@@ -697,9 +747,35 @@ function pendingSubmissions() {
   return [...real, ...samples].sort((a, b) => a.submittedAt.localeCompare(b.submittedAt))
 }
 
+// A photo may wait this long for its Pending write (another tab still sending)
+// before the cleanup may remove it.
+const PHOTO_CLEANUP_MIN_AGE_MS = 60 * 1000
+
+function isPendingSubmission(email, submittedAt) {
+  const identity = readProfiles()[email.toLowerCase()]?.identity
+  return identity?.status === 'pending' && identity.submittedAt === submittedAt
+}
+
 export async function getIdentityQueue() {
   await wait(400)
+  // Removes photos a review could not delete at the time.
+  await deleteStalePhotos(isPendingSubmission, PHOTO_CLEANUP_MIN_AGE_MS).catch(() => {})
   return pendingSubmissions()
+}
+
+// The card photo for a submission from getIdentityQueue():
+//   { kind: 'sample' }        made-up submission, no real photo
+//   { kind: 'photo', blob }   the photo, for this submission only
+//   { kind: 'missing' }       none was saved (sent before photos were kept)
+//   { kind: 'error' }         this browser's storage could not be read
+export async function getIdentityPhoto(submission) {
+  if (submission.sample) return { kind: 'sample' }
+  try {
+    const blob = await readPhoto(submission.email, submission.submittedAt)
+    return blob ? { kind: 'photo', blob } : { kind: 'missing' }
+  } catch {
+    return { kind: 'error' }
+  }
 }
 
 export async function getIdentityQueueCount() {
@@ -709,22 +785,34 @@ export async function getIdentityQueueCount() {
 // submission is an item from getIdentityQueue().
 // decision: 'approve' | 'reject'. A reject needs a reason, which the citizen sees.
 // Throws if someone already reviewed it (for example in another tab), or if
-// the citizen has sent a new submission since this one was listed.
+// the citizen has sent a new submission since this one was listed. A real
+// submission can only be approved once its card photo has been seen.
+// Returns { ...submission, status, photoDeleted }. The decision is saved
+// first, then the photo is deleted; photoDeleted is false if that delete
+// failed (the cleanup in getIdentityQueue removes it later).
 export async function reviewIdentity(submission, { decision, reason = '' }) {
   await wait()
   if (decision === 'reject' && checkRejectReason(reason)) {
     throw new Error('Please write a reason for the citizen.')
   }
   const status = decision === 'approve' ? 'verified' : 'rejected'
-  const stillPending = pendingSubmissions().some(
-    (item) => item.id === submission.id && item.submittedAt === submission.submittedAt,
-  )
-  if (!stillPending) throw new Error('This submission was already reviewed.')
+  const stillPending = () =>
+    pendingSubmissions().some(
+      (item) => item.id === submission.id && item.submittedAt === submission.submittedAt,
+    )
+  if (!stillPending()) throw new Error(ALREADY_REVIEWED)
 
   if (submission.sample) {
     sampleDecisions.set(submission.id, status)
     window.dispatchEvent(new Event(PROFILE_EVENT))
-    return { ...submission, status }
+    return { ...submission, status, photoDeleted: true }
+  }
+
+  if (decision === 'approve') {
+    const photo = await getIdentityPhoto(submission)
+    if (photo.kind === 'error') throw new Error(PHOTO_UNREADABLE_FOR_REVIEW)
+    if (photo.kind !== 'photo') throw new Error(NO_PHOTO_TO_APPROVE)
+    if (!stillPending()) throw new Error(ALREADY_REVIEWED) // reviewed elsewhere meanwhile
   }
 
   const { identity } = buildProfile(submission.email)
@@ -736,5 +824,12 @@ export async function reviewIdentity(submission, { decision, reason = '' }) {
       reviewedAt: new Date().toISOString(),
     },
   })
-  return { ...submission, status }
+
+  let photoDeleted = true
+  try {
+    await deletePhoto(submission.email, submission.submittedAt)
+  } catch {
+    photoDeleted = false
+  }
+  return { ...submission, status, photoDeleted }
 }

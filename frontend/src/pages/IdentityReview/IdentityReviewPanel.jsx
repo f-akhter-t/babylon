@@ -2,46 +2,32 @@ import { useEffect, useRef, useState } from 'react'
 import Button from '../../components/ui/Button'
 import VerifyBadge from '../Profile/VerifyBadge'
 import { MaskedNid, SampleTag } from './IdentityQueueCard'
+import IdCardPhoto from './IdCardPhoto'
+import { useIdentityPhoto } from './useIdentityPhoto'
 import { formatDate } from '../../utils/format'
 import { checkRejectReason, REJECT_REASON_MAX } from '../../utils/profileRules'
 
-// Where the NID photo would be. The photo is never stored on this device
-// (the same rule as the Profile page), so this says so instead of faking one.
-function PhotoPlaceholder() {
-  return (
-    <div className="flex aspect-[86/54] w-full max-w-sm flex-col items-center justify-center gap-2 rounded-tile border-2 border-dashed border-navy/25 bg-white/60 p-5 text-center">
-      <svg
-        viewBox="0 0 24 24"
-        className="h-8 w-8 text-slate"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        aria-hidden="true"
-      >
-        <rect x="3" y="5" width="18" height="14" rx="2" />
-        <circle cx="9" cy="11" r="2" />
-        <path d="M6 16c.6-1.4 1.7-2 3-2s2.4.6 3 2M14 10h4M14 13h3" />
-      </svg>
-      <p className="font-body text-sm font-bold text-navy">Card photo not stored</p>
-      <p className="font-body text-xs text-slate">
-        The card photo is not stored on this device. In the live system, it would load here from
-        secure storage for this review only.
-      </p>
-    </div>
-  )
-}
+const PHOTO_NOTE_ID = 'identity-photo-note'
+const SUGGESTED_REASON = 'Please send your NID again with a clear photo of the front of the card.'
 
 // One submission under review: Approve, or Reject with a reason the citizen sees.
+// A real submission can only be approved once its card photo has loaded.
 // onDecide(decision, reason) returns a promise.
 export default function IdentityReviewPanel({ submission, onDecide, focusOnOpen }) {
   const [reason, setReason] = useState('')
   const [busy, setBusy] = useState(null) // 'approve' | 'reject' | null
   const headingRef = useRef(null)
+  const reasonRef = useRef(null)
+  const photo = useIdentityPhoto(submission)
 
   const reasonError = checkRejectReason(reason)
   const reasonLength = reason.trim().length
+  const photoBlocksApprove = !submission.sample && photo.kind !== 'photo'
+
+  function applySuggestedReason() {
+    setReason(SUGGESTED_REASON)
+    reasonRef.current?.focus()
+  }
 
   useEffect(() => {
     if (focusOnOpen) headingRef.current?.focus()
@@ -97,7 +83,12 @@ export default function IdentityReviewPanel({ submission, onDecide, focusOnOpen 
       <div className="mt-5">
         <p className="font-body text-sm font-bold text-navy">Photo of the front of the NID card</p>
         <div className="mt-2">
-          <PhotoPlaceholder />
+          <IdCardPhoto
+            photo={photo}
+            name={submission.name}
+            noteId={PHOTO_NOTE_ID}
+            onUseReason={applySuggestedReason}
+          />
         </div>
       </div>
 
@@ -106,6 +97,7 @@ export default function IdentityReviewPanel({ submission, onDecide, focusOnOpen 
           Reason, if rejecting
         </label>
         <textarea
+          ref={reasonRef}
           id="identity-reject-reason"
           rows={3}
           maxLength={REJECT_REASON_MAX}
@@ -121,16 +113,19 @@ export default function IdentityReviewPanel({ submission, onDecide, focusOnOpen 
         </p>
       </div>
 
-      <p className="mt-5 rounded-tile bg-amber/20 px-4 py-2.5 font-body text-sm text-navy">
-        This demo has no photo to compare, so approve or reject to try the flow.
-      </p>
+      {submission.sample && (
+        <p className="mt-5 rounded-tile bg-amber/20 px-4 py-2.5 font-body text-sm text-navy">
+          This sample has no photo to compare, so approve or reject to try the flow.
+        </p>
+      )}
 
       <div className="mt-4 grid gap-3 sm:grid-cols-2">
         <Button
           variant="primary"
           size="md"
           className="whitespace-normal py-3.5 text-base"
-          disabled={Boolean(busy)}
+          disabled={Boolean(busy) || photoBlocksApprove}
+          aria-describedby={photoBlocksApprove && photo.kind !== 'loading' ? PHOTO_NOTE_ID : undefined}
           onClick={() => decide('approve')}
         >
           {busy === 'approve' ? 'Approving…' : 'Approve'}
