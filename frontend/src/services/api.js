@@ -2,7 +2,7 @@
 // Later, each function becomes a fetch() call. Pages will not change,
 // because every function is already async.
 
-import { issues as rawIssues, MAP_CENTER } from '../mock/issues'
+import { CATEGORIES, issues as rawIssues, MAP_CENTER } from '../mock/issues'
 import { heroSlides, heroSearchCategories } from '../mock/heroSlides'
 import {
   CATEGORY_DEPARTMENT,
@@ -12,13 +12,23 @@ import {
   weeklyReports,
 } from '../mock/departments'
 import { earnPoints } from '../mock/user'
+import { sampleIdentitySubmissions } from '../mock/identitySubmissions'
 import { distanceInMeters } from '../utils/geo'
+import { prepareIdPhoto } from '../utils/idPhoto'
+import {
+  deleteOtherPhotos,
+  deletePhoto,
+  deleteStalePhotos,
+  readPhoto,
+  savePhoto,
+} from './identityPhotos'
 import { getAccountName, getSession, renameAccount } from './auth'
 import {
   checkDetails,
   checkIdPhoto,
   checkNid,
   checkPhone,
+  checkRejectReason,
   normalizeNid,
   normalizePhone,
 } from '../utils/profileRules'
@@ -101,6 +111,24 @@ window.addEventListener('storage', (e) => {
   }
   notifyIssuesChanged()
 })
+
+// Changes a citizen made to their own report (see updateIssue), by issue id.
+// Kept apart from the reports themselves, so mock issues can be edited too.
+const EDITS_KEY = 'babylon.issueEdits'
+
+function loadEdits() {
+  try {
+    return JSON.parse(window.localStorage.getItem(EDITS_KEY)) ?? {}
+  } catch {
+    return {}
+  }
+}
+
+const edits = loadEdits()
+for (const [id, changes] of Object.entries(edits)) {
+  const index = all.findIndex((issue) => String(issue.id) === id)
+  if (index !== -1) all[index] = withDepartment({ ...all[index], ...changes })
+}
 
 function makeTitle(description) {
   const firstSentence = description.split(/[.!?\n]/)[0].trim()
@@ -206,6 +234,110 @@ export async function upvoteIssue(id) {
   return issue.votes
 }
 
+// ---------- Editing a report ----------
+// The citizen who filed a report may change its title, description, category,
+// photo and pin while it is still Open. Votes, follows and status are never
+// part of an edit. Every rule is checked again here, like a backend would.
+
+export const TITLE_MIN = 5
+export const TITLE_MAX = 70
+const DESCRIPTION_MIN = 10
+const DESCRIPTION_MAX = 500
+const EDIT_CATEGORIES = [...CATEGORIES, 'Other']
+export const LOCKED_MESSAGE = 'Work has started, so this report is locked.'
+
+function findIssue(id) {
+  return all.find((item) => String(item.id) === String(id))
+}
+
+function editError(code, message) {
+  return Object.assign(new Error(message), { code })
+}
+
+// Another tab may have moved a report on since this page loaded, so the
+// edit checks read its status again from storage.
+function refreshStatus(issue) {
+  const stored = loadSubmitted().find((item) => String(item.id) === String(issue.id))
+  if (!stored) return
+  const saved = submitted.find((item) => String(item.id) === String(issue.id))
+  for (const target of [issue, saved]) {
+    if (!target) continue
+    target.status = stored.status
+    target.priority = stored.priority
+    target.verification = stored.verification
+  }
+}
+
+// 'ok' | 'not-owner' | 'locked'. email is the logged-in citizen's (session.email).
+export function canEditIssue(issue, email) {
+  if (!issue || !email || !isOwnReport(issue, email)) return 'not-owner'
+  return issue.status === 'open' ? 'ok' : 'locked'
+}
+
+// The issue with its latest status, for the Edit page. null if the id is unknown.
+export async function getIssueForEdit(id) {
+  const issue = findIssue(id)
+  if (!issue) return null
+  refreshStatus(issue)
+  return present(issue)
+}
+
+// changes: { title, description, category, photoUrl, location }.
+// photoUrl: a new (small) data URL, or undefined to keep the photo.
+// location: { lat, lng, label, ward }, or undefined to keep the pin.
+// Throws an Error with code 'not-found' | 'forbidden' | 'locked' | 'invalid' | 'storage'.
+export async function updateIssue(id, changes) {
+  await wait()
+  const issue = findIssue(id)
+  if (!issue) throw editError('not-found', 'This issue no longer exists.')
+
+  const session = getSession()
+  if (session?.role !== 'citizen' || !isOwnReport(issue, session.email)) {
+    throw editError('forbidden', 'Only the citizen who reported this issue can edit it.')
+  }
+  refreshStatus(issue)
+  if (issue.status !== 'open') throw editError('locked', LOCKED_MESSAGE)
+
+  const title = (changes.title ?? '').trim()
+  const description = (changes.description ?? '').trim()
+  const { category, photoUrl, location } = changes
+  const valid =
+    title.length >= TITLE_MIN &&
+    title.length <= TITLE_MAX &&
+    description.length >= DESCRIPTION_MIN &&
+    description.length <= DESCRIPTION_MAX &&
+    EDIT_CATEGORIES.includes(category) &&
+    photoUrl !== null &&
+    (!location || (Number.isFinite(location.lat) && Number.isFinite(location.lng)))
+  if (!valid) throw editError('invalid', 'Some details are not valid. Please check the form.')
+
+  const key = String(issue.id)
+  const edit = { ...edits[key], title, description, category, editedAt: new Date().toISOString() }
+  if (photoUrl) edit.beforeImg = photoUrl
+  if (location) {
+    Object.assign(edit, {
+      lat: location.lat,
+      lng: location.lng,
+      location: location.label,
+      ward: location.ward ?? '',
+      distanceM: Math.round(distanceInMeters(MAP_CENTER, [location.lat, location.lng])),
+    })
+  }
+
+  try {
+    window.localStorage.setItem(EDITS_KEY, JSON.stringify({ ...edits, [key]: edit }))
+  } catch {
+    throw editError(
+      'storage',
+      'We could not save your changes on this device because its storage is full. Try a smaller photo.',
+    )
+  }
+  edits[key] = edit
+  const index = all.indexOf(issue)
+  all[index] = withDepartment({ ...issue, ...edit })
+  return present(all[index])
+}
+
 // ---------- Home ----------
 
 export async function getHeroSlides() {
@@ -216,6 +348,18 @@ export async function getHeroCategories() {
 }
 export async function getFixedThisWeek() {
   return all.filter((issue) => issue.status === 'resolved').slice(0, 3)
+}
+// Newest reports first. Used by the ticker on Home.
+export async function getRecentActivity(limit = 8) {
+  return [...all]
+    .sort((a, b) => ageMs(a) - ageMs(b))
+    .slice(0, limit)
+    .map((issue) => ({
+      id: issue.id,
+      title: issue.title,
+      status: issue.status,
+      time: timeAgo(issue),
+    }))
 }
 
 export async function getStats() {
@@ -466,8 +610,11 @@ export async function getUnreadAlertCount(email) {
 
 // ---------- Citizen profile ----------
 // Kept in this browser per account (by email) until the backend exists.
-// Privacy rule, even in the mock: the full NID number and the NID photo are
-// never stored. Only the last 4 digits and the review status are kept.
+// Privacy rule, even in the mock: the full NID number is never stored. Only
+// its last 4 digits and the review status are kept here. The NID card photo
+// is kept only while the submission is Pending, in its own store
+// (services/identityPhotos.js, never in this profile), and is deleted when
+// the admin approves or rejects, or replaced when the citizen sends again.
 //
 // identity.status: 'not-submitted' | 'pending' | 'verified' | 'rejected'
 // A citizen counts as Verified once identity.status is 'verified'.
@@ -581,24 +728,183 @@ export async function verifyOtp(email, code) {
   return { status: 'verified', profile: buildProfile(email) }
 }
 
-// nid is the full number and photo is a File. Neither is kept: the review
-// queue only gets the last 4 digits and the date.
+const ALREADY_SUBMITTED = 'Your identity is already submitted.'
+const PHOTO_STORAGE_BLOCKED =
+  'We could not keep your card photo on this device, so your identity was not sent. Private windows and some browser settings block site storage. Please allow it and try again.'
+const PHOTO_STORAGE_FULL =
+  'This device has no space left for your card photo, so your identity was not sent. Free some space and try again.'
+
+function identitySent(email) {
+  const { status } = buildProfile(email).identity
+  return status === 'pending' || status === 'verified'
+}
+
+// nid is the full number and photo is a File. The full number is never kept:
+// the profile only gets the last 4 digits. The photo is made smaller and saved
+// in its own store FIRST; only then does the profile say Pending (and the
+// profile event fire), so a Pending submission always has its photo.
+// Throws a whole-sentence message; nothing changes on the profile then.
 export async function submitIdentity(email, { nid, photo }) {
   await wait(700)
   if (checkNid(nid) || checkIdPhoto(photo)) {
     throw new Error('Please check your NID number and photo.')
   }
-  const { identity } = buildProfile(email)
-  if (identity.status === 'pending' || identity.status === 'verified') {
-    throw new Error('Your identity is already submitted.')
+  if (identitySent(email)) throw new Error(ALREADY_SUBMITTED)
+
+  const blob = await prepareIdPhoto(photo)
+  const submittedAt = new Date().toISOString()
+  try {
+    await savePhoto(email, submittedAt, blob)
+  } catch (err) {
+    throw new Error(err.code === 'storage-full' ? PHOTO_STORAGE_FULL : PHOTO_STORAGE_BLOCKED, {
+      cause: err,
+    })
   }
-  writeProfile(email, {
+
+  try {
+    if (identitySent(email)) throw new Error(ALREADY_SUBMITTED) // sent from another tab meanwhile
+    writeProfile(email, {
+      identity: {
+        status: 'pending',
+        nidLast4: normalizeNid(nid).slice(-4),
+        submittedAt,
+        reason: '',
+      },
+    })
+  } catch (err) {
+    // Not Pending, so the photo must not stay. If this delete fails too, the
+    // stale-photo cleanup removes it when the admin queue next loads.
+    await deletePhoto(email, submittedAt).catch(() => {})
+    throw err
+  }
+  // A new submission replaces the photo of any earlier one.
+  await deleteOtherPhotos(email, submittedAt).catch(() => {})
+  return buildProfile(email)
+}
+
+// ---------- Admin: identity checks ----------
+// The queue lists every account whose identity is waiting for review, plus a
+// few sample submissions (src/mock/) so the demo queue is never empty.
+// Real decisions are saved on the citizen's profile, so their Profile page and
+// the navbar badge update. Sample decisions live only in this module, so the
+// sidebar badge and the queue always agree, and a reload starts the demo again.
+// The queue never sees the full NID number. The card photo of a real
+// submission is read separately (getIdentityPhoto) and deleted after review.
+
+const sampleSubmissions = sampleIdentitySubmissions.map(({ submittedDaysAgo, ...item }) => ({
+  ...item,
+  sample: true,
+  submittedAt: new Date(Date.now() - submittedDaysAgo * 86400000 - 2 * 3600000).toISOString(),
+}))
+const sampleDecisions = new Map() // sample id -> 'verified' | 'rejected'
+
+export const ALREADY_REVIEWED = 'This submission was already reviewed.'
+export const NO_PHOTO_TO_APPROVE =
+  'No card photo was saved with this submission, so it cannot be approved. Reject it and ask the citizen to send it again.'
+const PHOTO_UNREADABLE_FOR_REVIEW =
+  'The card photo could not be loaded on this device, so this submission cannot be approved yet. Please try again.'
+
+const profileQueueId = (email) => `profile:${email}`
+
+function pendingSubmissions() {
+  const real = Object.entries(readProfiles())
+    .filter(([, stored]) => stored.identity?.status === 'pending')
+    .map(([email, stored]) => ({
+      id: profileQueueId(email),
+      email,
+      name: getAccountName(email) ?? email,
+      nidLast4: stored.identity.nidLast4,
+      submittedAt: stored.identity.submittedAt,
+      sample: false,
+    }))
+  const samples = sampleSubmissions.filter((item) => !sampleDecisions.has(item.id))
+  // Oldest first, so whoever has waited longest is checked first.
+  return [...real, ...samples].sort((a, b) => a.submittedAt.localeCompare(b.submittedAt))
+}
+
+// A photo may wait this long for its Pending write (another tab still sending)
+// before the cleanup may remove it.
+const PHOTO_CLEANUP_MIN_AGE_MS = 60 * 1000
+
+function isPendingSubmission(email, submittedAt) {
+  const identity = readProfiles()[email.toLowerCase()]?.identity
+  return identity?.status === 'pending' && identity.submittedAt === submittedAt
+}
+
+export async function getIdentityQueue() {
+  await wait(400)
+  // Removes photos a review could not delete at the time.
+  await deleteStalePhotos(isPendingSubmission, PHOTO_CLEANUP_MIN_AGE_MS).catch(() => {})
+  return pendingSubmissions()
+}
+
+// The card photo for a submission from getIdentityQueue():
+//   { kind: 'sample' }        made-up submission, no real photo
+//   { kind: 'photo', blob }   the photo, for this submission only
+//   { kind: 'missing' }       none was saved (sent before photos were kept)
+//   { kind: 'error' }         this browser's storage could not be read
+export async function getIdentityPhoto(submission) {
+  if (submission.sample) return { kind: 'sample' }
+  try {
+    const blob = await readPhoto(submission.email, submission.submittedAt)
+    return blob ? { kind: 'photo', blob } : { kind: 'missing' }
+  } catch {
+    return { kind: 'error' }
+  }
+}
+
+export async function getIdentityQueueCount() {
+  return pendingSubmissions().length
+}
+
+// submission is an item from getIdentityQueue().
+// decision: 'approve' | 'reject'. A reject needs a reason, which the citizen sees.
+// Throws if someone already reviewed it (for example in another tab), or if
+// the citizen has sent a new submission since this one was listed. A real
+// submission can only be approved once its card photo has been seen.
+// Returns { ...submission, status, photoDeleted }. The decision is saved
+// first, then the photo is deleted; photoDeleted is false if that delete
+// failed (the cleanup in getIdentityQueue removes it later).
+export async function reviewIdentity(submission, { decision, reason = '' }) {
+  await wait()
+  if (decision === 'reject' && checkRejectReason(reason)) {
+    throw new Error('Please write a reason for the citizen.')
+  }
+  const status = decision === 'approve' ? 'verified' : 'rejected'
+  const stillPending = () =>
+    pendingSubmissions().some(
+      (item) => item.id === submission.id && item.submittedAt === submission.submittedAt,
+    )
+  if (!stillPending()) throw new Error(ALREADY_REVIEWED)
+
+  if (submission.sample) {
+    sampleDecisions.set(submission.id, status)
+    window.dispatchEvent(new Event(PROFILE_EVENT))
+    return { ...submission, status, photoDeleted: true }
+  }
+
+  if (decision === 'approve') {
+    const photo = await getIdentityPhoto(submission)
+    if (photo.kind === 'error') throw new Error(PHOTO_UNREADABLE_FOR_REVIEW)
+    if (photo.kind !== 'photo') throw new Error(NO_PHOTO_TO_APPROVE)
+    if (!stillPending()) throw new Error(ALREADY_REVIEWED) // reviewed elsewhere meanwhile
+  }
+
+  const { identity } = buildProfile(submission.email)
+  writeProfile(submission.email, {
     identity: {
-      status: 'pending',
-      nidLast4: normalizeNid(nid).slice(-4),
-      submittedAt: new Date().toISOString(),
-      reason: '',
+      ...identity,
+      status,
+      reason: status === 'rejected' ? reason.trim() : '',
+      reviewedAt: new Date().toISOString(),
     },
   })
-  return buildProfile(email)
+
+  let photoDeleted = true
+  try {
+    await deletePhoto(submission.email, submission.submittedAt)
+  } catch {
+    photoDeleted = false
+  }
+  return { ...submission, status, photoDeleted }
 }

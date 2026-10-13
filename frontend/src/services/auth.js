@@ -122,3 +122,33 @@ export function renameAccount(email, name) {
     localStorage.setItem(SESSION_KEY, JSON.stringify({ ...session, name }))
   }
 }
+
+// ---------- First-time profile setup ----------
+// Set right after a new citizen signs up, so /profile opens as a welcome step.
+// Kept in sessionStorage: it survives a refresh, ends with the tab, and is
+// cleared when the person skips or leaves the profile page.
+const setupKey = (email) => `babylon:setup:${email.toLowerCase()}`
+
+export function startSetup(email) {
+  try {
+    sessionStorage.setItem(setupKey(email), '1')
+  } catch {
+    // storage blocked: the person simply sees the normal profile
+  }
+}
+
+export function isInSetup(email) {
+  try {
+    return Boolean(email) && sessionStorage.getItem(setupKey(email)) === '1'
+  } catch {
+    return false
+  }
+}
+
+export function endSetup(email) {
+  try {
+    sessionStorage.removeItem(setupKey(email))
+  } catch {
+    // nothing to clear
+  }
+}

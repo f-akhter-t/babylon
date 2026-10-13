@@ -14,7 +14,9 @@ const fromProfile = (profile) => ({
   ward: profile.ward,
 })
 
-export default function PersonalDetailsCard({ profile, onDirtyChange }) {
+// onStateChange({ dirty, canSave, saving }) lets the page show the phone
+// save bar, which submits or resets this form (by formId) from outside the card.
+export default function PersonalDetailsCard({ profile, formId, onStateChange, announce }) {
   const [saved, setSaved] = useState(() => fromProfile(profile)) // last saved values
   const [form, setForm] = useState(saved)
   const [touched, setTouched] = useState({})
@@ -27,8 +29,8 @@ export default function PersonalDetailsCard({ profile, onDirtyChange }) {
   const canSave = dirty && valid && !saving
 
   useEffect(() => {
-    onDirtyChange(dirty)
-  }, [dirty, onDirtyChange])
+    onStateChange({ dirty, canSave, saving })
+  }, [dirty, canSave, saving, onStateChange])
 
   function update(field, value) {
     setForm((current) => ({ ...current, [field]: value }))
@@ -55,7 +57,9 @@ export default function PersonalDetailsCard({ profile, onDirtyChange }) {
       setSaved(fromProfile(next))
       setForm(fromProfile(next))
       setTouched({})
-      setNotice({ tone: 'success', text: 'Your details are saved.' })
+      const text = 'Your details are saved.'
+      setNotice({ tone: 'success', text })
+      announce(text, { toast: true })
     } catch (err) {
       setNotice({ tone: 'error', text: err.message || 'Something went wrong. Please try again.' })
     } finally {
@@ -72,7 +76,16 @@ export default function PersonalDetailsCard({ profile, onDirtyChange }) {
       title="Personal details"
       intro="Departments see your name on your reports. Your address and ward help them find you."
     >
-      <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-4">
+      <form
+        id={formId}
+        onSubmit={handleSubmit}
+        onReset={(e) => {
+          e.preventDefault() // the form's own reset would clear the fields
+          discard()
+        }}
+        noValidate
+        className="flex flex-col gap-4"
+      >
         <div className="grid gap-4 sm:grid-cols-2">
           <TextField
             id="profile-name"

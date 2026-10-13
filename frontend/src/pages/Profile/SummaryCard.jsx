@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import StaircaseIcon from '../../components/ui/StaircaseIcon'
+import useCountUp from '../Home/useCountUp'
 import VerifyBadge from './VerifyBadge'
+import CompletenessMeter from './CompletenessMeter'
 import { getCurrentUser } from '../../services/api'
 
 function initialsFor(name) {
@@ -13,8 +15,11 @@ function initialsFor(name) {
 }
 
 // Points and level come from the same rule as the Alerts page (60 per report).
-export default function SummaryCard({ profile }) {
+// The points count up and the bar fills from empty when the card appears.
+// showMeter: false during first-time setup, where the welcome block shows it.
+export default function SummaryCard({ profile, showMeter = true }) {
   const [user, setUser] = useState(null)
+  const { ref: pointsRef, value: pointsShown } = useCountUp(user?.points, { duration: 1200 })
 
   useEffect(() => {
     let ignore = false
@@ -56,7 +61,10 @@ export default function SummaryCard({ profile }) {
               {`Level ${user.level} · ${user.role}`}
             </p>
           </div>
-          <p className="mt-2 font-heading text-5xl font-extrabold leading-none">{user.points}</p>
+          <p ref={pointsRef} className="mt-2 font-heading text-5xl font-extrabold leading-none">
+            <span aria-hidden="true">{Math.round(pointsShown)}</span>
+            <span className="sr-only">{`${user.points} points`}</span>
+          </p>
           <p className="mt-1 font-body text-sm text-mint/80">
             {user.reports === 1 ? 'points from 1 report' : `points from ${user.reports} reports`}
           </p>
@@ -70,7 +78,7 @@ export default function SummaryCard({ profile }) {
           >
             <div
               className="h-full rounded-full bg-brand transition-all duration-500"
-              style={{ width: `${progress}%` }}
+              style={{ width: `${progress}%`, animation: 'barFill 1.1s ease-out 0.3s both' }}
             />
           </div>
           <p className="mt-2 font-body text-xs text-mint/70">
@@ -87,7 +95,15 @@ export default function SummaryCard({ profile }) {
         </div>
       )}
 
-      <ul className="flex flex-col gap-2 border-t border-mint/15 pt-4 font-body text-sm">
+      {showMeter ? (
+        <div className="border-t border-mint/15 pt-4">
+          <CompletenessMeter profile={profile} />
+        </div>
+      ) : (
+        <div aria-hidden="true" className="border-t border-mint/15" />
+      )}
+
+      <ul className="flex flex-col gap-2 font-body text-sm">
         <li className="flex items-center justify-between gap-3">
           <span>Mobile number</span>
           <VerifyBadge status={profile.phoneVerified ? 'verified' : 'not-verified'} onDark />
@@ -100,7 +116,8 @@ export default function SummaryCard({ profile }) {
 
       <Link
         to="/my-reports"
-        className="self-start rounded-full font-body text-sm font-semibold text-brand underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/60"
+        // min-h-11 -my-3: a 44px tap area without changing the card's spacing.
+        className="-my-3 inline-flex min-h-11 items-center self-start rounded-full font-body text-sm font-semibold text-brand underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/60"
       >
         See your alerts and points
       </Link>

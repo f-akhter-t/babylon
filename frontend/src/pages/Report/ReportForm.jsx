@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import clsx from 'clsx'
 import CategoryChip from '../../components/ui/CategoryChip'
 import { createReport, fileToDataUrl } from '../../services/reportsStore'
+import { TITLE_MAX, TITLE_MIN } from '../../services/api'
 
 const REPORT_CATEGORIES = ['Roads', 'Waste', 'Water', 'Lighting', 'Bridges', 'Other']
 const MAX_PHOTO_MB = 5
@@ -55,14 +56,39 @@ function StepHeading({ number, done, children }) {
   )
 }
 
-// location = the pin the citizen picked on the map: { name: 'Station Road, Ward 4', lat, lng }
-// Report.jsx passes it in. Without it the report is saved with no pin (and no pin points).
-export default function ReportForm({ onSubmit, onCategoryChange, location }) {
-  const [photo, setPhoto] = useState(null) // { file, url }
+// The optional props after onCategoryChange are for editing a report
+// (the Edit issue page). The Report page leaves them out.
+//   location: the pin picked on the map: { name: 'Station Road, Ward 4', lat, lng }.
+//     Without it the report is saved with no pin (and no pin points).
+//   initialValues: { title, category, description, photoUrl } fills the form
+//     and adds a Title field. Save then needs a change, and the form is not
+//     cleared after saving.
+//   onCancel: shows a Cancel button next to Save.
+//   pinChanged: the map pin moved, which counts as a change.
+//   onDirtyChange(dirty): true while the fields differ from initialValues.
+//   lockedReason: a message. The form is shown but cannot be changed or sent.
+export default function ReportForm({
+  onSubmit,
+  onCategoryChange,
+  location,
+  initialValues,
+  submitLabel = 'Submit report',
+  onCancel,
+  pinChanged = false,
+  onDirtyChange,
+  lockedReason,
+}) {
+  const editing = Boolean(initialValues)
+  const locked = Boolean(lockedReason)
+  // { file, url }. A photo kept from the saved report has no file.
+  const [photo, setPhoto] = useState(() =>
+    initialValues?.photoUrl ? { file: null, url: initialValues.photoUrl } : null,
+  )
   const [photoError, setPhotoError] = useState('')
   const [dragging, setDragging] = useState(false)
-  const [category, setCategory] = useState('')
-  const [description, setDescription] = useState('')
+  const [title, setTitle] = useState(initialValues?.title ?? '')
+  const [category, setCategory] = useState(initialValues?.category ?? '')
+  const [description, setDescription] = useState(initialValues?.description ?? '')
   const [submitting, setSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState('')
   const inputRef = useRef(null)
@@ -70,7 +96,7 @@ export default function ReportForm({ onSubmit, onCategoryChange, location }) {
   // free the preview URL when the photo changes or the form unmounts
   useEffect(() => {
     return () => {
-      if (photo) URL.revokeObjectURL(photo.url)
+      if (photo?.file) URL.revokeObjectURL(photo.url)
     }
   }, [photo])
 
@@ -102,10 +128,27 @@ export default function ReportForm({ onSubmit, onCategoryChange, location }) {
   }
 
   const trimmed = description.trim()
-  const stepsDone = [Boolean(photo), Boolean(category), trimmed.length >= MIN_DESCRIPTION]
+  const trimmedTitle = title.trim()
+  const titleOk = !editing || trimmedTitle.length >= TITLE_MIN
+  const stepsDone = [
+    Boolean(photo),
+    Boolean(category),
+    trimmed.length >= MIN_DESCRIPTION && titleOk,
+  ]
   const doneCount = stepsDone.filter(Boolean).length
   const isComplete = doneCount === 3
-  const canSubmit = isComplete && !submitting
+  const fieldsChanged =
+    editing &&
+    (trimmedTitle !== initialValues.title ||
+      category !== initialValues.category ||
+      trimmed !== initialValues.description ||
+      photo?.url !== initialValues.photoUrl)
+  const hasChanges = !editing || fieldsChanged || pinChanged
+  const canSubmit = isComplete && hasChanges && !locked && !submitting
+
+  useEffect(() => {
+    onDirtyChange?.(fieldsChanged)
+  }, [fieldsChanged, onDirtyChange])
 
   async function handleSubmit(e) {
     e.preventDefault()
@@ -113,8 +156,13 @@ export default function ReportForm({ onSubmit, onCategoryChange, location }) {
     setSubmitting(true)
     setSubmitError('')
     try {
-      // 1. save the report. This is what puts a card on My reports,
-      //    adds points and sends the bell notification.
+      if (editing) {
+        await onSubmit?.({ photo: photo.file, category, description: trimmed, title: trimmedTitle })
+        return // the page moves on to the issue
+      }
+
+      // 1. save the report. This puts a card on My reports, adds points
+      //    and sends the bell notification.
       const photoUrl = await fileToDataUrl(photo.file)
       const report = createReport({
         category,
@@ -126,7 +174,6 @@ export default function ReportForm({ onSubmit, onCategoryChange, location }) {
 
       // 2. let the page react (for example go to My reports)
       await onSubmit?.({ photo: photo.file, category, description: trimmed, report })
-
       removePhoto()
       setCategory('')
       onCategoryChange?.('')
@@ -142,7 +189,42 @@ export default function ReportForm({ onSubmit, onCategoryChange, location }) {
   const missing = []
   if (!photo) missing.push('a photo')
   if (!category) missing.push('a category')
+  if (!titleOk) missing.push('a title')
   if (trimmed.length < MIN_DESCRIPTION) missing.push('a short description')
+
+  let hintText = `Still needed: ${missing.join(', ')}.`
+  if (isComplete && !editing) hintText = 'Clear photos and exact pins earn you points.'
+  else if (isComplete) hintText = hasChanges ? 'Your changes are ready to save.' : 'Change something to save.'
+
+  const submitButton = (
+    <button
+      type="submit"
+      disabled={!canSubmit}
+      className={clsx(
+        'group w-full rounded-full bg-navy px-6 py-4 font-body text-sm font-bold text-white transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest/60 focus-visible:ring-offset-2',
+        canSubmit
+          ? 'shadow-lg shadow-navy/25 hover:-translate-y-0.5 hover:bg-navy/90 hover:shadow-xl active:translate-y-0 active:scale-[0.99]'
+          : 'cursor-not-allowed opacity-50',
+      )}
+    >
+      {submitting ? (
+        editing ? 'Saving…' : 'Submitting…'
+      ) : (
+        <>
+          {submitLabel}{' '}
+          <span
+            aria-hidden="true"
+            className={clsx(
+              'inline-block transition-transform duration-200',
+              canSubmit && 'group-hover:translate-x-1',
+            )}
+          >
+            →
+          </span>
+        </>
+      )}
+    </button>
+  )
 
   return (
     <form
@@ -188,6 +270,7 @@ export default function ReportForm({ onSubmit, onCategoryChange, location }) {
           type="file"
           accept="image/*"
           className="sr-only"
+          disabled={locked}
           onChange={(e) => handleFile(e.target.files?.[0])}
         />
 
@@ -199,11 +282,14 @@ export default function ReportForm({ onSubmit, onCategoryChange, location }) {
               className="h-48 w-full object-cover transition-transform duration-500 group-hover:scale-105"
             />
             <div className="relative flex items-center justify-between gap-3 bg-white/90 px-4 py-2">
-              <span className="truncate font-body text-xs text-navy">{photo.file.name}</span>
+              <span className="truncate font-body text-xs text-navy">
+                {photo.file ? photo.file.name : 'Current photo'}
+              </span>
               <button
                 type="button"
                 onClick={removePhoto}
-                className="shrink-0 rounded-full px-3 py-1 font-body text-xs font-semibold text-forest transition hover:bg-forest/10 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest/50"
+                disabled={locked}
+                className="shrink-0 rounded-full px-3 py-1 font-body text-xs font-semibold text-forest transition hover:bg-forest/10 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest/50 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 Remove
               </button>
@@ -212,6 +298,7 @@ export default function ReportForm({ onSubmit, onCategoryChange, location }) {
         ) : (
           <button
             type="button"
+            disabled={locked}
             onClick={() => inputRef.current?.click()}
             onDragOver={(e) => {
               e.preventDefault()
@@ -273,10 +360,14 @@ export default function ReportForm({ onSubmit, onCategoryChange, location }) {
               key={c}
               label={c}
               active={category === c}
-              onClick={() => {
-                setCategory(c)
-                onCategoryChange?.(c)
-              }}
+              onClick={
+                locked
+                  ? undefined
+                  : () => {
+                      setCategory(c)
+                      onCategoryChange?.(c)
+                    }
+              }
               className="transition hover:-translate-y-0.5 hover:shadow-md active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest/50"
             />
           ))}
@@ -294,16 +385,36 @@ export default function ReportForm({ onSubmit, onCategoryChange, location }) {
             What is wrong?
           </StepHeading>
         </div>
+        {editing && (
+          <div className="flex flex-col gap-1.5">
+            <label htmlFor="report-title" className="font-body text-sm font-semibold text-navy">
+              Title
+            </label>
+            <input
+              id="report-title"
+              type="text"
+              value={title}
+              onChange={(e) => setTitle(e.target.value.slice(0, TITLE_MAX))}
+              disabled={locked}
+              aria-describedby="report-title-help"
+              className="w-full rounded-full border border-navy/15 bg-white px-4 py-3 font-body text-sm text-navy transition hover:border-forest/50 focus:border-forest focus:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest/40 disabled:opacity-60"
+            />
+            <p id="report-title-help" className="font-body text-xs text-muted">
+              {`A short name for the problem, ${TITLE_MIN} to ${TITLE_MAX} characters.`}
+            </p>
+          </div>
+        )}
         <label htmlFor="report-description" className="sr-only">
           Describe the problem
         </label>
         <textarea
           id="report-description"
+          disabled={locked}
           value={description}
           onChange={(e) => setDescription(e.target.value.slice(0, MAX_DESCRIPTION))}
           rows={4}
           placeholder="Large pothole in the left lane, about half a metre wide…"
-          className="w-full resize-none rounded-2xl border border-navy/15 bg-white px-4 py-3 font-body text-sm text-navy placeholder:text-muted transition hover:border-forest/50 focus:border-forest focus:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest/40"
+          className="w-full resize-none rounded-2xl border border-navy/15 bg-white px-4 py-3 font-body text-sm text-navy placeholder:text-muted transition hover:border-forest/50 focus:border-forest focus:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest/40 disabled:opacity-60"
         />
         <p
           className={clsx(
@@ -317,43 +428,34 @@ export default function ReportForm({ onSubmit, onCategoryChange, location }) {
 
       {/* submit */}
       <div className="flex flex-col items-center gap-2" style={rise(0.4)}>
-        <button
-          type="submit"
-          disabled={!canSubmit}
-          className={clsx(
-            'group w-full rounded-full bg-navy px-6 py-4 font-body text-sm font-bold text-white transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest/60 focus-visible:ring-offset-2',
-            canSubmit
-              ? 'shadow-lg shadow-navy/25 hover:-translate-y-0.5 hover:bg-navy/90 hover:shadow-xl active:translate-y-0 active:scale-[0.99]'
-              : 'cursor-not-allowed opacity-50',
-          )}
-        >
-          {submitting ? (
-            'Submitting…'
-          ) : (
-            <>
-              Submit report{' '}
-              <span
-                aria-hidden="true"
-                className={clsx(
-                  'inline-block transition-transform duration-200',
-                  canSubmit && 'group-hover:translate-x-1',
-                )}
-              >
-                →
-              </span>
-            </>
-          )}
-        </button>
+        {onCancel ? (
+          <div className="flex w-full flex-col-reverse gap-3 sm:flex-row">
+            <button
+              type="button"
+              onClick={onCancel}
+              className="flex shrink-0 items-center justify-center rounded-full border-2 border-navy/20 bg-white px-6 py-3.5 font-body text-sm font-bold text-navy transition hover:border-navy focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest/60 focus-visible:ring-offset-2"
+            >
+              Cancel
+            </button>
+            {submitButton}
+          </div>
+        ) : (
+          submitButton
+        )}
         {submitError && (
           <p role="alert" className="text-center font-body text-xs font-semibold text-amber-dark">
             {submitError}
           </p>
         )}
-        <p aria-live="polite" className="text-center font-body text-xs text-muted">
-          {isComplete
-            ? 'Clear photos and exact pins earn you points.'
-            : `Still needed: ${missing.join(', ')}.`}
-        </p>
+        {locked ? (
+          <p className="text-center font-body text-xs font-semibold text-amber-dark">
+            {lockedReason}
+          </p>
+        ) : (
+          <p aria-live="polite" className="text-center font-body text-xs text-muted">
+            {hintText}
+          </p>
+        )}
       </div>
     </form>
   )

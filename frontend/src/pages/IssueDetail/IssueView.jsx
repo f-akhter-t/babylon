@@ -8,11 +8,13 @@ import IssueSummary from './IssueSummary'
 import DetailActions from './DetailActions'
 import ProgressCard from './ProgressCard'
 import SeenBeforeNote from './SeenBeforeNote'
+import OwnerEdit from './OwnerEdit'
 
 // The page once the issue has loaded.
 // Phones: one column (photo, details, map).
 // Desktop: photo and map on the left, the details panel on the right.
-export default function IssueView({ issue, viewer, onToggleVote, onToggleFollow }) {
+// editAccess: 'ok' or 'locked' for the citizen who reported it, else 'not-owner'.
+export default function IssueView({ issue, viewer, editAccess, onToggleVote, onToggleFollow }) {
   // The three parts rise in one after the other.
   const photoRef = useEntrance(RISE_IN)
   const detailsRef = useEntrance(RISE_IN, { delay: 120 })
@@ -22,7 +24,7 @@ export default function IssueView({ issue, viewer, onToggleVote, onToggleFollow 
     <>
       <div className="flex items-center justify-between gap-3">
         <BackLink id={issue.id} />
-        <ShareButton />
+        <ShareButton title={issue.title} />
       </div>
 
       <div className="mt-3 grid gap-6 lg:grid-cols-[1.15fr_1fr] lg:grid-rows-[auto_1fr]">
@@ -35,6 +37,7 @@ export default function IssueView({ issue, viewer, onToggleVote, onToggleFollow 
           className="flex min-w-0 flex-col gap-5 rounded-hero bg-white p-5 shadow-xl shadow-navy/5 sm:p-7 lg:col-start-2 lg:row-span-2 lg:row-start-1"
         >
           <IssueSummary issue={issue} />
+          {editAccess !== 'not-owner' && <OwnerEdit issueId={issue.id} access={editAccess} />}
           <DetailActions
             issue={issue}
             viewer={viewer}

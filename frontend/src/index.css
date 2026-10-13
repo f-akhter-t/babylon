@@ -21,6 +21,13 @@
   --font-heading: "Bricolage Grotesque", sans-serif;
   --font-body: "Figtree", sans-serif;
 
+  /* Ticker scroll */
+  --animate-marquee: marquee 45s linear infinite;
+  @keyframes marquee {
+    from { transform: translateX(0); }
+    to { transform: translateX(-50%); }
+  }
+
   /* Corner radii: 14, 18, 22, 24, 32 px */
   --radius-chip: 14px;
   --radius-tile: 18px;
@@ -35,7 +42,35 @@
   }
 }
 
+/* Calm hover lift for cards. */
+@utility lift {
+  transition: transform 300ms ease, box-shadow 300ms ease;
+  &:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 20px 40px color-mix(in srgb, var(--color-navy) 25%, transparent);
+  }
+}
+
 button:not(:disabled),
 [role='button'] {
   cursor: pointer;
+}
+
+/* Two-tone focus ring: navy inside, brand outside.
+   It stays visible on both dark and light backgrounds. */
+:focus-visible {
+  outline: 2px solid var(--color-navy);
+  box-shadow: 0 0 0 4px var(--color-brand);
+}
+
+/* Safety net: people who ask for less motion get almost none. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

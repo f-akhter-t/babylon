@@ -16,13 +16,16 @@ export default function MapPopup({ issue, viewer, onClose, onToggleVote, onToggl
   return (
     <PopupShell lat={issue.lat} lng={issue.lng} width={WIDTH} pinHeight={PIN_HEIGHT} waitForFly>
       <div className="relative flex flex-col gap-3 p-4 font-body text-navy">
+        {/* A 44px tap area around the same small circle (centre unchanged). */}
         <button
           type="button"
           onClick={onClose}
           aria-label="Close (Esc)"
-          className="absolute right-2 top-2 flex size-7 items-center justify-center rounded-full text-lg leading-none text-muted hover:bg-mint hover:text-navy"
+          className="group absolute right-0 top-0 flex size-11 items-center justify-center rounded-full text-lg leading-none text-muted hover:text-navy"
         >
-          ×
+          <span className="flex size-7 items-center justify-center rounded-full group-hover:bg-mint">
+            ×
+          </span>
         </button>
 
         <div className="flex gap-3 pr-6">

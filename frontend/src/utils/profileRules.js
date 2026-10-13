@@ -76,6 +76,22 @@ export function checkIdPhoto(file) {
   return ''
 }
 
+// The reason an admin gives when rejecting an identity. The citizen sees it.
+export const REJECT_REASON_MIN = 5
+export const REJECT_REASON_MAX = 200
+
+export function checkRejectReason(value) {
+  const reason = value.trim()
+  if (!reason) return 'Please write a reason for the citizen.'
+  if (reason.length < REJECT_REASON_MIN) {
+    return `The reason needs at least ${REJECT_REASON_MIN} characters.`
+  }
+  if (reason.length > REJECT_REASON_MAX) {
+    return `The reason can be at most ${REJECT_REASON_MAX} characters.`
+  }
+  return ''
+}
+
 export function checkDetails({ name, address, ward }) {
   return {
     name: checkName(name),

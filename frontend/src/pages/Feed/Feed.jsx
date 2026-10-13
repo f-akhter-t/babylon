@@ -42,7 +42,9 @@ export default function Feed() {
 
   useEffect(() => {
     let active = true
-    setLoading(true)
+    Promise.resolve().then(() => {
+      if (active) setLoading(true)
+    })
     getIssues({ category, status, search }).then((list) => {
       if (active) {
         setIssues(list)

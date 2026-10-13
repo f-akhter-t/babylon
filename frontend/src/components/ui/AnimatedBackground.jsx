@@ -25,7 +25,9 @@ const styles = `
  * Purely visual: pointer-events-none, negative z-index, no layout effect.
  */
 export default function AnimatedBackground() {
-  const [reducedMotion, setReducedMotion] = useState(false)
+  const [reducedMotion, setReducedMotion] = useState(
+    () => window.matchMedia('(prefers-reduced-motion: reduce)').matches,
+  )
   const glowRef = useRef(null)
   const rafRef = useRef(null)
   const target = useRef({ x: 50, y: 50 })
@@ -33,7 +35,6 @@ export default function AnimatedBackground() {
 
   useEffect(() => {
     const mq = window.matchMedia('(prefers-reduced-motion: reduce)')
-    setReducedMotion(mq.matches)
     const onChange = () => setReducedMotion(mq.matches)
     mq.addEventListener('change', onChange)
     return () => mq.removeEventListener('change', onChange)

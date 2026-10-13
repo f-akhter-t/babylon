@@ -4,13 +4,17 @@ import ProfileCard from './ProfileCard'
 import TextField from './TextField'
 import FormNotice from './FormNotice'
 import VerifyBadge from './VerifyBadge'
+import IdentityTimeline from './IdentityTimeline'
+import PhotoDropzone from './PhotoDropzone'
 import { submitIdentity } from '../../services/api'
 import { checkIdPhoto, checkNid, normalizeNid } from '../../utils/profileRules'
+import { canReadImage, UNREADABLE_PHOTO } from '../../utils/idPhoto'
 import { formatDate } from '../../utils/format'
 
-// The full NID number and the photo live only in this component's state.
-// They are cleared after submitting and never written to browser storage.
-export default function IdentityCard({ profile, onDirtyChange }) {
+// The full NID number lives only in this component's state and is never
+// stored; the profile keeps its last 4 digits. The card photo is kept by
+// submitIdentity only until an admin reviews it, then deleted.
+export default function IdentityCard({ profile, onDirtyChange, announce }) {
   const [sent, setSent] = useState(null) // identity returned by the last submit
   // Until the profile reloads, show what was just sent instead of the old status.
   const identity =
@@ -26,7 +30,9 @@ export default function IdentityCard({ profile, onDirtyChange }) {
   const [photoError, setPhotoError] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [notice, setNotice] = useState(null) // { tone, text }
-  const inputRef = useRef(null)
+  const [focusRequest, setFocusRequest] = useState(0)
+  const statusRef = useRef(null)
+  const pickRef = useRef(0) // the latest photo choice wins if two are checked at once
 
   const formOpen =
     identity.status === 'not-submitted' || (identity.status === 'rejected' && resubmitting)
@@ -46,11 +52,24 @@ export default function IdentityCard({ profile, onDirtyChange }) {
     }
   }, [photo])
 
-  function handleFile(file) {
+  // After sending, move focus to the new status so keyboard users land on it.
+  useEffect(() => {
+    if (focusRequest) statusRef.current?.focus()
+  }, [focusRequest])
+
+  async function handleFile(file) {
     if (!file) return
     const problem = checkIdPhoto(file)
     if (problem) {
       setPhotoError(problem)
+      return
+    }
+    // A HEIC photo or a renamed file can pass the type check but not open.
+    const pick = ++pickRef.current
+    const readable = await canReadImage(file)
+    if (pick !== pickRef.current) return
+    if (!readable) {
+      setPhotoError(UNREADABLE_PHOTO)
       return
     }
     setPhotoError('')
@@ -63,7 +82,6 @@ export default function IdentityCard({ profile, onDirtyChange }) {
     setNidTouched(false)
     setPhoto(null)
     setPhotoError('')
-    if (inputRef.current) inputRef.current.value = '' // lets the same file be chosen again
   }
 
   async function handleSubmit(e) {
@@ -76,13 +94,19 @@ export default function IdentityCard({ profile, onDirtyChange }) {
       setSent(next.identity)
       clearForm()
       setResubmitting(false)
-      setNotice({ tone: 'success', text: 'Thank you. Your identity is sent for review.' })
+      const text = 'Thank you. Your identity is sent for review.'
+      setNotice({ tone: 'success', text })
+      announce(text, { toast: true })
+      setFocusRequest((n) => n + 1)
     } catch (err) {
       setNotice({ tone: 'error', text: err.message || 'Something went wrong. Please try again.' })
     } finally {
       setSubmitting(false)
     }
   }
+
+  const statusBox =
+    'rounded-tile bg-white/70 px-4 py-3 font-body text-sm text-navy focus:outline-none focus-visible:ring-2 focus-visible:ring-forest/50'
 
   return (
     <ProfileCard
@@ -91,25 +115,28 @@ export default function IdentityCard({ profile, onDirtyChange }) {
       intro="Verify your National ID so your reports carry more weight."
       badge={<VerifyBadge status={identity.status} />}
     >
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-5">
+        <IdentityTimeline identity={identity} />
+
         {identity.status === 'pending' && (
-          <div className="rounded-tile bg-white/70 px-4 py-3 font-body text-sm text-navy">
+          <div ref={statusRef} tabIndex={-1} className={statusBox}>
             <p className="font-bold">We are checking your details.</p>
             <p className="mt-1 text-slate">
               {`NID ending in ${identity.nidLast4}, sent on ${formatDate(identity.submittedAt)}. A review usually takes 1 to 2 working days.`}
             </p>
+            <p className="mt-1 text-slate">Your card photo is deleted as soon as the review is done.</p>
           </div>
         )}
 
         {identity.status === 'verified' && (
-          <div className="rounded-tile bg-white/70 px-4 py-3 font-body text-sm text-navy">
+          <div ref={statusRef} tabIndex={-1} className={statusBox}>
             <p className="font-bold">Your identity is verified.</p>
             <p className="mt-1 text-slate">{`NID ending in ${identity.nidLast4}.`}</p>
           </div>
         )}
 
         {identity.status === 'rejected' && (
-          <div className="rounded-tile border-2 border-danger/30 bg-white/70 px-4 py-3 font-body text-sm text-navy">
+          <div ref={statusRef} tabIndex={-1} className={`${statusBox} border-2 border-danger/30`}>
             <p className="font-bold">We could not verify your identity.</p>
             <p className="mt-1 text-slate">
               {`Reason: ${identity.reason || 'No reason given.'}`}
@@ -141,8 +168,8 @@ export default function IdentityCard({ profile, onDirtyChange }) {
                 nidDigits === 0
                   ? 'Smart cards have 10 digits, older cards 13 or 17.'
                   : nidDigits === 1
-                  ? 'Smart cards have 10 digits, older cards 13 or 17. You typed 1 digit.'
-                  : `Smart cards have 10 digits, older cards 13 or 17. You typed ${nidDigits} digits.`
+                    ? 'Smart cards have 10 digits, older cards 13 or 17. You typed 1 digit.'
+                    : `Smart cards have 10 digits, older cards 13 or 17. You typed ${nidDigits} digits.`
               }
               error={nidTouched && nid ? nidError : ''}
               className="sm:max-w-sm"
@@ -152,61 +179,22 @@ export default function IdentityCard({ profile, onDirtyChange }) {
               <p id="profile-nid-photo-label" className="font-body text-sm font-semibold text-navy">
                 Photo of the front of your NID card
               </p>
-              <input
-                ref={inputRef}
+              <PhotoDropzone
                 id="profile-nid-photo"
-                type="file"
-                accept="image/*"
-                className="sr-only"
-                aria-labelledby="profile-nid-photo-label"
-                onChange={(e) => handleFile(e.target.files?.[0])}
+                labelId="profile-nid-photo-label"
+                photo={photo}
+                error={photoError}
+                onFile={handleFile}
+                onRemove={() => {
+                  setPhoto(null)
+                  setPhotoError('')
+                }}
               />
-              {photo ? (
-                <div className="flex flex-wrap items-center gap-4 rounded-tile bg-white/70 p-3">
-                  <img
-                    src={photo.url}
-                    alt="Preview of your NID card photo"
-                    className="h-20 w-32 rounded-chip object-cover"
-                  />
-                  <div className="flex min-w-0 flex-1 flex-col gap-2">
-                    <span className="truncate font-body text-xs text-navy">{photo.file.name}</span>
-                    <div className="flex flex-wrap gap-2">
-                      <Button variant="outline" onClick={() => inputRef.current?.click()}>
-                        Choose another
-                      </Button>
-                      <Button
-                        variant="outline"
-                        onClick={() => {
-                          setPhoto(null)
-                          if (inputRef.current) inputRef.current.value = ''
-                        }}
-                      >
-                        Remove
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              ) : (
-                <button
-                  type="button"
-                  aria-describedby="profile-nid-photo-label"
-                  onClick={() => inputRef.current?.click()}
-                  className="flex h-24 w-full flex-col items-center justify-center gap-1 rounded-tile border-2 border-dashed border-forest/60 bg-white/70 px-4 text-center transition hover:border-forest hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest/50 sm:max-w-sm"
-                >
-                  <span className="font-body text-sm font-semibold text-navy">Choose a photo</span>
-                  <span className="font-body text-xs text-muted">JPG, PNG or WebP, up to 5 MB</span>
-                </button>
-              )}
-              {photoError && (
-                <p role="alert" className="font-body text-xs font-semibold text-danger">
-                  {photoError}
-                </p>
-              )}
             </div>
 
             <p className="font-body text-xs text-muted">
-              Only the last 4 digits of your NID and the review status are kept on this device. The
-              full number and the photo are not stored.
+              Your full NID number is never stored. Only its last 4 digits and the review status are
+              kept. Your card photo is kept only until an admin reviews it, then deleted.
             </p>
 
             <div className="flex flex-wrap items-center gap-3">
