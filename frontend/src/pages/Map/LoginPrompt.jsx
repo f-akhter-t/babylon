@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useCallback, useEffect, useRef } from 'react'
 import clsx from 'clsx'
 import Button from '../../components/ui/Button'
 import { animate, RISE_IN, SPRING } from './motion'
@@ -15,17 +15,29 @@ const REASONS = {
   report: 'Your reports are saved to your account so you can track them.',
 }
 
-// Small box asking a logged-out visitor to log in. Closes with × or Escape.
+// Small box asking a logged-out visitor to log in. Closes with × or Escape,
+// and then focus goes back to the button that opened it.
 // action: 'upvote' | 'follow' | 'report'
 export default function LoginPrompt({ action, onClose, className }) {
   const boxRef = useRef(null)
   const loginRef = useRef(null)
+  const openerRef = useRef(null) // the button that opened this box
 
   // Pop in, and move keyboard focus to "Log in".
   useEffect(() => {
+    // Remember the opener first. Only once: in development the effect runs
+    // twice, and the second time focus is already on "Log in".
+    if (!openerRef.current) openerRef.current = document.activeElement
     animate(boxRef.current, RISE_IN, { duration: 300, easing: SPRING })
     loginRef.current?.focus({ preventScroll: true }) // don't let the browser shift the map
   }, [])
+
+  // × and Escape: close, then put focus back where it was.
+  const close = useCallback(() => {
+    const opener = openerRef.current
+    onClose()
+    if (opener?.isConnected && opener !== document.body) opener.focus({ preventScroll: true })
+  }, [onClose])
 
   // Escape closes only this box. Listening in the "capture" phase runs first,
   // and stopPropagation keeps the page's own Escape (close popup) from running too.
@@ -33,11 +45,11 @@ export default function LoginPrompt({ action, onClose, className }) {
     const onKey = (event) => {
       if (event.key !== 'Escape') return
       event.stopPropagation()
-      onClose()
+      close()
     }
     window.addEventListener('keydown', onKey, true)
     return () => window.removeEventListener('keydown', onKey, true)
-  }, [onClose])
+  }, [close])
 
   return (
     <div
@@ -49,13 +61,16 @@ export default function LoginPrompt({ action, onClose, className }) {
         className,
       )}
     >
+      {/* A 44px tap area around the same small circle (centre unchanged). */}
       <button
         type="button"
-        onClick={onClose}
+        onClick={close}
         aria-label="Close"
-        className="absolute right-1.5 top-1.5 flex size-7 items-center justify-center rounded-full text-lg leading-none text-slate hover:bg-mint-deep hover:text-navy"
+        className="group absolute -right-0.5 -top-0.5 flex size-11 items-center justify-center rounded-full text-lg leading-none text-slate hover:text-navy"
       >
-        ×
+        <span className="flex size-7 items-center justify-center rounded-full group-hover:bg-mint-deep">
+          ×
+        </span>
       </button>
       <span className="font-heading text-base font-extrabold leading-tight">{TITLES[action]}</span>
       <span className="text-xs text-slate">{REASONS[action]}</span>

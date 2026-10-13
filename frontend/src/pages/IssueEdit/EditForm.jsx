@@ -129,7 +129,8 @@ export default function EditForm({ issue, email }) {
       <button
         type="button"
         onClick={handleCancel}
-        className="edit-rise group inline-flex items-center gap-1 rounded-full font-body text-sm font-semibold text-navy/70 transition hover:text-navy focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest/50"
+        // min-h-11 -my-3: a 44px tap area without moving the heading below.
+        className="edit-rise group -my-3 inline-flex min-h-11 items-center gap-1 rounded-full font-body text-sm font-semibold text-navy/70 transition hover:text-navy focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest/50"
         style={{ animation: 'editRise 0.45s ease-out both' }}
       >
         <span

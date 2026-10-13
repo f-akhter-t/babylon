@@ -10,6 +10,7 @@ import { useStoredIds } from './useStoredIds'
 import { useListKeys } from './useListKeys'
 import { useUnreadCount } from './useUnreadCount'
 import { useViewer } from './useViewer'
+import { useDocumentTitle } from '../IssueDetail/useDocumentTitle'
 
 const NO_FILTERS = { category: 'All', status: 'All', q: '' }
 
@@ -23,6 +24,7 @@ export default function Map() {
   // Following an issue adds 1 to the navbar bell, unfollowing takes 1 away.
   const unread = useUnreadCount(viewer.canAct ? followedIds.length : 0)
   const [cursors] = useState(cursorVariables) // built once
+  useDocumentTitle('Issues near you') // the same words as the page heading
 
   // Add this citizen's own vote and follow on top of the data.
   // The order stays as the data gave it (ranking is not done in the page).

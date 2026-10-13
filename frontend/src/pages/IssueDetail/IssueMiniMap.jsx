@@ -46,7 +46,7 @@ export default function IssueMiniMap({ issue }) {
         href={fullMap}
         target="_blank"
         rel="noopener noreferrer"
-        className="ml-auto mt-2 flex w-fit items-center gap-1.5 rounded-full px-2 py-1 text-sm font-semibold text-navy hover:underline focus-visible:outline-2 focus-visible:outline-navy"
+        className="ml-auto flex min-h-11 w-fit items-center gap-1.5 rounded-full px-2 text-sm font-semibold text-navy hover:underline focus-visible:outline-2 focus-visible:outline-navy"
       >
         Open in OpenStreetMap
         <ExternalLinkIcon size={14} />

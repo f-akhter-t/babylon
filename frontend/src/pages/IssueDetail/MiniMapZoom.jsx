@@ -3,8 +3,9 @@ import { useMap } from 'react-leaflet'
 import { DomEvent } from 'leaflet'
 import { MinusIcon, PlusIcon } from '../Map/MapIcons'
 
+// 44px on phones and tablets (tap size), 40px from lg up as before.
 const BUTTON =
-  'flex size-10 items-center justify-center bg-white text-navy transition hover:bg-mint active:bg-mint-deep focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-navy'
+  'flex size-11 items-center justify-center bg-white text-navy transition hover:bg-mint active:bg-mint-deep focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-navy lg:size-10'
 
 // Small + and − buttons for the mini map. Lives inside the map so it can use useMap().
 export default function MiniMapZoom() {
