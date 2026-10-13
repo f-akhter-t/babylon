@@ -1,28 +1,31 @@
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
-import clsx from 'clsx'
-import AuthShell, { Field, RoleTabs } from './AuthShell'
-import { DEMO_LOGIN, homePathFor, login } from '../../services/auth'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
+import AuthShell, { DemoHint, Field, FormError, SubmitButton, authLinkClass } from './AuthShell'
+import { DEMO_ACCOUNTS, DEMO_PASSWORD, homePathFor, login } from '../../services/auth'
+import { useDocumentTitle } from '../IssueDetail/useDocumentTitle'
 
+// Citizen log-in. Staff accounts sign in at /staff/login.
 export default function Login() {
+  useDocumentTitle('Log in')
   const navigate = useNavigate()
-  const [role, setRole] = useState('citizen')
-  const [email, setEmail] = useState('')
+  const location = useLocation()
+  // Filled in when the staff sign-in page sent a citizen account here.
+  const [email, setEmail] = useState(location.state?.email ?? '')
   const [password, setPassword] = useState('')
-  const [error, setError] = useState('')
+  const [error, setError] = useState(null) // { message, code }
   const [busy, setBusy] = useState(false)
 
   const ready = email.trim() && password
 
   async function handleSubmit(event) {
     event.preventDefault()
-    setError('')
+    setError(null)
     setBusy(true)
     try {
-      const user = await login({ email, password, role })
+      const user = await login({ email, password, door: 'citizen' })
       navigate(homePathFor(user.role))
     } catch (err) {
-      setError(err.message)
+      setError({ message: err.message, code: err.code })
     } finally {
       setBusy(false)
     }
@@ -31,19 +34,22 @@ export default function Login() {
   return (
     <AuthShell
       title="Log in"
-      subtitle="Choose your account type, then sign in."
+      subtitle="Sign in to report and follow issues in your area."
       footer={
         <>
           New to Babylon?{' '}
-          <Link to="/signup" className="font-bold underline">
+          <Link to="/signup" className={authLinkClass}>
             Create an account
           </Link>
         </>
       }
+      extra={
+        <Link to="/staff/login" className={authLinkClass}>
+          Government or admin staff? Sign in here.
+        </Link>
+      }
     >
-      <RoleTabs value={role} onChange={setRole} />
-
-      <form onSubmit={handleSubmit} className="mt-5 flex flex-col gap-4">
+      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         <Field
           id="email"
           label="Email"
@@ -63,24 +69,24 @@ export default function Login() {
           onChange={(e) => setPassword(e.target.value)}
         />
 
-        {error && <p className="font-body text-sm font-bold text-amber-dark">{error}</p>}
+        <FormError
+          message={error?.message}
+          action={
+            error?.code === 'staff-account' && (
+              <Link to="/staff/login" state={{ email }} className={authLinkClass}>
+                Go to the staff sign-in page.
+              </Link>
+            )
+          }
+        />
 
-        <button
-          type="submit"
-          disabled={!ready || busy}
-          className={clsx(
-            'rounded-full bg-navy px-6 py-3.5 font-body text-base font-bold text-mint transition-opacity',
-            !ready || busy ? 'cursor-not-allowed opacity-40' : 'hover:opacity-90',
-          )}
-        >
-          {busy ? 'Logging in…' : 'Log in'}
-        </button>
+        <SubmitButton disabled={!ready || busy}>{busy ? 'Logging in…' : 'Log in'}</SubmitButton>
       </form>
 
-      <p className="mt-5 rounded-tile bg-white px-4 py-3 font-body text-sm text-muted">
-        Demo account: <span className="font-bold text-navy">{DEMO_LOGIN[role]}</span> with
-        password <span className="font-bold text-navy">password123</span>
-      </p>
+      <DemoHint
+        accounts={DEMO_ACCOUNTS.citizen}
+        lines={[`The demo account uses the password ${DEMO_PASSWORD}.`]}
+      />
     </AuthShell>
   )
 }

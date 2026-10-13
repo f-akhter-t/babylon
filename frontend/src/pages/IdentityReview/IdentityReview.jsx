@@ -13,6 +13,7 @@ import {
   PROFILE_EVENT,
   reviewIdentity,
 } from '../../services/api'
+import { homePathFor } from '../../services/auth'
 
 // A submission is the same one only while its date matches, so a citizen who
 // sends again after a rejection shows up as a fresh card.
@@ -38,10 +39,12 @@ function QueueSection({ label, children }) {
   )
 }
 
-// Only admins review identities. Everyone else goes to the login page.
+// Only admins review identities. Guests go to the staff sign-in page,
+// other signed-in accounts go to their own home page.
 export default function IdentityReview() {
   const viewer = useViewer()
-  if (viewer.role !== 'admin') return <Navigate to="/login" replace />
+  if (viewer.isGuest) return <Navigate to="/staff/login" replace />
+  if (viewer.role !== 'admin') return <Navigate to={homePathFor(viewer.role)} replace />
   return <IdentityReviewPage />
 }
 

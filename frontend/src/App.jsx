@@ -14,6 +14,8 @@ import IdentityReview from './pages/IdentityReview/IdentityReview'
 import Styleguide from './pages/Styleguide/Styleguide'
 import Login from './pages/Auth/Login'
 import Signup from './pages/Auth/Signup'
+import StaffLogin from './pages/Auth/StaffLogin'
+import StaffSignup from './pages/Auth/StaffSignup'
 
 export default function App() {
   return (
@@ -33,6 +35,8 @@ export default function App() {
       <Route path="/styleguide" element={<Styleguide />} />
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<Signup />} />
+      <Route path="/staff/login" element={<StaffLogin />} />
+      <Route path="/staff/signup" element={<StaffSignup />} />
     </Routes>
   )
 }
