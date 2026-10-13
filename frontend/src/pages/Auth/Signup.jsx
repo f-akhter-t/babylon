@@ -3,10 +3,19 @@ import { Link, useNavigate } from 'react-router-dom'
 import AuthShell, { Field, FormError, SubmitButton, authLinkClass } from './AuthShell'
 import { signup, startSetup } from '../../services/auth'
 import { useDocumentTitle } from '../IssueDetail/useDocumentTitle'
+import GuestOnly from './GuestOnly'
 import { validateNewAccount } from './validateNewAccount'
 
 // Citizen sign-up. Staff accounts are created at /staff/signup.
 export default function Signup() {
+  return (
+    <GuestOnly>
+      <SignupPage />
+    </GuestOnly>
+  )
+}
+
+function SignupPage() {
   useDocumentTitle('Create account')
   const navigate = useNavigate()
   const [name, setName] = useState('')

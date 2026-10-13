@@ -1,30 +1,8 @@
 import clsx from 'clsx'
 import { Link } from 'react-router-dom'
-import { usePendingIdentityCount } from '../../hooks/usePendingIdentityCount'
-
-const variants = {
-  department: {
-    label: 'Department panel',
-    note: 'Only the admin can close an issue, after checking your after-photo.',
-    items: [
-      { label: 'Assigned issues' },
-      { label: 'In progress' },
-      { label: 'Awaiting verification' },
-      { label: 'Completed' },
-    ],
-  },
-  admin: {
-    label: 'Admin oversight',
-    note: 'Nothing closes without a photo you have checked.',
-    items: [
-      { label: 'Verification queue', to: '/admin/verify', count: 3 },
-      { label: 'Reopened issues', to: '/admin/verify', count: 1, tone: 'amber' },
-      { label: 'Accountability', to: '/admin/accountability' },
-      { label: 'All issues' },
-      { label: 'Identity checks', to: '/admin/identity', liveCount: true },
-    ],
-  },
-}
+import { useAdminCounts } from '../../hooks/useAdminCounts'
+import { ADMIN_NAV } from './adminNav'
+import AdminSignOut from './AdminSignOut'
 
 function NavItem({ item, isActive, onSelect }) {
   const classes = clsx(
@@ -65,12 +43,12 @@ export default function AdminLayout({
   variant = 'admin',
   active,
   onSelect,
-  department = 'Roads & Highways',
+  department,
   note,
   children,
 }) {
-  const config = variants[variant]
-  const pendingIdentity = usePendingIdentityCount()
+  const config = ADMIN_NAV[variant]
+  const counts = useAdminCounts(variant, department)
 
   return (
     <div className="flex min-h-screen bg-page font-body">
@@ -82,7 +60,7 @@ export default function AdminLayout({
           </p>
         </div>
 
-        {variant === 'department' && (
+        {variant === 'department' && department && (
           <div className="mt-6 rounded-tile border border-mint/15 bg-mint/5 px-4 py-3">
             <p className="text-xs text-mint/70">Signed in as</p>
             <p className="font-heading text-base font-bold text-mint">{department}</p>
@@ -93,7 +71,7 @@ export default function AdminLayout({
           {config.items.map((item) => (
             <NavItem
               key={item.label}
-              item={item.liveCount ? { ...item, count: pendingIdentity } : item}
+              item={item.badge ? { ...item, count: counts[item.badge] } : item}
               isActive={item.label === active}
               onSelect={onSelect}
             />
@@ -101,6 +79,7 @@ export default function AdminLayout({
         </nav>
 
         <p className="mt-auto px-2 text-sm text-mint/70">{note ?? config.note}</p>
+        <AdminSignOut className="mt-4" />
       </aside>
 
       <main className="min-w-0 flex-1">{children}</main>

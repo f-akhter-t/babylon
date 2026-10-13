@@ -9,9 +9,18 @@ import {
   login,
 } from '../../services/auth'
 import { useDocumentTitle } from '../IssueDetail/useDocumentTitle'
+import GuestOnly from './GuestOnly'
 
 // Sign-in for department and admin accounts. The role comes from the account.
 export default function StaffLogin() {
+  return (
+    <GuestOnly>
+      <StaffLoginPage />
+    </GuestOnly>
+  )
+}
+
+function StaffLoginPage() {
   useDocumentTitle('Staff sign in')
   const navigate = useNavigate()
   const location = useLocation()

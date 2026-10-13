@@ -1,11 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { Navigate } from 'react-router-dom'
 import clsx from 'clsx'
 import AdminLayout from '../../components/layout/AdminLayout'
 import FormNotice from '../Profile/FormNotice'
 import IdentityQueueCard, { QueueSkeleton } from './IdentityQueueCard'
 import IdentityReviewPanel from './IdentityReviewPanel'
-import { useViewer } from '../Map/useViewer'
+import RequireRole from '../Auth/RequireRole'
 import { useDocumentTitle } from '../IssueDetail/useDocumentTitle'
 import {
   ALREADY_REVIEWED,
@@ -13,7 +12,6 @@ import {
   PROFILE_EVENT,
   reviewIdentity,
 } from '../../services/api'
-import { homePathFor } from '../../services/auth'
 
 // A submission is the same one only while its date matches, so a citizen who
 // sends again after a rejection shows up as a fresh card.
@@ -42,10 +40,11 @@ function QueueSection({ label, children }) {
 // Only admins review identities. Guests go to the staff sign-in page,
 // other signed-in accounts go to their own home page.
 export default function IdentityReview() {
-  const viewer = useViewer()
-  if (viewer.isGuest) return <Navigate to="/staff/login" replace />
-  if (viewer.role !== 'admin') return <Navigate to={homePathFor(viewer.role)} replace />
-  return <IdentityReviewPage />
+  return (
+    <RequireRole role="admin">
+      <IdentityReviewPage />
+    </RequireRole>
+  )
 }
 
 function IdentityReviewPage() {

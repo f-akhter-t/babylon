@@ -390,6 +390,15 @@ export async function getDepartmentIssues(departmentName) {
   )
 }
 
+// Issues this department fixed and the admin closed (the "Completed" filter).
+export async function getCompletedDepartmentIssues(departmentName) {
+  return rankIssues(
+    all.filter(
+      (issue) => issue.department === departmentName && issue.status === 'resolved',
+    ),
+  )
+}
+
 export async function getDepartmentSummary(departmentName) {
   const list = await getDepartmentIssues(departmentName)
   return {
