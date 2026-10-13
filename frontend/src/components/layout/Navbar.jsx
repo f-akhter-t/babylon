@@ -17,7 +17,6 @@ const citizenLinks = [
 const departmentLinks = [{ label: 'Department panel', to: '/department' }]
 
 const adminLinks = [
-  { label: 'Department panel', to: '/department' },
   { label: 'Verify resolutions', to: '/admin/verify' },
   { label: 'Accountability', to: '/admin/accountability' },
 ]
