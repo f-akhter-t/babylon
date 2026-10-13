@@ -19,6 +19,14 @@ function StatusCell({ issue }) {
       </span>
     )
   }
+  if (issue.sentBack) {
+    return (
+      <span className="inline-flex items-center gap-2 rounded-full bg-slate/15 px-3 py-1 font-body text-sm font-semibold text-navy">
+        <StaircaseIcon level={2} className="text-slate" />
+        Sent back
+      </span>
+    )
+  }
   return <StatusPill status={issue.status} />
 }
 

@@ -1,8 +1,9 @@
 import { useState } from 'react'
 import clsx from 'clsx'
 
-export default function ResolvePanel({ issue, onSubmit }) {
+export default function ResolvePanel({ issue, onSubmit, busy = false }) {
   const [previewUrl, setPreviewUrl] = useState(null)
+  const [file, setFile] = useState(null) // sent to onSubmit, which shrinks it
   const [note, setNote] = useState('')
 
   if (!issue) {
@@ -46,10 +47,11 @@ export default function ResolvePanel({ issue, onSubmit }) {
   }
 
   function handleFile(event) {
-    const file = event.target.files?.[0]
-    if (!file) return
+    const picked = event.target.files?.[0]
+    if (!picked) return
     if (previewUrl) URL.revokeObjectURL(previewUrl)
-    setPreviewUrl(URL.createObjectURL(file))
+    setPreviewUrl(URL.createObjectURL(picked))
+    setFile(picked)
   }
 
   return (
@@ -60,6 +62,11 @@ export default function ResolvePanel({ issue, onSubmit }) {
       <h2 className="mt-1 font-heading text-2xl font-extrabold text-navy">
         {issue.title}
       </h2>
+      {issue.sentBack && (
+        <p className="mt-4 font-body text-sm font-bold text-danger">
+          {`The admin sent this back on ${issue.sentBack.on}. Reason: ${issue.sentBack.reason}`}
+        </p>
+      )}
 
       <p className="mt-5 font-body text-sm font-bold text-navy">Before · from citizen</p>
       <div className="mt-2 flex h-32 items-center justify-center rounded-card bg-slate font-body text-sm font-semibold text-mint">
@@ -103,11 +110,11 @@ export default function ResolvePanel({ issue, onSubmit }) {
 
       <button
         type="button"
-        disabled={!previewUrl}
-        onClick={() => onSubmit(issue.id, note)}
+        disabled={!previewUrl || busy}
+        onClick={() => onSubmit(issue.id, { note, file })}
         className={clsx(
           'mt-5 w-full rounded-full bg-navy px-6 py-3.5 font-body text-base font-bold text-mint transition-opacity',
-          !previewUrl ? 'cursor-not-allowed opacity-40' : 'hover:opacity-90',
+          !previewUrl || busy ? 'cursor-not-allowed opacity-40' : 'hover:opacity-90',
         )}
       >
         Submit for verification

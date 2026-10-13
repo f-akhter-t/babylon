@@ -1,11 +1,19 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import clsx from 'clsx'
 import AdminLayout from '../../components/layout/AdminLayout'
 import StaircaseIcon from '../../components/ui/StaircaseIcon'
+import LoadError from '../../components/ui/LoadError'
 import IssueTable from './IssueTable'
 import ResolvePanel from './ResolvePanel'
-import { getCompletedDepartmentIssues, getDepartmentIssues } from '../../services/api'
+import {
+  ISSUES_EVENT,
+  loadDepartmentPanel,
+  startWork as startWorkOn,
+  submitForVerification as sendForVerification,
+} from '../../services/api'
+import { useAsync } from '../../hooks/useAsync'
+import { resizeImage } from '../../utils/resizeImage'
 import RequireRole from '../Auth/RequireRole'
 import { useViewer } from '../Map/useViewer'
 import { useDocumentTitle } from '../IssueDetail/useDocumentTitle'
@@ -14,6 +22,8 @@ import { ALL_ASSIGNED_LABEL, DEPARTMENT_FILTERS, filterFor, issuesFor } from './
 // Accounts made before departments were saved at sign-up have none.
 const NO_DEPARTMENT =
   'This account has no department saved, so no issues can be shown. Please create a new staff account and choose your department.'
+const LOAD_FAILED = 'We could not load your department’s issues. Please try again.'
+const NO_ISSUES = Promise.resolve({ assigned: [], completed: [] })
 
 function StatCard({ label, value, level, iconClass, dark }) {
   return (
@@ -53,37 +63,56 @@ function DepartmentPanelPage() {
   const { department } = useViewer()
   const [searchParams] = useSearchParams()
   const status = filterFor(searchParams.get('status'))
-  const [issues, setIssues] = useState([])
-  const [completed, setCompleted] = useState([])
   const [selectedId, setSelectedId] = useState(null)
+  const [busy, setBusy] = useState(false)
+  const [notice, setNotice] = useState(null) // { tone: 'success' | 'error', text }
 
+  const load = useCallback(
+    () => (department ? loadDepartmentPanel(department) : NO_ISSUES),
+    [department],
+  )
+  const { data, error, loading, retry, reload } = useAsync(load)
+  const issues = data?.assigned ?? []
+  const completed = data?.completed ?? []
+
+  // An issue changed (here, in another tab, or by the admin): show the latest.
   useEffect(() => {
-    if (!department) return
-    getDepartmentIssues(department).then(setIssues)
-    getCompletedDepartmentIssues(department).then(setCompleted)
-  }, [department])
+    window.addEventListener(ISSUES_EVENT, reload)
+    return () => window.removeEventListener(ISSUES_EVENT, reload)
+  }, [reload])
 
   const shown = issuesFor(status, issues, completed)
   // Closed issues have nothing left to resolve, so they never open the panel.
   const selected =
     shown.find((issue) => issue.id === selectedId && issue.status !== 'resolved') ?? null
 
-  function startWork(id) {
-    setIssues((list) =>
-      list.map((issue) =>
-        issue.id === id ? { ...issue, status: 'in-progress' } : issue,
-      ),
-    )
-    setSelectedId(id)
+  async function startWork(id) {
+    setNotice(null)
+    setBusy(true)
+    try {
+      await startWorkOn(id)
+      setSelectedId(id)
+    } catch (err) {
+      setNotice({ tone: 'error', text: err.message })
+    } finally {
+      setBusy(false)
+    }
   }
 
-  function submitForVerification(id) {
-    setIssues((list) =>
-      list.map((issue) =>
-        issue.id === id ? { ...issue, verification: 'awaiting' } : issue,
-      ),
-    )
-    setSelectedId(null)
+  // The photo is shrunk first, so it fits in this device's storage.
+  async function submitForVerification(id, { note, file }) {
+    setNotice(null)
+    setBusy(true)
+    try {
+      const photoUrl = await resizeImage(file)
+      const issue = await sendForVerification(id, { note, photoUrl })
+      setSelectedId(null)
+      setNotice({ tone: 'success', text: `Sent to the admin for verification: ${issue.title}.` })
+    } catch (err) {
+      setNotice({ tone: 'error', text: err.message })
+    } finally {
+      setBusy(false)
+    }
   }
 
   const heading = status ? DEPARTMENT_FILTERS[status].label : ALL_ASSIGNED_LABEL
@@ -93,6 +122,19 @@ function DepartmentPanelPage() {
     (i) => i.status === 'in-progress' && i.verification !== 'awaiting',
   ).length
   const awaiting = issues.filter((i) => i.verification === 'awaiting').length
+
+  if (error) {
+    return (
+      <AdminLayout variant="department" active={heading} department={department}>
+        <div className="p-8">
+          <h1 className="font-heading text-4xl font-extrabold text-navy">{heading}</h1>
+          <div className="mt-6">
+            <LoadError message={LOAD_FAILED} onRetry={retry} />
+          </div>
+        </div>
+      </AdminLayout>
+    )
+  }
 
   return (
     <AdminLayout
@@ -111,6 +153,17 @@ function DepartmentPanelPage() {
           {!department && (
             <p role="alert" className="mt-3 font-body text-base font-bold text-danger">
               {NO_DEPARTMENT}
+            </p>
+          )}
+          {notice && (
+            <p
+              role={notice.tone === 'error' ? 'alert' : 'status'}
+              className={clsx(
+                'mt-3 font-body text-base font-bold',
+                notice.tone === 'error' ? 'text-danger' : 'text-forest',
+              )}
+            >
+              {notice.text}
             </p>
           )}
 
@@ -132,7 +185,7 @@ function DepartmentPanelPage() {
               onSelect={setSelectedId}
               onStart={startWork}
             />
-            {department && shown.length === 0 && (
+            {department && !loading && shown.length === 0 && (
               <p className="mt-3 font-body text-base text-navy">No issues match this filter.</p>
             )}
           </div>
@@ -143,6 +196,7 @@ function DepartmentPanelPage() {
             key={selected?.id ?? 'none'}
             issue={selected}
             onSubmit={submitForVerification}
+            busy={busy}
           />
         </aside>
       </div>
