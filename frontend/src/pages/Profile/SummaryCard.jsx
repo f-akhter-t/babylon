@@ -116,7 +116,8 @@ export default function SummaryCard({ profile, showMeter = true }) {
 
       <Link
         to="/my-reports"
-        className="self-start rounded-full font-body text-sm font-semibold text-brand underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/60"
+        // min-h-11 -my-3: a 44px tap area without changing the card's spacing.
+        className="-my-3 inline-flex min-h-11 items-center self-start rounded-full font-body text-sm font-semibold text-brand underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/60"
       >
         See your alerts and points
       </Link>

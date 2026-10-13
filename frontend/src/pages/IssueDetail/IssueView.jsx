@@ -24,7 +24,7 @@ export default function IssueView({ issue, viewer, editAccess, onToggleVote, onT
     <>
       <div className="flex items-center justify-between gap-3">
         <BackLink id={issue.id} />
-        <ShareButton />
+        <ShareButton title={issue.title} />
       </div>
 
       <div className="mt-3 grid gap-6 lg:grid-cols-[1.15fr_1fr] lg:grid-rows-[auto_1fr]">
