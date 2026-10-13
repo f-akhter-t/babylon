@@ -38,6 +38,18 @@ function ActionButton({ issue, onStart, onSelect }) {
     )
   }
 
+  if (issue.status === 'resolved') {
+    return (
+      <button
+        type="button"
+        disabled
+        className={clsx(base, 'cursor-not-allowed bg-slate/15 text-slate')}
+      >
+        Closed
+      </button>
+    )
+  }
+
   if (issue.status === 'open') {
     return (
       <button

@@ -12,6 +12,8 @@ import {
 } from 'recharts'
 import AdminLayout from '../../components/layout/AdminLayout'
 import { getAccountability } from '../../services/api'
+import RequireRole from '../Auth/RequireRole'
+import { useDocumentTitle } from '../IssueDetail/useDocumentTitle'
 
 const PERIODS = [
   { label: 'Last 4 weeks', weeks: 4 },
@@ -185,7 +187,17 @@ function WaitingLongest({ items }) {
   )
 }
 
+// Admins only. Department accounts go to their own panel.
 export default function Accountability() {
+  return (
+    <RequireRole role="admin">
+      <AccountabilityPage />
+    </RequireRole>
+  )
+}
+
+function AccountabilityPage() {
+  useDocumentTitle('Accountability')
   const [data, setData] = useState(null)
   const [weeks, setWeeks] = useState(8)
 

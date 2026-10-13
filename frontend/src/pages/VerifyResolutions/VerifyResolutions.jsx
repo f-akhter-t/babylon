@@ -4,6 +4,8 @@ import clsx from 'clsx'
 import AdminLayout from '../../components/layout/AdminLayout'
 import ReviewPanel from './ReviewPanel'
 import { getVerificationQueue, getReopenedIssues } from '../../services/api'
+import RequireRole from '../Auth/RequireRole'
+import { useDocumentTitle } from '../IssueDetail/useDocumentTitle'
 
 const PRIORITY_LABEL = {
   urgent: 'Urgent priority',
@@ -39,7 +41,17 @@ function QueueCard({ issue, selected, onSelect }) {
   )
 }
 
+// Admins only. Department accounts go to their own panel.
 export default function VerifyResolutions() {
+  return (
+    <RequireRole role="admin">
+      <VerifyResolutionsPage />
+    </RequireRole>
+  )
+}
+
+function VerifyResolutionsPage() {
+  useDocumentTitle('Verify resolutions')
   const [queue, setQueue] = useState([])
   const [reopened, setReopened] = useState(null)
   const [selectedId, setSelectedId] = useState(null)

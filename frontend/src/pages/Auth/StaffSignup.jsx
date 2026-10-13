@@ -11,11 +11,20 @@ import AuthShell, {
 import { DEMO_STAFF_CODE, STAFF_ROLES, homePathFor, signup } from '../../services/auth'
 import { departments } from '../../mock/departments'
 import { useDocumentTitle } from '../IssueDetail/useDocumentTitle'
+import GuestOnly from './GuestOnly'
 import { validateNewAccount } from './validateNewAccount'
 
 // Sign-up for department and admin accounts. Needs the staff access code,
 // which signup() checks.
 export default function StaffSignup() {
+  return (
+    <GuestOnly>
+      <StaffSignupPage />
+    </GuestOnly>
+  )
+}
+
+function StaffSignupPage() {
   useDocumentTitle('Staff sign up')
   const navigate = useNavigate()
   const [role, setRole] = useState('department')

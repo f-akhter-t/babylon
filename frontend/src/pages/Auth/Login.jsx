@@ -3,9 +3,18 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import AuthShell, { DemoHint, Field, FormError, SubmitButton, authLinkClass } from './AuthShell'
 import { DEMO_ACCOUNTS, DEMO_PASSWORD, homePathFor, login } from '../../services/auth'
 import { useDocumentTitle } from '../IssueDetail/useDocumentTitle'
+import GuestOnly from './GuestOnly'
 
 // Citizen log-in. Staff accounts sign in at /staff/login.
 export default function Login() {
+  return (
+    <GuestOnly>
+      <LoginPage />
+    </GuestOnly>
+  )
+}
+
+function LoginPage() {
   useDocumentTitle('Log in')
   const navigate = useNavigate()
   const location = useLocation()
