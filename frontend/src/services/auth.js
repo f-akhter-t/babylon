@@ -5,11 +5,20 @@ const USERS_KEY = 'babylon-users'
 const SESSION_KEY = 'babylon-session'
 const NAMES_KEY = 'babylon-names' // names changed on the Profile page, by email
 
-export const ROLES = [
-  { id: 'citizen', label: 'Citizen' },
+// Roles that sign up through the staff pages (/staff/login, /staff/signup).
+// Citizens use /login and /signup.
+export const STAFF_ROLES = [
   { id: 'department', label: 'Department' },
   { id: 'admin', label: 'Admin' },
 ]
+
+// Mock only: a real backend would issue a personal invitation to each staff
+// member instead of one shared code, and would never ship the code to the
+// browser. It is only compared inside signup() and never saved.
+const STAFF_ACCESS_CODE = 'BABYLON-STAFF-2026'
+export const DEMO_STAFF_CODE = STAFF_ACCESS_CODE
+
+const isStaffRole = (role) => role !== 'citizen'
 
 // Demo accounts so every role can be tried without signing up first.
 const DEMO_USERS = [
@@ -24,11 +33,15 @@ const DEMO_USERS = [
   { name: 'Admin', email: 'admin@babylon.test', password: 'password123', role: 'admin' },
 ]
 
-export const DEMO_LOGIN = {
-  citizen: 'citizen@babylon.test',
-  department: 'roads@babylon.test',
-  admin: 'admin@babylon.test',
+// Demo accounts listed on each sign-in page: citizens on /login, staff on /staff/login.
+export const DEMO_ACCOUNTS = {
+  citizen: [{ role: 'Citizen', email: 'citizen@babylon.test' }],
+  staff: [
+    { role: 'Department', email: 'roads@babylon.test' },
+    { role: 'Admin', email: 'admin@babylon.test' },
+  ],
 }
+export const DEMO_PASSWORD = 'password123'
 
 function readStored() {
   try {
@@ -70,19 +83,43 @@ export function getSession() {
   }
 }
 
-export async function login({ email, password, role }) {
-  const user = allUsers().find(
-    (u) => u.email.toLowerCase() === email.trim().toLowerCase() && u.role === role,
-  )
+// Thrown when an account signs in through the other door. `code` lets the
+// page show a link to the right sign-in page next to the message.
+function wrongDoor(message, code) {
+  const error = new Error(message)
+  error.code = code
+  return error
+}
+
+// door: 'citizen' (/login) or 'staff' (/staff/login). Each door accepts only
+// its own accounts. The account type is revealed only after the right password.
+export async function login({ email, password, door }) {
+  const user = allUsers().find((u) => u.email.toLowerCase() === email.trim().toLowerCase())
   if (!user || user.password !== password) {
-    throw new Error('Wrong email or password for this account type.')
+    throw new Error('That email and password do not match an account.')
+  }
+  if (door === 'citizen' && isStaffRole(user.role)) {
+    throw wrongDoor('This is a staff account, so please use the staff sign-in page.', 'staff-account')
+  }
+  if (door === 'staff' && !isStaffRole(user.role)) {
+    throw wrongDoor('This is a citizen account, so please use the citizen log-in page.', 'citizen-account')
   }
   const session = publicUser(user)
   localStorage.setItem(SESSION_KEY, JSON.stringify(session))
   return session
 }
 
-export async function signup({ name, email, password, role, department }) {
+export async function signup({ name, email, password, role, department, accessCode }) {
+  if (role !== 'citizen' && !STAFF_ROLES.some((r) => r.id === role)) {
+    throw new Error('Choose a valid account type.')
+  }
+  if (isStaffRole(role) && accessCode?.trim() !== STAFF_ACCESS_CODE) {
+    throw new Error('The staff access code is not correct. Ask your administrator for the code.')
+  }
+  if (role === 'department' && !department) {
+    throw new Error('Choose the department you work for.')
+  }
+
   const taken = allUsers().some(
     (u) => u.email.toLowerCase() === email.trim().toLowerCase(),
   )
