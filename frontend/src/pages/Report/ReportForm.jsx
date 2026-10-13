@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import clsx from 'clsx'
 import CategoryChip from '../../components/ui/CategoryChip'
+import { createReport, fileToDataUrl } from '../../services/reportsStore'
 
 const REPORT_CATEGORIES = ['Roads', 'Waste', 'Water', 'Lighting', 'Bridges', 'Other']
 const MAX_PHOTO_MB = 5
@@ -54,7 +55,9 @@ function StepHeading({ number, done, children }) {
   )
 }
 
-export default function ReportForm({ onSubmit, onCategoryChange }) {
+// location = the pin the citizen picked on the map: { name: 'Station Road, Ward 4', lat, lng }
+// Report.jsx passes it in. Without it the report is saved with no pin (and no pin points).
+export default function ReportForm({ onSubmit, onCategoryChange, location }) {
   const [photo, setPhoto] = useState(null) // { file, url }
   const [photoError, setPhotoError] = useState('')
   const [dragging, setDragging] = useState(false)
@@ -110,7 +113,20 @@ export default function ReportForm({ onSubmit, onCategoryChange }) {
     setSubmitting(true)
     setSubmitError('')
     try {
-      await onSubmit?.({ photo: photo.file, category, description: trimmed })
+      // 1. save the report. This is what puts a card on My reports,
+      //    adds points and sends the bell notification.
+      const photoUrl = await fileToDataUrl(photo.file)
+      const report = createReport({
+        category,
+        description: trimmed,
+        location: location?.name || '',
+        pinned: Boolean(location?.name),
+        photoUrl,
+      })
+
+      // 2. let the page react (for example go to My reports)
+      await onSubmit?.({ photo: photo.file, category, description: trimmed, report })
+
       removePhoto()
       setCategory('')
       onCategoryChange?.('')
