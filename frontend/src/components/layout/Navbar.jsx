@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link, NavLink, useNavigate } from 'react-router-dom'
 import clsx from 'clsx'
 import Logo from './Logo'
+import NotificationBell from './NotificationBell'
 import Button from '../ui/Button'
 import { getSession, homePathFor, logout } from '../../services/auth'
 import { useProfile } from '../../hooks/useProfile'
@@ -43,35 +44,6 @@ function initialsFor(name, fallback) {
   return letters || fallback
 }
 
-function BellLink({ unread }) {
-  return (
-    <Link
-      to="/my-reports"
-      aria-label={`Alerts, ${unread} new`}
-      className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-white/20 text-white transition-colors hover:bg-white/10"
-    >
-      <svg
-        viewBox="0 0 24 24"
-        width="18"
-        height="18"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        aria-hidden="true"
-      >
-        <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9" />
-        <path d="M13.73 21a2 2 0 0 1-3.46 0" />
-      </svg>
-      {unread > 0 && (
-        <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-amber text-xs font-bold text-navy">
-          {unread}
-        </span>
-      )}
-    </Link>
-  )
-}
 
 // With `to`, the avatar is a link (citizens: their profile, staff: their panel).
 // `label` is the link's accessible name. `verified` adds a small check on the corner.
@@ -122,7 +94,6 @@ function Avatar({ name, text, to, label, verified }) {
 export default function Navbar({
   variant = 'logged-out',
   showReport = true,
-  unread = 0,
   initials = 'NR',
 }) {
   const navigate = useNavigate()
@@ -209,7 +180,7 @@ export default function Navbar({
             </div>
           )}
 
-          {current === 'citizen' && <BellLink unread={unread} />}
+          {current === 'citizen' && <NotificationBell email={session?.email} />}
 
           {current !== 'logged-out' && (
             <Avatar

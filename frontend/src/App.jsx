@@ -5,7 +5,7 @@ import IssueDetail from './pages/IssueDetail/IssueDetail'
 import IssueEdit from './pages/IssueEdit/IssueEdit'
 import Report from './pages/Report/Report'
 import Feed from './pages/Feed/Feed'
-import Alerts from './pages/Alerts/Alerts'
+import MyReports from './pages/Myreports/MyReports'
 import Profile from './pages/Profile/Profile'
 import DepartmentPanel from './pages/DepartmentPanel/DepartmentPanel'
 import VerifyResolutions from './pages/VerifyResolutions/VerifyResolutions'
@@ -24,7 +24,7 @@ export default function App() {
       <Route path="/issues/:id/edit" element={<IssueEdit />} />
       <Route path="/report" element={<Report />} />
       <Route path="/feed" element={<Feed />} />
-      <Route path="/my-reports" element={<Alerts />} />
+      <Route path="/my-reports" element={<MyReports />} />
       <Route path="/profile" element={<Profile />} />
       <Route path="/department" element={<DepartmentPanel />} />
       <Route path="/admin/verify" element={<VerifyResolutions />} />

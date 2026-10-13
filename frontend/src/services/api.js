@@ -92,6 +92,26 @@ function saveSubmitted(list) {
 const submitted = loadSubmitted()
 all.push(...submitted.map(withDepartment))
 
+// Pages listen to this to refresh when a report is created, upvoted or an alert is read.
+export const ISSUES_EVENT = 'babylon:issues'
+const notifyIssuesChanged = () => window.dispatchEvent(new Event(ISSUES_EVENT))
+
+// Another tab (another citizen) upvoted or reported: pick it up here.
+window.addEventListener('storage', (e) => {
+  if (e.key !== SUBMITTED_KEY) return
+  for (const item of loadSubmitted()) {
+    const live = all.find((i) => String(i.id) === String(item.id))
+    const kept = submitted.find((i) => String(i.id) === String(item.id))
+    if (live) live.votes = item.votes
+    if (kept) kept.votes = item.votes
+    if (!live) {
+      all.push(withDepartment(item))
+      submitted.push(item)
+    }
+  }
+  notifyIssuesChanged()
+})
+
 // Changes a citizen made to their own report (see updateIssue), by issue id.
 // Kept apart from the reports themselves, so mock issues can be edited too.
 const EDITS_KEY = 'babylon.issueEdits'
@@ -194,6 +214,7 @@ export async function createIssue({ category, description, photoUrl, location, r
   submitted.push(issue)
   saveSubmitted(submitted)
   all.push(withDepartment(issue))
+  notifyIssuesChanged()
   return issue
 }
 
@@ -209,6 +230,7 @@ export async function upvoteIssue(id) {
     saved.votes = issue.votes
     saveSubmitted(submitted)
   }
+  notifyIssuesChanged()
   return issue.votes
 }
 
@@ -406,7 +428,7 @@ export async function getAccountability() {
   }
 }
 
-// ---------- Citizen (Alerts and points) ----------
+// ---------- Citizen (My reports, points and alerts) ----------
 // Everything here belongs to the logged-in account only, found by its email
 // (pass session.email). No email = no data. Points = 60 per report this account filed.
 
@@ -432,6 +454,12 @@ function isOwnReport(issue, email) {
 
 function ownReports(email) {
   return all.filter((issue) => isOwnReport(issue, email)).map(present)
+}
+
+// The citizen's own reports, newest first (My reports page).
+export async function getMyReports(email) {
+  if (!email) return []
+  return ownReports(email).sort((a, b) => ageMs(a) - ageMs(b))
 }
 
 export async function getCurrentUser(email) {
@@ -485,6 +513,22 @@ function alertForIssue(issue) {
   }
 }
 
+// "N neighbours upvoted your report". Votes start at 1 (the reporter's own vote).
+function alertForVotes(issue) {
+  const others = (issue.votes ?? 1) - 1
+  if (others < 1) return null
+  return {
+    id: `votes-${issue.id}`,
+    issueId: issue.id,
+    group: 'status',
+    type: 'upvote',
+    title: `${others} neighbour${others === 1 ? '' : 's'} upvoted your report`,
+    message: `${issue.title} is getting attention.`,
+    time: timeAgo(issue),
+    unread: false,
+  }
+}
+
 // Open issues by other people, same category as one of the user's reports, within 500 m.
 async function getNearbyAlerts(email) {
   const mine = ownReports(email)
@@ -519,20 +563,51 @@ async function getNearbyAlerts(email) {
   return result.slice(0, 3)
 }
 
+// An alert counts as read once the citizen opened it. Kept per account in this browser.
+const SEEN_KEY = 'babylon.seenAlerts'
+// A new title (new status or new votes) makes the alert unread again.
+const alertKey = (alert) => `${alert.id}|${alert.title}`
+
+function readSeen(email) {
+  try {
+    const store = JSON.parse(window.localStorage.getItem(SEEN_KEY))
+    return new Set(store?.[email.toLowerCase()] ?? [])
+  } catch {
+    return new Set()
+  }
+}
+
+export function markAlertsSeen(email, alerts) {
+  if (!email) return
+  try {
+    const store = JSON.parse(window.localStorage.getItem(SEEN_KEY)) ?? {}
+    const key = email.toLowerCase()
+    store[key] = [...new Set([...(store[key] ?? []), ...alerts.map(alertKey)])]
+    window.localStorage.setItem(SEEN_KEY, JSON.stringify(store))
+  } catch {
+    // storage blocked: alerts just stay unread
+  }
+  notifyIssuesChanged()
+}
+
 // group: 'All' | 'status' | 'nearby' | 'reopened'
 export async function getAlerts(group = 'All', email) {
   if (!email) return []
   const own = ownReports(email)
     .sort((a, b) => ageMs(a) - ageMs(b))
-    .map(alertForIssue)
+    .flatMap((issue) => [alertForIssue(issue), alertForVotes(issue)].filter(Boolean))
   const nearby = await getNearbyAlerts(email)
-  return [...own, ...nearby].filter((alert) => group === 'All' || alert.group === group)
+  const seen = readSeen(email)
+  return [...own, ...nearby]
+    .filter((alert) => group === 'All' || alert.group === group)
+    .map((alert) => ({ ...alert, unread: !seen.has(alertKey(alert)) }))
 }
 
 export async function getUnreadAlertCount(email) {
   if (!email) return 0
-  return (await getAlerts('All', email)).length
+  return (await getAlerts('All', email)).filter((alert) => alert.unread).length
 }
+
 // ---------- Citizen profile ----------
 // Kept in this browser per account (by email) until the backend exists.
 // Privacy rule, even in the mock: the full NID number is never stored. Only
