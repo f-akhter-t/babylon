@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import clsx from 'clsx'
 import { BarsIcon, ArrowUpIcon, BellIcon, CheckIcon, CloseIcon, PinIcon, ReopenIcon } from '../ui/icons'
@@ -21,18 +21,22 @@ export default function NotificationBell({ email, reportsPath = '/my-reports' })
   const navigate = useNavigate()
   const unread = items.filter((a) => a.unread).length
 
-  const load = useCallback(async () => setItems(await getAlerts('All', email)), [email])
-
   // reload when a report is created or upvoted, and once a minute so "2 min ago" stays fresh
   useEffect(() => {
+    let active = true
+    const load = () =>
+      Promise.resolve(getAlerts('All', email)).then((list) => {
+        if (active) setItems(list)
+      })
     load()
     window.addEventListener(ISSUES_EVENT, load)
     const timer = setInterval(load, 60000)
     return () => {
+      active = false
       window.removeEventListener(ISSUES_EVENT, load)
       clearInterval(timer)
     }
-  }, [load])
+  }, [email])
 
   useEffect(() => {
     if (!open) return
