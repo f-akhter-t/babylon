@@ -2,7 +2,8 @@ import { useEffect, useId, useRef } from 'react'
 import clsx from 'clsx'
 
 // A yes/no question on a native modal <dialog>. showModal() puts it in the
-// top layer and makes the rest of the page inert, so focus stays inside.
+// top layer and makes the rest of the page inert; Tab and Shift+Tab also wrap
+// between the two buttons, so focus never leaves the dialog.
 // Escape or the cancel button answers "no". Focus starts on the cancel button
 // and goes back to whatever opened the dialog when it closes.
 //
@@ -25,6 +26,7 @@ export default function ConfirmDialog({
 }) {
   const dialogRef = useRef(null)
   const cancelRef = useRef(null)
+  const confirmRef = useRef(null)
   const returnTo = useRef(null)
   const titleId = useId()
   const textId = useId()
@@ -46,6 +48,20 @@ export default function ConfirmDialog({
     if (!busy) onCancel()
   }
 
+  // Keep Tab inside: past the last button back to the first, and the other way.
+  function handleKeyDown(event) {
+    if (event.key !== 'Tab') return
+    const first = cancelRef.current
+    const last = confirmRef.current
+    if (event.shiftKey && document.activeElement === first) {
+      event.preventDefault()
+      last.focus()
+    } else if (!event.shiftKey && document.activeElement === last) {
+      event.preventDefault()
+      first.focus()
+    }
+  }
+
   function handleClose() {
     returnTo.current?.focus?.()
     onClosed?.()
@@ -58,6 +74,7 @@ export default function ConfirmDialog({
       aria-describedby={textId}
       onCancel={handleCancelEvent}
       onClose={handleClose}
+      onKeyDown={handleKeyDown}
       className="m-auto w-[min(28rem,calc(100vw-2rem))] rounded-panel bg-mint p-6 font-body text-navy shadow-xl backdrop:bg-navy/60 sm:p-8"
     >
       <h2 id={titleId} className="font-heading text-2xl font-extrabold">
@@ -77,6 +94,7 @@ export default function ConfirmDialog({
           {cancelLabel}
         </button>
         <button
+          ref={confirmRef}
           type="button"
           onClick={onConfirm}
           disabled={busy}
