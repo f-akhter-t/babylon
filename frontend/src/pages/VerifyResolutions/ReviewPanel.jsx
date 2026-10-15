@@ -2,7 +2,8 @@ import { useState } from 'react'
 import clsx from 'clsx'
 import StaircaseIcon from '../../components/ui/StaircaseIcon'
 import BeforeAfterSlider from './BeforeAfterSlider'
-import { REJECT_REASON_NEEDED } from '../../services/api'
+import { isReopenedInQueue, REJECT_REASON_NEEDED } from '../../services/api'
+import { reopenedSentence } from './reopenedText'
 import { fit, REGION_FOCUS, useFitMode } from '../../components/layout/staffFit'
 
 const CHECKS = [
@@ -54,10 +55,17 @@ export default function ReviewPanel({ issue, onApprove, onReject, busy = false }
             <h2 className="break-words font-heading text-2xl font-extrabold text-navy sm:text-3xl">
               {issue.title}
             </h2>
-            <p className="mt-1 break-words font-body text-sm text-muted">
-              {issue.location} · Reported {issue.reportedOn} · Marked done by{' '}
-              {issue.department} on {issue.submittedOn}
-            </p>
+            {/* A reopened issue sent by the admin was not marked done by anyone. */}
+            {isReopenedInQueue(issue) ? (
+              <p className="mt-1 break-words font-body text-sm font-bold text-navy">
+                {reopenedSentence(issue)}
+              </p>
+            ) : (
+              <p className="mt-1 break-words font-body text-sm text-muted">
+                {issue.location} · Reported {issue.reportedOn} · Marked done by{' '}
+                {issue.department} on {issue.submittedOn}
+              </p>
+            )}
           </div>
           <span className="inline-flex shrink-0 items-center gap-2 rounded-full bg-slate/15 px-3 py-1 font-body text-sm font-semibold text-navy">
             <StaircaseIcon level={3} className="text-slate" />
