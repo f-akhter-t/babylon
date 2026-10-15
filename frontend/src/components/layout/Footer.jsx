@@ -1,6 +1,7 @@
 // src/components/layout/Footer.jsx
 import { Link } from 'react-router-dom'
 import Logo from './Logo'
+import { useViewer } from '../../pages/Map/useViewer'
 
 const columns = [
   {
@@ -8,15 +9,15 @@ const columns = [
     links: [
       { label: 'Map', to: '/map' },
       { label: 'Issue feed', to: '/feed' },
-      { label: 'Report an issue', to: '/report' },
+      { label: 'Report an issue', to: '/report', hideFor: 'staff' },
     ],
   },
   {
     title: 'Account',
     links: [
-      { label: 'Log in', to: '/login' },
-      { label: 'Sign up', to: '/signup' },
-      { label: 'My reports', to: '/my-reports' },
+      { label: 'Log in', to: '/login', hideFor: 'signedIn' },
+      { label: 'Sign up', to: '/signup', hideFor: 'signedIn' },
+      { label: 'My reports', to: '/my-reports', hideFor: 'staff' },
     ],
   },
   {
@@ -29,7 +30,25 @@ const columns = [
   },
 ]
 
+// hideFor: 'staff' hides citizen-only links from staff; 'signedIn' hides
+// Log in and Sign up once someone is logged in. A column left empty is hidden.
+function visibleColumns(role) {
+  const isStaff = role === 'department' || role === 'admin'
+  const signedIn = role !== 'guest'
+  return columns
+    .map((column) => ({
+      ...column,
+      links: column.links.filter(
+        (link) =>
+          !(link.hideFor === 'staff' && isStaff) && !(link.hideFor === 'signedIn' && signedIn),
+      ),
+    }))
+    .filter((column) => column.links.length > 0)
+}
+
 export default function Footer() {
+  const viewer = useViewer() // follows a login or logout in another tab
+
   return (
     <footer className="bg-navy px-5 pt-10 font-body text-white md:px-10 md:pt-12 xl:px-18">
       <div className="flex flex-col gap-10 md:flex-row md:justify-between">
@@ -42,7 +61,7 @@ export default function Footer() {
         </div>
 
         <nav aria-label="Footer" className="grid grid-cols-2 gap-8 sm:grid-cols-3 md:gap-16">
-          {columns.map((column) => (
+          {visibleColumns(viewer.role).map((column) => (
             <div key={column.title}>
               <h3 className="text-xs font-semibold uppercase tracking-widest text-brand">
                 {column.title}
