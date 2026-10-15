@@ -2,6 +2,7 @@ import { useState } from 'react'
 import clsx from 'clsx'
 import Navbar from '../../components/layout/Navbar'
 import Footer from '../../components/layout/Footer'
+import Logo from '../../components/layout/Logo'
 import Button from '../../components/ui/Button'
 import StatusPill from '../../components/ui/StatusPill'
 import CategoryChip from '../../components/ui/CategoryChip'
@@ -13,6 +14,7 @@ const swatches = [
   'bg-amber', 'bg-amber-dark', 'bg-muted', 'bg-page',
   'bg-map-land', 'bg-map-park', 'bg-map-water',
 ]
+const logoSizes = ['sm', 'md', 'lg']
 const categories = ['All', 'Roads', 'Waste', 'Water', 'Lighting', 'Bridges']
 const statuses = ['open', 'in-progress', 'resolved']
 const priorities = ['urgent', 'high', 'medium', 'reopened', 'fix-verified']
@@ -33,6 +35,31 @@ export default function Styleguide() {
       </StyleSection>
 
       <div className="px-10">
+        <StyleSection title="Logo">
+          <div className="flex flex-col gap-4">
+            <div className="flex flex-wrap items-center gap-8 rounded-card bg-navy p-6">
+              {logoSizes.map((size) => (
+                <Logo key={size} size={size} to="/styleguide" label={`Babylon, ${size} size on dark`} />
+              ))}
+            </div>
+            <div className="flex flex-wrap items-center gap-8 rounded-card bg-mint p-6">
+              {logoSizes.map((size) => (
+                <Logo
+                  key={size}
+                  size={size}
+                  tone="onLight"
+                  to="/styleguide"
+                  label={`Babylon, ${size} size on light`}
+                />
+              ))}
+            </div>
+            <div className="flex flex-wrap items-center gap-8 rounded-card bg-mint p-6">
+              <Logo to={null} tone="onLight" />
+              <p className="text-sm text-navy">Without a link, for loading and error screens.</p>
+            </div>
+          </div>
+        </StyleSection>
+
         <StyleSection title="Colors">
           <div className="flex flex-wrap gap-4">
             {swatches.map((swatch) => (

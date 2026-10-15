@@ -1,5 +1,5 @@
 import { useRef } from 'react'
-import { Link } from 'react-router-dom'
+import Logo from '../../components/layout/Logo'
 import clsx from 'clsx'
 
 // Staff pages pick Department or Admin. A radio group: one tab stop,
@@ -151,13 +151,8 @@ export default function AuthShell({ variant = 'citizen', title, subtitle, childr
 
   return (
     <div className="min-h-screen bg-page font-body">
-      <header className="flex items-center gap-3 bg-navy px-4 py-3 sm:px-8">
-        <Link
-          to="/"
-          className="inline-flex min-h-11 items-center font-heading text-2xl font-extrabold text-mint focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-mint"
-        >
-          Babylon
-        </Link>
+      <header className="flex min-h-17 flex-wrap items-center gap-3 bg-navy px-4 py-3 sm:px-8">
+        <Logo />
         {staff && (
           <span className="rounded-full bg-mint px-3 py-1 font-body text-sm font-bold text-navy">
             Staff

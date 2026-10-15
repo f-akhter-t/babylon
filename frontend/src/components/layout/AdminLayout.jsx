@@ -4,6 +4,8 @@ import { Link, useLocation } from 'react-router-dom'
 import { useAdminCounts } from '../../hooks/useAdminCounts'
 import { ADMIN_NAV } from './adminNav'
 import AdminSignOut from './AdminSignOut'
+import Logo from './Logo'
+import { homePathFor } from '../../services/auth'
 import { fit } from './staffFit'
 
 const LG_QUERY = '(min-width: 64rem)'
@@ -17,6 +19,12 @@ const TOP_BAR_STICKY_QUERY = '(max-width: 63.999rem) and (min-height: 30rem)'
 // The time of that click tells the new layout to put focus on its Menu button.
 let drawerLinkAt = 0
 const justUsedDrawerLink = () => Date.now() - drawerLinkAt < 1500
+
+// The logo takes staff to their own panel.
+const LOGO_LABELS = {
+  department: 'Babylon, go to your department panel',
+  admin: 'Babylon, go to the admin panel',
+}
 
 function NavItem({ item, isActive, onSelect, onNavigate }) {
   const classes = clsx(
@@ -74,7 +82,12 @@ function StaffNav({ variant, active, onSelect, department, note, counts, onNavig
   return (
     <>
       <div className="px-2">
-        <p className="font-heading text-3xl font-extrabold text-mint">Babylon</p>
+        <Logo
+          size="lg"
+          to={homePathFor(variant)}
+          label={LOGO_LABELS[variant]}
+          onClick={onNavigate}
+        />
         <p className="mt-1 font-body text-xs font-bold uppercase tracking-widest text-brand">
           {config.label}
         </p>
@@ -219,7 +232,7 @@ export default function AdminLayout({
         className="top-0 z-20 flex flex-wrap items-center justify-between gap-3 bg-navy px-4 py-3 max-lg:[@media(min-height:30rem)]:sticky lg:hidden"
       >
         <div className="min-w-0">
-          <p className="font-heading text-2xl font-extrabold text-mint">Babylon</p>
+          <Logo to={homePathFor(variant)} label={LOGO_LABELS[variant]} />
           <p className="font-body text-xs font-bold uppercase tracking-widest text-brand">
             {config.label}
           </p>
