@@ -1,6 +1,8 @@
 import { useRef, useState } from 'react'
 
-export default function BeforeAfterSlider() {
+// before and after are image URLs (the after-photo is a data URL). A missing
+// photo shows a label in its place.
+export default function BeforeAfterSlider({ before, after, title }) {
   const ref = useRef(null)
   const [pos, setPos] = useState(50)
 
@@ -28,18 +30,36 @@ export default function BeforeAfterSlider() {
       className="relative h-[280px] cursor-ew-resize select-none overflow-hidden rounded-card bg-forest"
     >
       <div className="absolute inset-0 bg-forest">
-        <span className="absolute left-3/4 top-1/2 -translate-x-1/2 -translate-y-1/2 font-body text-sm font-semibold text-mint">
-          Department after-photo
-        </span>
+        {after ? (
+          <img
+            src={after}
+            alt={`The department’s photo of “${title}” after the fix.`}
+            draggable={false}
+            className="h-full w-full select-none object-cover"
+          />
+        ) : (
+          <span className="absolute left-3/4 top-1/2 -translate-x-1/2 -translate-y-1/2 font-body text-sm font-semibold text-mint">
+            Department after-photo
+          </span>
+        )}
       </div>
 
       <div
         className="absolute inset-0 bg-slate"
         style={{ clipPath: `inset(0 ${100 - pos}% 0 0)` }}
       >
-        <span className="absolute left-1/4 top-1/2 -translate-x-1/2 -translate-y-1/2 font-body text-sm font-semibold text-mint">
-          Citizen photo
-        </span>
+        {before ? (
+          <img
+            src={before}
+            alt={`The citizen’s photo of “${title}” before the fix.`}
+            draggable={false}
+            className="h-full w-full select-none object-cover"
+          />
+        ) : (
+          <span className="absolute left-1/4 top-1/2 -translate-x-1/2 -translate-y-1/2 font-body text-sm font-semibold text-mint">
+            Citizen photo
+          </span>
+        )}
       </div>
 
       <span className="absolute left-4 top-4 rounded-full bg-navy px-3 py-1 font-body text-xs font-bold tracking-widest text-mint">

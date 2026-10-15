@@ -48,8 +48,11 @@ export default function ReviewPanel({ issue, onApprove, onReject, busy = false }
       </div>
 
       <div className="mt-5">
-        {/* The photos show once the slider renders before and after (Stage 4). */}
-        <BeforeAfterSlider before={issue.beforeImg} after={issue.pendingAfterImg} alt={issue.title} />
+        <BeforeAfterSlider
+          before={issue.beforeImg}
+          after={issue.pendingAfterImg}
+          title={issue.title}
+        />
       </div>
 
       <div className="mt-6 grid grid-cols-2 gap-6">

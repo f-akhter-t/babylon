@@ -66,6 +66,7 @@ function DepartmentPanelPage() {
   const [selectedId, setSelectedId] = useState(null)
   const [busy, setBusy] = useState(false)
   const [notice, setNotice] = useState(null) // { tone: 'success' | 'error', text }
+  const [submitError, setSubmitError] = useState(null) // shown in the Resolve panel
 
   const load = useCallback(
     () => (department ? loadDepartmentPanel(department) : NO_ISSUES),
@@ -86,12 +87,18 @@ function DepartmentPanelPage() {
   const selected =
     shown.find((issue) => issue.id === selectedId && issue.status !== 'resolved') ?? null
 
+  function select(id) {
+    setSelectedId(id)
+    setSubmitError(null)
+  }
+
   async function startWork(id) {
     setNotice(null)
     setBusy(true)
     try {
-      await startWorkOn(id)
-      setSelectedId(id)
+      const issue = await startWorkOn(id)
+      select(id)
+      setNotice({ tone: 'success', text: `Work has started on “${issue.title}”.` })
     } catch (err) {
       setNotice({ tone: 'error', text: err.message })
     } finally {
@@ -99,17 +106,22 @@ function DepartmentPanelPage() {
     }
   }
 
-  // The photo is shrunk first, so it fits in this device's storage.
+  // The photo is shrunk first, so it fits in this device's storage. If saving
+  // fails, the panel stays open with the photo and note, to try again.
   async function submitForVerification(id, { note, file }) {
     setNotice(null)
+    setSubmitError(null)
     setBusy(true)
     try {
       const photoUrl = await resizeImage(file)
       const issue = await sendForVerification(id, { note, photoUrl })
       setSelectedId(null)
-      setNotice({ tone: 'success', text: `Sent to the admin for verification: ${issue.title}.` })
+      setNotice({
+        tone: 'success',
+        text: `“${issue.title}” was sent to the admin for verification.`,
+      })
     } catch (err) {
-      setNotice({ tone: 'error', text: err.message })
+      setSubmitError(err.message)
     } finally {
       setBusy(false)
     }
@@ -167,28 +179,37 @@ function DepartmentPanelPage() {
             </p>
           )}
 
-          <div className="mt-6 grid grid-cols-3 gap-4">
-            <StatCard label="Open" value={open} level={1} iconClass="text-amber-dark" />
-            <StatCard
-              label="In progress"
-              value={inProgress}
-              level={2}
-              iconClass="text-slate"
-            />
-            <StatCard label="Awaiting admin check" value={awaiting} dark />
-          </div>
+          {loading ? (
+            <p role="status" className="mt-6 font-body text-base text-navy">
+              Loading your department’s issues.
+            </p>
+          ) : (
+            <>
+              <div className="mt-6 grid grid-cols-3 gap-4">
+                <StatCard label="Open" value={open} level={1} iconClass="text-amber-dark" />
+                <StatCard
+                  label="In progress"
+                  value={inProgress}
+                  level={2}
+                  iconClass="text-slate"
+                />
+                <StatCard label="Awaiting admin check" value={awaiting} dark />
+              </div>
 
-          <div className="mt-6">
-            <IssueTable
-              issues={shown}
-              selectedId={selectedId}
-              onSelect={setSelectedId}
-              onStart={startWork}
-            />
-            {department && !loading && shown.length === 0 && (
-              <p className="mt-3 font-body text-base text-navy">No issues match this filter.</p>
-            )}
-          </div>
+              <div className="mt-6">
+                <IssueTable
+                  issues={shown}
+                  selectedId={selectedId}
+                  onSelect={select}
+                  onStart={startWork}
+                  busy={busy}
+                />
+                {department && shown.length === 0 && (
+                  <p className="mt-3 font-body text-base text-navy">No issues match this filter.</p>
+                )}
+              </div>
+            </>
+          )}
         </div>
 
         <aside className="w-[390px] shrink-0 bg-mint p-6">
@@ -197,6 +218,7 @@ function DepartmentPanelPage() {
             issue={selected}
             onSubmit={submitForVerification}
             busy={busy}
+            error={submitError}
           />
         </aside>
       </div>

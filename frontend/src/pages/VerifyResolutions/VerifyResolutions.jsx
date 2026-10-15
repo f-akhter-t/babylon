@@ -146,45 +146,51 @@ function VerifyResolutionsPage() {
           </div>
         )}
 
-        <div className="mt-6 grid grid-cols-[270px_minmax(0,1fr)] items-start gap-6">
-          <div>
-            <p className="font-body text-sm font-bold text-muted">Waiting for your check</p>
-            <div className="mt-3 flex flex-col gap-3">
-              {queue.map((issue) => (
-                <QueueCard
-                  key={issue.id}
-                  issue={issue}
-                  selected={selected?.id === issue.id}
-                  onSelect={setSelectedId}
-                />
-              ))}
+        {loading ? (
+          <p role="status" className="mt-6 font-body text-base text-navy">
+            Loading the verification queue.
+          </p>
+        ) : (
+          <div className="mt-6 grid grid-cols-[270px_minmax(0,1fr)] items-start gap-6">
+            <div>
+              <p className="font-body text-sm font-bold text-muted">Waiting for your check</p>
+              <div className="mt-3 flex flex-col gap-3">
+                {queue.map((issue) => (
+                  <QueueCard
+                    key={issue.id}
+                    issue={issue}
+                    selected={selected?.id === issue.id}
+                    onSelect={setSelectedId}
+                  />
+                ))}
+              </div>
             </div>
-          </div>
 
-          {selected ? (
-            <ReviewPanel
-              key={selected.id}
-              issue={selected}
-              onApprove={(issue) =>
-                finish(
-                  () => approveResolution(issue.id),
-                  `Approved and closed: ${issue.title}`,
-                )
-              }
-              onReject={(issue, reason) =>
-                finish(
-                  () => rejectResolution(issue.id, reason),
-                  `Sent back to ${issue.department}: ${issue.title}`,
-                )
-              }
-              busy={busy}
-            />
-          ) : loading ? null : (
-            <div className="rounded-panel bg-mint p-8 font-body text-base text-muted">
-              Nothing is waiting for your check.
-            </div>
-          )}
-        </div>
+            {selected ? (
+              <ReviewPanel
+                key={selected.id}
+                issue={selected}
+                onApprove={(issue) =>
+                  finish(
+                    () => approveResolution(issue.id),
+                    `“${issue.title}” was approved and closed.`,
+                  )
+                }
+                onReject={(issue, reason) =>
+                  finish(
+                    () => rejectResolution(issue.id, reason),
+                    `“${issue.title}” was sent back to ${issue.department}.`,
+                  )
+                }
+                busy={busy}
+              />
+            ) : (
+              <div className="rounded-panel bg-mint p-8 font-body text-base text-muted">
+                Nothing is waiting for your check.
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </AdminLayout>
   )

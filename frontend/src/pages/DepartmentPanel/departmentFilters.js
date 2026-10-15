@@ -27,3 +27,9 @@ export function issuesFor(status, assigned, completed) {
   if (key === 'completed') return completed
   return assigned.filter(DEPARTMENT_FILTERS[key].matches)
 }
+
+// The admin's reason for sending a fix back, as one sentence (issue.sentBack
+// from the API: { reason, on }). Shown in the table and the Resolve panel.
+export function sentBackMessage(sentBack) {
+  return `The admin sent this back on ${sentBack.on}. Reason: ${sentBack.reason}`
+}

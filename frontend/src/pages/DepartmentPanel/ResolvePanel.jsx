@@ -1,7 +1,9 @@
 import { useState } from 'react'
 import clsx from 'clsx'
+import { sentBackMessage } from './departmentFilters'
 
-export default function ResolvePanel({ issue, onSubmit, busy = false }) {
+// error: why the last submit failed (one sentence), or null.
+export default function ResolvePanel({ issue, onSubmit, busy = false, error = null }) {
   const [previewUrl, setPreviewUrl] = useState(null)
   const [file, setFile] = useState(null) // sent to onSubmit, which shrinks it
   const [note, setNote] = useState('')
@@ -63,8 +65,8 @@ export default function ResolvePanel({ issue, onSubmit, busy = false }) {
         {issue.title}
       </h2>
       {issue.sentBack && (
-        <p className="mt-4 font-body text-sm font-bold text-danger">
-          {`The admin sent this back on ${issue.sentBack.on}. Reason: ${issue.sentBack.reason}`}
+        <p className="mt-4 min-w-0 break-words font-body text-sm font-bold text-danger">
+          {sentBackMessage(issue.sentBack)}
         </p>
       )}
 
@@ -119,6 +121,11 @@ export default function ResolvePanel({ issue, onSubmit, busy = false }) {
       >
         Submit for verification
       </button>
+      {error && (
+        <p role="alert" className="mt-3 min-w-0 break-words font-body text-sm font-bold text-danger">
+          {error}
+        </p>
+      )}
       <p className="mt-3 font-body text-sm text-muted">
         The issue stays In progress until the admin confirms the fix in the photo.
       </p>

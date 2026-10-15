@@ -314,8 +314,9 @@ export async function rejectResolution(id, reason = '') {
   return present(issue)
 }
 
-// Dev only: sessionStorage 'babylon:failLoads' makes the Department and
-// Verify pages fail to load, to try their error screens. Not in production builds.
+// Dev only: sessionStorage 'babylon:failLoads' makes the Department, Verify
+// and Accountability pages fail to load, to try their error screens. Not in
+// production builds.
 function failLoadsForTesting() {
   if (!import.meta.env.DEV) return
   let on = false
@@ -658,6 +659,12 @@ export async function getAccountability() {
     waitingLongest,
     weekly: weeklyReports,
   }
+}
+
+// Everything the Accountability page shows, in one load.
+export async function loadAccountability() {
+  failLoadsForTesting()
+  return getAccountability()
 }
 
 // ---------- Citizen (My reports, points and alerts) ----------
