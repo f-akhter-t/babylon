@@ -16,6 +16,7 @@ import { loadAccountability } from '../../services/api'
 import { useAsync } from '../../hooks/useAsync'
 import RequireRole from '../Auth/RequireRole'
 import { useDocumentTitle } from '../IssueDetail/useDocumentTitle'
+import { fit, REGION_FOCUS, useFitMode } from '../../components/layout/staffFit'
 
 const PERIODS = [
   { label: 'Last 4 weeks', weeks: 4 },
@@ -24,11 +25,11 @@ const PERIODS = [
 
 function StatCard({ label, children, valueClass }) {
   return (
-    <div className="rounded-card bg-navy px-6 py-5">
+    <div className="min-w-0 rounded-card bg-navy px-5 py-4 xl:px-6 xl:py-5">
       <p className="font-body text-sm font-bold text-mint">{label}</p>
       <p
         className={clsx(
-          'mt-2 font-heading text-5xl font-extrabold',
+          'mt-2 font-heading text-4xl font-extrabold sm:text-5xl lg:text-4xl xl:text-5xl',
           valueClass ?? 'text-mint',
         )}
       >
@@ -38,18 +39,21 @@ function StatCard({ label, children, valueClass }) {
   )
 }
 
+// A table where it is at least 36rem wide; one labelled card per department
+// when narrower. Container queries, so it follows its own width.
 function DepartmentTable({ departments }) {
-  const columns = 'grid-cols-[minmax(0,1.3fr)_minmax(0,1.6fr)_70px_80px]'
+  const columns = '@xl:grid-cols-[minmax(0,1.3fr)_minmax(0,1.6fr)_70px_80px]'
+  const cardLabel = 'block font-body text-sm font-semibold text-muted @xl:hidden'
 
   return (
-    <div>
+    <div className="@container">
       <h2 className="font-heading text-2xl font-extrabold text-navy">
         Department performance
       </h2>
 
       <div
         className={clsx(
-          'mt-4 grid gap-4 font-body text-sm font-semibold text-muted',
+          'mt-4 hidden gap-4 font-body text-sm font-semibold text-muted @xl:grid',
           columns,
         )}
       >
@@ -65,13 +69,13 @@ function DepartmentTable({ departments }) {
           <div
             key={d.name}
             className={clsx(
-              'grid items-center gap-4 border-t border-navy/10 py-4',
-              'mt-3 font-body text-base font-bold text-navy',
+              'mt-3 grid grid-cols-2 gap-x-4 gap-y-2 border-t border-navy/10 py-4 @xl:items-center @xl:gap-4',
+              'font-body text-base font-bold text-navy',
               columns,
             )}
           >
-            <span>{d.name}</span>
-            <div className="flex items-center gap-3">
+            <span className="col-span-2 min-w-0 break-words @xl:col-span-1">{d.name}</span>
+            <div className="col-span-2 flex min-w-0 items-center gap-3 @xl:col-span-1">
               <div className="h-2.5 flex-1 overflow-hidden rounded-full bg-white">
                 <div
                   className="h-full rounded-full bg-forest"
@@ -82,8 +86,14 @@ function DepartmentTable({ departments }) {
                 {d.resolved} / {d.assigned}
               </span>
             </div>
-            <span>{d.avgDays}</span>
-            <span>{d.reopened}</span>
+            <span>
+              <span className={cardLabel}>Avg days</span>
+              {d.avgDays}
+            </span>
+            <span>
+              <span className={cardLabel}>Reopened</span>
+              {d.reopened}
+            </span>
           </div>
         )
       })}
@@ -108,6 +118,8 @@ function WeeklyChart({ weekly }) {
               dataKey="week"
               tickLine={false}
               axisLine={false}
+              interval="preserveStartEnd"
+              minTickGap={12}
               tick={{ fill: 'currentColor', fontSize: 12 }}
             />
             <YAxis
@@ -137,7 +149,7 @@ function WeeklyChart({ weekly }) {
         </ResponsiveContainer>
       </div>
 
-      <div className="mt-3 flex items-center gap-6 font-body text-sm text-navy">
+      <div className="mt-3 flex flex-wrap items-center gap-x-6 gap-y-2 font-body text-sm text-navy">
         <span className="flex items-center gap-2">
           <span className="w-8 border-t-2 border-dashed border-navy" />
           Received
@@ -151,22 +163,34 @@ function WeeklyChart({ weekly }) {
   )
 }
 
-function WaitingLongest({ items }) {
+// In fit mode the list scrolls and the link to the queue stays at the bottom.
+function WaitingLongest({ items, fitMode }) {
   return (
-    <aside className="flex flex-col rounded-panel bg-navy p-6">
+    <aside className={clsx('flex flex-col rounded-panel bg-navy p-4 sm:p-6', fit.column)}>
       <h2 className="font-heading text-2xl font-extrabold text-mint">Waiting longest</h2>
       <p className="mt-2 font-body text-sm text-mint/70">
         Issues that have gone the longest without being resolved.
       </p>
 
-      <div className="mt-4 flex flex-col">
+      <div
+        role={fitMode ? 'region' : undefined}
+        aria-label={fitMode ? 'Waiting longest' : undefined}
+        tabIndex={fitMode ? 0 : undefined}
+        className={clsx(
+          'mt-4 flex flex-col rounded-tile',
+          'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-mint',
+          fit.scroll,
+          fit.grow,
+          fit.min32,
+        )}
+      >
         {items.map((item) => (
           <div
             key={item.title}
             className="flex items-center justify-between gap-3 border-t border-mint/15 py-4"
           >
             <div className="min-w-0">
-              <p className="font-body text-base font-bold text-mint">{item.title}</p>
+              <p className="break-words font-body text-base font-bold text-mint">{item.title}</p>
               <p className="font-body text-sm text-mint/70">
                 {item.department}
                 {item.reopened ? ' · reopened' : ''}
@@ -181,7 +205,7 @@ function WaitingLongest({ items }) {
 
       <Link
         to="/admin/verify"
-        className="mt-auto rounded-full bg-mint px-6 py-3.5 text-center font-body text-base font-bold text-navy transition-opacity hover:opacity-90"
+        className="mt-4 flex min-h-11 shrink-0 items-center justify-center rounded-full bg-mint px-6 py-3 text-center font-body text-base font-bold text-navy transition-opacity hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-mint motion-reduce:transition-none"
       >
         Open verification queue
       </Link>
@@ -202,6 +226,7 @@ function AccountabilityPage() {
   useDocumentTitle('Accountability')
   const [weeks, setWeeks] = useState(8)
   const { data, error, loading, retry } = useAsync(loadAccountability)
+  const fitMode = useFitMode()
 
   const weekly = data ? data.weekly.slice(-weeks) : []
 
@@ -211,10 +236,10 @@ function AccountabilityPage() {
       active="Accountability"
       note="Numbers on this screen are sample data for the mockup."
     >
-      <div className="p-8">
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <h1 className="font-heading text-4xl font-extrabold text-navy">
+      <div className={clsx('p-4 sm:p-6 lg:p-8', fit.page)}>
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div className="min-w-0">
+            <h1 className="font-heading text-3xl font-extrabold text-navy sm:text-4xl">
               Accountability
             </h1>
             <p className="mt-1 font-body text-base text-muted">
@@ -226,7 +251,7 @@ function AccountabilityPage() {
             value={weeks}
             onChange={(e) => setWeeks(Number(e.target.value))}
             aria-label="Period"
-            className="rounded-full border border-navy bg-white px-5 py-3 font-body text-sm font-bold text-navy focus:outline-none focus:ring-2 focus:ring-forest"
+            className="min-h-11 w-full rounded-full border border-navy bg-white px-5 py-2 font-body text-sm font-bold text-navy focus:outline-none focus:ring-2 focus:ring-forest sm:w-auto"
           >
             {PERIODS.map((p) => (
               <option key={p.weeks} value={p.weeks}>
@@ -253,7 +278,7 @@ function AccountabilityPage() {
 
         {data && (
           <>
-            <div className="mt-6 grid grid-cols-4 gap-4">
+            <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
               <StatCard label="Reports received">{data.stats.received}</StatCard>
               <StatCard label="Resolved and verified" valueClass="text-brand">
                 {data.stats.resolved}
@@ -267,12 +292,25 @@ function AccountabilityPage() {
               </StatCard>
             </div>
 
-            <div className="mt-6 grid grid-cols-[minmax(0,1fr)_340px] items-stretch gap-6">
-              <div className="rounded-panel bg-mint p-6">
+            {/* Below lg everything stacks: table, chart, then Waiting longest. */}
+            <div
+              className={clsx(
+                'mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_18.75rem]',
+                fit.grow,
+                fit.rows,
+                fit.min64,
+              )}
+            >
+              <div
+                role={fitMode ? 'region' : undefined}
+                aria-label={fitMode ? 'Department performance and reports per week' : undefined}
+                tabIndex={fitMode ? 0 : undefined}
+                className={clsx('min-w-0 rounded-panel bg-mint p-4 sm:p-6', fit.scroll, REGION_FOCUS)}
+              >
                 <DepartmentTable departments={data.departments} />
                 <WeeklyChart weekly={weekly} />
               </div>
-              <WaitingLongest items={data.waitingLongest} />
+              <WaitingLongest items={data.waitingLongest} fitMode={fitMode} />
             </div>
           </>
         )}
