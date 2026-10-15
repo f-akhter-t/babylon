@@ -30,7 +30,7 @@ function StatCard({ label, children, valueClass }) {
       <p className="font-body text-sm font-bold text-mint">{label}</p>
       <p
         className={clsx(
-          'mt-2 font-heading text-4xl font-extrabold sm:text-5xl lg:text-4xl xl:text-5xl',
+          'mt-2 font-heading text-4xl font-extrabold sm:text-5xl lg:text-2xl xl:text-5xl',
           valueClass ?? 'text-mint',
         )}
       >
