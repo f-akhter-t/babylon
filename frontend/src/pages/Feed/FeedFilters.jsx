@@ -15,7 +15,10 @@ export default function FeedFilters({
     <>
       <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
         <span className="ml-auto font-body text-sm text-muted">
-          {loading ? 'Searching…' : `${resultCount} ${resultCount === 1 ? 'issue' : 'issues'} found`}
+          {loading
+            ? 'Searching…'
+            : resultCount !== null &&
+              `${resultCount} ${resultCount === 1 ? 'issue' : 'issues'} found`}
         </span>
       </div>
 
