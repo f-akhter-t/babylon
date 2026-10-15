@@ -7,8 +7,10 @@ import { MinusIcon, PlusIcon } from '../Map/MapIcons'
 const BUTTON =
   'flex size-11 items-center justify-center bg-white text-navy transition hover:bg-mint active:bg-mint-deep focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-navy lg:size-10'
 
-// Small + and − buttons for the mini map. Lives inside the map so it can use useMap().
-export default function MiniMapZoom() {
+// Small + and − buttons, the zoom control on every map except the Map page's
+// own control column (same look). Lives inside the map so it can use useMap().
+// position: where it sits, e.g. "right-3 top-3" (the issue page) or "left-3 top-3".
+export default function MiniMapZoom({ position = 'right-3 top-3' }) {
   const map = useMap()
   const ref = useRef(null)
 
@@ -21,7 +23,7 @@ export default function MiniMapZoom() {
   return (
     <div
       ref={ref}
-      className="absolute right-3 top-3 z-1000 flex flex-col overflow-hidden rounded-chip border border-navy/20 shadow-md"
+      className={`absolute ${position} z-1000 flex flex-col overflow-hidden rounded-chip border border-navy/20 shadow-md`}
     >
       <button type="button" aria-label="Zoom in" onClick={() => map.zoomIn()} className={BUTTON}>
         <PlusIcon size={16} />

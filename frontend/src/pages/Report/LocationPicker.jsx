@@ -16,6 +16,7 @@ import { MAP_CENTER } from '../../mock/issues'
 import { distanceInMeters } from '../../utils/geo'
 import { DRAFT_PIN_SIZE, draftPinSvg } from '../Map/pinMarkup'
 import { pinIcon } from '../Map/statusPin'
+import MiniMapZoom from '../IssueDetail/MiniMapZoom'
 
 const START = { lat: MAP_CENTER[0], lng: MAP_CENTER[1] }
 const MATCH_RADIUS_M = 120 // an open issue this close counts as a possible duplicate
@@ -35,18 +36,6 @@ const dragPinIcon = L.divIcon({
 })
 
 const pickerStyle = `
-  .drag-hint.leaflet-tooltip {
-    background: var(--color-navy);
-    border: 0;
-    border-radius: 9999px;
-    box-shadow: none;
-    color: white;
-    font-size: 12px;
-    font-weight: 600;
-    padding: 6px 12px;
-  }
-  .drag-hint.leaflet-tooltip-top::before { border-top-color: var(--color-navy); }
-
   @keyframes pickerIn {
     from { opacity: 0; transform: translateY(18px); }
     to { opacity: 1; transform: none; }
@@ -336,8 +325,11 @@ export default function LocationPicker({
         center={markerPosition}
         zoom={16}
         scrollWheelZoom
+        zoomControl={false}
         className="absolute inset-0 z-0 h-full w-full"
       >
+        {/* The same + and − as the issue page, where Leaflet's own sat. */}
+        <MiniMapZoom position="left-3 top-3" />
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"

@@ -154,15 +154,37 @@ textarea,
   box-shadow: 0 0 0 4px var(--color-brand);
 }
 
-/* Leaflet's + and − zoom buttons are 30px. On phones they get a 44px target.
-   Three classes deep to beat leaflet.css, whichever loads last. */
-@media (max-width: 47.999rem) {
-  .leaflet-touch .leaflet-bar.leaflet-control-zoom a {
-    width: 44px;
-    height: 44px;
-    line-height: 44px;
-  }
+/* Every map's Leaflet chrome, styled once. Two classes deep (or more) to beat
+   leaflet.css, which loads later. The zoom buttons are the site's own
+   (MiniMapZoom and the Map page's controls), so Leaflet's are never shown. */
+.leaflet-container {
+  font-family: var(--font-body);
 }
+.leaflet-container .leaflet-popup-content-wrapper {
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-xl);
+}
+.leaflet-container a.leaflet-popup-close-button {
+  width: 44px;
+  height: 44px;
+  font-size: 22px;
+  line-height: 44px;
+  color: var(--color-navy);
+}
+.leaflet-container .leaflet-tooltip {
+  background: var(--color-navy);
+  border: 0;
+  border-radius: 9999px;
+  box-shadow: none;
+  color: white;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 6px 12px;
+}
+.leaflet-container .leaflet-tooltip-top::before { border-top-color: var(--color-navy); }
+.leaflet-container .leaflet-tooltip-bottom::before { border-bottom-color: var(--color-navy); }
+.leaflet-container .leaflet-tooltip-left::before { border-left-color: var(--color-navy); }
+.leaflet-container .leaflet-tooltip-right::before { border-right-color: var(--color-navy); }
 
 /* Safety net: people who ask for less motion get almost none. */
 @media (prefers-reduced-motion: reduce) {
