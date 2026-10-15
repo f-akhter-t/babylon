@@ -6,6 +6,7 @@ import IdentityQueueCard, { QueueSkeleton } from './IdentityQueueCard'
 import IdentityReviewPanel from './IdentityReviewPanel'
 import RequireRole from '../Auth/RequireRole'
 import { useDocumentTitle } from '../IssueDetail/useDocumentTitle'
+import { fit } from '../../components/layout/staffFit'
 import {
   ALREADY_REVIEWED,
   getIdentityQueue,
@@ -26,13 +27,16 @@ function QueueSection({ label, children }) {
   return (
     <section
       aria-labelledby="identity-queue-heading"
-      className="min-w-0 overflow-hidden rounded-panel bg-navy p-4 lg:w-72 lg:shrink-0"
+      className={clsx(
+        'min-w-0 overflow-hidden rounded-panel bg-navy p-4 lg:w-72 lg:shrink-0',
+        fit.column,
+      )}
     >
       <h2 id="identity-queue-heading" className="px-1 font-heading text-xl font-extrabold text-mint">
         Submissions
       </h2>
       <p className="mt-1 px-1 font-body text-sm text-mint/70">{label}</p>
-      <div className="mt-4">{children}</div>
+      <div className={clsx('mt-4', fit.column, fit.grow)}>{children}</div>
     </section>
   )
 }
@@ -152,7 +156,7 @@ function IdentityReviewPage() {
 
   return (
     <AdminLayout variant="admin" active="Identity checks">
-      <div className="p-4 break-words sm:p-8">
+      <div className={clsx('p-4 break-words sm:p-6 lg:p-8', fit.page)}>
         <h1 className="font-heading text-3xl font-extrabold text-navy sm:text-4xl">
           Identity checks
         </h1>
@@ -192,7 +196,16 @@ function IdentityReviewPage() {
             </div>
           </div>
         ) : (
-          <div className="mt-6 flex flex-col gap-6 lg:flex-row lg:items-start">
+          // In fit mode the list and the review both take the full height left,
+          // and each scrolls inside itself.
+          <div
+            className={clsx(
+              'mt-6 flex flex-col gap-6 lg:flex-row lg:items-start',
+              fit.stretch,
+              fit.grow,
+              fit.min80,
+            )}
+          >
             <QueueSection
               label={
                 queue.length === 1
@@ -206,6 +219,9 @@ function IdentityReviewPage() {
                 className={clsx(
                   'relative flex gap-3 overflow-x-auto p-1 pb-3',
                   'lg:max-h-160 lg:flex-col lg:overflow-x-hidden lg:overflow-y-auto lg:pb-1',
+                  fit.noMaxHeight,
+                  fit.grow,
+                  fit.min32,
                 )}
               >
                 {queue.map((item) => (
@@ -220,7 +236,7 @@ function IdentityReviewPage() {
               </ul>
             </QueueSection>
 
-            <div ref={panelRef} className="min-w-0 flex-1 scroll-mt-4">
+            <div ref={panelRef} className={clsx('min-w-0 flex-1 scroll-mt-4', fit.column)}>
               {selected ? (
                 <IdentityReviewPanel
                   key={keyOf(selected)}

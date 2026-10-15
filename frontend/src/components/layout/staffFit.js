@@ -21,6 +21,10 @@ export const fit = {
   // Takes the height that is left. Pair with a min-h-* from below so it never
   // collapses when the cards above it grow.
   grow: 'lg:[@media(min-height:37.5rem)]:flex-1',
+  // A row of columns that all take the row's full height.
+  stretch: 'lg:[@media(min-height:37.5rem)]:items-stretch',
+  // Drops a fixed max height, so the list can use the height it is given instead.
+  noMaxHeight: 'lg:[@media(min-height:37.5rem)]:max-h-none',
   // A single-row grid that fills the height it is given.
   rows: 'lg:[@media(min-height:37.5rem)]:grid-rows-1',
   // Scrolls inside itself (only in fit mode; otherwise the page scrolls).
