@@ -25,13 +25,13 @@ export default function Styleguide() {
   return (
     <div>
       <StyleSection title="Navbar: logged out">
-        <Navbar variant="logged-out" />
+        <Navbar />
       </StyleSection>
       <StyleSection title="Navbar: citizen">
-        <Navbar variant="citizen" unread={3} />
+        <Navbar />
       </StyleSection>
       <StyleSection title="Navbar: admin">
-        <Navbar variant="admin" />
+        <Navbar />
       </StyleSection>
 
       <div className="px-10">

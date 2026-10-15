@@ -70,7 +70,7 @@ function ReportPage() {
     <>
       <style>{pageStyle}</style>
       <AnimatedBackground />
-      <Navbar variant="citizen" />
+      <Navbar />
 
       <main className="relative min-h-[70vh] px-6 py-8 md:px-10">
         <div className="mx-auto max-w-6xl">

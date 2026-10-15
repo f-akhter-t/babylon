@@ -59,7 +59,7 @@ function MyReportsPage() {
 
   return (
     <div className="flex min-h-screen flex-col bg-page">
-      <Navbar variant="citizen" />
+      <Navbar />
 
       <main className="mx-auto w-full max-w-[1180px] flex-1 px-6 pb-14 pt-8 font-body text-sm text-navy max-sm:px-3.5">
         <div className="flex flex-wrap items-end gap-3.5">

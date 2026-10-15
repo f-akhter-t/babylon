@@ -8,7 +8,6 @@ import { useMapFilters } from './useMapFilters'
 import { useIssues } from './useIssues'
 import { useStoredIds } from './useStoredIds'
 import { useListKeys } from './useListKeys'
-import { useUnreadCount } from './useUnreadCount'
 import { useViewer } from './useViewer'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 
@@ -21,8 +20,6 @@ export default function Map() {
   // Each account has its own votes and follows.
   const [votedIds, toggleVote] = useStoredIds(viewer.storageKey('voted'))
   const [followedIds, toggleFollow] = useStoredIds(viewer.storageKey('followed'))
-  // Following an issue adds 1 to the navbar bell, unfollowing takes 1 away.
-  const unread = useUnreadCount(viewer.canAct ? followedIds.length : 0)
   const [cursors] = useState(cursorVariables) // built once
   useDocumentTitle('Issues near you') // the same words as the page heading
 
@@ -56,7 +53,7 @@ export default function Map() {
       className={clsx('flex min-h-dvh flex-col font-body lg:h-dvh', CURSOR_CLASSES)}
     >
       {/* With a login, the Navbar uses it. Without one, show the logged-out version. */}
-      <Navbar variant={viewer.session ? viewer.role : 'logged-out'} unread={unread} />
+      <Navbar />
       <main className="flex flex-1 flex-col lg:min-h-0 lg:flex-row">
         <IssuesSidebar
           className="order-2 lg:order-1"

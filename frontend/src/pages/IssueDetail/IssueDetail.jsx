@@ -4,7 +4,6 @@ import Navbar from '../../components/layout/Navbar'
 import { canEditIssue } from '../../services/api'
 import { useViewer } from '../Map/useViewer'
 import { useStoredIds } from '../Map/useStoredIds'
-import { useUnreadCount } from '../Map/useUnreadCount'
 import { useIssue } from './useIssue'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import { DetailLoading, DetailMessage } from './DetailStates'
@@ -23,9 +22,6 @@ export default function IssueDetail() {
   // The same per-account lists as the Map page, so votes and follows match.
   const [votedIds, toggleVote] = useStoredIds(viewer.storageKey('voted'))
   const [followedIds, toggleFollow] = useStoredIds(viewer.storageKey('followed'))
-  // Following an issue adds 1 to the navbar bell, like on the Map page.
-  const unread = useUnreadCount(viewer.canAct ? followedIds.length : 0)
-
   // Add this citizen's own vote and follow on top of the data.
   const voted = issue ? votedIds.includes(issue.id) : false
   const shown = issue && {
@@ -53,7 +49,7 @@ export default function IssueDetail() {
     // isolate: the backdrop's -z-10 stays inside this page.
     <div className="relative isolate min-h-dvh font-body">
       <PageBackdrop />
-      <Navbar variant={viewer.session ? viewer.role : 'logged-out'} unread={unread} />
+      <Navbar />
       <main className="mx-auto w-full max-w-6xl px-4 pb-12 pt-5 sm:px-6 lg:px-10">
         {/* Always in the page, so the message is announced once when it appears. */}
         <div role="status">
