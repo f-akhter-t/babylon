@@ -153,6 +153,17 @@ export default function AdminLayout({
     }
   }, [menuOpen])
 
+  // The action bars stick to the bottom of the window when the page scrolls.
+  // This keeps a focused field from scrolling to a spot under them.
+  useEffect(() => {
+    const root = document.documentElement
+    const before = root.style.scrollPaddingBottom
+    root.style.scrollPaddingBottom = '7rem'
+    return () => {
+      root.style.scrollPaddingBottom = before
+    }
+  }, [])
+
   // Close it when the window becomes wide enough for the sidebar.
   useEffect(() => {
     const query = window.matchMedia(LG_QUERY)
