@@ -404,7 +404,7 @@ export default function LocationPicker({
           type="button"
           onClick={handleLocate}
           disabled={locating}
-          className="group shrink-0 rounded-full border border-navy/15 bg-white px-4 py-2.5 font-body text-sm font-semibold text-navy shadow-sm transition hover:-translate-y-0.5 hover:bg-mint hover:shadow-md active:scale-95 disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest/50"
+          className="group shrink-0 rounded-full border border-navy/15 bg-white px-4 py-2.5 font-body text-sm font-semibold text-navy shadow-sm transition hover:-translate-y-0.5 hover:bg-mint hover:shadow-md active:scale-95 disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest/50"
         >
           <span className="inline-flex items-center gap-1.5">
             <svg

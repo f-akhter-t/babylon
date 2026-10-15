@@ -100,7 +100,7 @@ function ActionButton({ issue, onStart, onSelect, busy }) {
         className={clsx(
           base,
           'bg-forest text-mint',
-          busy ? 'cursor-not-allowed opacity-40' : 'hover:bg-forest/90',
+          busy ? 'cursor-not-allowed opacity-50' : 'hover:bg-forest/90',
         )}
       >
         Start work

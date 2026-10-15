@@ -103,7 +103,7 @@ export function SubmitButton({ disabled, children }) {
       className={clsx(
         'min-h-11 rounded-full bg-navy px-6 py-3.5 font-body text-base font-bold text-mint transition-opacity motion-reduce:transition-none',
         'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forest',
-        disabled ? 'cursor-not-allowed opacity-40' : 'hover:opacity-90',
+        disabled ? 'cursor-not-allowed opacity-50' : 'hover:opacity-90',
       )}
     >
       {children}

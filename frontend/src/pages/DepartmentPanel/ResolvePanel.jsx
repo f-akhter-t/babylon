@@ -148,7 +148,7 @@ export default function ResolvePanel({ issue, onSubmit, busy = false, error = nu
             'min-h-11 w-full rounded-full bg-navy px-6 py-3 font-body text-base font-bold text-mint transition-opacity motion-reduce:transition-none',
             'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forest',
             // ! beats the global "button:not(:disabled)" pointer rule in index.css.
-            needsPhoto || busy ? 'cursor-not-allowed! opacity-40' : 'hover:opacity-90',
+            needsPhoto || busy ? 'cursor-not-allowed! opacity-50' : 'hover:opacity-90',
           )}
         >
           Submit for verification

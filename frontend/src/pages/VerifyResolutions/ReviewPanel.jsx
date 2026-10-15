@@ -170,7 +170,7 @@ export default function ReviewPanel({ issue, onApprove, onReject, busy = false }
               'min-h-11 rounded-full bg-forest px-3 py-2.5 font-body text-sm font-bold text-mint transition-opacity motion-reduce:transition-none sm:px-6 sm:text-base',
               'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forest',
               // ! beats the global "button:not(:disabled)" pointer rule in index.css.
-              canApprove && !busy ? 'hover:opacity-90' : 'cursor-not-allowed! opacity-40',
+              canApprove && !busy ? 'hover:opacity-90' : 'cursor-not-allowed! opacity-50',
             )}
           >
             Approve and close

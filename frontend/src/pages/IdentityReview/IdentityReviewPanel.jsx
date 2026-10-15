@@ -123,7 +123,7 @@ export default function IdentityReviewPanel({ submission, onDecide, focusOnOpen 
             disabled={Boolean(busy)}
             aria-describedby="identity-reject-hint"
             placeholder="For example: the photo is blurry, please take it again in good light."
-            className="mt-2 w-full rounded-tile border border-navy/60 bg-white p-3 font-body text-sm text-navy placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-forest disabled:opacity-60"
+            className="mt-2 w-full rounded-tile border border-navy/60 bg-white p-3 font-body text-sm text-navy placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-forest disabled:opacity-50"
           />
           <p id="identity-reject-hint" className="mt-1 font-body text-xs text-slate">
             {`The citizen will see this reason. Do not include their NID number. ${reasonLength} of ${REJECT_REASON_MAX} characters.`}
