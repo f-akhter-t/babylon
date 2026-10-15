@@ -1,9 +1,16 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import clsx from 'clsx'
 import AdminLayout from '../../components/layout/AdminLayout'
+import LoadError from '../../components/ui/LoadError'
 import ReviewPanel from './ReviewPanel'
-import { getVerificationQueue, getReopenedIssues } from '../../services/api'
+import {
+  approveResolution,
+  ISSUES_EVENT,
+  loadVerification,
+  rejectResolution,
+} from '../../services/api'
+import { useAsync } from '../../hooks/useAsync'
 import RequireRole from '../Auth/RequireRole'
 import { useDocumentTitle } from '../IssueDetail/useDocumentTitle'
 
@@ -52,24 +59,52 @@ export default function VerifyResolutions() {
 
 function VerifyResolutionsPage() {
   useDocumentTitle('Verify resolutions')
-  const [queue, setQueue] = useState([])
-  const [reopened, setReopened] = useState(null)
   const [selectedId, setSelectedId] = useState(null)
-  const [notice, setNotice] = useState('')
+  const [notice, setNotice] = useState(null) // { tone: 'success' | 'error', text }
+  const [busy, setBusy] = useState(false)
 
+  const load = useCallback(() => loadVerification(), [])
+  const { data, error, loading, retry, reload } = useAsync(load)
+  const queue = data?.queue ?? []
+  const reopened = data?.reopened[0] ?? null
+
+  // A department sent a fix, or another admin checked one: show the latest.
   useEffect(() => {
-    Promise.all([getVerificationQueue(), getReopenedIssues()]).then(([q, r]) => {
-      setQueue(q)
-      setReopened(r[0] ?? null)
-    })
-  }, [])
+    window.addEventListener(ISSUES_EVENT, reload)
+    return () => window.removeEventListener(ISSUES_EVENT, reload)
+  }, [reload])
 
   const selected = queue.find((issue) => issue.id === selectedId) ?? queue[0] ?? null
 
-  function finish(issue, message) {
-    setQueue((list) => list.filter((item) => item.id !== issue.id))
-    setSelectedId(null)
-    setNotice(message)
+  // Saves the decision. The queue reloads through ISSUES_EVENT.
+  async function finish(save, message) {
+    setNotice(null)
+    setBusy(true)
+    try {
+      await save()
+      setSelectedId(null)
+      setNotice({ tone: 'success', text: message })
+    } catch (err) {
+      setNotice({ tone: 'error', text: err.message })
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  if (error) {
+    return (
+      <AdminLayout variant="admin" active="Verification queue">
+        <div className="p-8">
+          <h1 className="font-heading text-4xl font-extrabold text-navy">Verify resolutions</h1>
+          <div className="mt-6">
+            <LoadError
+              message="We could not load the verification queue. Please try again."
+              onRetry={retry}
+            />
+          </div>
+        </div>
+      </AdminLayout>
+    )
   }
 
   return (
@@ -84,7 +119,15 @@ function VerifyResolutionsPage() {
         </p>
 
         {notice && (
-          <p className="mt-3 font-body text-sm font-bold text-forest">{notice}</p>
+          <p
+            role={notice.tone === 'error' ? 'alert' : 'status'}
+            className={clsx(
+              'mt-3 font-body text-sm font-bold',
+              notice.tone === 'error' ? 'text-danger' : 'text-forest',
+            )}
+          >
+            {notice.text}
+          </p>
         )}
 
         {reopened && (
@@ -103,38 +146,51 @@ function VerifyResolutionsPage() {
           </div>
         )}
 
-        <div className="mt-6 grid grid-cols-[270px_minmax(0,1fr)] items-start gap-6">
-          <div>
-            <p className="font-body text-sm font-bold text-muted">Waiting for your check</p>
-            <div className="mt-3 flex flex-col gap-3">
-              {queue.map((issue) => (
-                <QueueCard
-                  key={issue.id}
-                  issue={issue}
-                  selected={selected?.id === issue.id}
-                  onSelect={setSelectedId}
-                />
-              ))}
+        {loading ? (
+          <p role="status" className="mt-6 font-body text-base text-navy">
+            Loading the verification queue.
+          </p>
+        ) : (
+          <div className="mt-6 grid grid-cols-[270px_minmax(0,1fr)] items-start gap-6">
+            <div>
+              <p className="font-body text-sm font-bold text-muted">Waiting for your check</p>
+              <div className="mt-3 flex flex-col gap-3">
+                {queue.map((issue) => (
+                  <QueueCard
+                    key={issue.id}
+                    issue={issue}
+                    selected={selected?.id === issue.id}
+                    onSelect={setSelectedId}
+                  />
+                ))}
+              </div>
             </div>
-          </div>
 
-          {selected ? (
-            <ReviewPanel
-              key={selected.id}
-              issue={selected}
-              onApprove={(issue) =>
-                finish(issue, `Approved and closed: ${issue.title}`)
-              }
-              onReject={(issue) =>
-                finish(issue, `Sent back to ${issue.department}: ${issue.title}`)
-              }
-            />
-          ) : (
-            <div className="rounded-panel bg-mint p-8 font-body text-base text-muted">
-              Nothing is waiting for your check.
-            </div>
-          )}
-        </div>
+            {selected ? (
+              <ReviewPanel
+                key={selected.id}
+                issue={selected}
+                onApprove={(issue) =>
+                  finish(
+                    () => approveResolution(issue.id),
+                    `“${issue.title}” was approved and closed.`,
+                  )
+                }
+                onReject={(issue, reason) =>
+                  finish(
+                    () => rejectResolution(issue.id, reason),
+                    `“${issue.title}” was sent back to ${issue.department}.`,
+                  )
+                }
+                busy={busy}
+              />
+            ) : (
+              <div className="rounded-panel bg-mint p-8 font-body text-base text-muted">
+                Nothing is waiting for your check.
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </AdminLayout>
   )

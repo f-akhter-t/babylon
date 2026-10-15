@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import clsx from 'clsx'
 import {
@@ -11,7 +11,9 @@ import {
   YAxis,
 } from 'recharts'
 import AdminLayout from '../../components/layout/AdminLayout'
-import { getAccountability } from '../../services/api'
+import LoadError from '../../components/ui/LoadError'
+import { loadAccountability } from '../../services/api'
+import { useAsync } from '../../hooks/useAsync'
 import RequireRole from '../Auth/RequireRole'
 import { useDocumentTitle } from '../IssueDetail/useDocumentTitle'
 
@@ -198,12 +200,8 @@ export default function Accountability() {
 
 function AccountabilityPage() {
   useDocumentTitle('Accountability')
-  const [data, setData] = useState(null)
   const [weeks, setWeeks] = useState(8)
-
-  useEffect(() => {
-    getAccountability().then(setData)
-  }, [])
+  const { data, error, loading, retry } = useAsync(loadAccountability)
 
   const weekly = data ? data.weekly.slice(-weeks) : []
 
@@ -237,6 +235,21 @@ function AccountabilityPage() {
             ))}
           </select>
         </div>
+
+        {error && (
+          <div className="mt-6">
+            <LoadError
+              message="We could not load the accountability figures. Please try again."
+              onRetry={retry}
+            />
+          </div>
+        )}
+
+        {loading && (
+          <p role="status" className="mt-6 font-body text-base text-navy">
+            Loading the accountability figures.
+          </p>
+        )}
 
         {data && (
           <>

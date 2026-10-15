@@ -1,8 +1,11 @@
 import { useState } from 'react'
 import clsx from 'clsx'
+import { sentBackMessage } from './departmentFilters'
 
-export default function ResolvePanel({ issue, onSubmit }) {
+// error: why the last submit failed (one sentence), or null.
+export default function ResolvePanel({ issue, onSubmit, busy = false, error = null }) {
   const [previewUrl, setPreviewUrl] = useState(null)
+  const [file, setFile] = useState(null) // sent to onSubmit, which shrinks it
   const [note, setNote] = useState('')
 
   if (!issue) {
@@ -46,10 +49,11 @@ export default function ResolvePanel({ issue, onSubmit }) {
   }
 
   function handleFile(event) {
-    const file = event.target.files?.[0]
-    if (!file) return
+    const picked = event.target.files?.[0]
+    if (!picked) return
     if (previewUrl) URL.revokeObjectURL(previewUrl)
-    setPreviewUrl(URL.createObjectURL(file))
+    setPreviewUrl(URL.createObjectURL(picked))
+    setFile(picked)
   }
 
   return (
@@ -60,6 +64,11 @@ export default function ResolvePanel({ issue, onSubmit }) {
       <h2 className="mt-1 font-heading text-2xl font-extrabold text-navy">
         {issue.title}
       </h2>
+      {issue.sentBack && (
+        <p className="mt-4 min-w-0 break-words font-body text-sm font-bold text-danger">
+          {sentBackMessage(issue.sentBack)}
+        </p>
+      )}
 
       <p className="mt-5 font-body text-sm font-bold text-navy">Before · from citizen</p>
       <div className="mt-2 flex h-32 items-center justify-center rounded-card bg-slate font-body text-sm font-semibold text-mint">
@@ -103,15 +112,20 @@ export default function ResolvePanel({ issue, onSubmit }) {
 
       <button
         type="button"
-        disabled={!previewUrl}
-        onClick={() => onSubmit(issue.id, note)}
+        disabled={!previewUrl || busy}
+        onClick={() => onSubmit(issue.id, { note, file })}
         className={clsx(
           'mt-5 w-full rounded-full bg-navy px-6 py-3.5 font-body text-base font-bold text-mint transition-opacity',
-          !previewUrl ? 'cursor-not-allowed opacity-40' : 'hover:opacity-90',
+          !previewUrl || busy ? 'cursor-not-allowed opacity-40' : 'hover:opacity-90',
         )}
       >
         Submit for verification
       </button>
+      {error && (
+        <p role="alert" className="mt-3 min-w-0 break-words font-body text-sm font-bold text-danger">
+          {error}
+        </p>
+      )}
       <p className="mt-3 font-body text-sm text-muted">
         The issue stays In progress until the admin confirms the fix in the photo.
       </p>

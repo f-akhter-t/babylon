@@ -1,6 +1,7 @@
 import clsx from 'clsx'
 import StatusPill from '../../components/ui/StatusPill'
 import StaircaseIcon from '../../components/ui/StaircaseIcon'
+import { sentBackMessage } from './departmentFilters'
 
 const COLUMNS = 'grid-cols-[56px_minmax(0,1fr)_80px_150px_170px]'
 
@@ -19,10 +20,18 @@ function StatusCell({ issue }) {
       </span>
     )
   }
+  if (issue.sentBack) {
+    return (
+      <span className="inline-flex items-center gap-2 rounded-full bg-slate/15 px-3 py-1 font-body text-sm font-semibold text-navy">
+        <StaircaseIcon level={2} className="text-slate" />
+        Sent back
+      </span>
+    )
+  }
   return <StatusPill status={issue.status} />
 }
 
-function ActionButton({ issue, onStart, onSelect }) {
+function ActionButton({ issue, onStart, onSelect, busy }) {
   const base =
     'w-full rounded-full px-4 py-2.5 font-body text-sm font-bold transition-colors'
 
@@ -54,11 +63,16 @@ function ActionButton({ issue, onStart, onSelect }) {
     return (
       <button
         type="button"
+        disabled={busy}
         onClick={(e) => {
           e.stopPropagation()
           onStart(issue.id)
         }}
-        className={clsx(base, 'bg-forest text-mint hover:bg-forest/90')}
+        className={clsx(
+          base,
+          'bg-forest text-mint',
+          busy ? 'cursor-not-allowed opacity-40' : 'hover:bg-forest/90',
+        )}
       >
         Start work
       </button>
@@ -82,7 +96,7 @@ function ActionButton({ issue, onStart, onSelect }) {
   )
 }
 
-export default function IssueTable({ issues, selectedId, onSelect, onStart }) {
+export default function IssueTable({ issues, selectedId, onSelect, onStart, busy = false }) {
   return (
     <div className="overflow-hidden rounded-card bg-mint">
       <div
@@ -128,6 +142,11 @@ export default function IssueTable({ issues, selectedId, onSelect, onStart }) {
               {issue.location}
               {issue.ward ? `, ${issue.ward}` : ''}
             </p>
+            {issue.sentBack && (
+              <p className="mt-1 min-w-0 break-words font-body text-sm font-bold text-danger">
+                {sentBackMessage(issue.sentBack)}
+              </p>
+            )}
           </div>
 
           <span className="font-body text-base font-bold text-navy">
@@ -136,7 +155,7 @@ export default function IssueTable({ issues, selectedId, onSelect, onStart }) {
 
           <StatusCell issue={issue} />
 
-          <ActionButton issue={issue} onStart={onStart} onSelect={onSelect} />
+          <ActionButton issue={issue} onStart={onStart} onSelect={onSelect} busy={busy} />
         </div>
       ))}
     </div>

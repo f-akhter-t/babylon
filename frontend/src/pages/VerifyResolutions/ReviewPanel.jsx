@@ -2,6 +2,7 @@ import { useState } from 'react'
 import clsx from 'clsx'
 import StaircaseIcon from '../../components/ui/StaircaseIcon'
 import BeforeAfterSlider from './BeforeAfterSlider'
+import { REJECT_REASON_NEEDED } from '../../services/api'
 
 const CHECKS = [
   'Same location as the original report',
@@ -9,11 +10,22 @@ const CHECKS = [
   'Photo was taken after work started',
 ]
 
-export default function ReviewPanel({ issue, onApprove, onReject }) {
+export default function ReviewPanel({ issue, onApprove, onReject, busy = false }) {
   const [checked, setChecked] = useState([false, false, false])
   const [reason, setReason] = useState('')
+  const [reasonError, setReasonError] = useState('')
 
   const canApprove = checked[0] && checked[1]
+
+  // A reason is needed to send a fix back (the API checks it again).
+  function reject() {
+    if (!reason.trim()) {
+      setReasonError(REJECT_REASON_NEEDED)
+      return
+    }
+    setReasonError('')
+    onReject(issue, reason)
+  }
 
   function toggle(index) {
     setChecked((list) => list.map((value, i) => (i === index ? !value : value)))
@@ -36,7 +48,11 @@ export default function ReviewPanel({ issue, onApprove, onReject }) {
       </div>
 
       <div className="mt-5">
-        <BeforeAfterSlider />
+        <BeforeAfterSlider
+          before={issue.beforeImg}
+          after={issue.pendingAfterImg}
+          title={issue.title}
+        />
       </div>
 
       <div className="mt-6 grid grid-cols-2 gap-6">
@@ -86,23 +102,29 @@ export default function ReviewPanel({ issue, onApprove, onReject }) {
       <div className="mt-6 grid grid-cols-2 gap-4">
         <button
           type="button"
-          disabled={!canApprove}
+          disabled={!canApprove || busy}
           onClick={() => onApprove(issue)}
           className={clsx(
             'rounded-full bg-forest px-6 py-3.5 font-body text-base font-bold text-mint transition-opacity',
-            canApprove ? 'hover:opacity-90' : 'cursor-not-allowed opacity-40',
+            canApprove && !busy ? 'hover:opacity-90' : 'cursor-not-allowed opacity-40',
           )}
         >
           Approve and close
         </button>
         <button
           type="button"
-          onClick={() => onReject(issue, reason)}
+          disabled={busy}
+          onClick={reject}
           className="rounded-full border-2 border-navy bg-white px-6 py-3.5 font-body text-base font-bold text-navy transition-colors hover:bg-mint-deep"
         >
           Reject and send back
         </button>
       </div>
+      {reasonError && (
+        <p role="alert" className="mt-3 font-body text-sm font-bold text-danger">
+          {reasonError}
+        </p>
+      )}
     </div>
   )
 }
