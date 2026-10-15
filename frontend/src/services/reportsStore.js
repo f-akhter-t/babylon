@@ -174,6 +174,13 @@ export function createReport({ category, description = '', location = '', pinned
   return report
 }
 
+// Called by deleteIssue in services/api.js with the report's id in this store,
+// so a deleted report no longer counts here either.
+export function removeReport(id) {
+  if (!state.reports.some((r) => r.id === id)) return
+  commit((s) => ({ ...s, reports: s.reports.filter((r) => r.id !== id) }))
+}
+
 // Call this from any upvote button. Only affects reports in this store.
 export function upvoteReport(id) {
   if (!state.reports.some((r) => r.id === id)) return false

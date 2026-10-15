@@ -25,6 +25,7 @@ import {
   savePhoto,
 } from './identityPhotos'
 import { getAccountName, getSession, renameAccount } from './auth'
+import { removeReport as removeOldStoreReport } from './reportsStore'
 import {
   checkDetails,
   checkIdPhoto,
@@ -94,6 +95,31 @@ function saveSubmitted(list) {
 const submitted = loadSubmitted()
 all.push(...submitted.map(withDepartment))
 
+// Reports their citizen deleted (see deleteIssue), by issue id. A list of its
+// own, so deleted mock issues stay deleted too.
+const DELETED_KEY = 'babylon.deletedIssues'
+
+function loadDeleted() {
+  try {
+    const list = JSON.parse(window.localStorage.getItem(DELETED_KEY))
+    return Array.isArray(list) ? list.map(String) : []
+  } catch {
+    return []
+  }
+}
+
+let deletedIds = loadDeleted()
+
+// Takes an issue out of the lists in memory (not out of storage).
+function dropFromMemory(id) {
+  const key = String(id)
+  for (const list of [all, submitted]) {
+    const index = list.findIndex((item) => String(item.id) === key)
+    if (index !== -1) list.splice(index, 1)
+  }
+}
+deletedIds.forEach(dropFromMemory)
+
 // Pages listen to this to refresh when a report is created, upvoted or an alert is read.
 export const ISSUES_EVENT = 'babylon:issues'
 const notifyIssuesChanged = () => window.dispatchEvent(new Event(ISSUES_EVENT))
@@ -111,6 +137,14 @@ window.addEventListener('storage', (e) => {
       submitted.push(item)
     }
   }
+  notifyIssuesChanged()
+})
+
+// Another tab deleted a report: drop it here too.
+window.addEventListener('storage', (e) => {
+  if (e.key !== DELETED_KEY) return
+  deletedIds = loadDeleted()
+  deletedIds.forEach(dropFromMemory)
   notifyIssuesChanged()
 })
 
@@ -152,8 +186,8 @@ function loadWorkflow() {
 let workflow = loadWorkflow()
 
 function publicPart(entry) {
-  const { pendingAfterImg, sentBack, updatedAt, ...rest } = entry
-  void [pendingAfterImg, sentBack, updatedAt]
+  const { pendingAfterImg, sentBack, sentBackHistory, updatedAt, ...rest } = entry
+  void [pendingAfterImg, sentBack, sentBackHistory, updatedAt]
   return rest
 }
 
@@ -312,6 +346,12 @@ export async function rejectResolution(id, reason = '') {
     verification: 'none',
     pendingAfterImg: null,
     sentBack: { reason: text, on: shortDate() },
+    // Kept for the citizen who filed the report (see ownerDetails). Never
+    // cleared, unlike sentBack, which only describes the current send-back.
+    sentBackHistory: [
+      ...(workflow[String(issue.id)]?.sentBackHistory ?? []),
+      { reason: text, on: shortDate() },
+    ],
     // A reopened issue goes to the department for the first time, so it must
     // stop being "reopened" (the department list and Start work skip those).
     // Its priority before it was reopened was not kept, so it becomes High.
@@ -425,7 +465,7 @@ export async function getIssues({ category = 'All', status = 'All', search = '' 
 
 export async function getIssueById(id) {
   const issue = all.find((item) => String(item.id) === String(id))
-  return issue ? present(issue) : null
+  return issue ? ownerDetails(present(issue)) : null
 }
 
 // A citizen's new report. location is { lat, lng, label, ward }.
@@ -433,7 +473,9 @@ export async function getIssueById(id) {
 // the logged-in account's email, read here the way a backend reads its login.
 // photoUrl is a (small) data URL of the photo. Severity is a placeholder
 // ('medium') until the AI severity engine exists.
-export async function createIssue({ category, description, photoUrl, location, reporter }) {
+// legacyReportId: the same report's id in the old My reports store
+// (services/reportsStore.js), so deleting it can remove that record too.
+export async function createIssue({ category, description, photoUrl, location, reporter, legacyReportId }) {
   const today = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
 
   const issue = {
@@ -459,6 +501,7 @@ export async function createIssue({ category, description, photoUrl, location, r
     reporter: reporter || 'You',
     reporterEmail: getSession()?.email ?? null,
     description,
+    ...(legacyReportId ? { legacyReportId } : {}),
   }
 
   submitted.push(issue)
@@ -594,6 +637,48 @@ export async function updateIssue(id, changes) {
   const index = all.indexOf(issue)
   all[index] = withDepartment({ ...issue, ...edit })
   return present(all[index])
+}
+
+// Deletes the logged-in citizen's own report while it is still Open: the
+// same rule as editing. It disappears from the map, the feed, My reports and
+// the points. Saves first, so a failed save changes nothing.
+// Throws an Error with code 'not-found' | 'forbidden' | 'locked' | 'storage'.
+export async function deleteIssue(id, email) {
+  await wait()
+  const key = String(id)
+  deletedIds = loadDeleted()
+  const issue = findIssue(id)
+  if (!issue || deletedIds.includes(key)) throw editError('not-found', 'This issue no longer exists.')
+
+  const session = getSession()
+  const sameAccount = email && session?.email?.toLowerCase() === email.toLowerCase()
+  if (session?.role !== 'citizen' || !sameAccount || !isOwnReport(issue, session.email)) {
+    throw editError('forbidden', 'Only the citizen who reported this issue can delete it.')
+  }
+  refreshStatus(issue)
+  refreshWorkflow(issue)
+  if (canEditIssue(issue, session.email) !== 'ok') throw editError('locked', LOCKED_MESSAGE)
+
+  const nextDeleted = [...deletedIds, key]
+  const nextSubmitted = submitted.filter((item) => String(item.id) !== key)
+  const { [key]: droppedEdit, ...nextEdits } = edits
+  const { [key]: droppedEntry, ...nextWorkflow } = loadWorkflow()
+  void [droppedEdit, droppedEntry]
+  try {
+    window.localStorage.setItem(DELETED_KEY, JSON.stringify(nextDeleted))
+    window.localStorage.setItem(SUBMITTED_KEY, JSON.stringify(nextSubmitted))
+    window.localStorage.setItem(EDITS_KEY, JSON.stringify(nextEdits))
+    window.localStorage.setItem(WORKFLOW_KEY, JSON.stringify(nextWorkflow))
+  } catch {
+    throw editError('storage', 'We could not delete your report because the storage on this device is blocked.')
+  }
+
+  deletedIds = nextDeleted
+  delete edits[key]
+  workflow = nextWorkflow
+  dropFromMemory(key)
+  if (issue.legacyReportId) removeOldStoreReport(issue.legacyReportId)
+  notifyIssuesChanged()
 }
 
 // ---------- Home ----------
@@ -761,10 +846,25 @@ function ownReports(email) {
   return all.filter((issue) => isOwnReport(issue, email)).map(present)
 }
 
-// The citizen's own reports, newest first (My reports page).
+// The citizen's own reports, newest first (My reports page). Only for the
+// logged-in account itself, with the details only the reporter may see.
 export async function getMyReports(email) {
-  if (!email) return []
-  return ownReports(email).sort((a, b) => ageMs(a) - ageMs(b))
+  if (!email || getSession()?.email?.toLowerCase() !== email.toLowerCase()) return []
+  return ownReports(email)
+    .sort((a, b) => ageMs(a) - ageMs(b))
+    .map(ownerDetails)
+}
+
+// For the citizen who filed the report only: every time the admin sent the
+// department's fix back, with the reason (sentBackHistory), and whether it is
+// sent back right now. Other citizens, guests and staff get the issue as it is.
+function ownerDetails(issue) {
+  const session = getSession()
+  if (session?.role !== 'citizen' || !isOwnReport(issue, session.email)) return issue
+  const entry = workflow[String(issue.id)] ?? {}
+  // Reports sent back before the history existed only have the current reason.
+  const history = entry.sentBackHistory ?? (entry.sentBack ? [entry.sentBack] : [])
+  return { ...issue, sentBackHistory: history, sentBackNow: Boolean(entry.sentBack) }
 }
 
 export async function getCurrentUser(email) {
