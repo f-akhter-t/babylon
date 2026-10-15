@@ -5,8 +5,6 @@ import Footer from '../../components/layout/Footer'
 import AnimatedBackground from '../../components/ui/AnimatedBackground'
 import { canEditIssue, getIssueForEdit, LOCKED_MESSAGE } from '../../services/api'
 import { useViewer } from '../Map/useViewer'
-import { useStoredIds } from '../Map/useStoredIds'
-import { useUnreadCount } from '../Map/useUnreadCount'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import { DetailLoading, DetailMessage } from '../IssueDetail/DetailStates'
 import { setIssueNotice } from '../IssueDetail/issueNotice'
@@ -17,8 +15,6 @@ import EditForm from './EditForm'
 export default function IssueEdit() {
   const { id } = useParams()
   const viewer = useViewer()
-  const [followedIds] = useStoredIds(viewer.storageKey('followed'))
-  const unread = useUnreadCount(viewer.canAct ? followedIds.length : 0)
   const [result, setResult] = useState({ id: null, issue: null, error: false })
 
   useEffect(() => {
@@ -62,7 +58,7 @@ export default function IssueEdit() {
   return (
     <>
       <AnimatedBackground />
-      <Navbar variant="citizen" unread={unread} />
+      <Navbar />
       <main className="relative min-h-[70vh] px-4 py-8 sm:px-6 md:px-10">
         <div className="mx-auto max-w-6xl">
           {loading && <DetailLoading />}

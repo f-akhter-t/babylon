@@ -46,7 +46,7 @@ export default function Home() {
 
   return (
     <div className="font-body">
-      <Navbar variant="logged-out" />
+      <Navbar />
       <main>
         <HeroSlider slides={data?.slides} categories={data?.categories} />
         <StatsRow stats={data?.stats} />

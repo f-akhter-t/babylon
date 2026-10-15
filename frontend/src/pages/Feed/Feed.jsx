@@ -76,7 +76,7 @@ export default function Feed() {
     <>
       <style>{pageStyle}</style>
       <AnimatedBackground />
-      <Navbar variant={viewer.session ? viewer.role : 'logged-out'} />
+      <Navbar />
 
       <main>
         <section className="bg-navy px-6 py-16 text-white md:px-10">

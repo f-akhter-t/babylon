@@ -14,7 +14,7 @@ export default function NotFound() {
 
   return (
     <div className="flex min-h-screen flex-col bg-page">
-      <Navbar variant={viewer.session ? viewer.role : 'logged-out'} />
+      <Navbar />
 
       <main className="flex flex-1 items-center justify-center px-4 py-16 font-body">
         <div className="flex w-full max-w-lg flex-col items-center gap-6 text-center">

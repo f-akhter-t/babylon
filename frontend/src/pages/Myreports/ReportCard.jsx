@@ -14,9 +14,11 @@ export default function ReportCard({ report, onOpen }) {
         'hover:-translate-y-0.5 hover:shadow-lift focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-navy'
       )}
     >
-      <div className="grid h-[150px] grid-cols-[1.5fr_1fr] gap-0.5 bg-page">
+      {/* grid-rows-1: the row is exactly the 150px strip, so a tall photo is
+          cropped instead of growing under the text. */}
+      <div className="grid h-[150px] grid-cols-[1.5fr_1fr] grid-rows-1 gap-0.5 bg-page">
         {r.photoUrl ? (
-          <img src={r.photoUrl} alt={`Photo of ${r.title}`} className="h-full w-full object-cover" />
+          <img src={r.photoUrl} alt={`Photo of ${r.title}`} className="h-full min-h-0 w-full object-cover" />
         ) : (
           <div className="grid place-items-center bg-slate text-xs text-mint">
             <span className="flex items-center gap-1.5"><CameraIcon />No photo added</span>
@@ -25,7 +27,8 @@ export default function ReportCard({ report, onOpen }) {
         <MapIllustration />
       </div>
 
-      <div className="flex flex-1 flex-col gap-2 px-4 pb-4 pt-3.5">
+      {/* The card's own mint surface, opaque, so the text never sits on the photo or map. */}
+      <div className="relative flex flex-1 flex-col gap-2 bg-mint px-4 pb-4 pt-3.5">
         <div className="flex items-center justify-between gap-2">
           <ReportStatusPill status={r.status} />
           <span className="text-[13px] text-muted">{r.dateLabel}</span>

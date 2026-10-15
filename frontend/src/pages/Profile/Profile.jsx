@@ -4,8 +4,6 @@ import Navbar from '../../components/layout/Navbar'
 import Footer from '../../components/layout/Footer'
 import AnimatedBackground from '../../components/ui/AnimatedBackground'
 import { useViewer } from '../Map/useViewer'
-import { useStoredIds } from '../Map/useStoredIds'
-import { useUnreadCount } from '../Map/useUnreadCount'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import { useProfile } from '../../hooks/useProfile'
 import { endSetup, homePathFor, isInSetup } from '../../services/auth'
@@ -53,8 +51,6 @@ export default function Profile() {
 
 function ProfilePage({ viewer }) {
   const { profile, loading, error, reload } = useProfile()
-  const [followedIds] = useStoredIds(viewer.storageKey('followed'))
-  const unread = useUnreadCount(followedIds.length)
   const email = viewer.session.email
   const firstTime = useFirstTimeSetup(email)
   useDocumentTitle(firstTime ? 'Welcome' : 'Your profile')
@@ -132,7 +128,7 @@ function ProfilePage({ viewer }) {
     <div className="profile-page">
       <style>{profileStyle}</style>
       <AnimatedBackground />
-      <Navbar variant="citizen" unread={unread} />
+      <Navbar />
 
       <main className="relative min-h-[70vh] px-4 pt-8 pb-8 sm:px-6 md:px-10">
         <div className="mx-auto max-w-6xl">

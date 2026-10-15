@@ -4,7 +4,8 @@ import clsx from 'clsx'
 import Logo from './Logo'
 import NotificationBell from './NotificationBell'
 import Button from '../ui/Button'
-import { getSession, homePathFor, logout } from '../../services/auth'
+import { homePathFor, logout } from '../../services/auth'
+import { useViewer } from '../../pages/Map/useViewer'
 import { useProfile } from '../../hooks/useProfile'
 import { usePendingIdentityCount } from '../../hooks/usePendingIdentityCount'
 import { confirmLeave } from '../../utils/leaveGuard'
@@ -116,12 +117,13 @@ function Avatar({ name, text, to, label, verified }) {
 }
 
 export default function Navbar({
-  variant = 'logged-out',
   showReport = true,
   initials = 'NR',
 }) {
   const navigate = useNavigate()
-  const [session, setSession] = useState(getSession)
+  // The live session (it follows a login or logout in another tab). The
+  // whole bar, the avatar included, comes from it: pages pass nothing.
+  const { session } = useViewer()
   const [open, setOpen] = useState(false)
   const headerRef = useRef(null)
   const menuButtonRef = useRef(null)
@@ -154,8 +156,7 @@ export default function Navbar({
     }
   }, [open])
 
-  // A real login decides which navbar to show. Without a login, the page decides.
-  const current = session?.role ?? variant
+  const current = session?.role ?? 'logged-out'
   const links = linksByVariant[current] ?? citizenLinks
   const canReport = current !== 'admin' && current !== 'department'
   // Citizens: name and Verified status from their profile, so a rename shows at once.
@@ -163,7 +164,7 @@ export default function Navbar({
   const isCitizen = session?.role === 'citizen'
   const displayName = isCitizen ? profile.name || session.name : session?.name
   const avatarText = session ? initialsFor(displayName, initials) : initials
-  // The avatar link follows the real login, never the page's variant, so guests get none.
+  // Citizens: their profile. Staff: their own panel. Guests have no avatar.
   const staffLabel = staffAvatarLabels[session?.role]
   let avatarTo
   let avatarLabel
@@ -178,7 +179,9 @@ export default function Navbar({
   function handleLogout() {
     if (!confirmLeave()) return // unsaved changes on this page: stay
     logout()
-    setSession(null)
+    // Tell every live reader of the session in this tab (this bar, the footer,
+    // the page guards) the same way another tab's logout would.
+    window.dispatchEvent(new StorageEvent('storage', { key: 'babylon-session' }))
     setOpen(false)
     navigate('/')
   }
