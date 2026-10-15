@@ -270,6 +270,8 @@ export default function ReportForm({
           type="file"
           accept="image/*"
           className="sr-only"
+          tabIndex={-1}
+          aria-hidden="true"
           disabled={locked}
           onChange={(e) => handleFile(e.target.files?.[0])}
         />

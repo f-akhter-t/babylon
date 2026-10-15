@@ -31,7 +31,8 @@ export default function PhotoDropzone({ id, labelId, photo, error, onFile, onRem
         type="file"
         accept="image/*"
         className="sr-only"
-        aria-labelledby={labelId}
+        tabIndex={-1}
+        aria-hidden="true"
         onChange={(e) => choose(e.target.files?.[0])}
       />
 
