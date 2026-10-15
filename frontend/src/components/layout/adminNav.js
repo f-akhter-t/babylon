@@ -20,7 +20,12 @@ export const ADMIN_NAV = {
     note: 'Nothing closes without a photo you have checked.',
     items: [
       { label: 'Verification queue', to: '/admin/verify', badge: 'queue' },
-      { label: 'Reopened issues', to: '/admin/verify', badge: 'reopened', tone: 'amber' },
+      {
+        label: 'Reopened issues',
+        to: '/admin/verify?view=reopened',
+        badge: 'reopened',
+        tone: 'amber',
+      },
       { label: 'Accountability', to: '/admin/accountability' },
       { label: 'Identity checks', to: '/admin/identity', badge: 'identity' },
     ],

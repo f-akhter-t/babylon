@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import clsx from 'clsx'
 import AdminLayout from '../../components/layout/AdminLayout'
 import LoadError from '../../components/ui/LoadError'
 import ReviewPanel from './ReviewPanel'
+import ReopenedList from './ReopenedList'
 import {
   approveResolution,
   ISSUES_EVENT,
@@ -59,8 +60,28 @@ export default function VerifyResolutions() {
   )
 }
 
+// ?view=reopened shows the reopened issues instead of the queue. Any other
+// value shows the queue.
+const VIEWS = {
+  queue: {
+    nav: 'Verification queue',
+    heading: 'Verify resolutions',
+    loading: 'Loading the verification queue.',
+    loadError: 'We could not load the verification queue. Please try again.',
+  },
+  reopened: {
+    nav: 'Reopened issues',
+    heading: 'Reopened issues',
+    loading: 'Loading the reopened issues.',
+    loadError: 'We could not load the reopened issues. Please try again.',
+  },
+}
+
 function VerifyResolutionsPage() {
-  useDocumentTitle('Verify resolutions')
+  const [searchParams] = useSearchParams()
+  const viewKey = searchParams.get('view') === 'reopened' ? 'reopened' : 'queue'
+  const view = VIEWS[viewKey]
+  useDocumentTitle(view.heading)
   const [selectedId, setSelectedId] = useState(null)
   const [notice, setNotice] = useState(null) // { tone: 'success' | 'error', text }
   const [busy, setBusy] = useState(false)
@@ -95,24 +116,44 @@ function VerifyResolutionsPage() {
 
   if (error) {
     return (
-      <AdminLayout variant="admin" active="Verification queue">
+      <AdminLayout variant="admin" active={view.nav}>
         <div className="p-4 sm:p-6 lg:p-8">
           <h1 className="font-heading text-3xl font-extrabold text-navy sm:text-4xl">
-            Verify resolutions
+            {view.heading}
           </h1>
           <div className="mt-6">
-            <LoadError
-              message="We could not load the verification queue. Please try again."
-              onRetry={retry}
-            />
+            <LoadError message={view.loadError} onRetry={retry} />
           </div>
         </div>
       </AdminLayout>
     )
   }
 
+  if (viewKey === 'reopened') {
+    return (
+      <AdminLayout variant="admin" active={view.nav}>
+        <div className={clsx('p-4 sm:p-6 lg:p-8', fit.page)}>
+          <h1 className="font-heading text-3xl font-extrabold text-navy sm:text-4xl">
+            {view.heading}
+          </h1>
+          <p className="mt-1 font-body text-base text-muted">
+            These problems were marked resolved, but citizens reported them again. Open one to
+            see its details.
+          </p>
+          {loading ? (
+            <p role="status" className="mt-6 font-body text-base text-navy">
+              {view.loading}
+            </p>
+          ) : (
+            <ReopenedList issues={data.reopened} />
+          )}
+        </div>
+      </AdminLayout>
+    )
+  }
+
   return (
-    <AdminLayout variant="admin" active="Verification queue">
+    <AdminLayout variant="admin" active={view.nav}>
       <div className={clsx('p-4 sm:p-6 lg:p-8', fit.page)}>
         <h1 className="font-heading text-3xl font-extrabold text-navy sm:text-4xl">
           Verify resolutions
@@ -152,7 +193,7 @@ function VerifyResolutionsPage() {
 
         {loading ? (
           <p role="status" className="mt-6 font-body text-base text-navy">
-            Loading the verification queue.
+            {view.loading}
           </p>
         ) : (
           // From lg: the queue on the left, the review on the right. In fit mode
