@@ -136,6 +136,7 @@ function MyReportsPage() {
                 </Reveal>
               ))}
             </div>
+            <p className="mt-3 text-xs text-muted">Map images © OpenStreetMap contributors</p>
           </>
         ) : (
           <Reveal className="mt-5">

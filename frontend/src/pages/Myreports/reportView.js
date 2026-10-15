@@ -65,6 +65,10 @@ export function toReportView(issue, email) {
     category: issue.category,
     location: place,
     photoUrl: issue.beforeImg || null,
+    // For the small street map: the spot, and the pin colour the Map page uses.
+    lat: issue.lat,
+    lng: issue.lng,
+    mapStatus: issue.status,
     status,
     upvotes: issue.votes ?? 0,
     department: issue.department ?? null,
