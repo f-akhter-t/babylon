@@ -98,10 +98,11 @@ function Avatar({ name, text, to, label, verified }) {
       <Link
         to={to}
         title={name}
-        aria-label={label}
+        // The visible initials are part of the name, so voice control can use them.
+        aria-label={`${label}, ${text}`}
         className={clsx(circle, 'relative transition hover:ring-2 hover:ring-brand')}
       >
-        <span aria-hidden="true">{text}</span>
+        {text}
         {check}
       </Link>
     )
