@@ -1,13 +1,24 @@
+import { useEffect, useRef, useState } from 'react'
 import clsx from 'clsx'
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import { useAdminCounts } from '../../hooks/useAdminCounts'
 import { ADMIN_NAV } from './adminNav'
 import AdminSignOut from './AdminSignOut'
+import { fit } from './staffFit'
 
-function NavItem({ item, isActive, onSelect }) {
+const LG_QUERY = '(min-width: 64rem)'
+const MENU_ID = 'staff-menu'
+
+// A link in the drawer may open another staff page, which mounts a new layout.
+// The time of that click tells the new layout to put focus on its Menu button.
+let drawerLinkAt = 0
+const justUsedDrawerLink = () => Date.now() - drawerLinkAt < 1500
+
+function NavItem({ item, isActive, onSelect, onNavigate }) {
   const classes = clsx(
-    'flex w-full items-center justify-between rounded-tile px-4 py-3',
-    'font-body text-base font-semibold transition-colors text-left',
+    'flex min-h-11 w-full items-center justify-between rounded-tile px-4 py-3',
+    'font-body text-base font-semibold transition-colors text-left motion-reduce:transition-none',
+    'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-mint',
     isActive ? 'bg-mint text-navy' : 'text-mint/80 hover:bg-mint/10',
   )
 
@@ -24,7 +35,12 @@ function NavItem({ item, isActive, onSelect }) {
 
   if (item.to) {
     return (
-      <Link to={item.to} className={classes}>
+      <Link
+        to={item.to}
+        aria-current={isActive ? 'page' : undefined}
+        onClick={onNavigate}
+        className={classes}
+      >
         {item.label}
         {badge}
       </Link>
@@ -32,13 +48,70 @@ function NavItem({ item, isActive, onSelect }) {
   }
 
   return (
-    <button type="button" onClick={() => onSelect?.(item.label)} className={classes}>
+    <button
+      type="button"
+      aria-current={isActive ? 'page' : undefined}
+      onClick={() => {
+        onSelect?.(item.label)
+        onNavigate?.()
+      }}
+      className={classes}
+    >
       {item.label}
       {badge}
     </button>
   )
 }
 
+// Everything in the sidebar: used by the desktop sidebar and the drawer.
+function StaffNav({ variant, active, onSelect, department, note, counts, onNavigate }) {
+  const config = ADMIN_NAV[variant]
+
+  return (
+    <>
+      <div className="px-2">
+        <p className="font-heading text-3xl font-extrabold text-mint">Babylon</p>
+        <p className="mt-1 font-body text-xs font-bold uppercase tracking-widest text-brand">
+          {config.label}
+        </p>
+      </div>
+
+      {variant === 'department' && department && (
+        <div className="mt-6 rounded-tile border border-mint/15 bg-mint/5 px-4 py-3">
+          <p className="text-xs text-mint/70">Signed in as</p>
+          <p className="font-heading text-base font-bold text-mint">{department}</p>
+        </div>
+      )}
+
+      <nav aria-label={config.label} className="mt-6 flex flex-col gap-2">
+        {config.items.map((item) => (
+          <NavItem
+            key={item.label}
+            item={item.badge ? { ...item, count: counts[item.badge] } : item}
+            isActive={item.label === active}
+            onSelect={onSelect}
+            onNavigate={onNavigate}
+          />
+        ))}
+      </nav>
+
+      <p className="mt-auto px-2 pt-6 text-sm text-mint/70">{note ?? config.note}</p>
+      <AdminSignOut className="mt-4" />
+    </>
+  )
+}
+
+function MenuIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-5 w-5" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+      <path d="M4 7h16M4 12h16M4 17h16" />
+    </svg>
+  )
+}
+
+// Staff pages. From lg up: a fixed sidebar, and the page fits the window when
+// it is tall enough (see staffFit.js). Below lg: a top bar whose Menu button
+// opens the same sidebar as a drawer.
 export default function AdminLayout({
   variant = 'admin',
   active,
@@ -49,40 +122,129 @@ export default function AdminLayout({
 }) {
   const config = ADMIN_NAV[variant]
   const counts = useAdminCounts(variant, department)
+  const location = useLocation()
+  // The drawer belongs to the page it was opened on: moving to another page
+  // (or another filter) closes it.
+  const [openOn, setOpenOn] = useState(null)
+  const menuOpen = openOn !== null && openOn === location.key
+  const dialogRef = useRef(null)
+  const menuButtonRef = useRef(null)
+
+  // A drawer link moved to another staff page: focus its Menu button.
+  useEffect(() => {
+    if (!justUsedDrawerLink()) return
+    drawerLinkAt = 0
+    if (!window.matchMedia(LG_QUERY).matches) menuButtonRef.current?.focus()
+  }, [])
+
+  // Open and close the native dialog. While it is open, the page behind it
+  // cannot be used or scrolled.
+  useEffect(() => {
+    const dialog = dialogRef.current
+    if (!dialog) return
+    if (menuOpen && !dialog.open) dialog.showModal()
+    if (!menuOpen && dialog.open) dialog.close()
+    if (!menuOpen) return
+    const root = document.documentElement
+    const before = root.style.overflow
+    root.style.overflow = 'hidden'
+    return () => {
+      root.style.overflow = before
+    }
+  }, [menuOpen])
+
+  // The action bars stick to the bottom of the window when the page scrolls.
+  // This keeps a focused field from scrolling to a spot under them.
+  useEffect(() => {
+    const root = document.documentElement
+    const before = root.style.scrollPaddingBottom
+    root.style.scrollPaddingBottom = '7rem'
+    return () => {
+      root.style.scrollPaddingBottom = before
+    }
+  }, [])
+
+  // Close it when the window becomes wide enough for the sidebar.
+  useEffect(() => {
+    const query = window.matchMedia(LG_QUERY)
+    const onChange = () => {
+      if (query.matches) setOpenOn(null)
+    }
+    query.addEventListener('change', onChange)
+    return () => query.removeEventListener('change', onChange)
+  }, [])
+
+  // Escape, a link, the Close button or the backdrop all end here.
+  function handleClose() {
+    setOpenOn(null)
+    if (!window.matchMedia(LG_QUERY).matches) menuButtonRef.current?.focus()
+  }
+
+  function handleNavigate() {
+    drawerLinkAt = Date.now()
+    dialogRef.current?.close()
+  }
+
+  const navProps = { variant, active, onSelect, department, note, counts }
 
   return (
-    <div className="flex min-h-screen bg-page font-body">
-      <aside className="flex w-[250px] shrink-0 flex-col bg-navy px-3.5 py-6">
-        <div className="px-2">
-          <p className="font-heading text-3xl font-extrabold text-mint">Babylon</p>
-          <p className="mt-1 font-body text-xs font-bold uppercase tracking-widest text-brand">
+    // break-words: with very large text, long words wrap instead of widening the page.
+    <div className="min-h-screen break-words bg-page font-body lg:flex">
+      <div className="flex flex-wrap items-center justify-between gap-3 bg-navy px-4 py-3 lg:hidden">
+        <div className="min-w-0">
+          <p className="font-heading text-2xl font-extrabold text-mint">Babylon</p>
+          <p className="font-body text-xs font-bold uppercase tracking-widest text-brand">
             {config.label}
           </p>
         </div>
+        <button
+          ref={menuButtonRef}
+          type="button"
+          aria-expanded={menuOpen}
+          aria-controls={MENU_ID}
+          onClick={() => setOpenOn(location.key)}
+          className="flex min-h-11 min-w-11 shrink-0 items-center gap-2 rounded-full border border-mint/40 px-4 font-body text-sm font-bold text-mint transition-colors hover:bg-mint/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-mint motion-reduce:transition-none"
+        >
+          <MenuIcon />
+          Menu
+        </button>
+      </div>
 
-        {variant === 'department' && department && (
-          <div className="mt-6 rounded-tile border border-mint/15 bg-mint/5 px-4 py-3">
-            <p className="text-xs text-mint/70">Signed in as</p>
-            <p className="font-heading text-base font-bold text-mint">{department}</p>
-          </div>
-        )}
+      <dialog
+        ref={dialogRef}
+        id={MENU_ID}
+        aria-label={config.label}
+        onClose={handleClose}
+        onClick={(e) => {
+          if (e.target === e.currentTarget) dialogRef.current?.close() // the backdrop
+        }}
+        className="m-0 h-dvh max-h-none w-full max-w-none bg-transparent p-0 backdrop:bg-navy/60 lg:hidden"
+      >
+        <div className="flex h-full w-[min(20rem,85vw)] flex-col overflow-y-auto bg-navy px-3.5 py-6">
+          <button
+            type="button"
+            onClick={() => dialogRef.current?.close()}
+            className="mb-4 min-h-11 self-end rounded-full border border-mint/40 px-4 font-body text-sm font-bold text-mint transition-colors hover:bg-mint/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-mint motion-reduce:transition-none"
+          >
+            Close menu
+          </button>
+          <StaffNav {...navProps} onNavigate={handleNavigate} />
+        </div>
+      </dialog>
 
-        <nav className="mt-6 flex flex-col gap-2">
-          {config.items.map((item) => (
-            <NavItem
-              key={item.label}
-              item={item.badge ? { ...item, count: counts[item.badge] } : item}
-              isActive={item.label === active}
-              onSelect={onSelect}
-            />
-          ))}
-        </nav>
-
-        <p className="mt-auto px-2 text-sm text-mint/70">{note ?? config.note}</p>
-        <AdminSignOut className="mt-4" />
+      <aside className="hidden w-[250px] shrink-0 flex-col overflow-y-auto bg-navy px-3.5 py-6 lg:sticky lg:top-0 lg:flex lg:h-dvh">
+        <StaffNav {...navProps} />
       </aside>
 
-      <main className="min-w-0 flex-1">{children}</main>
+      {/* Fields scrolled into view keep clear of the sticky action bars. */}
+      <main
+        className={clsx(
+          'min-w-0 flex-1 [&_:is(a,button,input,select,textarea)]:scroll-mb-28',
+          fit.screen,
+        )}
+      >
+        {children}
+      </main>
     </div>
   )
 }

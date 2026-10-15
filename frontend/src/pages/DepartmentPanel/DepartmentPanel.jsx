@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import clsx from 'clsx'
 import AdminLayout from '../../components/layout/AdminLayout'
@@ -18,6 +18,10 @@ import RequireRole from '../Auth/RequireRole'
 import { useViewer } from '../Map/useViewer'
 import { useDocumentTitle } from '../IssueDetail/useDocumentTitle'
 import { ALL_ASSIGNED_LABEL, DEPARTMENT_FILTERS, filterFor, issuesFor } from './departmentFilters'
+import { fit, REGION_FOCUS, useFitMode } from '../../components/layout/staffFit'
+
+const PANEL_ID = 'resolve-panel'
+const PANEL_HEADING_ID = 'resolve-panel-heading'
 
 // Accounts made before departments were saved at sign-up have none.
 const NO_DEPARTMENT =
@@ -29,7 +33,7 @@ function StatCard({ label, value, level, iconClass, dark }) {
   return (
     <div
       className={clsx(
-        'rounded-card px-5 py-4',
+        'flex items-center justify-between gap-3 rounded-card px-5 py-3 sm:block sm:py-4',
         dark ? 'bg-navy text-mint' : 'bg-mint text-navy',
       )}
     >
@@ -39,7 +43,7 @@ function StatCard({ label, value, level, iconClass, dark }) {
       </div>
       <p
         className={clsx(
-          'mt-2 font-heading text-5xl font-extrabold',
+          'font-heading text-4xl font-extrabold sm:mt-2 sm:text-5xl',
           dark ? 'text-brand' : 'text-navy',
         )}
       >
@@ -67,6 +71,13 @@ function DepartmentPanelPage() {
   const [busy, setBusy] = useState(false)
   const [notice, setNotice] = useState(null) // { tone: 'success' | 'error', text }
   const [submitError, setSubmitError] = useState(null) // shown in the Resolve panel
+  // The Resolve panel is a disclosure: closed until an issue is picked. Closing
+  // it only hides it, so a chosen photo and note are kept.
+  const [panelOpen, setPanelOpen] = useState(false)
+  const [focusPanel, setFocusPanel] = useState(0) // bumped to move focus to the panel
+  const panelHeadingRef = useRef(null)
+  const toggleRef = useRef(null)
+  const fitMode = useFitMode()
 
   const load = useCallback(
     () => (department ? loadDepartmentPanel(department) : NO_ISSUES),
@@ -87,9 +98,24 @@ function DepartmentPanelPage() {
   const selected =
     shown.find((issue) => issue.id === selectedId && issue.status !== 'resolved') ?? null
 
+  // Picking an issue opens the panel and moves focus to its heading.
+  useEffect(() => {
+    if (focusPanel) panelHeadingRef.current?.focus()
+  }, [focusPanel])
+
   function select(id) {
+    // Closed issues have nothing to resolve, so they do not open the panel.
+    const issue = [...issues, ...completed].find((item) => item.id === id)
+    if (!issue || issue.status === 'resolved') return
     setSelectedId(id)
     setSubmitError(null)
+    setPanelOpen(true)
+    setFocusPanel((n) => n + 1)
+  }
+
+  function closePanel() {
+    setPanelOpen(false)
+    toggleRef.current?.focus()
   }
 
   async function startWork(id) {
@@ -116,6 +142,7 @@ function DepartmentPanelPage() {
       const photoUrl = await resizeImage(file)
       const issue = await sendForVerification(id, { note, photoUrl })
       setSelectedId(null)
+      closePanel()
       setNotice({
         tone: 'success',
         text: `“${issue.title}” was sent to the admin for verification.`,
@@ -138,8 +165,10 @@ function DepartmentPanelPage() {
   if (error) {
     return (
       <AdminLayout variant="department" active={heading} department={department}>
-        <div className="p-8">
-          <h1 className="font-heading text-4xl font-extrabold text-navy">{heading}</h1>
+        <div className="p-4 sm:p-6 lg:p-8">
+          <h1 className="break-words font-heading text-3xl font-extrabold text-navy sm:text-4xl">
+            {heading}
+          </h1>
           <div className="mt-6">
             <LoadError message={LOAD_FAILED} onRetry={retry} />
           </div>
@@ -154,14 +183,39 @@ function DepartmentPanelPage() {
       active={heading}
       department={department}
     >
-      <div className="flex min-h-screen">
-        <div className="min-w-0 flex-1 p-8">
-          <h1 className="font-heading text-4xl font-extrabold text-navy">
-            {heading}
-          </h1>
-          <p className="mt-1 font-body text-base text-muted">
-            Ranked by priority. Urgent problems stay at the top.
-          </p>
+      {/* One column below lg: heading, stat cards, Resolve panel, table.
+          From lg: the panel moves to a column on the right while it is open. */}
+      <div
+        className={clsx(
+          // The last row grows to fit a tall panel, so the heading rows never stretch.
+          'grid grid-cols-1 gap-5 p-4 sm:gap-6 sm:p-6 lg:grid-rows-[auto_auto_1fr] lg:p-8',
+          panelOpen ? 'lg:grid-cols-[minmax(0,1fr)_min(22.5rem,40%)]' : 'lg:grid-cols-1',
+          fit.departmentGrid,
+        )}
+      >
+        <div className="min-w-0 lg:col-start-1 lg:row-start-1">
+          <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-3">
+            <div className="min-w-0">
+              <h1 className="break-words font-heading text-3xl font-extrabold text-navy sm:text-4xl">
+                {heading}
+              </h1>
+              <p className="mt-1 font-body text-base text-muted">
+                Ranked by priority. Urgent problems stay at the top.
+              </p>
+            </div>
+            <button
+              ref={toggleRef}
+              type="button"
+              aria-expanded={panelOpen}
+              aria-controls={PANEL_ID}
+              onClick={() => (panelOpen ? closePanel() : setPanelOpen(true))}
+              className="min-h-11 max-w-full rounded-full border-2 border-navy bg-white px-5 py-2 text-left font-body text-sm font-bold text-navy transition-colors hover:bg-mint-deep focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forest motion-reduce:transition-none"
+            >
+              {panelOpen
+                ? 'Hide the Resolve with proof panel.'
+                : 'Show the Resolve with proof panel.'}
+            </button>
+          </div>
           {!department && (
             <p role="alert" className="mt-3 font-body text-base font-bold text-danger">
               {NO_DEPARTMENT}
@@ -171,48 +225,47 @@ function DepartmentPanelPage() {
             <p
               role={notice.tone === 'error' ? 'alert' : 'status'}
               className={clsx(
-                'mt-3 font-body text-base font-bold',
+                'mt-3 break-words font-body text-base font-bold',
                 notice.tone === 'error' ? 'text-danger' : 'text-forest',
               )}
             >
               {notice.text}
             </p>
           )}
-
-          {loading ? (
+          {loading && (
             <p role="status" className="mt-6 font-body text-base text-navy">
               Loading your department’s issues.
             </p>
-          ) : (
-            <>
-              <div className="mt-6 grid grid-cols-3 gap-4">
-                <StatCard label="Open" value={open} level={1} iconClass="text-amber-dark" />
-                <StatCard
-                  label="In progress"
-                  value={inProgress}
-                  level={2}
-                  iconClass="text-slate"
-                />
-                <StatCard label="Awaiting admin check" value={awaiting} dark />
-              </div>
-
-              <div className="mt-6">
-                <IssueTable
-                  issues={shown}
-                  selectedId={selectedId}
-                  onSelect={select}
-                  onStart={startWork}
-                  busy={busy}
-                />
-                {department && shown.length === 0 && (
-                  <p className="mt-3 font-body text-base text-navy">No issues match this filter.</p>
-                )}
-              </div>
-            </>
           )}
         </div>
 
-        <aside className="w-[390px] shrink-0 bg-mint p-6">
+        {!loading && (
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4 lg:col-start-1 lg:row-start-2">
+            <StatCard label="Open" value={open} level={1} iconClass="text-amber-dark" />
+            <StatCard label="In progress" value={inProgress} level={2} iconClass="text-slate" />
+            <StatCard label="Awaiting admin check" value={awaiting} dark />
+          </div>
+        )}
+
+        <section
+          id={PANEL_ID}
+          aria-labelledby={PANEL_HEADING_ID}
+          hidden={!panelOpen}
+          className={clsx(
+            'min-w-0 max-w-full rounded-card bg-mint px-4 pt-4 sm:px-6 sm:pt-6',
+            'lg:col-start-2 lg:row-span-3 lg:row-start-1',
+            fit.scroll,
+            fit.barPadding,
+          )}
+        >
+          <h2
+            id={PANEL_HEADING_ID}
+            ref={panelHeadingRef}
+            tabIndex={-1}
+            className="mb-2 rounded-tile font-body text-xs font-bold uppercase tracking-widest text-forest focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forest"
+          >
+            Resolve with proof
+          </h2>
           <ResolvePanel
             key={selected?.id ?? 'none'}
             issue={selected}
@@ -220,7 +273,32 @@ function DepartmentPanelPage() {
             busy={busy}
             error={submitError}
           />
-        </aside>
+        </section>
+
+        {!loading && (
+          <div
+            role={fitMode ? 'region' : undefined}
+            aria-label={fitMode ? 'Issues' : undefined}
+            tabIndex={fitMode ? 0 : undefined}
+            className={clsx(
+              'min-w-0 rounded-card lg:col-start-1 lg:row-start-3',
+              fit.scroll,
+              fit.min48,
+              REGION_FOCUS,
+            )}
+          >
+            <IssueTable
+              issues={shown}
+              selectedId={selectedId}
+              onSelect={select}
+              onStart={startWork}
+              busy={busy}
+            />
+            {department && shown.length === 0 && (
+              <p className="mt-3 font-body text-base text-navy">No issues match this filter.</p>
+            )}
+          </div>
+        )}
       </div>
     </AdminLayout>
   )

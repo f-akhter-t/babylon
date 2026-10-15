@@ -3,7 +3,10 @@ import StatusPill from '../../components/ui/StatusPill'
 import StaircaseIcon from '../../components/ui/StaircaseIcon'
 import { sentBackMessage } from './departmentFilters'
 
-const COLUMNS = 'grid-cols-[56px_minmax(0,1fr)_80px_150px_170px]'
+// A table where the list is at least 48rem wide; stacked cards when it is narrower
+// (a phone, or the Resolve panel open beside it). Container queries, so it
+// follows the list's own width.
+const COLUMNS = '@3xl:grid-cols-[56px_minmax(0,1fr)_80px_150px_170px]'
 
 const PRIORITY_LABEL = {
   urgent: 'Urgent',
@@ -14,7 +17,7 @@ const PRIORITY_LABEL = {
 function StatusCell({ issue }) {
   if (issue.verification === 'awaiting') {
     return (
-      <span className="inline-flex items-center gap-2 rounded-full bg-slate/15 px-3 py-1 font-body text-sm font-semibold text-navy">
+      <span className="inline-flex max-w-full items-center gap-2 rounded-full bg-slate/15 px-3 py-1 font-body text-sm font-semibold text-navy">
         <StaircaseIcon level={3} className="text-slate" />
         Awaiting check
       </span>
@@ -22,7 +25,7 @@ function StatusCell({ issue }) {
   }
   if (issue.sentBack) {
     return (
-      <span className="inline-flex items-center gap-2 rounded-full bg-slate/15 px-3 py-1 font-body text-sm font-semibold text-navy">
+      <span className="inline-flex max-w-full items-center gap-2 rounded-full bg-slate/15 px-3 py-1 font-body text-sm font-semibold text-navy">
         <StaircaseIcon level={2} className="text-slate" />
         Sent back
       </span>
@@ -33,7 +36,7 @@ function StatusCell({ issue }) {
 
 function ActionButton({ issue, onStart, onSelect, busy }) {
   const base =
-    'w-full rounded-full px-4 py-2.5 font-body text-sm font-bold transition-colors'
+    'min-h-11 w-full rounded-full px-4 py-2.5 font-body text-sm font-bold transition-colors motion-reduce:transition-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forest'
 
   if (issue.verification === 'awaiting') {
     return (
@@ -98,10 +101,10 @@ function ActionButton({ issue, onStart, onSelect, busy }) {
 
 export default function IssueTable({ issues, selectedId, onSelect, onStart, busy = false }) {
   return (
-    <div className="overflow-hidden rounded-card bg-mint">
+    <div className="@container rounded-card bg-mint">
       <div
         className={clsx(
-          'grid items-center gap-4 bg-mint-deep px-5 py-3',
+          'sticky top-0 z-10 hidden items-center gap-4 rounded-t-card bg-mint-deep px-5 py-3 @3xl:grid',
           'font-body text-sm font-semibold text-navy',
           COLUMNS,
         )}
@@ -118,17 +121,18 @@ export default function IssueTable({ issues, selectedId, onSelect, onStart, busy
           key={issue.id}
           onClick={() => onSelect(issue.id)}
           className={clsx(
-            'grid cursor-pointer items-center gap-4 border-t border-navy/10 px-5 py-4',
+            'grid cursor-pointer grid-cols-[2.5rem_minmax(0,1fr)] gap-x-3 gap-y-3 border-navy/10 px-4 py-4 last:rounded-b-card',
+            '[&+&]:border-t @3xl:items-center @3xl:gap-4 @3xl:border-t @3xl:px-5',
             COLUMNS,
             issue.id === selectedId ? 'bg-white' : 'hover:bg-white/50',
           )}
         >
-          <span className="font-heading text-3xl font-extrabold text-forest">
+          <span className="font-heading text-2xl font-extrabold text-forest @3xl:text-3xl">
             {issue.rank}
           </span>
 
           <div className="min-w-0">
-            <p className="font-body text-base font-bold text-navy">{issue.title}</p>
+            <p className="break-words font-body text-base font-bold text-navy">{issue.title}</p>
             <p className="font-body text-sm text-muted">
               <span
                 className={clsx(
@@ -149,13 +153,21 @@ export default function IssueTable({ issues, selectedId, onSelect, onStart, busy
             )}
           </div>
 
-          <span className="font-body text-base font-bold text-navy">
-            ↑ {issue.votes}
-          </span>
+          {/* Cards: one wrapping line under the title. Table: three columns. */}
+          <div className="col-start-2 flex flex-wrap items-center gap-3 @3xl:contents">
+            <span className="font-body text-base font-bold text-navy">
+              <span className="@3xl:hidden">
+                {issue.votes === 1 ? '↑ 1 vote' : `↑ ${issue.votes} votes`}
+              </span>
+              <span className="hidden @3xl:inline">↑ {issue.votes}</span>
+            </span>
 
-          <StatusCell issue={issue} />
+            <StatusCell issue={issue} />
 
-          <ActionButton issue={issue} onStart={onStart} onSelect={onSelect} busy={busy} />
+            <div className="w-full @md:w-auto @md:min-w-44 @3xl:w-full @3xl:min-w-0">
+              <ActionButton issue={issue} onStart={onStart} onSelect={onSelect} busy={busy} />
+            </div>
+          </div>
         </div>
       ))}
     </div>

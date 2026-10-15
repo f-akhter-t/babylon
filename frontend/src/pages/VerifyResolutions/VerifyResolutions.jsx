@@ -13,6 +13,7 @@ import {
 import { useAsync } from '../../hooks/useAsync'
 import RequireRole from '../Auth/RequireRole'
 import { useDocumentTitle } from '../IssueDetail/useDocumentTitle'
+import { fit } from '../../components/layout/staffFit'
 
 const PRIORITY_LABEL = {
   urgent: 'Urgent priority',
@@ -28,11 +29,12 @@ function QueueCard({ issue, selected, onSelect }) {
       type="button"
       onClick={() => onSelect(issue.id)}
       className={clsx(
-        'w-full rounded-card border-2 bg-mint p-4 text-left transition-colors',
+        'w-full rounded-card border-2 bg-mint p-4 text-left transition-colors motion-reduce:transition-none',
+        'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forest',
         selected ? 'border-navy' : 'border-transparent hover:border-navy/30',
       )}
     >
-      <p className="font-heading text-base font-bold text-navy">{issue.title}</p>
+      <p className="break-words font-heading text-base font-bold text-navy">{issue.title}</p>
       <p className="mt-1 font-body text-sm text-muted">
         {issue.department} · submitted {issue.submittedOn}
       </p>
@@ -94,8 +96,10 @@ function VerifyResolutionsPage() {
   if (error) {
     return (
       <AdminLayout variant="admin" active="Verification queue">
-        <div className="p-8">
-          <h1 className="font-heading text-4xl font-extrabold text-navy">Verify resolutions</h1>
+        <div className="p-4 sm:p-6 lg:p-8">
+          <h1 className="font-heading text-3xl font-extrabold text-navy sm:text-4xl">
+            Verify resolutions
+          </h1>
           <div className="mt-6">
             <LoadError
               message="We could not load the verification queue. Please try again."
@@ -109,8 +113,8 @@ function VerifyResolutionsPage() {
 
   return (
     <AdminLayout variant="admin" active="Verification queue">
-      <div className="p-8">
-        <h1 className="font-heading text-4xl font-extrabold text-navy">
+      <div className={clsx('p-4 sm:p-6 lg:p-8', fit.page)}>
+        <h1 className="font-heading text-3xl font-extrabold text-navy sm:text-4xl">
           Verify resolutions
         </h1>
         <p className="mt-1 font-body text-base text-muted">
@@ -122,7 +126,7 @@ function VerifyResolutionsPage() {
           <p
             role={notice.tone === 'error' ? 'alert' : 'status'}
             className={clsx(
-              'mt-3 font-body text-sm font-bold',
+              'mt-3 break-words font-body text-sm font-bold',
               notice.tone === 'error' ? 'text-danger' : 'text-forest',
             )}
           >
@@ -131,15 +135,15 @@ function VerifyResolutionsPage() {
         )}
 
         {reopened && (
-          <div className="mt-5 flex items-center justify-between gap-4 rounded-card border border-amber-dark bg-amber/20 px-5 py-4">
-            <p className="font-body text-base text-navy">
+          <div className="mt-5 flex flex-col items-start gap-3 rounded-card border border-amber-dark bg-amber/20 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-5">
+            <p className="min-w-0 break-words font-body text-base text-navy">
               <span className="font-bold">A closed problem came back:</span> &quot;
               {reopened.title}&quot; was marked resolved on {reopened.reopenedFrom}.{' '}
               {reopened.votes} citizens have reported it again.
             </p>
             <Link
               to={`/issues/${reopened.id}`}
-              className="shrink-0 rounded-full bg-navy px-5 py-3 font-body text-sm font-bold text-mint transition-opacity hover:opacity-90"
+              className="inline-flex min-h-11 shrink-0 items-center rounded-full bg-navy px-5 py-2 font-body text-sm font-bold text-mint transition-opacity hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forest motion-reduce:transition-none"
             >
               Review reopened issue
             </Link>
@@ -151,10 +155,19 @@ function VerifyResolutionsPage() {
             Loading the verification queue.
           </p>
         ) : (
-          <div className="mt-6 grid grid-cols-[270px_minmax(0,1fr)] items-start gap-6">
-            <div>
+          // From lg: the queue on the left, the review on the right. In fit mode
+          // both scroll inside themselves and the review's buttons stay pinned.
+          <div
+            className={clsx(
+              'mt-6 grid grid-cols-1 gap-6 lg:grid-cols-[16.25rem_minmax(0,1fr)]',
+              fit.grow,
+              fit.rows,
+              fit.min80,
+            )}
+          >
+            <div className={clsx('flex min-w-0 flex-col', fit.column)}>
               <p className="font-body text-sm font-bold text-muted">Waiting for your check</p>
-              <div className="mt-3 flex flex-col gap-3">
+              <div className={clsx('-mx-1 mt-2 flex flex-col gap-3 p-1', fit.scroll, fit.min32)}>
                 {queue.map((issue) => (
                   <QueueCard
                     key={issue.id}
@@ -185,7 +198,7 @@ function VerifyResolutionsPage() {
                 busy={busy}
               />
             ) : (
-              <div className="rounded-panel bg-mint p-8 font-body text-base text-muted">
+              <div className="self-start rounded-panel bg-mint p-6 font-body text-base text-muted sm:p-8">
                 Nothing is waiting for your check.
               </div>
             )}
