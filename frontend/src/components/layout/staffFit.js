@@ -25,6 +25,11 @@ export const fit = {
   rows: 'lg:[@media(min-height:37.5rem)]:grid-rows-1',
   // Scrolls inside itself (only in fit mode; otherwise the page scrolls).
   scroll: 'lg:[@media(min-height:37.5rem)]:overflow-y-auto lg:[@media(min-height:37.5rem)]:overscroll-contain',
+  // For a scrolling panel with an action bar pinned to its bottom: a focused
+  // field never scrolls to a spot under the bar.
+  barPadding: 'lg:[@media(min-height:37.5rem)]:scroll-pb-28',
+  // /department: heading and stat cards keep their height; the table takes the rest.
+  departmentGrid: 'lg:[@media(min-height:37.5rem)]:h-full lg:[@media(min-height:37.5rem)]:grid-rows-[auto_auto_minmax(12rem,1fr)]',
   // Smallest heights for scrolling regions, so they stay usable.
   min32: 'lg:[@media(min-height:37.5rem)]:min-h-32',
   min48: 'lg:[@media(min-height:37.5rem)]:min-h-48',
