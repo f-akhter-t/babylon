@@ -155,7 +155,7 @@ export default function IssueTable({
           key={issue.id}
           onClick={() => onSelect(issue.id)}
           className={clsx(
-            'grid cursor-pointer grid-cols-[2.5rem_minmax(0,1fr)] gap-x-3 gap-y-3 border-navy/10 px-4 py-4 last:rounded-b-card',
+            'relative grid cursor-pointer grid-cols-[2.5rem_minmax(0,1fr)] gap-x-3 gap-y-3 border-navy/10 px-4 py-4 last:rounded-b-card',
             '[&+&]:border-t @3xl:items-center @3xl:gap-4 @3xl:border-t @3xl:px-5',
             COLUMNS,
             issue.id === selectedId ? 'bg-white' : 'hover:bg-white/50',
@@ -193,7 +193,8 @@ export default function IssueTable({
 
           {/* Cards: one wrapping line under the title. Table: three columns. */}
           <div className="col-start-2 flex flex-wrap items-center gap-3 @3xl:contents">
-            {/* The arrow is decoration; screen readers hear "48 votes". */}
+            {/* The arrow is decoration; screen readers hear "48 votes". The row
+                is relative so that text stays inside the scrolling list. */}
             <span className="font-body text-base font-bold text-navy">
               <span aria-hidden="true">↑ </span>
               <span className="@3xl:hidden">
