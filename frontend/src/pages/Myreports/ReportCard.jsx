@@ -2,6 +2,7 @@ import clsx from 'clsx'
 import { Link } from 'react-router-dom'
 import ReportStatusPill from '../../components/ui/ReportStatusPill'
 import MapIllustration from './MapIllustration'
+import { cardTitleId } from './cardTitleId'
 import { ArrowUpIcon, CameraIcon, PinIcon } from '../../components/ui/icons'
 
 // One report on My reports. The title is a button whose ::after covers the
@@ -41,6 +42,7 @@ export default function ReportCard({ report, onOpen }) {
         </div>
         <h3 className="font-heading text-[19px] font-extrabold leading-[1.15] tracking-tight">
           <button
+            id={cardTitleId(r.id)}
             type="button"
             onClick={() => onOpen(r.id)}
             className="text-left after:absolute after:inset-0 after:rounded-card after:content-[''] focus-visible:shadow-none focus-visible:outline-none focus-visible:after:outline-2 focus-visible:after:-outline-offset-2 focus-visible:after:outline-navy"
