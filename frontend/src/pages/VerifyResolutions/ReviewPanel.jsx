@@ -158,7 +158,7 @@ export default function ReviewPanel({ issue, onApprove, onReject, busy = false }
         </div>
       </div>
 
-      <div className="sticky bottom-0 rounded-b-panel border-t border-navy/10 bg-mint px-4 py-3 sm:px-6 sm:py-4">
+      <div data-toast-clearance className="sticky bottom-0 rounded-b-panel border-t border-navy/10 bg-mint px-4 py-3 sm:px-6 sm:py-4">
         <div className="grid grid-cols-2 gap-3 sm:gap-4">
           <button
             type="button"

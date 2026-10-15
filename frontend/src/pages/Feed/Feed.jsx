@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useState } from 'react'
 import Navbar from '../../components/layout/Navbar'
 import Footer from '../../components/layout/Footer'
 import AnimatedBackground from '../../components/ui/AnimatedBackground'
@@ -11,6 +11,7 @@ import { useStoredIds } from '../Map/useStoredIds'
 import { getIssues } from '../../services/api'
 import { useAsync } from '../../hooks/useAsync'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
+import { useToast } from '../../components/ui/toast'
 
 const pageStyle = `
   @keyframes cardIn {
@@ -21,10 +22,6 @@ const pageStyle = `
     0% { transform: scale(1); }
     40% { transform: scale(1.35); }
     100% { transform: scale(1); }
-  }
-  @keyframes toastIn {
-    from { opacity: 0; transform: translateY(8px); }
-    to { opacity: 1; transform: translateY(0); }
   }
   @media (prefers-reduced-motion: reduce) {
     * { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; }
@@ -38,7 +35,7 @@ export default function Feed() {
   const [category, setCategory] = useState('All')
   const [status, setStatus] = useState('All')
   const [search, setSearch] = useState('')
-  const [toast, setToast] = useState(null)
+  const toast = useToast()
 
   const viewer = useViewer()
   // Same key as Map and Issue detail, so a vote shows the same everywhere.
@@ -62,17 +59,11 @@ export default function Feed() {
   const failed = Boolean(error) && !loading
   const issues = loading || failed ? [] : data.list
 
-  useEffect(() => {
-    if (!toast) return
-    const t = setTimeout(() => setToast(null), 1800)
-    return () => clearTimeout(t)
-  }, [toast])
-
   function handleUpvote(issue) {
     if (issue.status === 'resolved') return
     const wasVoted = votedIds.includes(issue.id)
     toggleVote(issue.id)
-    setToast(wasVoted ? 'Vote removed' : 'Upvoted')
+    toast.info(wasVoted ? 'Your vote was removed.' : 'You upvoted this issue.')
   }
 
   // Overlay this viewer's own vote on top of the fetched count — same math as Map.
@@ -136,16 +127,6 @@ export default function Feed() {
       </main>
 
       <Footer />
-
-      {toast && (
-        <div
-          role="status"
-          className="fixed bottom-6 left-1/2 z-[1200] -translate-x-1/2 rounded-full bg-navy px-5 py-2.5 font-body text-sm font-semibold text-white shadow-lg"
-          style={{ animation: 'toastIn 0.25s ease-out' }}
-        >
-          {toast}
-        </div>
-      )}
     </>
   )
 }

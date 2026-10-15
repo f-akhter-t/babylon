@@ -61,17 +61,19 @@ export default function Footer() {
         </div>
 
         <nav aria-label="Footer" className="grid grid-cols-2 gap-8 sm:grid-cols-3 md:gap-16">
+          {/* Keeps the heading order right: the column titles below are h3. */}
+          <h2 className="sr-only">Site links</h2>
           {visibleColumns(viewer.role).map((column) => (
             <div key={column.title}>
               <h3 className="text-xs font-semibold uppercase tracking-widest text-brand">
                 {column.title}
               </h3>
-              <ul className="mt-3 space-y-2">
+              <ul className="mt-1.5">
                 {column.links.map((link) => (
                   <li key={link.label}>
                     <Link
                       to={link.to}
-                      className="font-medium text-white transition-colors hover:text-brand"
+                      className="inline-flex min-h-11 min-w-11 items-center font-medium text-white transition-colors hover:text-brand"
                     >
                       {link.label}
                     </Link>

@@ -3,6 +3,7 @@ import { Routes, Route, useLocation } from 'react-router-dom'
 import ErrorBoundary from './components/layout/ErrorBoundary'
 import PageLoading from './components/layout/PageLoading'
 import ScrollToTop from './components/layout/ScrollToTop'
+import Toaster from './components/ui/Toaster'
 
 // Each page's code loads only when someone opens it.
 const Home = lazy(() => import('./pages/Home/Home'))
@@ -58,6 +59,8 @@ export default function App() {
           </Routes>
         </Suspense>
       </ErrorBoundary>
+      {/* Outside the boundary and Suspense, so toasts survive a page change or a crash. */}
+      <Toaster />
     </>
   )
 }

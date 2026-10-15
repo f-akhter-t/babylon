@@ -42,7 +42,7 @@ export default function FeedCard({ issue, onUpvote }) {
       </div>
 
       <div className="flex flex-1 flex-col gap-3 p-4">
-        <Link to={`/issues/${issue.id}`}>
+        <Link to={`/issues/${issue.id}`} className="flex min-h-11 items-center">
           <h3 className="font-heading text-base font-bold text-navy transition-colors group-hover:text-forest">
             {issue.title}
           </h3>
@@ -70,7 +70,7 @@ export default function FeedCard({ issue, onUpvote }) {
               onClick={handleClick}
               aria-pressed={issue.voted}
               aria-label={`${issue.voted ? 'Remove your vote from' : 'Upvote'} ${issue.title}, currently ${issue.votes} votes`}
-              className={`flex items-center gap-1 rounded-full border-2 px-3 py-1.5 font-body text-xs font-semibold transition active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest/50 ${
+              className={`flex items-center gap-1 rounded-full border-2 px-3 py-1.5 font-body text-xs font-semibold transition max-md:min-h-11 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest/50 ${
                 issue.voted
                   ? 'border-forest bg-forest text-white hover:bg-forest/90'
                   : 'border-navy text-navy hover:bg-navy/10'

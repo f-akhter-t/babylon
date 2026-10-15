@@ -5,6 +5,7 @@
 export default function SaveBar({ formId, canSave, saving }) {
   return (
     <div
+      data-toast-clearance
       className="sticky bottom-0 z-[1000] -mx-4 mt-6 sm:-mx-6 md:-mx-10 lg:hidden"
       style={{ animation: 'saveBarIn 0.3s ease-out both' }}
     >

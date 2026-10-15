@@ -11,7 +11,7 @@
   --color-amber: #FFB547;
   --color-amber-dark: #E39F2E;
   --color-danger: #A82E2E; /* Downvote and other "take back" actions */
-  --color-muted: #6B7890;
+  --color-muted: #4A566C;
   --color-page: #CDCDCD;
   --color-map-land: #F2EFE9;
   --color-map-park: #CDEBC0;
@@ -26,6 +26,13 @@
   @keyframes marquee {
     from { transform: translateX(0); }
     to { transform: translateX(-50%); }
+  }
+
+  /* Toasts rise in (components/ui/Toaster.jsx) */
+  --animate-toast-in: toast-in 0.25s ease-out;
+  @keyframes toast-in {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: none; }
   }
 
   /* Corner radii: 14, 18, 22, 24, 32 px */
@@ -63,6 +70,16 @@ button:not(:disabled),
   box-shadow: 0 0 0 4px var(--color-brand);
 }
 
+/* Leaflet's + and − zoom buttons are 30px. On phones they get a 44px target.
+   Three classes deep to beat leaflet.css, whichever loads last. */
+@media (max-width: 47.999rem) {
+  .leaflet-touch .leaflet-bar.leaflet-control-zoom a {
+    width: 44px;
+    height: 44px;
+    line-height: 44px;
+  }
+}
+
 /* Safety net: people who ask for less motion get almost none. */
 @media (prefers-reduced-motion: reduce) {
   *,
@@ -72,5 +89,12 @@ button:not(:disabled),
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
+  }
+
+  /* Except the Home ticker after someone presses Play on it: it starts paused
+     for them, so moving is their choice. Same speed as --animate-marquee. */
+  .ticker-played {
+    animation-duration: 45s !important;
+    animation-iteration-count: infinite !important;
   }
 }

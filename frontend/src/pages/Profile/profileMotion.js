@@ -11,10 +11,6 @@ export const profileStyle = `
     from { opacity: 0; transform: translateY(18px); }
     to { opacity: 1; transform: none; }
   }
-  @keyframes toastIn {
-    from { opacity: 0; transform: translateY(8px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
   @keyframes barFill {
     from { width: 0; }
   }

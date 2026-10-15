@@ -227,7 +227,9 @@ export default function AdminLayout({
   return (
     // break-words: with very large text, long words wrap instead of widening the page.
     <div ref={layoutRef} className="min-h-screen break-words bg-page font-body lg:flex">
-      <div
+      {/* The banner landmark on phones and tablets. From lg up it is hidden and the
+          sidebar takes over, so there is only ever one banner. */}
+      <header
         ref={topBarRef}
         className="top-0 z-20 flex flex-wrap items-center justify-between gap-3 bg-navy px-4 py-3 max-lg:[@media(min-height:30rem)]:sticky lg:hidden"
       >
@@ -248,7 +250,7 @@ export default function AdminLayout({
           <MenuIcon />
           Menu
         </button>
-      </div>
+      </header>
 
       <dialog
         ref={dialogRef}
@@ -272,7 +274,7 @@ export default function AdminLayout({
         </div>
       </dialog>
 
-      <aside className="hidden w-[250px] shrink-0 flex-col overflow-y-auto bg-navy px-3.5 py-6 lg:sticky lg:top-0 lg:flex lg:h-dvh">
+      <aside aria-label="Staff menu" className="hidden w-[250px] shrink-0 flex-col overflow-y-auto bg-navy px-3.5 py-6 lg:sticky lg:top-0 lg:flex lg:h-dvh">
         <StaffNav {...navProps} />
       </aside>
 
