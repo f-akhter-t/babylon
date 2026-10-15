@@ -1,13 +1,14 @@
 import { Link } from 'react-router-dom'
 import clsx from 'clsx'
 import { fit } from '../../components/layout/staffFit'
+import { votesSinceSentence } from './reopenedText'
 
 const CONTROL =
   'inline-flex min-h-11 items-center justify-center rounded-full px-5 py-2 text-center font-body text-sm font-bold transition-colors motion-reduce:transition-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forest'
 
 // Every reopened issue, each with two controls: send it to the verification
-// queue, or open its issue page. issues: getReopenedIssues(). votes is how
-// many citizens reported it again. sendingId: the issue being saved, if any.
+// queue, or open its issue page. issues: getReopenedIssues().
+// sendingId: the issue being saved, if any.
 export default function ReopenedList({ issues, onSend, sendingId = null }) {
   if (issues.length === 0) {
     return (
@@ -42,9 +43,7 @@ export default function ReopenedList({ issues, onSend, sendingId = null }) {
                 {`It was first marked resolved on ${issue.reopenedFrom}.`}
               </p>
               <p className="font-body text-sm font-bold">
-                {issue.votes === 1
-                  ? 'One citizen has reported it again.'
-                  : `${issue.votes} citizens have reported it again.`}
+                {votesSinceSentence(issue)}
               </p>
 
               {/* Named with the visible text and the issue title, for screen readers. */}

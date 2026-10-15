@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import clsx from 'clsx'
 import StaircaseIcon from '../../components/ui/StaircaseIcon'
 import BeforeAfterSlider from './BeforeAfterSlider'
@@ -6,17 +6,33 @@ import { isReopenedInQueue, REJECT_REASON_NEEDED } from '../../services/api'
 import { reopenedSentence } from './reopenedText'
 import { fit, REGION_FOCUS, useFitMode } from '../../components/layout/staffFit'
 
+// Approve needs the first two checks in either list.
 const CHECKS = [
   'Same location as the original report',
   'The problem is visibly fixed',
   'Photo was taken after work started',
 ]
 
+// A reopened issue the admin sent here has no new after-photo. Approving it
+// dismisses the reopening and closes the issue again.
+const REOPENED_INTRO = 'Approve only if the earlier fix still holds. Otherwise send it back with a reason.'
+const REOPENED_CHECKS = [
+  'The new reports are about the same place as the earlier fix.',
+  'The earlier fix still holds, so the issue can be closed again.',
+  'I have looked at the photo from the new report.',
+]
+
+const APPROVE_REASON_ID = 'approve-needs-checks'
+const REJECT_ERROR_ID = 'reject-reason-error'
+
 export default function ReviewPanel({ issue, onApprove, onReject, busy = false }) {
   const [checked, setChecked] = useState([false, false, false])
   const [reason, setReason] = useState('')
   const [reasonError, setReasonError] = useState('')
+  const reasonRef = useRef(null)
   const fitMode = useFitMode()
+  const reopened = isReopenedInQueue(issue)
+  const checks = reopened ? REOPENED_CHECKS : CHECKS
 
   const canApprove = checked[0] && checked[1]
 
@@ -24,10 +40,18 @@ export default function ReviewPanel({ issue, onApprove, onReject, busy = false }
   function reject() {
     if (!reason.trim()) {
       setReasonError(REJECT_REASON_NEEDED)
+      reasonRef.current?.focus()
       return
     }
     setReasonError('')
     onReject(issue, reason)
+  }
+
+  // Stays focusable when the checks are missing (aria-disabled), so the
+  // reason under it is read out. Really disabled only while saving.
+  function approve() {
+    if (!canApprove) return
+    onApprove(issue)
   }
 
   function toggle(index) {
@@ -62,8 +86,7 @@ export default function ReviewPanel({ issue, onApprove, onReject, busy = false }
               </p>
             ) : (
               <p className="mt-1 break-words font-body text-sm text-muted">
-                {issue.location} · Reported {issue.reportedOn} · Marked done by{' '}
-                {issue.department} on {issue.submittedOn}
+                {`${issue.location}. Reported on ${issue.reportedOn}. ${issue.department} marked it done on ${issue.submittedOn}.`}
               </p>
             )}
           </div>
@@ -84,8 +107,11 @@ export default function ReviewPanel({ issue, onApprove, onReject, busy = false }
         <div className="mt-6 grid gap-6 @2xl:grid-cols-2">
           <div>
             <p className="font-body text-sm font-bold text-navy">Check before approving</p>
+            {reopened && (
+              <p className="mt-1 font-body text-sm text-navy">{REOPENED_INTRO}</p>
+            )}
             <div className="mt-2 flex flex-col gap-1">
-              {CHECKS.map((label, index) => (
+              {checks.map((label, index) => (
                 <label
                   key={label}
                   className="flex min-h-11 cursor-pointer items-center gap-3 font-body text-base text-navy"
@@ -94,7 +120,7 @@ export default function ReviewPanel({ issue, onApprove, onReject, busy = false }
                     type="checkbox"
                     checked={checked[index]}
                     onChange={() => toggle(index)}
-                    className="h-5 w-5 shrink-0 accent-forest"
+                    className="h-6 w-6 shrink-0 accent-forest"
                   />
                   {label}
                 </label>
@@ -115,12 +141,18 @@ export default function ReviewPanel({ issue, onApprove, onReject, busy = false }
               Reason, if sending back
             </label>
             <textarea
+              ref={reasonRef}
               id="reject-reason"
               rows={2}
               value={reason}
-              onChange={(e) => setReason(e.target.value)}
+              onChange={(e) => {
+                setReason(e.target.value)
+                if (reasonError && e.target.value.trim()) setReasonError('')
+              }}
+              aria-invalid={reasonError ? true : undefined}
+              aria-describedby={reasonError ? REJECT_ERROR_ID : undefined}
               placeholder="Tell the department what is still wrong"
-              className="mt-2 w-full rounded-tile border border-navy/20 bg-white p-3 font-body text-sm text-navy placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-forest"
+              className="mt-2 w-full rounded-tile border border-navy/60 bg-white p-3 font-body text-sm text-navy placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-forest"
             />
           </div>
         </div>
@@ -130,12 +162,15 @@ export default function ReviewPanel({ issue, onApprove, onReject, busy = false }
         <div className="grid grid-cols-2 gap-3 sm:gap-4">
           <button
             type="button"
-            disabled={!canApprove || busy}
-            onClick={() => onApprove(issue)}
+            disabled={busy}
+            aria-disabled={!canApprove || undefined}
+            aria-describedby={!canApprove ? APPROVE_REASON_ID : undefined}
+            onClick={approve}
             className={clsx(
               'min-h-11 rounded-full bg-forest px-3 py-2.5 font-body text-sm font-bold text-mint transition-opacity motion-reduce:transition-none sm:px-6 sm:text-base',
               'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forest',
-              canApprove && !busy ? 'hover:opacity-90' : 'cursor-not-allowed opacity-40',
+              // ! beats the global "button:not(:disabled)" pointer rule in index.css.
+              canApprove && !busy ? 'hover:opacity-90' : 'cursor-not-allowed! opacity-40',
             )}
           >
             Approve and close
@@ -149,8 +184,13 @@ export default function ReviewPanel({ issue, onApprove, onReject, busy = false }
             Reject and send back
           </button>
         </div>
+        {!canApprove && (
+          <p id={APPROVE_REASON_ID} className="mt-2 font-body text-sm text-navy">
+            Tick the first two checks to approve this fix.
+          </p>
+        )}
         {reasonError && (
-          <p role="alert" className="mt-2 font-body text-sm font-bold text-danger">
+          <p id={REJECT_ERROR_ID} role="alert" className="mt-2 font-body text-sm font-bold text-danger">
             {reasonError}
           </p>
         )}
