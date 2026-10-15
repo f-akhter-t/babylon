@@ -10,10 +10,22 @@ import ReportModal from './ReportModal'
 import { EarnCard, LevelCard } from './LevelCard'
 import Navbar from '../../components/layout/Navbar'
 import Footer from '../../components/layout/Footer'
+import { useDocumentTitle } from '../../hooks/useDocumentTitle'
+import RequireCitizen from '../Auth/RequireCitizen'
 
 const FILTERS = ['All', 'Open', 'In progress', 'Resolved', 'Reopened']
 
+// Staff go to their panel. Guests see the page with its logged-out message.
 export default function MyReports() {
+  return (
+    <RequireCitizen guests="allow">
+      <MyReportsPage />
+    </RequireCitizen>
+  )
+}
+
+function MyReportsPage() {
+  useDocumentTitle('My reports')
   const { reports, user, earn, loading, email } = useMyData()
   const [filter, setFilter] = useState('All')
   const [query, setQuery] = useState('')

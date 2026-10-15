@@ -5,7 +5,7 @@ import FormNotice from '../Profile/FormNotice'
 import IdentityQueueCard, { QueueSkeleton } from './IdentityQueueCard'
 import IdentityReviewPanel from './IdentityReviewPanel'
 import RequireRole from '../Auth/RequireRole'
-import { useDocumentTitle } from '../IssueDetail/useDocumentTitle'
+import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import { fit } from '../../components/layout/staffFit'
 import {
   ALREADY_REVIEWED,

@@ -10,7 +10,7 @@ import { useStoredIds } from './useStoredIds'
 import { useListKeys } from './useListKeys'
 import { useUnreadCount } from './useUnreadCount'
 import { useViewer } from './useViewer'
-import { useDocumentTitle } from '../IssueDetail/useDocumentTitle'
+import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 
 const NO_FILTERS = { category: 'All', status: 'All', q: '' }
 

@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import AuthShell, { DemoHint, Field, FormError, SubmitButton, authLinkClass } from './AuthShell'
 import { DEMO_ACCOUNTS, DEMO_PASSWORD, homePathFor, login } from '../../services/auth'
-import { useDocumentTitle } from '../IssueDetail/useDocumentTitle'
+import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import GuestOnly from './GuestOnly'
 
 // Citizen log-in. Staff accounts sign in at /staff/login.
@@ -12,6 +12,14 @@ export default function Login() {
       <LoginPage />
     </GuestOnly>
   )
+}
+
+// Where to go after logging in. RequireCitizen sends guests here from /report
+// (keeping ?lat=…&lng=… from the Map). Only /report itself, with or without a
+// query string, is accepted, so this can never send someone to another site.
+function returnPathFrom(state) {
+  const from = state?.from
+  return typeof from === 'string' && /^\/report(\?[^#]*)?$/.test(from) ? from : null
 }
 
 function LoginPage() {
@@ -32,7 +40,9 @@ function LoginPage() {
     setBusy(true)
     try {
       const user = await login({ email, password, door: 'citizen' })
-      navigate(homePathFor(user.role))
+      const back = user.role === 'citizen' ? returnPathFrom(location.state) : null
+      if (back) navigate(back, { replace: true })
+      else navigate(homePathFor(user.role))
     } catch (err) {
       setError({ message: err.message, code: err.code })
     } finally {

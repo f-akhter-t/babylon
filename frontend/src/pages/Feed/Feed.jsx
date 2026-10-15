@@ -10,6 +10,7 @@ import { useViewer } from '../Map/useViewer'
 import { useStoredIds } from '../Map/useStoredIds'
 import { getIssues } from '../../services/api'
 import { useAsync } from '../../hooks/useAsync'
+import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 
 const pageStyle = `
   @keyframes cardIn {
@@ -33,6 +34,7 @@ const pageStyle = `
 const LOAD_FAILED = 'We could not load the issues. Check your connection and try again.'
 
 export default function Feed() {
+  useDocumentTitle('Issue feed')
   const [category, setCategory] = useState('All')
   const [status, setStatus] = useState('All')
   const [search, setSearch] = useState('')

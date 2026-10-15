@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import AuthShell, { Field, FormError, SubmitButton, authLinkClass } from './AuthShell'
 import { signup, startSetup } from '../../services/auth'
-import { useDocumentTitle } from '../IssueDetail/useDocumentTitle'
+import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import GuestOnly from './GuestOnly'
 import { validateNewAccount } from './validateNewAccount'
 
