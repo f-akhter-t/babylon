@@ -33,7 +33,7 @@ function PhotoMessage({ id, title, children, warn = false }) {
       className={clsx(
         MESSAGE_BOX,
         'flex flex-col items-center justify-center gap-2 border-2 border-dashed p-3 text-center wrap-anywhere sm:p-5',
-        warn ? 'border-amber-dark bg-white' : 'border-navy/25 bg-white/60',
+        warn ? 'border-danger bg-white' : 'border-navy/25 bg-white/60',
       )}
     >
       <CardIcon />

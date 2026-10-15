@@ -65,7 +65,7 @@ export function RoleRadioGroup({ label, options, value, onChange }) {
 
 export function Field({ id, label, children, ...props }) {
   const classes =
-    'mt-2 w-full rounded-tile border border-navy/20 bg-white px-4 py-3 font-body text-base text-navy placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-forest'
+    'mt-2 w-full rounded-tile border border-navy/60 bg-white px-4 py-3 font-body text-base text-navy placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-forest'
 
   return (
     <div>
