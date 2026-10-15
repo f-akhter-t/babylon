@@ -154,7 +154,7 @@ export default function Navbar({
 
   return (
     <header className="sticky top-0 z-[1100] border-b border-white/10 bg-navy font-body">
-      <div className="flex items-center gap-4 px-5 py-3 lg:gap-8 lg:px-10">
+      <div className="flex flex-wrap items-center gap-4 px-5 py-3 lg:gap-8 lg:px-10">
         <div className="shrink-0">
           <Logo />
         </div>
@@ -176,7 +176,7 @@ export default function Navbar({
           ))}
         </nav>
 
-        <div className="ml-auto flex items-center gap-3 lg:gap-4">
+        <div className="ml-auto flex flex-wrap items-center justify-end gap-3 lg:gap-4">
           {current === 'logged-out' && (
             <div className="hidden items-center gap-4 lg:flex">
               <Link
