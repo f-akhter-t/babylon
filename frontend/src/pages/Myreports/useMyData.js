@@ -13,7 +13,7 @@ export default function useMyData() {
     let active = true
     const load = () =>
       Promise.all([getMyReports(email), getCurrentUser(email), getEarnPoints()]).then(([issues, user, earn]) => {
-        if (active) setData({ loading: false, reports: issues.map(toReportView), user, earn })
+        if (active) setData({ loading: false, reports: issues.map((issue) => toReportView(issue, email)), user, earn })
       })
     load()
     window.addEventListener(ISSUES_EVENT, load)

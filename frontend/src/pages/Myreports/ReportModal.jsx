@@ -1,5 +1,7 @@
 import { useEffect } from 'react'
+import { Link } from 'react-router-dom'
 import clsx from 'clsx'
+import { LOCKED_MESSAGE } from '../../services/api'
 import ReportStatusPill from '../../components/ui/ReportStatusPill'
 import MapIllustration from './MapIllustration'
 import { CameraIcon, CloseIcon } from '../../components/ui/icons'
@@ -30,6 +32,19 @@ export default function ReportModal({ report, onClose }) {
         <p className="mt-1 text-[13px] text-muted">
           Reported on {r.dateLabel} · {r.upvotes} upvote{r.upvotes === 1 ? '' : 's'}
         </p>
+        {/* The same rule as the card and the edit page (canEditIssue). */}
+        {r.editState === 'ok' && (
+          <Link
+            to={`/issues/${r.id}/edit`}
+            aria-label={`Edit report: ${r.title}`}
+            className="mt-3 inline-flex min-h-11 items-center rounded-full border-2 border-navy px-5 text-sm font-bold text-navy transition-colors hover:bg-navy/10 motion-reduce:transition-none"
+          >
+            Edit report
+          </Link>
+        )}
+        {r.editState === 'locked' && (
+          <p className="mt-2 text-sm font-semibold text-navy">{LOCKED_MESSAGE}</p>
+        )}
 
         <div className="mt-2 grid gap-5 md:grid-cols-2">
           <div>

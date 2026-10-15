@@ -1,17 +1,19 @@
 import clsx from 'clsx'
+import { Link } from 'react-router-dom'
 import ReportStatusPill from '../../components/ui/ReportStatusPill'
 import MapIllustration from './MapIllustration'
 import { ArrowUpIcon, CameraIcon, PinIcon } from '../../components/ui/icons'
 
+// One report on My reports. The title is a button whose ::after covers the
+// whole card, so a click anywhere opens the details (like the Map sidebar).
+// "Edit report" sits above that layer, only while the report can be edited.
 export default function ReportCard({ report, onOpen }) {
   const r = report
   return (
-    <button
-      type="button"
-      onClick={() => onOpen(r.id)}
+    <article
       className={clsx(
-        'flex h-full w-full flex-col overflow-hidden rounded-card bg-mint text-left transition duration-150',
-        'hover:-translate-y-0.5 hover:shadow-lift focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-navy'
+        'relative flex h-full w-full flex-col overflow-hidden rounded-card bg-mint text-left transition duration-150',
+        'hover:-translate-y-0.5 hover:shadow-lift',
       )}
     >
       {/* grid-rows-1: the row is exactly the 150px strip, so a tall photo is
@@ -28,12 +30,20 @@ export default function ReportCard({ report, onOpen }) {
       </div>
 
       {/* The card's own mint surface, opaque, so the text never sits on the photo or map. */}
-      <div className="relative flex flex-1 flex-col gap-2 bg-mint px-4 pb-4 pt-3.5">
+      <div className="flex flex-1 flex-col gap-2 bg-mint px-4 pb-4 pt-3.5">
         <div className="flex items-center justify-between gap-2">
           <ReportStatusPill status={r.status} />
           <span className="text-[13px] text-muted">{r.dateLabel}</span>
         </div>
-        <h3 className="font-heading text-[19px] font-extrabold leading-[1.15] tracking-tight">{r.title}</h3>
+        <h3 className="font-heading text-[19px] font-extrabold leading-[1.15] tracking-tight">
+          <button
+            type="button"
+            onClick={() => onOpen(r.id)}
+            className="text-left after:absolute after:inset-0 after:rounded-card after:content-[''] focus-visible:shadow-none focus-visible:outline-none focus-visible:after:outline-2 focus-visible:after:-outline-offset-2 focus-visible:after:outline-navy"
+          >
+            {r.title}
+          </button>
+        </h3>
         <div className="flex flex-wrap items-center gap-1.5 text-[13px] text-muted">
           <PinIcon size={15} />
           {r.location || 'Location not set'}
@@ -56,9 +66,24 @@ export default function ReportCard({ report, onOpen }) {
           <span className="inline-flex items-center gap-1 rounded-full border-[1.5px] border-navy px-[13px] py-[5px] font-bold">
             <ArrowUpIcon size={13} /> {r.upvotes}
           </span>
-          <span className="font-bold text-forest underline underline-offset-[3px]">View details</span>
+          <span className="flex items-center gap-4">
+            {r.editState === 'ok' && (
+              // Above the card's click layer. The ::before strip gives a 44px
+              // tap target without making the row taller.
+              <Link
+                to={`/issues/${r.id}/edit`}
+                aria-label={`Edit report: ${r.title}`}
+                className="relative z-10 font-bold text-navy underline underline-offset-[3px] before:absolute before:inset-x-0 before:top-1/2 before:h-11 before:-translate-y-1/2 before:content-['']"
+              >
+                Edit report
+              </Link>
+            )}
+            <span aria-hidden="true" className="font-bold text-forest underline underline-offset-[3px]">
+              View details
+            </span>
+          </span>
         </div>
       </div>
-    </button>
+    </article>
   )
 }
