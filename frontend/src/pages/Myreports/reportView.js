@@ -1,3 +1,5 @@
+import { canEditIssue } from '../../services/api'
+
 // Turns an issue from services/api.js into what the My reports cards need.
 // api.js uses status 'open' | 'in-progress' | 'resolved' and priority/verification flags.
 
@@ -26,6 +28,8 @@ function updateText(issue, status) {
   if (status === 'reopened') return 'Reopened and sent to the admin'
   if (status === 'resolved') return 'Fix verified by admin'
   if (issue.verification === 'awaiting') return 'Waiting for the admin to check the fix'
+  // Only while it is sent back right now; the reason is in the details.
+  if (issue.sentBackNow) return "The department's fix was sent back."
   if (status === 'in_progress') return 'Work in progress'
   return `Waiting for work to start · ${timeAgo(reportedAt(issue))}`
 }
@@ -34,6 +38,13 @@ function buildHistory(issue, status) {
   const steps = [{ label: 'Open', note: `Reported ${issue.reportedOn ?? ''}`.trim() }]
   if (issue.department) steps.push({ label: `Sent to ${issue.department}`, note: issue.sentOn })
   if (status !== 'open') steps.push({ label: 'In progress' })
+  // Every time the admin sent the fix back (the report's owner only gets these).
+  for (const back of issue.sentBackHistory ?? []) {
+    steps.push({
+      label: 'Fix sent back',
+      note: `The department's fix was sent back on ${back.on}. Reason: ${back.reason}`,
+    })
+  }
   if (issue.verification === 'awaiting') steps.push({ label: 'Awaiting admin check' })
   if (status === 'resolved' || status === 'reopened') {
     steps.push({ label: 'Resolved', note: 'After-photo verified by admin' })
@@ -42,7 +53,8 @@ function buildHistory(issue, status) {
   return steps
 }
 
-export function toReportView(issue) {
+// email: the logged-in citizen's, for the edit rule (canEditIssue).
+export function toReportView(issue, email) {
   const status = reportStatus(issue)
   const place = [issue.location, issue.ward && !issue.location?.includes(issue.ward) ? issue.ward : '']
     .filter(Boolean)
@@ -60,5 +72,7 @@ export function toReportView(issue) {
     description: issue.description ?? '',
     updateText: updateText(issue, status),
     history: buildHistory(issue, status),
+    // 'ok' | 'locked' (always the owner here): decides the Edit link.
+    editState: canEditIssue(issue, email),
   }
 }

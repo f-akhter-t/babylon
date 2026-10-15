@@ -17,6 +17,10 @@ function inProgressLines(issue) {
   }
   const lines = [line(`Started ${issue.startedOn}`)]
   if (issue.departmentNote) lines.push(line(issue.departmentNote))
+  // Only the citizen who filed the report gets sentBackHistory (services/api.js).
+  for (const back of issue.sentBackHistory ?? []) {
+    lines.push(line(`The department's fix was sent back on ${back.on}. Reason: ${back.reason}`))
+  }
   if (issue.verification === 'awaiting') {
     lines.push(line(`Submitted ${issue.submittedOn}, waiting for the admin check`))
   }
