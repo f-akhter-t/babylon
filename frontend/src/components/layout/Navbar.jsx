@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { Link, NavLink, useNavigate } from 'react-router-dom'
+import { useEffect, useRef, useState } from 'react'
+import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom'
 import clsx from 'clsx'
 import Logo from './Logo'
 import NotificationBell from './NotificationBell'
@@ -72,7 +72,7 @@ function initialsFor(name, fallback) {
 // `label` is the link's accessible name. `verified` adds a small check on the corner.
 function Avatar({ name, text, to, label, verified }) {
   const circle =
-    'flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-forest text-sm font-semibold text-white'
+    'flex size-10 shrink-0 items-center justify-center rounded-full bg-forest text-sm font-semibold text-white max-lg:size-11'
   const check = verified && (
     <span
       aria-hidden="true"
@@ -101,7 +101,7 @@ function Avatar({ name, text, to, label, verified }) {
         aria-label={label}
         className={clsx(circle, 'relative transition hover:ring-2 hover:ring-brand')}
       >
-        {text}
+        <span aria-hidden="true">{text}</span>
         {check}
       </Link>
     )
@@ -122,6 +122,36 @@ export default function Navbar({
   const navigate = useNavigate()
   const [session, setSession] = useState(getSession)
   const [open, setOpen] = useState(false)
+  const headerRef = useRef(null)
+  const menuButtonRef = useRef(null)
+  const location = useLocation()
+
+  // The phone menu closes when the page changes (a link, Back, a redirect).
+  const [shownAt, setShownAt] = useState(location.key)
+  if (shownAt !== location.key) {
+    setShownAt(location.key)
+    setOpen(false)
+  }
+
+  // While it is open: Escape closes it and puts focus back on the Menu
+  // button; a click or tap outside the header closes it.
+  useEffect(() => {
+    if (!open) return
+    function onKeyDown(event) {
+      if (event.key !== 'Escape') return
+      setOpen(false)
+      menuButtonRef.current?.focus()
+    }
+    function onPointerDown(event) {
+      if (!headerRef.current?.contains(event.target)) setOpen(false)
+    }
+    document.addEventListener('keydown', onKeyDown)
+    document.addEventListener('pointerdown', onPointerDown)
+    return () => {
+      document.removeEventListener('keydown', onKeyDown)
+      document.removeEventListener('pointerdown', onPointerDown)
+    }
+  }, [open])
 
   // A real login decides which navbar to show. Without a login, the page decides.
   const current = session?.role ?? variant
@@ -153,13 +183,13 @@ export default function Navbar({
   }
 
   return (
-    <header className="sticky top-0 z-[1100] border-b border-white/10 bg-navy font-body">
+    <header ref={headerRef} className="sticky top-0 z-[1100] border-b border-white/10 bg-navy font-body">
       <div className="flex flex-wrap items-center gap-4 px-5 py-3 lg:gap-8 lg:px-10">
         <div className="shrink-0">
           <Logo />
         </div>
 
-        <nav className="hidden items-center gap-2 lg:flex">
+        <nav aria-label="Main" className="hidden items-center gap-2 lg:flex">
           {links.map((link) => (
             <NavLink
               key={link.to}
@@ -226,12 +256,13 @@ export default function Navbar({
           )}
 
           <button
+            ref={menuButtonRef}
             type="button"
             onClick={() => setOpen((value) => !value)}
             aria-label={open ? 'Close menu' : 'Open menu'}
             aria-expanded={open}
             aria-controls="mobile-menu"
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-white/20 text-white transition-colors hover:bg-white/10 lg:hidden"
+            className="flex size-11 shrink-0 items-center justify-center rounded-full border border-white/20 text-white transition-colors hover:bg-white/10 lg:hidden"
           >
             <svg
               viewBox="0 0 24 24"
@@ -261,42 +292,44 @@ export default function Navbar({
           }}
           className="flex flex-col gap-1 border-t border-white/10 px-5 pb-5 pt-3 lg:hidden"
         >
-          {isCitizen && (
-            <NavLink
-              to="/profile"
-              className={({ isActive }) =>
-                clsx(
-                  'flex items-center justify-between gap-3 rounded-tile px-4 py-3 transition-colors',
-                  isActive ? 'bg-mint text-navy' : 'text-white hover:bg-white/10',
-                )
-              }
-            >
-              <span className="min-w-0">
-                <span className="block text-xs opacity-70">Your profile</span>
-                <span className="block truncate text-base font-semibold">{displayName}</span>
-              </span>
-              {profile.isVerified && (
-                <span className="shrink-0 rounded-full bg-brand px-2.5 py-0.5 text-xs font-bold text-navy">
-                  Verified
+          <nav aria-label="Main" className="flex flex-col gap-1">
+            {isCitizen && (
+              <NavLink
+                to="/profile"
+                className={({ isActive }) =>
+                  clsx(
+                    'flex items-center justify-between gap-3 rounded-tile px-4 py-3 transition-colors',
+                    isActive ? 'bg-mint text-navy' : 'text-white hover:bg-white/10',
+                  )
+                }
+              >
+                <span className="min-w-0">
+                  <span className="block text-xs opacity-70">Your profile</span>
+                  <span className="block truncate text-base font-semibold">{displayName}</span>
                 </span>
-              )}
-            </NavLink>
-          )}
+                {profile.isVerified && (
+                  <span className="shrink-0 rounded-full bg-brand px-2.5 py-0.5 text-xs font-bold text-navy">
+                    Verified
+                  </span>
+                )}
+              </NavLink>
+            )}
 
-          {links.map((link) => (
-            <NavLink
-              key={link.to}
-              to={link.to}
-              className={({ isActive }) =>
-                clsx(
-                  'rounded-tile px-4 py-3 text-base font-medium transition-colors',
-                  isActive ? 'bg-mint text-navy' : 'text-white/80 hover:bg-white/10',
-                )
-              }
-            >
-              {linkLabel(link)}
-            </NavLink>
-          ))}
+            {links.map((link) => (
+              <NavLink
+                key={link.to}
+                to={link.to}
+                className={({ isActive }) =>
+                  clsx(
+                    'rounded-tile px-4 py-3 text-base font-medium transition-colors',
+                    isActive ? 'bg-mint text-navy' : 'text-white/80 hover:bg-white/10',
+                  )
+                }
+              >
+                {linkLabel(link)}
+              </NavLink>
+            ))}
+          </nav>
 
           {current === 'logged-out' && (
             <div className="mt-2 grid grid-cols-2 gap-2">
