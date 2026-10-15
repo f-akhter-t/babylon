@@ -83,7 +83,7 @@ export default function ConfirmDialog({
       <p id={textId} className="mt-2 text-base text-slate">
         {text}
       </p>
-      <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+      <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-end">
         <button
           ref={cancelRef}
           type="button"
