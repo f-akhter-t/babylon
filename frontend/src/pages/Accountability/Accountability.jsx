@@ -17,6 +17,7 @@ import { useAsync } from '../../hooks/useAsync'
 import RequireRole from '../Auth/RequireRole'
 import { useDocumentTitle } from '../IssueDetail/useDocumentTitle'
 import { fit, REGION_FOCUS, useFitMode } from '../../components/layout/staffFit'
+import { usePrefersReducedMotion } from '../Feed/feedMotionHooks'
 
 const PERIODS = [
   { label: 'Last 4 weeks', weeks: 4 },
@@ -101,14 +102,37 @@ function DepartmentTable({ departments }) {
   )
 }
 
+// "W3" in the data reads as "Week 3".
+const weekName = (week) => week.replace(/^W(\d+)$/, 'Week $1')
+
+// One sentence about the trend, computed from the weeks shown.
+function trendSentence(weekly) {
+  if (weekly.length < 2) return null
+  const first = weekly[0]
+  const last = weekly[weekly.length - 1]
+  return `Over the last ${weekly.length} weeks, reports received went from ${first.received} to ${last.received} a week, and resolved reports went from ${first.resolved} to ${last.resolved} a week.`
+}
+
+// The chart is a picture for sighted users. Screen readers get the sentence
+// and the table instead, so the chart itself is hidden from them and its
+// keyboard layer is off. The lines do not animate when less motion is asked for.
 function WeeklyChart({ weekly }) {
+  const reducedMotion = usePrefersReducedMotion()
+  const [showTable, setShowTable] = useState(false)
+  const summary = trendSentence(weekly)
+
   return (
     <div className="mt-8 border-t border-navy/10 pt-5">
       <h3 className="font-body text-sm font-bold text-navy">Reports per week</h3>
+      {summary && <p className="mt-1 font-body text-sm text-navy">{summary}</p>}
 
-      <div className="mt-3 h-[220px] text-muted">
+      <div aria-hidden="true" className="mt-3 h-[220px] text-muted">
         <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={weekly} margin={{ top: 8, right: 12, bottom: 0, left: -20 }}>
+          <LineChart
+            data={weekly}
+            accessibilityLayer={false}
+            margin={{ top: 8, right: 12, bottom: 0, left: -20 }}
+          >
             <CartesianGrid
               stroke="currentColor"
               strokeOpacity={0.15}
@@ -136,6 +160,7 @@ function WeeklyChart({ weekly }) {
               strokeWidth={2.5}
               strokeDasharray="6 5"
               dot={false}
+              isAnimationActive={!reducedMotion}
             />
             <Line
               type="monotone"
@@ -144,6 +169,7 @@ function WeeklyChart({ weekly }) {
               stroke="var(--color-forest)"
               strokeWidth={3.5}
               dot={false}
+              isAnimationActive={!reducedMotion}
             />
           </LineChart>
         </ResponsiveContainer>
@@ -151,13 +177,44 @@ function WeeklyChart({ weekly }) {
 
       <div className="mt-3 flex flex-wrap items-center gap-x-6 gap-y-2 font-body text-sm text-navy">
         <span className="flex items-center gap-2">
-          <span className="w-8 border-t-2 border-dashed border-navy" />
+          <span aria-hidden="true" className="w-8 border-t-2 border-dashed border-navy" />
           Received
         </span>
         <span className="flex items-center gap-2">
-          <span className="w-8 border-t-4 border-forest" />
+          <span aria-hidden="true" className="w-8 border-t-4 border-forest" />
           Resolved and verified
         </span>
+      </div>
+
+      <button
+        type="button"
+        aria-expanded={showTable}
+        aria-controls="weekly-table"
+        onClick={() => setShowTable((open) => !open)}
+        className="mt-4 min-h-11 rounded-full border-2 border-navy bg-white px-5 py-2 font-body text-sm font-bold text-navy transition-colors hover:bg-mint-deep focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forest motion-reduce:transition-none"
+      >
+        {showTable ? 'Hide the table of these figures.' : 'Show these figures as a table.'}
+      </button>
+      <div id="weekly-table" hidden={!showTable} className="mt-3 overflow-x-auto">
+        <table className="w-full font-body text-sm text-navy">
+          <caption className="mb-2 text-left font-bold">Reports received and resolved each week</caption>
+          <thead>
+            <tr className="border-b border-navy/20 text-left">
+              <th scope="col" className="py-2 pr-4 font-semibold">Week</th>
+              <th scope="col" className="py-2 pr-4 font-semibold">Received</th>
+              <th scope="col" className="py-2 font-semibold">Resolved and verified</th>
+            </tr>
+          </thead>
+          <tbody>
+            {weekly.map((row) => (
+              <tr key={row.week} className="border-b border-navy/10">
+                <th scope="row" className="py-2 pr-4 text-left font-semibold">{weekName(row.week)}</th>
+                <td className="py-2 pr-4">{row.received}</td>
+                <td className="py-2">{row.resolved}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
     </div>
   )
@@ -191,10 +248,10 @@ function WaitingLongest({ items, fitMode }) {
           >
             <div className="min-w-0">
               <p className="break-words font-body text-base font-bold text-mint">{item.title}</p>
-              <p className="font-body text-sm text-mint/70">
-                {item.department}
-                {item.reopened ? ' · reopened' : ''}
-              </p>
+              <p className="font-body text-sm text-mint/70">{item.department}</p>
+              {item.reopened && (
+                <p className="font-body text-sm text-mint/70">It was reopened after a fix.</p>
+              )}
             </div>
             <span className="shrink-0 rounded-full bg-amber px-3 py-1 font-body text-sm font-bold text-navy">
               {item.days} days
@@ -283,10 +340,7 @@ function AccountabilityPage() {
               <StatCard label="Resolved and verified" valueClass="text-brand">
                 {data.stats.resolved}
               </StatCard>
-              <StatCard label="Average time to resolve">
-                {data.stats.avgDays}{' '}
-                <span className="text-xl font-bold">days</span>
-              </StatCard>
+              <StatCard label="Average time to resolve">{`${data.stats.avgDays} days`}</StatCard>
               <StatCard label="Reopened after closing" valueClass="text-amber">
                 {data.stats.reopenedPercent}%
               </StatCard>
