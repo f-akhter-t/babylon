@@ -1,3 +1,4 @@
+import { lazy, Suspense } from 'react'
 import { Routes, Route } from 'react-router-dom'
 import Home from './pages/Home/Home'
 import Map from './pages/Map/Map'
@@ -11,11 +12,15 @@ import DepartmentPanel from './pages/DepartmentPanel/DepartmentPanel'
 import VerifyResolutions from './pages/VerifyResolutions/VerifyResolutions'
 import Accountability from './pages/Accountability/Accountability'
 import IdentityReview from './pages/IdentityReview/IdentityReview'
-import Styleguide from './pages/Styleguide/Styleguide'
 import Login from './pages/Auth/Login'
 import Signup from './pages/Auth/Signup'
 import StaffLogin from './pages/Auth/StaffLogin'
 import StaffSignup from './pages/Auth/StaffSignup'
+
+// The styleguide is a dev tool: production builds leave it out entirely.
+const Styleguide = import.meta.env.DEV
+  ? lazy(() => import('./pages/Styleguide/Styleguide'))
+  : null
 
 export default function App() {
   return (
@@ -32,7 +37,16 @@ export default function App() {
       <Route path="/admin/verify" element={<VerifyResolutions />} />
       <Route path="/admin/accountability" element={<Accountability />} />
       <Route path="/admin/identity" element={<IdentityReview />} />
-      <Route path="/styleguide" element={<Styleguide />} />
+      {Styleguide && (
+        <Route
+          path="/styleguide"
+          element={
+            <Suspense fallback={null}>
+              <Styleguide />
+            </Suspense>
+          }
+        />
+      )}
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<Signup />} />
       <Route path="/staff/login" element={<StaffLogin />} />
