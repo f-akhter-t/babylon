@@ -18,7 +18,7 @@ export default function ReportModal({ report, onClose }) {
       onMouseDown={(e) => e.target === e.currentTarget && onClose()}
     >
       <div role="dialog" aria-modal="true" aria-label={r.title} className="relative max-h-[calc(100vh-32px)] w-[860px] max-w-full overflow-auto rounded-[26px] bg-mint p-6">
-        <button type="button" onClick={onClose} aria-label="Close" className="absolute right-4 top-4 grid h-[34px] w-[34px] place-items-center rounded-full bg-white">
+        <button type="button" onClick={onClose} aria-label="Close" className="absolute right-4 top-4 grid size-11 place-items-center rounded-full bg-white">
           <CloseIcon />
         </button>
 

@@ -291,7 +291,7 @@ export default function ReportForm({
                 type="button"
                 onClick={removePhoto}
                 disabled={locked}
-                className="shrink-0 rounded-full px-3 py-1 font-body text-xs font-semibold text-forest transition hover:bg-forest/10 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest/50 disabled:cursor-not-allowed disabled:opacity-50"
+                className="min-h-11 shrink-0 rounded-full px-3 py-1 font-body text-xs font-semibold text-forest transition hover:bg-forest/10 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest/50 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 Remove
               </button>

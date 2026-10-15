@@ -422,7 +422,7 @@ export default function LocationPicker({
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search street or landmark"
             aria-label="Search street or landmark"
-            className="w-full rounded-full border border-navy/15 bg-white py-2.5 pl-10 pr-4 font-body text-sm text-navy shadow-sm transition placeholder:text-muted hover:border-forest/50 focus:border-forest focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest/40"
+            className="w-full rounded-full border border-navy/15 bg-white py-2.5 pl-10 pr-4 font-body text-sm text-navy shadow-sm max-md:min-h-11 transition placeholder:text-muted hover:border-forest/50 focus:border-forest focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest/40"
           />
         </div>
         <button

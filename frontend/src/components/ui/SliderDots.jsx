@@ -11,7 +11,7 @@ export default function SliderDots({ count, active, onSelect }) {
           onClick={() => onSelect(i)}
           aria-label={`Go to slide ${i + 1}`}
           aria-current={i === active}
-          className="group rounded-full p-2 focus-visible:outline-2 focus-visible:outline-brand"
+          className="group flex h-11 min-w-11 items-center justify-center rounded-full focus-visible:outline-2 focus-visible:outline-brand"
         >
           <span
             className={clsx(

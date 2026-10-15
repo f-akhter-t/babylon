@@ -13,6 +13,7 @@ export default function CategoryChip({
     active && tone === 'forest' && 'border-forest bg-forest text-white',
     !active && 'border-navy/60 text-navy',
     !active && onClick && 'hover:bg-navy/10',
+    onClick && 'max-md:min-h-11', // a 44px target on phones
     className,
   )
 

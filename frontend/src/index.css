@@ -70,6 +70,16 @@ button:not(:disabled),
   box-shadow: 0 0 0 4px var(--color-brand);
 }
 
+/* Leaflet's + and − zoom buttons are 30px. On phones they get a 44px target.
+   Three classes deep to beat leaflet.css, whichever loads last. */
+@media (max-width: 47.999rem) {
+  .leaflet-touch .leaflet-bar.leaflet-control-zoom a {
+    width: 44px;
+    height: 44px;
+    line-height: 44px;
+  }
+}
+
 /* Safety net: people who ask for less motion get almost none. */
 @media (prefers-reduced-motion: reduce) {
   *,

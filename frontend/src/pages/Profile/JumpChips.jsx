@@ -26,7 +26,7 @@ export default function JumpChips() {
           key={section.id}
           type="button"
           onClick={() => jump(section.id)}
-          className="rounded-full border border-navy/20 bg-white/70 px-4 py-2 font-body text-sm font-semibold text-navy transition hover:-translate-y-0.5 hover:border-navy hover:bg-navy hover:text-mint hover:shadow-md active:translate-y-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest/50"
+          className="rounded-full border border-navy/20 bg-white/70 px-4 py-2 max-md:min-h-11 font-body text-sm font-semibold text-navy transition hover:-translate-y-0.5 hover:border-navy hover:bg-navy hover:text-mint hover:shadow-md active:translate-y-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest/50"
         >
           {section.label}
         </button>

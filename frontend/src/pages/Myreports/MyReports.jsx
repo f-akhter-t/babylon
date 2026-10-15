@@ -104,7 +104,7 @@ function MyReportsPage() {
                   onClick={() => setFilter(f)}
                   aria-pressed={filter === f}
                   className={clsx(
-                    'rounded-full border-[1.5px] border-navy px-[15px] py-[7px] font-semibold transition-colors',
+                    'rounded-full border-[1.5px] border-navy px-[15px] py-[7px] font-semibold transition-colors max-md:min-h-11',
                     filter === f ? 'bg-navy text-mint' : 'hover:bg-white'
                   )}
                 >
@@ -112,7 +112,7 @@ function MyReportsPage() {
                 </button>
               ))}
             </div>
-            <label className="order-2 flex h-10 min-w-[200px] flex-[1_1_240px] items-center gap-2 rounded-full border-[1.5px] border-muted/50 bg-white px-3.5">
+            <label className="order-2 flex h-10 min-w-[200px] max-md:h-11 flex-[1_1_240px] items-center gap-2 rounded-full border-[1.5px] border-muted/50 bg-white px-3.5">
               <PinIcon size={18} />
               <input
                 value={query}
@@ -157,7 +157,7 @@ function MyReportsPage() {
               {(loggedOut || noReportsAtAll) && (
                 <Link
                   to={loggedOut ? '/login' : '/report'}
-                  className="inline-block rounded-full bg-forest px-5 py-[11px] font-bold text-mint"
+                  className="inline-flex min-h-11 items-center rounded-full bg-forest px-5 py-[11px] font-bold text-mint"
                 >
                   {loggedOut ? 'Log in' : 'Report an issue'}
                 </Link>
