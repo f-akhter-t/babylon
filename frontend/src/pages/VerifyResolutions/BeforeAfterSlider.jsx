@@ -27,7 +27,7 @@ export default function BeforeAfterSlider({ before, after, title }) {
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
       style={{ touchAction: 'none' }}
-      className="relative h-[280px] cursor-ew-resize select-none overflow-hidden rounded-card bg-forest"
+      className="relative h-[clamp(11.25rem,35vh,17.5rem)] cursor-ew-resize select-none overflow-hidden rounded-card bg-forest"
     >
       <div className="absolute inset-0 bg-forest">
         {after ? (
