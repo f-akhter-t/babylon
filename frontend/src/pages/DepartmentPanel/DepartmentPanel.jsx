@@ -293,6 +293,7 @@ function DepartmentPanelPage() {
               onSelect={select}
               onStart={startWork}
               busy={busy}
+              panelId={PANEL_ID}
             />
             {department && shown.length === 0 && (
               <p className="mt-3 font-body text-base text-navy">No issues match this filter.</p>

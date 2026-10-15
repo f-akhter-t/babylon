@@ -13,7 +13,7 @@ import {
   rejectResolution,
   sendReopenedToQueue,
 } from '../../services/api'
-import { reopenedSentence } from './reopenedText'
+import { bannerSentence, reopenedSentence } from './reopenedText'
 import { useAsync } from '../../hooks/useAsync'
 import RequireRole from '../Auth/RequireRole'
 import { useDocumentTitle } from '../IssueDetail/useDocumentTitle'
@@ -29,9 +29,12 @@ const PRIORITY_LABEL = {
 function QueueCard({ issue, selected, onSelect }) {
   const strong = issue.priority === 'urgent' || issue.priority === 'high'
 
+  // aria-current marks the one being reviewed (not aria-pressed: picking it
+  // again does not unpick it). The Identity queue works the same way.
   return (
     <button
       type="button"
+      aria-current={selected ? 'true' : undefined}
       onClick={() => onSelect(issue.id)}
       className={clsx(
         'w-full rounded-card border-2 bg-mint p-4 text-left transition-colors motion-reduce:transition-none',
@@ -43,7 +46,7 @@ function QueueCard({ issue, selected, onSelect }) {
       <p className="mt-1 break-words font-body text-sm text-muted">
         {isReopenedInQueue(issue)
           ? reopenedSentence(issue)
-          : `${issue.department} · submitted ${issue.submittedOn}`}
+          : `${issue.department} sent this on ${issue.submittedOn}.`}
       </p>
       <span
         className={clsx(
@@ -214,11 +217,10 @@ function VerifyResolutionsPage() {
 
         {reopened && (
           <div className="mt-5 flex flex-col items-start gap-3 rounded-card border border-amber-dark bg-amber/20 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-5">
-            <p className="min-w-0 break-words font-body text-base text-navy">
-              <span className="font-bold">A closed problem came back:</span> &quot;
-              {reopened.title}&quot; was marked resolved on {reopened.reopenedFrom}.{' '}
-              {reopened.votes} citizens have reported it again.
-            </p>
+            <div className="min-w-0 break-words font-body text-base text-navy">
+              <p className="font-bold">A closed problem came back.</p>
+              <p>{bannerSentence(reopened)}</p>
+            </div>
             <Link
               to={`/issues/${reopened.id}`}
               className="inline-flex min-h-11 shrink-0 items-center rounded-full bg-navy px-5 py-2 font-body text-sm font-bold text-mint transition-opacity hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forest motion-reduce:transition-none"
@@ -244,17 +246,23 @@ function VerifyResolutionsPage() {
             )}
           >
             <div className={clsx('flex min-w-0 flex-col', fit.column)}>
-              <p className="font-body text-sm font-bold text-muted">Waiting for your check</p>
-              <div className={clsx('-mx-1 mt-2 flex flex-col gap-3 p-1', fit.scroll, fit.min32)}>
+              <p id="verify-queue-label" className="font-body text-sm font-bold text-muted">
+                Waiting for your check
+              </p>
+              <ul
+                aria-labelledby="verify-queue-label"
+                className={clsx('-mx-1 mt-2 flex flex-col gap-3 p-1', fit.scroll, fit.min32)}
+              >
                 {queue.map((issue) => (
-                  <QueueCard
-                    key={issue.id}
-                    issue={issue}
-                    selected={selected?.id === issue.id}
-                    onSelect={setSelectedId}
-                  />
+                  <li key={issue.id}>
+                    <QueueCard
+                      issue={issue}
+                      selected={selected?.id === issue.id}
+                      onSelect={setSelectedId}
+                    />
+                  </li>
                 ))}
-              </div>
+              </ul>
             </div>
 
             {selected ? (

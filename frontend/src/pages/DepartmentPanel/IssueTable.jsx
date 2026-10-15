@@ -9,9 +9,35 @@ import { sentBackMessage } from './departmentFilters'
 const COLUMNS = '@3xl:grid-cols-[56px_minmax(0,1fr)_80px_150px_170px]'
 
 const PRIORITY_LABEL = {
-  urgent: 'Urgent',
-  high: 'High',
-  medium: 'Medium',
+  urgent: 'Urgent priority',
+  high: 'High priority',
+  medium: 'Medium priority',
+}
+
+// The issue's title. Open and in-progress issues: a button that picks the issue
+// for the Resolve panel, the one keyboard control for the row (the row itself
+// is only clickable with a mouse). Closed issues have nothing to pick: text.
+function IssueTitle({ issue, selected, onSelect, panelId }) {
+  const text = 'break-words font-body text-base font-bold text-navy'
+  if (issue.status === 'resolved') return <p className={text}>{issue.title}</p>
+  return (
+    <button
+      type="button"
+      aria-controls={panelId}
+      aria-current={selected ? 'true' : undefined}
+      onClick={(e) => {
+        e.stopPropagation()
+        onSelect(issue.id)
+      }}
+      className={clsx(
+        text,
+        'block min-h-11 w-full rounded-tile text-left hover:underline',
+        'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forest',
+      )}
+    >
+      {issue.title}
+    </button>
+  )
 }
 
 function StatusCell({ issue }) {
@@ -99,12 +125,20 @@ function ActionButton({ issue, onStart, onSelect, busy }) {
   )
 }
 
-export default function IssueTable({ issues, selectedId, onSelect, onStart, busy = false }) {
+// panelId: the Resolve panel's id, which the title buttons control.
+export default function IssueTable({
+  issues,
+  selectedId,
+  onSelect,
+  onStart,
+  busy = false,
+  panelId,
+}) {
   return (
     <div className="@container rounded-card bg-mint">
       <div
         className={clsx(
-          'sticky top-0 z-10 hidden items-center gap-4 rounded-t-card bg-mint-deep px-5 py-3 @3xl:grid',
+          'sticky top-[var(--staff-bar,0px)] z-10 hidden items-center gap-4 rounded-t-card bg-mint-deep px-5 py-3 @3xl:grid lg:top-0',
           'font-body text-sm font-semibold text-navy',
           COLUMNS,
         )}
@@ -121,7 +155,7 @@ export default function IssueTable({ issues, selectedId, onSelect, onStart, busy
           key={issue.id}
           onClick={() => onSelect(issue.id)}
           className={clsx(
-            'grid cursor-pointer grid-cols-[2.5rem_minmax(0,1fr)] gap-x-3 gap-y-3 border-navy/10 px-4 py-4 last:rounded-b-card',
+            'relative grid cursor-pointer grid-cols-[2.5rem_minmax(0,1fr)] gap-x-3 gap-y-3 border-navy/10 px-4 py-4 last:rounded-b-card',
             '[&+&]:border-t @3xl:items-center @3xl:gap-4 @3xl:border-t @3xl:px-5',
             COLUMNS,
             issue.id === selectedId ? 'bg-white' : 'hover:bg-white/50',
@@ -132,19 +166,23 @@ export default function IssueTable({ issues, selectedId, onSelect, onStart, busy
           </span>
 
           <div className="min-w-0">
-            <p className="break-words font-body text-base font-bold text-navy">{issue.title}</p>
-            <p className="font-body text-sm text-muted">
+            <IssueTitle
+              issue={issue}
+              selected={issue.id === selectedId}
+              onSelect={onSelect}
+              panelId={panelId}
+            />
+            {/* Two labels, not a sentence: no full stops. */}
+            <p className="flex flex-wrap gap-x-3 font-body text-sm text-muted">
               <span
                 className={clsx(
                   'font-bold',
-                  issue.priority === 'urgent' ? 'text-amber-dark' : 'text-forest',
+                  issue.priority === 'urgent' ? 'text-danger' : 'text-forest',
                 )}
               >
                 {PRIORITY_LABEL[issue.priority] ?? issue.priority}
               </span>
-              {' · '}
-              {issue.location}
-              {issue.ward ? `, ${issue.ward}` : ''}
+              <span>{issue.ward ? `${issue.location}, ${issue.ward}` : issue.location}</span>
             </p>
             {issue.sentBack && (
               <p className="mt-1 min-w-0 break-words font-body text-sm font-bold text-danger">
@@ -155,11 +193,19 @@ export default function IssueTable({ issues, selectedId, onSelect, onStart, busy
 
           {/* Cards: one wrapping line under the title. Table: three columns. */}
           <div className="col-start-2 flex flex-wrap items-center gap-3 @3xl:contents">
+            {/* The arrow is decoration; screen readers hear "48 votes". The row
+                is relative so that text stays inside the scrolling list. */}
             <span className="font-body text-base font-bold text-navy">
+              <span aria-hidden="true">↑ </span>
               <span className="@3xl:hidden">
-                {issue.votes === 1 ? '↑ 1 vote' : `↑ ${issue.votes} votes`}
+                {issue.votes === 1 ? '1 vote' : `${issue.votes} votes`}
               </span>
-              <span className="hidden @3xl:inline">↑ {issue.votes}</span>
+              <span aria-hidden="true" className="hidden @3xl:inline">
+                {issue.votes}
+              </span>
+              <span className="hidden @3xl:inline @3xl:sr-only">
+                {issue.votes === 1 ? '1 vote' : `${issue.votes} votes`}
+              </span>
             </span>
 
             <StatusCell issue={issue} />

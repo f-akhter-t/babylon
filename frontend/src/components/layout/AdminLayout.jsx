@@ -8,6 +8,10 @@ import { fit } from './staffFit'
 
 const LG_QUERY = '(min-width: 64rem)'
 const MENU_ID = 'staff-menu'
+// The top bar sticks below lg, but only when the window is tall enough: on a
+// short or zoomed window it would take too much of the screen. Keep in step
+// with the max-lg:[@media(min-height:30rem)]:sticky class below.
+const TOP_BAR_STICKY_QUERY = '(max-width: 63.999rem) and (min-height: 30rem)'
 
 // A link in the drawer may open another staff page, which mounts a new layout.
 // The time of that click tells the new layout to put focus on its Menu button.
@@ -129,6 +133,8 @@ export default function AdminLayout({
   const menuOpen = openOn !== null && openOn === location.key
   const dialogRef = useRef(null)
   const menuButtonRef = useRef(null)
+  const layoutRef = useRef(null)
+  const topBarRef = useRef(null)
 
   // A drawer link moved to another staff page: focus its Menu button.
   useEffect(() => {
@@ -153,14 +159,32 @@ export default function AdminLayout({
     }
   }, [menuOpen])
 
-  // The action bars stick to the bottom of the window when the page scrolls.
-  // This keeps a focused field from scrolling to a spot under them.
+  // When the page scrolls, the top bar (below lg) and the action bars stick to
+  // the window. The scroll padding keeps a focused field from scrolling under
+  // either one. --staff-bar is the top bar's height while it sticks (else 0),
+  // for other sticky things such as the issue table's header. All of it is
+  // removed when the staff layout goes, so citizen pages are not affected.
   useEffect(() => {
-    const root = document.documentElement
-    const before = root.style.scrollPaddingBottom
-    root.style.scrollPaddingBottom = '7rem'
+    const html = document.documentElement
+    const layout = layoutRef.current
+    const bar = topBarRef.current
+    const sticky = window.matchMedia(TOP_BAR_STICKY_QUERY)
+    const update = () => {
+      const height = sticky.matches ? bar.offsetHeight : 0
+      layout.style.setProperty('--staff-bar', `${height}px`)
+      html.style.scrollPaddingTop = `${height}px`
+    }
+    html.style.scrollPaddingBottom = '7rem'
+    update()
+    const observer = new ResizeObserver(update)
+    observer.observe(bar)
+    sticky.addEventListener('change', update)
     return () => {
-      root.style.scrollPaddingBottom = before
+      observer.disconnect()
+      sticky.removeEventListener('change', update)
+      layout.style.removeProperty('--staff-bar')
+      html.style.removeProperty('scroll-padding-top')
+      html.style.removeProperty('scroll-padding-bottom')
     }
   }, [])
 
@@ -189,8 +213,11 @@ export default function AdminLayout({
 
   return (
     // break-words: with very large text, long words wrap instead of widening the page.
-    <div className="min-h-screen break-words bg-page font-body lg:flex">
-      <div className="flex flex-wrap items-center justify-between gap-3 bg-navy px-4 py-3 lg:hidden">
+    <div ref={layoutRef} className="min-h-screen break-words bg-page font-body lg:flex">
+      <div
+        ref={topBarRef}
+        className="top-0 z-20 flex flex-wrap items-center justify-between gap-3 bg-navy px-4 py-3 max-lg:[@media(min-height:30rem)]:sticky lg:hidden"
+      >
         <div className="min-w-0">
           <p className="font-heading text-2xl font-extrabold text-mint">Babylon</p>
           <p className="font-body text-xs font-bold uppercase tracking-widest text-brand">
