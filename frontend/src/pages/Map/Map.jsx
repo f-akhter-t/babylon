@@ -1,9 +1,6 @@
-import { useState } from 'react'
-import clsx from 'clsx'
 import Navbar from '../../components/layout/Navbar'
 import IssuesSidebar from './IssuesSidebar'
 import IssueMap from './IssueMap'
-import { CURSOR_CLASSES, cursorVariables } from './cursors'
 import { useMapFilters } from './useMapFilters'
 import { useIssues } from './useIssues'
 import { useStoredIds } from './useStoredIds'
@@ -20,7 +17,6 @@ export default function Map() {
   // Each account has its own votes and follows.
   const [votedIds, toggleVote] = useStoredIds(viewer.storageKey('voted'))
   const [followedIds, toggleFollow] = useStoredIds(viewer.storageKey('followed'))
-  const [cursors] = useState(cursorVariables) // built once
   useDocumentTitle('Issues near you') // the same words as the page heading
 
   // Add this citizen's own vote and follow on top of the data.
@@ -48,10 +44,7 @@ export default function Map() {
   useListKeys(shownIssues, selectedId, select)
 
   return (
-    <div
-      style={cursors}
-      className={clsx('flex min-h-dvh flex-col font-body lg:h-dvh', CURSOR_CLASSES)}
-    >
+    <div className="flex min-h-dvh flex-col font-body lg:h-dvh">
       {/* With a login, the Navbar uses it. Without one, show the logged-out version. */}
       <Navbar />
       <main className="flex flex-1 flex-col lg:min-h-0 lg:flex-row">

@@ -43,6 +43,31 @@
   --radius-hero: 32px;
 }
 
+/* Cursors: the high-visibility set (a thick navy edge with a white line
+   inside), used on every page. Fixed artwork, like the favicon: an SVG in a
+   data URI cannot read var(--color-navy), so the navy is written into each
+   image as #011638. Keep it in sync with --color-navy above.
+   Each variable is a 28px image with its hot spot and the matching system
+   cursor as the fallback. Browsers that support image-set() in cursor get a
+   sharp 2x version from the @supports block below. */
+:root {
+  --cursor-arrow: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='-2 -2 28 28' fill='none' stroke-linecap='round' stroke-linejoin='round'%3E%3Cg stroke='%23011638' stroke-width='4'%3E%3Cpath d='M3 1v19l5-5 3.5 7.5 3-1.4L11 13.6h7z' /%3E%3C/g%3E%3Cg stroke='white' stroke-width='1.6' fill='%23011638'%3E%3Cpath d='M3 1v19l5-5 3.5 7.5 3-1.4L11 13.6h7z' /%3E%3C/g%3E%3C/svg%3E") 5 3, default;
+  --cursor-pointer: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='-2 -2 28 28' fill='none' stroke-linecap='round' stroke-linejoin='round'%3E%3Cg stroke='%23011638' stroke-width='5.5'%3E%3Cpath d='M10 9.5V4a2 2 0 0 0-4 0v10' /%3E%3Cpath d='M14 10V9a2 2 0 0 0-4 0v1' /%3E%3Cpath d='M18 11v-1a2 2 0 0 0-4 0' /%3E%3Cpath d='M18 11a2 2 0 1 1 4 0v3a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.9-6-2.3l-3.6-3.6a2 2 0 0 1 2.8-2.8L7 15' /%3E%3C/g%3E%3Cg stroke='white' stroke-width='2.2' fill='none'%3E%3Cpath d='M10 9.5V4a2 2 0 0 0-4 0v10' /%3E%3Cpath d='M14 10V9a2 2 0 0 0-4 0v1' /%3E%3Cpath d='M18 11v-1a2 2 0 0 0-4 0' /%3E%3Cpath d='M18 11a2 2 0 1 1 4 0v3a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.9-6-2.3l-3.6-3.6a2 2 0 0 1 2.8-2.8L7 15' /%3E%3C/g%3E%3C/svg%3E") 9 3, pointer;
+  --cursor-grab: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='-2 -2 28 28' fill='none' stroke-linecap='round' stroke-linejoin='round'%3E%3Cg stroke='%23011638' stroke-width='5.5'%3E%3Cpath d='M18 11V6a2 2 0 0 0-4 0' /%3E%3Cpath d='M14 10V4a2 2 0 0 0-4 0v2' /%3E%3Cpath d='M10 10.5V6a2 2 0 0 0-4 0v8' /%3E%3Cpath d='M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.9-6-2.3l-3.6-3.6a2 2 0 0 1 2.8-2.8L7 15' /%3E%3C/g%3E%3Cg stroke='white' stroke-width='2.2' fill='none'%3E%3Cpath d='M18 11V6a2 2 0 0 0-4 0' /%3E%3Cpath d='M14 10V4a2 2 0 0 0-4 0v2' /%3E%3Cpath d='M10 10.5V6a2 2 0 0 0-4 0v8' /%3E%3Cpath d='M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.9-6-2.3l-3.6-3.6a2 2 0 0 1 2.8-2.8L7 15' /%3E%3C/g%3E%3C/svg%3E") 14 14, grab;
+  --cursor-grabbing: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='-2 -2 28 28' fill='none' stroke-linecap='round' stroke-linejoin='round'%3E%3Cg stroke='%23011638' stroke-width='5.5'%3E%3Cpath d='M18 11.5V9a2 2 0 0 0-4 0v1.4' /%3E%3Cpath d='M14 10V8a2 2 0 0 0-4 0v2' /%3E%3Cpath d='M10 9.9V9a2 2 0 0 0-4 0v5' /%3E%3Cpath d='M6 14a2 2 0 0 0-4 0' /%3E%3Cpath d='M18 11a2 2 0 1 1 4 0v3a8 8 0 0 1-8 8h-4a8 8 0 0 1-8-8 2 2 0 1 1 4 0' /%3E%3C/g%3E%3Cg stroke='white' stroke-width='2.2' fill='none'%3E%3Cpath d='M18 11.5V9a2 2 0 0 0-4 0v1.4' /%3E%3Cpath d='M14 10V8a2 2 0 0 0-4 0v2' /%3E%3Cpath d='M10 9.9V9a2 2 0 0 0-4 0v5' /%3E%3Cpath d='M6 14a2 2 0 0 0-4 0' /%3E%3Cpath d='M18 11a2 2 0 1 1 4 0v3a8 8 0 0 1-8 8h-4a8 8 0 0 1-8-8 2 2 0 1 1 4 0' /%3E%3C/g%3E%3C/svg%3E") 14 14, grabbing;
+  --cursor-crosshair: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='-2 -2 28 28' fill='none' stroke-linecap='round' stroke-linejoin='round'%3E%3Cg stroke='%23011638' stroke-width='5.5'%3E%3Ccircle cx='12' cy='12' r='6' /%3E%3Cpath d='M12 1v6M12 17v6M1 12h6M17 12h6' /%3E%3C/g%3E%3Cg stroke='white' stroke-width='2.2' fill='none'%3E%3Ccircle cx='12' cy='12' r='6' /%3E%3Cpath d='M12 1v6M12 17v6M1 12h6M17 12h6' /%3E%3C/g%3E%3C/svg%3E") 14 14, crosshair;
+}
+
+@supports (cursor: image-set(url("data:,x") 1x) 0 0, auto) {
+  :root {
+    --cursor-arrow: image-set(url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='-2 -2 28 28' fill='none' stroke-linecap='round' stroke-linejoin='round'%3E%3Cg stroke='%23011638' stroke-width='4'%3E%3Cpath d='M3 1v19l5-5 3.5 7.5 3-1.4L11 13.6h7z' /%3E%3C/g%3E%3Cg stroke='white' stroke-width='1.6' fill='%23011638'%3E%3Cpath d='M3 1v19l5-5 3.5 7.5 3-1.4L11 13.6h7z' /%3E%3C/g%3E%3C/svg%3E") 1x, url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='56' viewBox='-2 -2 28 28' fill='none' stroke-linecap='round' stroke-linejoin='round'%3E%3Cg stroke='%23011638' stroke-width='4'%3E%3Cpath d='M3 1v19l5-5 3.5 7.5 3-1.4L11 13.6h7z' /%3E%3C/g%3E%3Cg stroke='white' stroke-width='1.6' fill='%23011638'%3E%3Cpath d='M3 1v19l5-5 3.5 7.5 3-1.4L11 13.6h7z' /%3E%3C/g%3E%3C/svg%3E") 2x) 5 3, default;
+    --cursor-pointer: image-set(url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='-2 -2 28 28' fill='none' stroke-linecap='round' stroke-linejoin='round'%3E%3Cg stroke='%23011638' stroke-width='5.5'%3E%3Cpath d='M10 9.5V4a2 2 0 0 0-4 0v10' /%3E%3Cpath d='M14 10V9a2 2 0 0 0-4 0v1' /%3E%3Cpath d='M18 11v-1a2 2 0 0 0-4 0' /%3E%3Cpath d='M18 11a2 2 0 1 1 4 0v3a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.9-6-2.3l-3.6-3.6a2 2 0 0 1 2.8-2.8L7 15' /%3E%3C/g%3E%3Cg stroke='white' stroke-width='2.2' fill='none'%3E%3Cpath d='M10 9.5V4a2 2 0 0 0-4 0v10' /%3E%3Cpath d='M14 10V9a2 2 0 0 0-4 0v1' /%3E%3Cpath d='M18 11v-1a2 2 0 0 0-4 0' /%3E%3Cpath d='M18 11a2 2 0 1 1 4 0v3a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.9-6-2.3l-3.6-3.6a2 2 0 0 1 2.8-2.8L7 15' /%3E%3C/g%3E%3C/svg%3E") 1x, url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='56' viewBox='-2 -2 28 28' fill='none' stroke-linecap='round' stroke-linejoin='round'%3E%3Cg stroke='%23011638' stroke-width='5.5'%3E%3Cpath d='M10 9.5V4a2 2 0 0 0-4 0v10' /%3E%3Cpath d='M14 10V9a2 2 0 0 0-4 0v1' /%3E%3Cpath d='M18 11v-1a2 2 0 0 0-4 0' /%3E%3Cpath d='M18 11a2 2 0 1 1 4 0v3a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.9-6-2.3l-3.6-3.6a2 2 0 0 1 2.8-2.8L7 15' /%3E%3C/g%3E%3Cg stroke='white' stroke-width='2.2' fill='none'%3E%3Cpath d='M10 9.5V4a2 2 0 0 0-4 0v10' /%3E%3Cpath d='M14 10V9a2 2 0 0 0-4 0v1' /%3E%3Cpath d='M18 11v-1a2 2 0 0 0-4 0' /%3E%3Cpath d='M18 11a2 2 0 1 1 4 0v3a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.9-6-2.3l-3.6-3.6a2 2 0 0 1 2.8-2.8L7 15' /%3E%3C/g%3E%3C/svg%3E") 2x) 9 3, pointer;
+    --cursor-grab: image-set(url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='-2 -2 28 28' fill='none' stroke-linecap='round' stroke-linejoin='round'%3E%3Cg stroke='%23011638' stroke-width='5.5'%3E%3Cpath d='M18 11V6a2 2 0 0 0-4 0' /%3E%3Cpath d='M14 10V4a2 2 0 0 0-4 0v2' /%3E%3Cpath d='M10 10.5V6a2 2 0 0 0-4 0v8' /%3E%3Cpath d='M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.9-6-2.3l-3.6-3.6a2 2 0 0 1 2.8-2.8L7 15' /%3E%3C/g%3E%3Cg stroke='white' stroke-width='2.2' fill='none'%3E%3Cpath d='M18 11V6a2 2 0 0 0-4 0' /%3E%3Cpath d='M14 10V4a2 2 0 0 0-4 0v2' /%3E%3Cpath d='M10 10.5V6a2 2 0 0 0-4 0v8' /%3E%3Cpath d='M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.9-6-2.3l-3.6-3.6a2 2 0 0 1 2.8-2.8L7 15' /%3E%3C/g%3E%3C/svg%3E") 1x, url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='56' viewBox='-2 -2 28 28' fill='none' stroke-linecap='round' stroke-linejoin='round'%3E%3Cg stroke='%23011638' stroke-width='5.5'%3E%3Cpath d='M18 11V6a2 2 0 0 0-4 0' /%3E%3Cpath d='M14 10V4a2 2 0 0 0-4 0v2' /%3E%3Cpath d='M10 10.5V6a2 2 0 0 0-4 0v8' /%3E%3Cpath d='M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.9-6-2.3l-3.6-3.6a2 2 0 0 1 2.8-2.8L7 15' /%3E%3C/g%3E%3Cg stroke='white' stroke-width='2.2' fill='none'%3E%3Cpath d='M18 11V6a2 2 0 0 0-4 0' /%3E%3Cpath d='M14 10V4a2 2 0 0 0-4 0v2' /%3E%3Cpath d='M10 10.5V6a2 2 0 0 0-4 0v8' /%3E%3Cpath d='M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.9-6-2.3l-3.6-3.6a2 2 0 0 1 2.8-2.8L7 15' /%3E%3C/g%3E%3C/svg%3E") 2x) 14 14, grab;
+    --cursor-grabbing: image-set(url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='-2 -2 28 28' fill='none' stroke-linecap='round' stroke-linejoin='round'%3E%3Cg stroke='%23011638' stroke-width='5.5'%3E%3Cpath d='M18 11.5V9a2 2 0 0 0-4 0v1.4' /%3E%3Cpath d='M14 10V8a2 2 0 0 0-4 0v2' /%3E%3Cpath d='M10 9.9V9a2 2 0 0 0-4 0v5' /%3E%3Cpath d='M6 14a2 2 0 0 0-4 0' /%3E%3Cpath d='M18 11a2 2 0 1 1 4 0v3a8 8 0 0 1-8 8h-4a8 8 0 0 1-8-8 2 2 0 1 1 4 0' /%3E%3C/g%3E%3Cg stroke='white' stroke-width='2.2' fill='none'%3E%3Cpath d='M18 11.5V9a2 2 0 0 0-4 0v1.4' /%3E%3Cpath d='M14 10V8a2 2 0 0 0-4 0v2' /%3E%3Cpath d='M10 9.9V9a2 2 0 0 0-4 0v5' /%3E%3Cpath d='M6 14a2 2 0 0 0-4 0' /%3E%3Cpath d='M18 11a2 2 0 1 1 4 0v3a8 8 0 0 1-8 8h-4a8 8 0 0 1-8-8 2 2 0 1 1 4 0' /%3E%3C/g%3E%3C/svg%3E") 1x, url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='56' viewBox='-2 -2 28 28' fill='none' stroke-linecap='round' stroke-linejoin='round'%3E%3Cg stroke='%23011638' stroke-width='5.5'%3E%3Cpath d='M18 11.5V9a2 2 0 0 0-4 0v1.4' /%3E%3Cpath d='M14 10V8a2 2 0 0 0-4 0v2' /%3E%3Cpath d='M10 9.9V9a2 2 0 0 0-4 0v5' /%3E%3Cpath d='M6 14a2 2 0 0 0-4 0' /%3E%3Cpath d='M18 11a2 2 0 1 1 4 0v3a8 8 0 0 1-8 8h-4a8 8 0 0 1-8-8 2 2 0 1 1 4 0' /%3E%3C/g%3E%3Cg stroke='white' stroke-width='2.2' fill='none'%3E%3Cpath d='M18 11.5V9a2 2 0 0 0-4 0v1.4' /%3E%3Cpath d='M14 10V8a2 2 0 0 0-4 0v2' /%3E%3Cpath d='M10 9.9V9a2 2 0 0 0-4 0v5' /%3E%3Cpath d='M6 14a2 2 0 0 0-4 0' /%3E%3Cpath d='M18 11a2 2 0 1 1 4 0v3a8 8 0 0 1-8 8h-4a8 8 0 0 1-8-8 2 2 0 1 1 4 0' /%3E%3C/g%3E%3C/svg%3E") 2x) 14 14, grabbing;
+    --cursor-crosshair: image-set(url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='-2 -2 28 28' fill='none' stroke-linecap='round' stroke-linejoin='round'%3E%3Cg stroke='%23011638' stroke-width='5.5'%3E%3Ccircle cx='12' cy='12' r='6' /%3E%3Cpath d='M12 1v6M12 17v6M1 12h6M17 12h6' /%3E%3C/g%3E%3Cg stroke='white' stroke-width='2.2' fill='none'%3E%3Ccircle cx='12' cy='12' r='6' /%3E%3Cpath d='M12 1v6M12 17v6M1 12h6M17 12h6' /%3E%3C/g%3E%3C/svg%3E") 1x, url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='56' viewBox='-2 -2 28 28' fill='none' stroke-linecap='round' stroke-linejoin='round'%3E%3Cg stroke='%23011638' stroke-width='5.5'%3E%3Ccircle cx='12' cy='12' r='6' /%3E%3Cpath d='M12 1v6M12 17v6M1 12h6M17 12h6' /%3E%3C/g%3E%3Cg stroke='white' stroke-width='2.2' fill='none'%3E%3Ccircle cx='12' cy='12' r='6' /%3E%3Cpath d='M12 1v6M12 17v6M1 12h6M17 12h6' /%3E%3C/g%3E%3C/svg%3E") 2x) 14 14, crosshair;
+  }
+}
+
 @layer base {
   body {
     @apply bg-page font-body;
@@ -58,9 +83,70 @@
   }
 }
 
+/* One cursor rule for the whole site. Every use names its system keyword as
+   the var() fallback, so a missing variable still shows the right cursor. */
+html,
+label {
+  /* label too: the browser's own stylesheet gives it the system arrow */
+  cursor: var(--cursor-arrow, default);
+}
+
+a[href],
 button:not(:disabled),
-[role='button'] {
-  cursor: pointer;
+[role='button']:not([aria-disabled='true']),
+summary,
+select:not(:disabled),
+input:is([type='checkbox'], [type='radio'], [type='range'], [type='file']):not(:disabled),
+label:has(> input:is([type='checkbox'], [type='radio']):not(:disabled)) {
+  cursor: var(--cursor-pointer, pointer);
+}
+
+/* Text fields keep the system text cursor (disabled ones: not-allowed, below). */
+input:not([type='checkbox'], [type='radio'], [type='range'], [type='file'], [type='button'], [type='submit'], [type='reset'], [type='color'], :disabled),
+textarea:not(:disabled),
+[contenteditable='true'] {
+  cursor: text;
+}
+
+:disabled,
+[aria-disabled='true'] {
+  cursor: not-allowed;
+}
+
+/* Maps. leaflet.css sets its own cursors and loads later, hence !important.
+   Leaflet puts .leaflet-dragging on <body> while the map or a pin is dragged. */
+.leaflet-container.leaflet-grab,
+.leaflet-container .leaflet-grab {
+  cursor: var(--cursor-grab, grab) !important;
+}
+.leaflet-container .leaflet-interactive,
+.leaflet-container a {
+  cursor: var(--cursor-pointer, pointer) !important;
+}
+.leaflet-container .leaflet-marker-draggable {
+  cursor: var(--cursor-grab, grab) !important;
+}
+.leaflet-dragging .leaflet-grab,
+.leaflet-dragging .leaflet-interactive,
+.leaflet-dragging .leaflet-marker-draggable {
+  cursor: var(--cursor-grabbing, grabbing) !important;
+}
+
+/* Tailwind's cursor utilities, pointed at the same set. */
+@utility cursor-default {
+  cursor: var(--cursor-arrow, default);
+}
+@utility cursor-pointer {
+  cursor: var(--cursor-pointer, pointer);
+}
+@utility cursor-grab {
+  cursor: var(--cursor-grab, grab);
+}
+@utility cursor-grabbing {
+  cursor: var(--cursor-grabbing, grabbing);
+}
+@utility cursor-crosshair {
+  cursor: var(--cursor-crosshair, crosshair);
 }
 
 /* Two-tone focus ring: navy inside, brand outside.
@@ -70,15 +156,37 @@ button:not(:disabled),
   box-shadow: 0 0 0 4px var(--color-brand);
 }
 
-/* Leaflet's + and − zoom buttons are 30px. On phones they get a 44px target.
-   Three classes deep to beat leaflet.css, whichever loads last. */
-@media (max-width: 47.999rem) {
-  .leaflet-touch .leaflet-bar.leaflet-control-zoom a {
-    width: 44px;
-    height: 44px;
-    line-height: 44px;
-  }
+/* Every map's Leaflet chrome, styled once. Two classes deep (or more) to beat
+   leaflet.css, which loads later. The zoom buttons are the site's own
+   (MiniMapZoom and the Map page's controls), so Leaflet's are never shown. */
+.leaflet-container {
+  font-family: var(--font-body);
 }
+.leaflet-container .leaflet-popup-content-wrapper {
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-xl);
+}
+.leaflet-container a.leaflet-popup-close-button {
+  width: 44px;
+  height: 44px;
+  font-size: 22px;
+  line-height: 44px;
+  color: var(--color-navy);
+}
+.leaflet-container .leaflet-tooltip {
+  background: var(--color-navy);
+  border: 0;
+  border-radius: 9999px;
+  box-shadow: none;
+  color: white;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 6px 12px;
+}
+.leaflet-container .leaflet-tooltip-top::before { border-top-color: var(--color-navy); }
+.leaflet-container .leaflet-tooltip-bottom::before { border-bottom-color: var(--color-navy); }
+.leaflet-container .leaflet-tooltip-left::before { border-left-color: var(--color-navy); }
+.leaflet-container .leaflet-tooltip-right::before { border-right-color: var(--color-navy); }
 
 /* Safety net: people who ask for less motion get almost none. */
 @media (prefers-reduced-motion: reduce) {

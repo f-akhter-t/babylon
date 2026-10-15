@@ -399,7 +399,7 @@ export default function ReportForm({
               onChange={(e) => setTitle(e.target.value.slice(0, TITLE_MAX))}
               disabled={locked}
               aria-describedby="report-title-help"
-              className="w-full rounded-full border border-navy/15 bg-white px-4 py-3 font-body text-sm text-navy transition hover:border-forest/50 focus:border-forest focus:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest/40 disabled:opacity-60"
+              className="w-full rounded-full border border-navy/15 bg-white px-4 py-3 font-body text-sm text-navy transition hover:border-forest/50 focus:border-forest focus:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest/40 disabled:opacity-50"
             />
             <p id="report-title-help" className="font-body text-xs text-muted">
               {`A short name for the problem, ${TITLE_MIN} to ${TITLE_MAX} characters.`}
@@ -416,7 +416,7 @@ export default function ReportForm({
           onChange={(e) => setDescription(e.target.value.slice(0, MAX_DESCRIPTION))}
           rows={4}
           placeholder="Large pothole in the left lane, about half a metre wide…"
-          className="w-full resize-none rounded-2xl border border-navy/15 bg-white px-4 py-3 font-body text-sm text-navy placeholder:text-muted transition hover:border-forest/50 focus:border-forest focus:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest/40 disabled:opacity-60"
+          className="w-full resize-none rounded-2xl border border-navy/15 bg-white px-4 py-3 font-body text-sm text-navy placeholder:text-muted transition hover:border-forest/50 focus:border-forest focus:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest/40 disabled:opacity-50"
         />
         <p
           className={clsx(

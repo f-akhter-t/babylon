@@ -57,7 +57,7 @@ export default function ReopenedList({ issues, onSend, sendingId = null }) {
                   className={clsx(
                     CONTROL,
                     'bg-navy text-mint',
-                    busy ? 'cursor-not-allowed opacity-40' : 'hover:bg-navy/90',
+                    busy ? 'cursor-not-allowed opacity-50' : 'hover:bg-navy/90',
                   )}
                 >
                   {sendingId === issue.id ? 'Sending…' : 'Send to verification queue'}

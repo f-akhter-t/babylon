@@ -89,7 +89,7 @@ export default function ConfirmDialog({
           type="button"
           onClick={onCancel}
           disabled={busy}
-          className="min-h-11 rounded-full border-2 border-navy px-5 font-bold text-navy transition-colors hover:bg-navy/10 disabled:opacity-60 motion-reduce:transition-none"
+          className="min-h-11 rounded-full border-2 border-navy px-5 font-bold text-navy transition-colors hover:bg-navy/10 disabled:opacity-50 motion-reduce:transition-none"
         >
           {cancelLabel}
         </button>
@@ -100,7 +100,7 @@ export default function ConfirmDialog({
           disabled={busy}
           aria-busy={busy || undefined}
           className={clsx(
-            'min-h-11 rounded-full px-5 font-bold transition-opacity hover:opacity-90 disabled:opacity-60 motion-reduce:transition-none',
+            'min-h-11 rounded-full px-5 font-bold transition-opacity hover:opacity-90 disabled:opacity-50 motion-reduce:transition-none',
             tone === 'danger' ? 'bg-danger text-white' : 'bg-navy text-mint',
           )}
         >

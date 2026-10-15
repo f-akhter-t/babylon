@@ -1,21 +1,10 @@
 // src/pages/Home/PreviewMap.jsx
-import { MapContainer, TileLayer, CircleMarker, Popup } from 'react-leaflet'
+import { MapContainer, Marker, Popup, TileLayer } from 'react-leaflet'
 import { Link } from 'react-router-dom'
 import clsx from 'clsx'
 import 'leaflet/dist/leaflet.css'
-
-// Full class names, so Tailwind can find them. Leaflet adds them to each pin.
-const pinColor = {
-  open: 'fill-amber stroke-white',
-  progress: 'fill-forest stroke-white',
-  reopened: 'fill-danger stroke-white',
-}
-
-function pinKind(issue) {
-  if (issue.priority === 'reopened') return 'reopened'
-  if (issue.status === 'in-progress') return 'progress'
-  return 'open'
-}
+import { pinIcon } from '../Map/statusPin'
+import { pinName } from '../Map/pinMarkup'
 
 export default function PreviewMap({ issues, className, fade = false }) {
   // "isolate" keeps Leaflet's high z-index inside this box, so it never covers the navbar.
@@ -47,15 +36,17 @@ export default function PreviewMap({ issues, className, fade = false }) {
         className="size-full [&_.leaflet-tile-pane]:saturate-[0.45] [&_.leaflet-tile-pane]:brightness-[0.97]"
       >
         <TileLayer
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          attribution="&copy; OpenStreetMap contributors"
+          url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         />
         {issues.map((issue) => (
-          <CircleMarker
+          // The Map page's pins: the colour follows the status, as there.
+          <Marker
             key={issue.id}
-            center={[issue.lat, issue.lng]}
-            radius={11}
-            pathOptions={{ className: pinColor[pinKind(issue)], fillOpacity: 1, weight: 2 }}
+            position={[issue.lat, issue.lng]}
+            icon={pinIcon(issue.status)}
+            title={pinName(issue.title, issue.status)}
+            riseOnHover
           >
             <Popup>
               <p className="text-xs font-bold uppercase tracking-widest text-navy">
@@ -69,7 +60,7 @@ export default function PreviewMap({ issues, className, fade = false }) {
               </Link>
               <p className="mt-1 text-sm font-semibold text-slate">{issue.votes} upvotes</p>
             </Popup>
-          </CircleMarker>
+          </Marker>
         ))}
       </MapContainer>
 

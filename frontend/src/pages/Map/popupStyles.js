@@ -1,10 +1,9 @@
-// Shared by MapPopup and DropPin.
-// leaflet.css beats normal Tailwind classes, so these resets use "!".
+// Shared by MapPopup and DropPin. Every popup's look (corners, shadow) is set
+// once in index.css; this only removes Leaflet's padding, because these
+// popups bring their own. leaflet.css beats normal Tailwind classes, so "!".
 // [&_.x] means "a child with class x inside this popup".
 export const POPUP_CLASSES = [
-  '[&_.leaflet-popup-content-wrapper]:rounded-card!',
   '[&_.leaflet-popup-content-wrapper]:p-0!',
-  '[&_.leaflet-popup-content-wrapper]:shadow-xl!',
   '[&_.leaflet-popup-content]:m-0!',
 ].join(' ')
 

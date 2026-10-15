@@ -43,11 +43,11 @@ export default function DropPin({ active, issues, onPlaced, onStop, onUpvoteInst
   }, [blocked])
 
   // While active: crosshair cursor, and Escape turns the mode off.
-  // "important" on the map itself beats the page's grab cursor (see cursors.js).
+  // "important" on the map itself beats the map's grab cursor (index.css).
   useEffect(() => {
     if (!active) return
     const container = map.getContainer()
-    container.style.setProperty('cursor', 'var(--cursor-crosshair)', 'important')
+    container.style.setProperty('cursor', 'var(--cursor-crosshair, crosshair)', 'important')
     const onKey = (event) => {
       if (event.key === 'Escape') onStop()
     }

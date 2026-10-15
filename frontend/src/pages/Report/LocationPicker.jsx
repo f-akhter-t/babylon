@@ -14,56 +14,28 @@ import StaircaseIcon from '../../components/ui/StaircaseIcon'
 import { getIssues, upvoteIssue } from '../../services/api'
 import { MAP_CENTER } from '../../mock/issues'
 import { distanceInMeters } from '../../utils/geo'
+import { DRAFT_PIN_SIZE, draftPinSvg } from '../Map/pinMarkup'
+import { pinIcon } from '../Map/statusPin'
+import MiniMapZoom from '../IssueDetail/MiniMapZoom'
 
 const START = { lat: MAP_CENTER[0], lng: MAP_CENTER[1] }
 const MATCH_RADIUS_M = 120 // an open issue this close counts as a possible duplicate
 
-// Colours come from the Tailwind theme (text-navy, fill-brand, ...), not hex values.
-const pinIcon = L.divIcon({
+// The draggable pin is the Map's own "report here" pin (pinMarkup.js), inside
+// this page's wrapper for the pulse, the shadow and the lift while dragging.
+const dragPinIcon = L.divIcon({
   className: 'report-pin',
   html: `<div class="pin-wrap">
     <span class="pin-pulse"></span>
     <span class="pin-shadow"></span>
-    <div class="pin-body">
-      <svg viewBox="0 0 40 52" class="h-[52px] w-10 text-navy drop-shadow-md" aria-hidden="true">
-        <path class="fill-current" d="M20 0C9 0 0 8.7 0 19.5 0 33 20 52 20 52s20-19 20-32.5C40 8.7 31 0 20 0z"/>
-        <circle cx="20" cy="19" r="8" class="fill-brand"/>
-      </svg>
-    </div>
+    <div class="pin-body">${draftPinSvg}</div>
   </div>`,
-  iconSize: [40, 52],
-  iconAnchor: [20, 52],
-  tooltipAnchor: [0, -52],
-})
-
-const matchIcon = L.divIcon({
-  className: 'report-pin',
-  html: `<div class="pin-wrap">
-    <span class="pin-pulse match-pulse"></span>
-    <div class="pin-body">
-      <svg viewBox="0 0 40 52" class="h-10 w-[31px] text-amber drop-shadow" aria-hidden="true">
-        <path class="fill-current" d="M20 0C9 0 0 8.7 0 19.5 0 33 20 52 20 52s20-19 20-32.5C40 8.7 31 0 20 0z"/>
-        <circle cx="20" cy="19" r="7" class="fill-navy"/>
-      </svg>
-    </div>
-  </div>`,
-  iconSize: [31, 40],
-  iconAnchor: [15, 40],
+  iconSize: DRAFT_PIN_SIZE,
+  iconAnchor: [DRAFT_PIN_SIZE[0] / 2, DRAFT_PIN_SIZE[1]],
+  tooltipAnchor: [0, -DRAFT_PIN_SIZE[1]],
 })
 
 const pickerStyle = `
-  .drag-hint.leaflet-tooltip {
-    background: var(--color-navy);
-    border: 0;
-    border-radius: 9999px;
-    box-shadow: none;
-    color: white;
-    font-size: 12px;
-    font-weight: 600;
-    padding: 6px 12px;
-  }
-  .drag-hint.leaflet-tooltip-top::before { border-top-color: var(--color-navy); }
-
   @keyframes pickerIn {
     from { opacity: 0; transform: translateY(18px); }
     to { opacity: 1; transform: none; }
@@ -118,7 +90,6 @@ const pickerStyle = `
     background: var(--color-forest);
     animation: pinPulse 1.8s ease-out infinite;
   }
-  .report-pin .match-pulse { background: var(--color-amber); }
   .report-pin.is-dragging .pin-pulse { display: none; }
 `
 
@@ -354,8 +325,11 @@ export default function LocationPicker({
         center={markerPosition}
         zoom={16}
         scrollWheelZoom
+        zoomControl={false}
         className="absolute inset-0 z-0 h-full w-full"
       >
+        {/* The same + and − as the issue page, where Leaflet's own sat. */}
+        <MiniMapZoom position="left-3 top-3" />
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -376,7 +350,7 @@ export default function LocationPicker({
         {match && (
           <Marker
             position={[match.issue.lat, match.issue.lng]}
-            icon={matchIcon}
+            icon={pinIcon(match.issue.status, true)}
             interactive={false}
           />
         )}
@@ -384,7 +358,7 @@ export default function LocationPicker({
         <Marker
           ref={markerRef}
           position={markerPosition}
-          icon={pinIcon}
+          icon={dragPinIcon}
           draggable
           alt="Report location pin"
           title="The pin marks where the problem is. Drag it to change the spot."
@@ -430,7 +404,7 @@ export default function LocationPicker({
           type="button"
           onClick={handleLocate}
           disabled={locating}
-          className="group shrink-0 rounded-full border border-navy/15 bg-white px-4 py-2.5 font-body text-sm font-semibold text-navy shadow-sm transition hover:-translate-y-0.5 hover:bg-mint hover:shadow-md active:scale-95 disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest/50"
+          className="group shrink-0 rounded-full border border-navy/15 bg-white px-4 py-2.5 font-body text-sm font-semibold text-navy shadow-sm transition hover:-translate-y-0.5 hover:bg-mint hover:shadow-md active:scale-95 disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest/50"
         >
           <span className="inline-flex items-center gap-1.5">
             <svg
