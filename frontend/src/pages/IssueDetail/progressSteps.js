@@ -27,6 +27,8 @@ function resolvedLines(issue) {
   if (issue.status !== 'resolved') {
     return [line('Needs an after-photo and an admin check', true)]
   }
+  // A reopened issue the admin closed again without a new fix (no after-photo).
+  if (issue.reopenedFrom && !issue.afterImg) return [line(`The admin confirmed the fix from ${issue.reopenedFrom}`)]
   const days = issue.fixedInDays === 1 ? '1 day' : `${issue.fixedInDays} days`
   return [line(`Fixed in ${days}`)]
 }
@@ -50,8 +52,9 @@ export function buildProgress(issue) {
     }
   })
 
+  // Still reopened while the admin checks it again (its priority stays 'reopened').
   const reopened =
-    issue.verification === 'reopened'
+    issue.verification === 'reopened' || issue.priority === 'reopened'
       ? `Reopened. First marked resolved ${issue.reopenedFrom}`
       : null
 

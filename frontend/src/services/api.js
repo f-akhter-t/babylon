@@ -310,8 +310,43 @@ export async function rejectResolution(id, reason = '') {
     verification: 'none',
     pendingAfterImg: null,
     sentBack: { reason: text, on: shortDate() },
+    // A reopened issue goes to the department for the first time, so it must
+    // stop being "reopened" (the department list and Start work skip those).
+    // Its priority before it was reopened was not kept, so it becomes High.
+    ...(issue.priority === 'reopened' ? { priority: 'high' } : {}),
   })
   return present(issue)
+}
+
+// A reopened issue that the admin sent to the verification queue. Its
+// priority stays 'reopened' until the admin approves or rejects it.
+export function isReopenedInQueue(issue) {
+  return issue.priority === 'reopened' && issue.verification === 'awaiting'
+}
+
+// Admin: put a reopened issue in the verification queue, where Approve keeps
+// the fix and Reject sends it to the department with a reason.
+export async function sendReopenedToQueue(id) {
+  await wait()
+  const issue = staffIssue(id, 'admin')
+  if (issue.verification !== 'reopened') {
+    throw workflowError('conflict', 'This issue is no longer reopened.')
+  }
+  const now = new Date()
+  try {
+    saveWorkflow(issue, {
+      verification: 'awaiting',
+      submittedOn: shortDate(),
+      submittedAt: now.toISOString(),
+    })
+  } catch (err) {
+    if (err.code !== 'storage') throw err
+    throw workflowError(
+      'storage',
+      'This could not be saved because the storage on this device is full. Clear old demo data and try again.',
+    )
+  }
+  return withStaffDetails(present(issue))
 }
 
 // Dev only: sessionStorage 'babylon:failLoads' makes the Department, Verify
@@ -552,8 +587,9 @@ export async function getHeroSlides() {
 export async function getHeroCategories() {
   return heroSearchCategories
 }
+// Only issues with an after-photo: a reopened issue approved again has none.
 export async function getFixedThisWeek() {
-  return all.filter((issue) => issue.status === 'resolved').slice(0, 3)
+  return all.filter((issue) => issue.status === 'resolved' && issue.afterImg).slice(0, 3)
 }
 // Newest reports first. Used by the ticker on Home.
 export async function getRecentActivity(limit = 8) {
