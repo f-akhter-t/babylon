@@ -85,7 +85,9 @@
 
 /* One cursor rule for the whole site. Every use names its system keyword as
    the var() fallback, so a missing variable still shows the right cursor. */
-html {
+html,
+label {
+  /* label too: the browser's own stylesheet gives it the system arrow */
   cursor: var(--cursor-arrow, default);
 }
 
@@ -99,9 +101,9 @@ label:has(> input:is([type='checkbox'], [type='radio']):not(:disabled)) {
   cursor: var(--cursor-pointer, pointer);
 }
 
-/* Text fields keep the system text cursor. */
-input:not([type='checkbox'], [type='radio'], [type='range'], [type='file'], [type='button'], [type='submit'], [type='reset'], [type='color']),
-textarea,
+/* Text fields keep the system text cursor (disabled ones: not-allowed, below). */
+input:not([type='checkbox'], [type='radio'], [type='range'], [type='file'], [type='button'], [type='submit'], [type='reset'], [type='color'], :disabled),
+textarea:not(:disabled),
 [contenteditable='true'] {
   cursor: text;
 }
