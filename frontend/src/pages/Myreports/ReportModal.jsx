@@ -6,6 +6,9 @@ import ReportStatusPill from '../../components/ui/ReportStatusPill'
 import MapIllustration from './MapIllustration'
 import { CameraIcon, CloseIcon } from '../../components/ui/icons'
 
+const actionClass =
+  'inline-flex min-h-11 items-center rounded-full border-2 border-navy px-5 text-sm font-bold text-navy transition-colors hover:bg-navy/10 motion-reduce:transition-none'
+
 export default function ReportModal({ report, onClose }) {
   useEffect(() => {
     const onKey = (e) => e.key === 'Escape' && onClose()
@@ -33,15 +36,24 @@ export default function ReportModal({ report, onClose }) {
           Reported on {r.dateLabel} · {r.upvotes} upvote{r.upvotes === 1 ? '' : 's'}
         </p>
         {/* The same rule as the card and the edit page (canEditIssue). */}
-        {r.editState === 'ok' && (
+        <div className="mt-3 flex flex-wrap gap-2">
           <Link
-            to={`/issues/${r.id}/edit`}
-            aria-label={`Edit report: ${r.title}`}
-            className="mt-3 inline-flex min-h-11 items-center rounded-full border-2 border-navy px-5 text-sm font-bold text-navy transition-colors hover:bg-navy/10 motion-reduce:transition-none"
+            to={`/issues/${r.id}`}
+            aria-label={`Open issue page: ${r.title}`}
+            className={actionClass}
           >
-            Edit report
+            Open issue page
           </Link>
-        )}
+          {r.editState === 'ok' && (
+            <Link
+              to={`/issues/${r.id}/edit`}
+              aria-label={`Edit report: ${r.title}`}
+              className={actionClass}
+            >
+              Edit report
+            </Link>
+          )}
+        </div>
         {r.editState === 'locked' && (
           <p className="mt-2 text-sm font-semibold text-navy">{LOCKED_MESSAGE}</p>
         )}
