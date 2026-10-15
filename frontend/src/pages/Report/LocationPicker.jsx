@@ -387,6 +387,7 @@ export default function LocationPicker({
           icon={pinIcon}
           draggable
           alt="Report location pin"
+          title="The pin marks where the problem is. Drag it to change the spot."
           zIndexOffset={1000}
           eventHandlers={eventHandlers}
         >
