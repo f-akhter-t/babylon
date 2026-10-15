@@ -2,14 +2,17 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import ReportForm from '../Report/ReportForm'
 import LocationPicker from '../Report/LocationPicker'
-import { canEditIssue, getIssueForEdit, LOCKED_MESSAGE, updateIssue } from '../../services/api'
+import { canEditIssue, deleteIssue, getIssueForEdit, LOCKED_MESSAGE, updateIssue } from '../../services/api'
 import { resizeImage } from '../../utils/resizeImage'
 import { confirmLeave } from '../../utils/leaveGuard'
 import { hasGuardEntry, useUnsavedChanges } from '../Profile/useUnsavedChanges'
 import { setIssueNotice } from '../IssueDetail/issueNotice'
+import ConfirmDialog from '../../components/ui/ConfirmDialog'
+import { useToast } from '../../components/ui/toast'
 
 const LEAVE_MESSAGE = 'You have changes that are not saved. Leave this page anyway?'
 const SAVED_MESSAGE = 'Your changes are saved.'
+const DELETED_MESSAGE = 'Your report was deleted.'
 
 // Motion for the heading. The form and the map bring their own.
 const pageStyle = `
@@ -31,7 +34,11 @@ export default function EditForm({ issue, email }) {
   const [location, setLocation] = useState(null) // { lat, lng, label, ward } from the map
   const [fieldsDirty, setFieldsDirty] = useState(false)
   const [lockedReason, setLockedReason] = useState('')
-  const [exit, setExit] = useState(null) // { notice } once saved or cancelled
+  const [exit, setExit] = useState(null) // { notice } once saved or cancelled, { to } once deleted
+  const [askingDelete, setAskingDelete] = useState(false)
+  const [deleting, setDeleting] = useState(false)
+  const afterDialog = useRef(null) // what to do once the dialog has closed
+  const toast = useToast()
 
   const initialValues = useMemo(
     () => ({
@@ -84,8 +91,11 @@ export default function EditForm({ issue, email }) {
   useEffect(() => {
     if (!exit) return
     if (exit.notice) setIssueNotice(issue.id, exit.notice)
-    const go = () =>
-      fromDetail ? navigate(-1) : navigate(`/issues/${issue.id}`, { replace: true })
+    const go = () => {
+      if (exit.to) navigate(exit.to, { replace: true })
+      else if (fromDetail) navigate(-1)
+      else navigate(`/issues/${issue.id}`, { replace: true })
+    }
     if (!hasGuardEntry()) {
       go()
       return
@@ -96,6 +106,34 @@ export default function EditForm({ issue, email }) {
 
   function handleCancel() {
     if (confirmLeave()) setExit({})
+  }
+
+  // Delete, after the citizen confirms. The dialog closes first: while it is
+  // open the rest of the page (the toasts too) is inert, so the toast and the
+  // move to My reports wait for handleDialogClosed.
+  async function confirmDelete() {
+    setDeleting(true)
+    try {
+      await deleteIssue(issue.id, email)
+      afterDialog.current = () => {
+        toast.info(DELETED_MESSAGE)
+        setExit({ to: '/my-reports' })
+      }
+    } catch (err) {
+      afterDialog.current = () => {
+        if (err.code === 'locked') setLockedReason(LOCKED_MESSAGE)
+        toast.error(err.message)
+      }
+    } finally {
+      setDeleting(false)
+      setAskingDelete(false)
+    }
+  }
+
+  function handleDialogClosed() {
+    const next = afterDialog.current
+    afterDialog.current = null
+    next?.()
   }
 
   // If this throws, the form keeps what the citizen typed and shows the message.
@@ -196,6 +234,32 @@ export default function EditForm({ issue, email }) {
           showMatches={false}
         />
       </div>
+
+      {/* Apart from Save, at the very end: deleting cannot be undone. */}
+      {!lockedReason && (
+        <div className="mt-10 border-t border-navy/10 pt-6">
+          <button
+            type="button"
+            onClick={() => setAskingDelete(true)}
+            className="inline-flex min-h-11 items-center rounded-full border-2 border-danger px-5 font-body text-sm font-bold text-danger transition-colors hover:bg-danger/10 motion-reduce:transition-none"
+          >
+            Delete report
+          </button>
+        </div>
+      )}
+
+      <ConfirmDialog
+        open={askingDelete}
+        title="Delete this report?"
+        text="This removes it from the map, the feed and My reports. This cannot be undone."
+        cancelLabel="Keep report"
+        confirmLabel="Delete report"
+        tone="danger"
+        busy={deleting}
+        onCancel={() => setAskingDelete(false)}
+        onConfirm={confirmDelete}
+        onClosed={handleDialogClosed}
+      />
     </>
   )
 }
