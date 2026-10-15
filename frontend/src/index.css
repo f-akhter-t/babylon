@@ -28,6 +28,13 @@
     to { transform: translateX(-50%); }
   }
 
+  /* Toasts rise in (components/ui/Toaster.jsx) */
+  --animate-toast-in: toast-in 0.25s ease-out;
+  @keyframes toast-in {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: none; }
+  }
+
   /* Corner radii: 14, 18, 22, 24, 32 px */
   --radius-chip: 14px;
   --radius-tile: 18px;
