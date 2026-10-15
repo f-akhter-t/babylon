@@ -1,6 +1,6 @@
 import FeedCard from './FeedCard'
 import { FadeUpCard } from './feedMotion'
-import { usePrefersReducedMotion } from './feedMotionHooks'
+import { usePrefersReducedMotion } from '../../hooks/usePrefersReducedMotion'
 
 function SkeletonCard() {
   return (

@@ -19,9 +19,9 @@ import {
 } from '../../services/api'
 import { useAsync } from '../../hooks/useAsync'
 import RequireRole from '../Auth/RequireRole'
-import { useDocumentTitle } from '../IssueDetail/useDocumentTitle'
+import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import { fit, REGION_FOCUS, useFitMode } from '../../components/layout/staffFit'
-import { usePrefersReducedMotion } from '../Feed/feedMotionHooks'
+import { usePrefersReducedMotion } from '../../hooks/usePrefersReducedMotion'
 
 // Every string that names the period, each one whole template so a
 // translation can put the number wherever its grammar needs it.

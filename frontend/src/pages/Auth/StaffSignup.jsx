@@ -10,7 +10,7 @@ import AuthShell, {
 } from './AuthShell'
 import { DEMO_STAFF_CODE, STAFF_ROLES, homePathFor, signup } from '../../services/auth'
 import { departments } from '../../mock/departments'
-import { useDocumentTitle } from '../IssueDetail/useDocumentTitle'
+import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import GuestOnly from './GuestOnly'
 import { validateNewAccount } from './validateNewAccount'
 

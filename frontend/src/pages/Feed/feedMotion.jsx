@@ -1,4 +1,4 @@
-import { useInView } from './feedMotionHooks'
+import { useInView } from '../../hooks/usePrefersReducedMotion'
 
 export function FadeUpCard({ children, index, reducedMotion }) {
   const [ref, inView] = useInView()

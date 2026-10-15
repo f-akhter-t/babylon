@@ -7,7 +7,7 @@ import { canEditIssue, getIssueForEdit, LOCKED_MESSAGE } from '../../services/ap
 import { useViewer } from '../Map/useViewer'
 import { useStoredIds } from '../Map/useStoredIds'
 import { useUnreadCount } from '../Map/useUnreadCount'
-import { useDocumentTitle } from '../IssueDetail/useDocumentTitle'
+import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import { DetailLoading, DetailMessage } from '../IssueDetail/DetailStates'
 import { setIssueNotice } from '../IssueDetail/issueNotice'
 import EditForm from './EditForm'

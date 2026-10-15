@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import AuthShell, { DemoHint, Field, FormError, SubmitButton, authLinkClass } from './AuthShell'
 import { DEMO_ACCOUNTS, DEMO_PASSWORD, homePathFor, login } from '../../services/auth'
-import { useDocumentTitle } from '../IssueDetail/useDocumentTitle'
+import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import GuestOnly from './GuestOnly'
 
 // Citizen log-in. Staff accounts sign in at /staff/login.

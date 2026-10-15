@@ -16,7 +16,7 @@ import { useAsync } from '../../hooks/useAsync'
 import { resizeImage } from '../../utils/resizeImage'
 import RequireRole from '../Auth/RequireRole'
 import { useViewer } from '../Map/useViewer'
-import { useDocumentTitle } from '../IssueDetail/useDocumentTitle'
+import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import { ALL_ASSIGNED_LABEL, DEPARTMENT_FILTERS, filterFor, issuesFor } from './departmentFilters'
 import { fit, REGION_FOCUS, useFitMode } from '../../components/layout/staffFit'
 

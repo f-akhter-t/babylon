@@ -16,7 +16,7 @@ import {
 import { bannerSentence, reopenedSentence } from './reopenedText'
 import { useAsync } from '../../hooks/useAsync'
 import RequireRole from '../Auth/RequireRole'
-import { useDocumentTitle } from '../IssueDetail/useDocumentTitle'
+import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import { fit } from '../../components/layout/staffFit'
 
 const PRIORITY_LABEL = {
