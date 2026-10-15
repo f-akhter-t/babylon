@@ -17,7 +17,7 @@ export default defineConfig({
             { name: 'leaflet', test: /node_modules[\\/](leaflet|react-leaflet|@react-leaflet)[\\/]/ },
             {
               name: 'recharts',
-              test: /node_modules[\\/](recharts|d3-[^\\/]+|victory-vendor|internmap|decimal\.js-light|eventemitter3|react-redux|@reduxjs|redux|reselect|immer|es-toolkit|tiny-invariant)[\\/]/,
+              test: /node_modules[\\/](recharts|d3-[^\\/]+|victory-vendor|internmap|decimal\.js-light|eventemitter3|react-redux|@reduxjs|redux|redux-thunk|reselect|immer|es-toolkit|tiny-invariant|use-sync-external-store)[\\/]/,
             },
           ],
         },
