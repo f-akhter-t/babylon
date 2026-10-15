@@ -1,7 +1,7 @@
 import clsx from 'clsx'
 import { Link } from 'react-router-dom'
 import ReportStatusPill from '../../components/ui/ReportStatusPill'
-import MapIllustration from './MapIllustration'
+import StaticMap from '../../components/ui/StaticMap'
 import { cardTitleId } from './cardTitleId'
 import { ArrowUpIcon, CameraIcon, PinIcon } from '../../components/ui/icons'
 
@@ -31,7 +31,7 @@ export default function ReportCard({ report, onOpen }) {
             <span className="flex items-center gap-1.5"><CameraIcon />No photo added</span>
           </div>
         )}
-        <MapIllustration />
+        <StaticMap lat={r.lat} lng={r.lng} status={r.mapStatus} className="h-full w-full" />
       </div>
 
       {/* The card's own mint surface, opaque, so the text never sits on the photo or map. */}

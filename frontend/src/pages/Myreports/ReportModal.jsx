@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import clsx from 'clsx'
 import { LOCKED_MESSAGE } from '../../services/api'
 import ReportStatusPill from '../../components/ui/ReportStatusPill'
-import MapIllustration from './MapIllustration'
+import StaticMap from '../../components/ui/StaticMap'
 import { CameraIcon, CloseIcon } from '../../components/ui/icons'
 import { cardTitleId } from './cardTitleId'
 
@@ -112,8 +112,16 @@ export default function ReportModal({ report, onClose }) {
             </div>
             <div className="relative mt-2.5 h-[150px] overflow-hidden rounded-[20px]">
               <span className="absolute left-2.5 top-2.5 z-10 rounded-full bg-white px-3 py-1.5 text-xs font-bold">{r.location || 'Location not set'}</span>
-              <MapIllustration pinClass="left-1/2 top-[60%] w-[26px]" />
+              <StaticMap
+                lat={r.lat}
+                lng={r.lng}
+                status={r.mapStatus}
+                cover={{ width: 460, height: 150 }}
+                className="h-full w-full"
+              />
             </div>
+            {/* The page's own credit is hidden behind the dialog. */}
+            <p className="mt-1 text-right text-xs text-muted">Map © OpenStreetMap contributors</p>
           </div>
 
           <div>
