@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import clsx from 'clsx'
 import AdminLayout from '../../components/layout/AdminLayout'
@@ -7,10 +7,13 @@ import ReviewPanel from './ReviewPanel'
 import ReopenedList from './ReopenedList'
 import {
   approveResolution,
+  isReopenedInQueue,
   ISSUES_EVENT,
   loadVerification,
   rejectResolution,
+  sendReopenedToQueue,
 } from '../../services/api'
+import { reopenedSentence } from './reopenedText'
 import { useAsync } from '../../hooks/useAsync'
 import RequireRole from '../Auth/RequireRole'
 import { useDocumentTitle } from '../IssueDetail/useDocumentTitle'
@@ -20,6 +23,7 @@ const PRIORITY_LABEL = {
   urgent: 'Urgent priority',
   high: 'High priority',
   medium: 'Medium priority',
+  reopened: 'Reopened',
 }
 
 function QueueCard({ issue, selected, onSelect }) {
@@ -36,8 +40,10 @@ function QueueCard({ issue, selected, onSelect }) {
       )}
     >
       <p className="break-words font-heading text-base font-bold text-navy">{issue.title}</p>
-      <p className="mt-1 font-body text-sm text-muted">
-        {issue.department} · submitted {issue.submittedOn}
+      <p className="mt-1 break-words font-body text-sm text-muted">
+        {isReopenedInQueue(issue)
+          ? reopenedSentence(issue)
+          : `${issue.department} · submitted ${issue.submittedOn}`}
       </p>
       <span
         className={clsx(
@@ -83,8 +89,12 @@ function VerifyResolutionsPage() {
   const view = VIEWS[viewKey]
   useDocumentTitle(view.heading)
   const [selectedId, setSelectedId] = useState(null)
-  const [notice, setNotice] = useState(null) // { tone: 'success' | 'error', text }
+  // { tone: 'success' | 'error', text, view }: only shown on the view it came from.
+  const [notice, setNotice] = useState(null)
   const [busy, setBusy] = useState(false)
+  const [sendingId, setSendingId] = useState(null)
+  const headingRef = useRef(null)
+  const shownNotice = notice?.view === viewKey ? notice : null
 
   const load = useCallback(() => loadVerification(), [])
   const { data, error, loading, retry, reload } = useAsync(load)
@@ -106,13 +116,45 @@ function VerifyResolutionsPage() {
     try {
       await save()
       setSelectedId(null)
-      setNotice({ tone: 'success', text: message })
+      setNotice({ tone: 'success', text: message, view: 'queue' })
     } catch (err) {
-      setNotice({ tone: 'error', text: err.message })
+      setNotice({ tone: 'error', text: err.message, view: 'queue' })
     } finally {
       setBusy(false)
     }
   }
+
+  // A reopened issue goes to the queue and leaves this list (it reloads
+  // through ISSUES_EVENT). Its button disappears, so focus moves to the heading.
+  async function sendToQueue(issue) {
+    setNotice(null)
+    setSendingId(issue.id)
+    try {
+      await sendReopenedToQueue(issue.id)
+      setNotice({
+        tone: 'success',
+        text: `“${issue.title}” was sent to the verification queue.`,
+        view: 'reopened',
+      })
+      headingRef.current?.focus()
+    } catch (err) {
+      setNotice({ tone: 'error', text: err.message, view: 'reopened' })
+    } finally {
+      setSendingId(null)
+    }
+  }
+
+  const noticeLine = shownNotice && (
+    <p
+      role={shownNotice.tone === 'error' ? 'alert' : 'status'}
+      className={clsx(
+        'mt-3 break-words font-body text-sm font-bold',
+        shownNotice.tone === 'error' ? 'text-danger' : 'text-forest',
+      )}
+    >
+      {shownNotice.text}
+    </p>
+  )
 
   if (error) {
     return (
@@ -133,19 +175,24 @@ function VerifyResolutionsPage() {
     return (
       <AdminLayout variant="admin" active={view.nav}>
         <div className={clsx('p-4 sm:p-6 lg:p-8', fit.page)}>
-          <h1 className="font-heading text-3xl font-extrabold text-navy sm:text-4xl">
+          <h1
+            ref={headingRef}
+            tabIndex={-1}
+            className="rounded-tile font-heading text-3xl font-extrabold text-navy focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forest sm:text-4xl"
+          >
             {view.heading}
           </h1>
           <p className="mt-1 font-body text-base text-muted">
-            These problems were marked resolved, but citizens reported them again. Open one to
-            see its details.
+            These problems were marked resolved, but citizens reported them again. Send one to
+            the verification queue to approve or reject it there.
           </p>
+          {noticeLine}
           {loading ? (
             <p role="status" className="mt-6 font-body text-base text-navy">
               {view.loading}
             </p>
           ) : (
-            <ReopenedList issues={data.reopened} />
+            <ReopenedList issues={data.reopened} onSend={sendToQueue} sendingId={sendingId} />
           )}
         </div>
       </AdminLayout>
@@ -163,17 +210,7 @@ function VerifyResolutionsPage() {
           approve or send it back.
         </p>
 
-        {notice && (
-          <p
-            role={notice.tone === 'error' ? 'alert' : 'status'}
-            className={clsx(
-              'mt-3 break-words font-body text-sm font-bold',
-              notice.tone === 'error' ? 'text-danger' : 'text-forest',
-            )}
-          >
-            {notice.text}
-          </p>
-        )}
+        {noticeLine}
 
         {reopened && (
           <div className="mt-5 flex flex-col items-start gap-3 rounded-card border border-amber-dark bg-amber/20 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-5">
