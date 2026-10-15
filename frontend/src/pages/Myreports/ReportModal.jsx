@@ -1,26 +1,71 @@
-import { useEffect } from 'react'
+import { useEffect, useId, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import clsx from 'clsx'
 import { LOCKED_MESSAGE } from '../../services/api'
 import ReportStatusPill from '../../components/ui/ReportStatusPill'
 import MapIllustration from './MapIllustration'
 import { CameraIcon, CloseIcon } from '../../components/ui/icons'
+import { cardTitleId } from './cardTitleId'
 
+const actionClass =
+  'inline-flex min-h-11 items-center rounded-full border-2 border-navy px-5 text-sm font-bold text-navy transition-colors hover:bg-navy/10 motion-reduce:transition-none'
+
+// A report's details, on a native modal <dialog>: showModal() puts it in the
+// top layer and makes the page behind inert, so Tab stays inside. It opens
+// whenever ?report=<id> is in the address (a card click, or Back from the
+// issue page). Focus starts on Close and goes back to that report's card;
+// Tab wraps inside it.
+// Escape, Close and a click on the dimmed backdrop all call onClose.
 export default function ReportModal({ report, onClose }) {
+  const dialogRef = useRef(null)
+  const closeRef = useRef(null)
+  const titleId = useId()
+  const id = report.id
+
   useEffect(() => {
-    const onKey = (e) => e.key === 'Escape' && onClose()
-    document.addEventListener('keydown', onKey)
-    return () => document.removeEventListener('keydown', onKey)
-  }, [onClose])
+    const dialog = dialogRef.current
+    if (!dialog.open) dialog.showModal()
+    closeRef.current?.focus()
+    return () => {
+      if (dialog.open) dialog.close()
+      // Still on My reports: back to the card. After a move to another page the
+      // card is gone and nothing happens.
+      document.getElementById(cardTitleId(id))?.focus()
+    }
+  }, [id])
+
+  // Tab and Shift+Tab wrap around inside the dialog, so focus never leaves it.
+  function keepTabInside(event) {
+    if (event.key !== 'Tab') return
+    const items = [...dialogRef.current.querySelectorAll('a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])')]
+    const first = items[0]
+    const last = items.at(-1)
+    if (event.shiftKey && document.activeElement === first) {
+      event.preventDefault()
+      last.focus()
+    } else if (!event.shiftKey && document.activeElement === last) {
+      event.preventDefault()
+      first.focus()
+    }
+  }
 
   const r = report
   return (
-    <div
-      className="fixed inset-0 z-[1200] flex items-center justify-center bg-navy/55 p-4"
+    <dialog
+      ref={dialogRef}
+      aria-labelledby={titleId}
+      onCancel={(e) => {
+        e.preventDefault() // Escape: close through the address, like the Close button
+        onClose()
+      }}
+      // The dialog element itself is only hit on the backdrop: the content
+      // fills it.
       onMouseDown={(e) => e.target === e.currentTarget && onClose()}
+      onKeyDown={keepTabInside}
+      className="m-auto max-h-[calc(100dvh-32px)] w-[860px] max-w-[calc(100vw-2rem)] overflow-hidden rounded-[26px] bg-mint p-0 text-navy backdrop:bg-navy/55"
     >
-      <div role="dialog" aria-modal="true" aria-label={r.title} className="relative max-h-[calc(100vh-32px)] w-[860px] max-w-full overflow-auto rounded-[26px] bg-mint p-6">
-        <button type="button" onClick={onClose} aria-label="Close" className="absolute right-4 top-4 grid size-11 place-items-center rounded-full bg-white">
+      <div className="relative max-h-[calc(100dvh-32px)] overflow-auto p-6">
+        <button ref={closeRef} type="button" onClick={onClose} aria-label="Close" className="absolute right-4 top-4 grid size-11 place-items-center rounded-full bg-white">
           <CloseIcon />
         </button>
 
@@ -28,20 +73,29 @@ export default function ReportModal({ report, onClose }) {
           <ReportStatusPill status={r.status} />
           <span className="rounded-full border-[1.5px] border-navy px-[9px] text-xs font-bold">{r.category}</span>
         </div>
-        <h2 className="max-w-[90%] font-heading text-[32px] font-extrabold leading-tight tracking-tight">{r.title}</h2>
+        <h2 id={titleId} className="max-w-[90%] font-heading text-[32px] font-extrabold leading-tight tracking-tight">{r.title}</h2>
         <p className="mt-1 text-[13px] text-muted">
           Reported on {r.dateLabel} · {r.upvotes} upvote{r.upvotes === 1 ? '' : 's'}
         </p>
         {/* The same rule as the card and the edit page (canEditIssue). */}
-        {r.editState === 'ok' && (
+        <div className="mt-3 flex flex-wrap gap-2">
           <Link
-            to={`/issues/${r.id}/edit`}
-            aria-label={`Edit report: ${r.title}`}
-            className="mt-3 inline-flex min-h-11 items-center rounded-full border-2 border-navy px-5 text-sm font-bold text-navy transition-colors hover:bg-navy/10 motion-reduce:transition-none"
+            to={`/issues/${r.id}`}
+            aria-label={`Open issue page: ${r.title}`}
+            className={actionClass}
           >
-            Edit report
+            Open issue page
           </Link>
-        )}
+          {r.editState === 'ok' && (
+            <Link
+              to={`/issues/${r.id}/edit`}
+              aria-label={`Edit report: ${r.title}`}
+              className={actionClass}
+            >
+              Edit report
+            </Link>
+          )}
+        </div>
         {r.editState === 'locked' && (
           <p className="mt-2 text-sm font-semibold text-navy">{LOCKED_MESSAGE}</p>
         )}
@@ -95,6 +149,6 @@ export default function ReportModal({ report, onClose }) {
           </div>
         </div>
       </div>
-    </div>
+    </dialog>
   )
 }

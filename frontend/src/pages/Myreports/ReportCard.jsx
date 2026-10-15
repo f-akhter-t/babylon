@@ -2,11 +2,16 @@ import clsx from 'clsx'
 import { Link } from 'react-router-dom'
 import ReportStatusPill from '../../components/ui/ReportStatusPill'
 import MapIllustration from './MapIllustration'
+import { cardTitleId } from './cardTitleId'
 import { ArrowUpIcon, CameraIcon, PinIcon } from '../../components/ui/icons'
 
 // One report on My reports. The title is a button whose ::after covers the
 // whole card, so a click anywhere opens the details (like the Map sidebar).
-// "Edit report" sits above that layer, only while the report can be edited.
+// "Open issue page" and, while the report can be edited, "Edit report" sit
+// above that layer.
+const linkClass =
+  "relative z-10 whitespace-nowrap font-bold underline underline-offset-[3px] before:absolute before:inset-x-0 before:top-1/2 before:h-11 before:-translate-y-1/2 before:content-['']"
+
 export default function ReportCard({ report, onOpen }) {
   const r = report
   return (
@@ -37,6 +42,7 @@ export default function ReportCard({ report, onOpen }) {
         </div>
         <h3 className="font-heading text-[19px] font-extrabold leading-[1.15] tracking-tight">
           <button
+            id={cardTitleId(r.id)}
             type="button"
             onClick={() => onOpen(r.id)}
             className="text-left after:absolute after:inset-0 after:rounded-card after:content-[''] focus-visible:shadow-none focus-visible:outline-none focus-visible:after:outline-2 focus-visible:after:-outline-offset-2 focus-visible:after:outline-navy"
@@ -66,21 +72,26 @@ export default function ReportCard({ report, onOpen }) {
           <span className="inline-flex items-center gap-1 rounded-full border-[1.5px] border-navy px-[13px] py-[5px] font-bold">
             <ArrowUpIcon size={13} /> {r.upvotes}
           </span>
+          {/* Above the card's click layer, in reading order: the issue page, then
+              Edit. The ::before strips give 44px tap targets without making the
+              row taller. */}
           <span className="flex items-center gap-4">
+            <Link
+              to={`/issues/${r.id}`}
+              aria-label={`Open issue page: ${r.title}`}
+              className={clsx(linkClass, 'text-forest')}
+            >
+              Open issue page
+            </Link>
             {r.editState === 'ok' && (
-              // Above the card's click layer. The ::before strip gives a 44px
-              // tap target without making the row taller.
               <Link
                 to={`/issues/${r.id}/edit`}
                 aria-label={`Edit report: ${r.title}`}
-                className="relative z-10 font-bold text-navy underline underline-offset-[3px] before:absolute before:inset-x-0 before:top-1/2 before:h-11 before:-translate-y-1/2 before:content-['']"
+                className={clsx(linkClass, 'text-navy')}
               >
                 Edit report
               </Link>
             )}
-            <span aria-hidden="true" className="font-bold text-forest underline underline-offset-[3px]">
-              View details
-            </span>
           </span>
         </div>
       </div>
