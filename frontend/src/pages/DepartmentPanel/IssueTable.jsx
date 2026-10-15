@@ -104,7 +104,7 @@ export default function IssueTable({ issues, selectedId, onSelect, onStart, busy
     <div className="@container rounded-card bg-mint">
       <div
         className={clsx(
-          'sticky top-0 z-10 hidden items-center gap-4 rounded-t-card bg-mint-deep px-5 py-3 @3xl:grid',
+          'sticky top-[var(--staff-bar,0px)] z-10 hidden items-center gap-4 rounded-t-card bg-mint-deep px-5 py-3 @3xl:grid lg:top-0',
           'font-body text-sm font-semibold text-navy',
           COLUMNS,
         )}
