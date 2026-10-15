@@ -14,6 +14,14 @@ export default function Login() {
   )
 }
 
+// Where to go after logging in. RequireCitizen sends guests here from /report
+// (keeping ?lat=…&lng=… from the Map). Only /report itself, with or without a
+// query string, is accepted, so this can never send someone to another site.
+function returnPathFrom(state) {
+  const from = state?.from
+  return typeof from === 'string' && /^\/report(\?[^#]*)?$/.test(from) ? from : null
+}
+
 function LoginPage() {
   useDocumentTitle('Log in')
   const navigate = useNavigate()
@@ -32,7 +40,9 @@ function LoginPage() {
     setBusy(true)
     try {
       const user = await login({ email, password, door: 'citizen' })
-      navigate(homePathFor(user.role))
+      const back = user.role === 'citizen' ? returnPathFrom(location.state) : null
+      if (back) navigate(back, { replace: true })
+      else navigate(homePathFor(user.role))
     } catch (err) {
       setError({ message: err.message, code: err.code })
     } finally {
