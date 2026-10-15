@@ -8,6 +8,8 @@ import LocationPicker from './LocationPicker'
 import { useViewer } from '../Map/useViewer' // CHANGE 1
 import { createIssue, POINTS_PER_REPORT } from '../../services/api' // CHANGE 1
 import { resizeImage } from '../../utils/resizeImage'
+import { useDocumentTitle } from '../../hooks/useDocumentTitle'
+import RequireCitizen from '../Auth/RequireCitizen'
 
 const pageStyle = `
   @keyframes pageRise {
@@ -27,7 +29,17 @@ const pageStyle = `
   }
 `
 
+// Citizens only: guests log in first and come back here, staff go to their panel.
 export default function Report() {
+  return (
+    <RequireCitizen guests="login">
+      <ReportPage />
+    </RequireCitizen>
+  )
+}
+
+function ReportPage() {
+  useDocumentTitle('Report an issue')
   const viewer = useViewer() // CHANGE 2
   const [toast, setToast] = useState(null)
   const [category, setCategory] = useState('')
