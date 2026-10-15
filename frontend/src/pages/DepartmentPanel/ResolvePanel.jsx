@@ -134,7 +134,7 @@ export default function ResolvePanel({ issue, onSubmit, busy = false, error = nu
 
       {/* Stays on screen while the panel is in view: pinned to the bottom of
           the panel (fit mode) or of the window (page scrolling). */}
-      <div className="sticky bottom-0 -mx-4 mt-4 border-t border-navy/10 bg-mint px-4 py-3 sm:-mx-6 sm:px-6 sm:pb-6">
+      <div data-toast-clearance className="sticky bottom-0 -mx-4 mt-4 border-t border-navy/10 bg-mint px-4 py-3 sm:-mx-6 sm:px-6 sm:pb-6">
         <button
           type="button"
           disabled={busy}

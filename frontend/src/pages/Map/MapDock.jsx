@@ -45,6 +45,7 @@ export default function MapDock({ position, pinHeight, settled, children }) {
   return (
     <div
       ref={ref}
+      data-toast-clearance
       className="absolute bottom-3 left-18 right-3 z-1001 max-h-[calc(100%-5.75rem)] cursor-auto overflow-y-auto rounded-card bg-white shadow-xl"
     >
       {children}

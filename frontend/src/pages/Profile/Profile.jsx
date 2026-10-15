@@ -17,13 +17,12 @@ import IdentityCard from './IdentityCard'
 import SummaryCard from './SummaryCard'
 import JumpChips from './JumpChips'
 import SaveBar from './SaveBar'
-import ProfileToast from './ProfileToast'
+import { useToast } from '../../components/ui/toast'
 import { ProfileError, ProfileLoading } from './ProfileStates'
 import WelcomeHeader from './WelcomeHeader'
 
 const LEAVE_MESSAGE = 'You have changes that are not saved. Leave this page anyway?'
 const DETAILS_FORM_ID = 'profile-details-form'
-const TOAST_MS = 3500
 
 // The setup flag is cleared a moment after the page closes. React's
 // development mode closes and reopens every page once on load; reopening
@@ -95,26 +94,28 @@ function ProfilePage({ viewer }) {
 
   useUnsavedChanges(Object.values(dirty).some(Boolean), LEAVE_MESSAGE)
 
-  // One live region for the whole page. Clearing it first makes the same
-  // sentence be read out again if it repeats.
+  // announce(text): read out by the page's own live region (form steps such
+  // as "We sent a code"). announce(text, { toast: true }): shown as a toast,
+  // which the shared Toaster also reads out, so it is never heard twice.
+  // Clearing the region first makes the same sentence be read out again.
   const [spoken, setSpoken] = useState('')
-  const [toast, setToast] = useState(null) // { text, id }
+  const toast = useToast()
   const timers = useRef([])
-  const announce = useCallback((text, { toast: showToast = false } = {}) => {
-    setSpoken('')
-    timers.current.push(setTimeout(() => setSpoken(text), 60))
-    if (showToast) setToast({ text, id: Date.now() })
-  }, [])
+  const announce = useCallback(
+    (text, { toast: showToast = false } = {}) => {
+      if (showToast) {
+        toast.info(text)
+        return
+      }
+      setSpoken('')
+      timers.current.push(setTimeout(() => setSpoken(text), 60))
+    },
+    [toast],
+  )
   useEffect(() => {
     const pending = timers.current
     return () => pending.forEach(clearTimeout)
   }, [])
-
-  useEffect(() => {
-    if (!toast) return
-    const timer = setTimeout(() => setToast(null), TOAST_MS)
-    return () => clearTimeout(timer)
-  }, [toast])
 
   // While the phone save bar shows, keep focused fields from hiding under it.
   const showSaveBar = details.dirty
@@ -196,7 +197,6 @@ function ProfilePage({ viewer }) {
       <p role="status" aria-live="polite" className="sr-only">
         {spoken}
       </p>
-      <ProfileToast key={toast?.id} message={toast?.text} raised={showSaveBar} />
 
       <Footer />
     </div>

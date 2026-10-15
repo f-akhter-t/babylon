@@ -8,6 +8,7 @@ import { useSyncExternalStore } from 'react'
 // one replaces the old one. Any component can raise one; no provider needed.
 
 const SPEAK_DELAY_MS = 60
+const TOAST_ZONE_PX = 80 // the strip at the bottom of the screen where toasts sit
 
 let state = {
   info: null, // { id, text }
@@ -25,13 +26,14 @@ function setState(patch) {
 }
 
 // Bars a toast must not cover carry data-toast-clearance: the Profile save bar,
-// the staff action bars and the Map dock.
+// the staff action bars and the Map dock. Any of them reaching into the
+// bottom strip of the screen pushes the toasts up above it.
 function measureClearance() {
   let clearance = 0
   for (const bar of document.querySelectorAll('[data-toast-clearance]')) {
     const box = bar.getBoundingClientRect()
     if (!box.width || !box.height) continue
-    if (box.top < window.innerHeight && box.bottom > window.innerHeight - 2) {
+    if (box.top < window.innerHeight && box.bottom > window.innerHeight - TOAST_ZONE_PX) {
       clearance = Math.max(clearance, window.innerHeight - box.top)
     }
   }

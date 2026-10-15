@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import Navbar from '../../components/layout/Navbar'
 import Footer from '../../components/layout/Footer'
@@ -8,6 +8,7 @@ import LocationPicker from './LocationPicker'
 import { useViewer } from '../Map/useViewer' // CHANGE 1
 import { createIssue, POINTS_PER_REPORT } from '../../services/api' // CHANGE 1
 import { resizeImage } from '../../utils/resizeImage'
+import { useToast } from '../../components/ui/toast'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import RequireCitizen from '../Auth/RequireCitizen'
 
@@ -15,10 +16,6 @@ const pageStyle = `
   @keyframes pageRise {
     from { opacity: 0; transform: translateY(14px); }
     to { opacity: 1; transform: none; }
-  }
-  @keyframes toastIn {
-    from { opacity: 0; transform: translateY(8px); }
-    to { opacity: 1; transform: translateY(0); }
   }
   @media (prefers-reduced-motion: reduce) {
     * {
@@ -41,7 +38,7 @@ export default function Report() {
 function ReportPage() {
   useDocumentTitle('Report an issue')
   const viewer = useViewer() // CHANGE 2
-  const [toast, setToast] = useState(null)
+  const toast = useToast()
   const [category, setCategory] = useState('')
   const [location, setLocation] = useState(null) // { lat, lng, label, ward } from the map
   const [searchParams] = useSearchParams()
@@ -53,12 +50,6 @@ function ReportPage() {
     Number.isFinite(paramLat) && Number.isFinite(paramLng)
       ? { lat: paramLat, lng: paramLng }
       : null
-
-  useEffect(() => {
-    if (!toast) return
-    const t = setTimeout(() => setToast(null), 3500)
-    return () => clearTimeout(t)
-  }, [toast])
 
   // Mock backend: the report is saved in the browser and shows up in the feed.
   // If this throws, the form keeps what the citizen typed and shows the message.
@@ -72,7 +63,7 @@ function ReportPage() {
       location,
       reporter: viewer.session?.name, // CHANGE 3
     })
-    setToast(`Report submitted. You earned ${POINTS_PER_REPORT} points.`) // CHANGE 3
+    toast.info(`Your report is submitted. You earned ${POINTS_PER_REPORT} points.`) // CHANGE 3
   }
 
   return (
@@ -114,7 +105,7 @@ function ReportPage() {
             <LocationPicker
               category={category}
               onChange={setLocation}
-              onToast={setToast}
+              onToast={toast.info}
               initial={pinnedFromMap}
             />
           </div>
@@ -122,16 +113,6 @@ function ReportPage() {
       </main>
 
       <Footer />
-
-      {toast && (
-        <div
-          role="status"
-          className="fixed bottom-6 left-1/2 z-[1200] -translate-x-1/2 rounded-full bg-navy px-5 py-2.5 font-body text-sm font-semibold text-white shadow-lg"
-          style={{ animation: 'toastIn 0.25s ease-out' }}
-        >
-          {toast}
-        </div>
-      )}
     </>
   )
 }

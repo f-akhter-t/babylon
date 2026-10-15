@@ -335,7 +335,7 @@ export default function LocationPicker({
     getIssues()
       .then(setIssues)
       .catch(() => {}) // keep the list we already have
-    onToast?.(`Upvoted "${issue.title}". No need to report it again.`)
+    onToast?.(`You upvoted "${issue.title}", so there is no need to report it again.`)
   }
 
   function handleDismiss() {

@@ -137,7 +137,7 @@ export default function IdentityReviewPanel({ submission, onDecide, focusOnOpen 
         )}
       </div>
 
-      <div className="sticky bottom-0 grid grid-cols-2 gap-3 rounded-b-panel border-t border-navy/10 bg-mint px-3 py-3 sm:px-6 sm:py-4">
+      <div data-toast-clearance className="sticky bottom-0 grid grid-cols-2 gap-3 rounded-b-panel border-t border-navy/10 bg-mint px-3 py-3 sm:px-6 sm:py-4">
         <Button
           variant="primary"
           size="md"
