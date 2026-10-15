@@ -59,3 +59,18 @@ export function ChevronsIcon(props) {
     </svg>
   )
 }
+export function PauseIcon(props) {
+  return (
+    <svg {...base} {...props}>
+      <path d="M9 5v14M15 5v14" />
+    </svg>
+  )
+}
+
+export function PlayIcon(props) {
+  return (
+    <svg {...base} {...props}>
+      <path d="M8 5.5v13l10.5-6.5z" />
+    </svg>
+  )
+}

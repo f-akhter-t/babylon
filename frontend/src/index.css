@@ -73,4 +73,11 @@ button:not(:disabled),
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
+
+  /* Except the Home ticker after someone presses Play on it: it starts paused
+     for them, so moving is their choice. Same speed as --animate-marquee. */
+  .ticker-played {
+    animation-duration: 45s !important;
+    animation-iteration-count: infinite !important;
+  }
 }
