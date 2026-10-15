@@ -77,7 +77,7 @@ export default function AnimatedBackground() {
         className="ab-animate absolute inset-0"
         style={{
           backgroundImage:
-            'linear-gradient(135deg, #d6d8db 0%, #c6c9ce 35%, #b7bac0 65%, #a4a8af 100%)',
+            'linear-gradient(135deg, color-mix(in srgb, var(--color-page) 80%, white) 0%, color-mix(in srgb, var(--color-page) 95%, var(--color-slate)) 35%, color-mix(in srgb, var(--color-page) 86%, var(--color-slate)) 65%, color-mix(in srgb, var(--color-page) 74%, var(--color-slate)) 100%)',
           backgroundSize: '200% 200%',
           animation: reducedMotion ? 'none' : 'meshDrift 30s ease-in-out infinite',
         }}

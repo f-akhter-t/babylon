@@ -170,9 +170,11 @@ export default function LocationPicker({
 
   useEffect(() => {
     let active = true
-    getIssues().then((list) => {
-      if (active) setIssues(list)
-    })
+    getIssues()
+      .then((list) => {
+        if (active) setIssues(list)
+      })
+      .catch(() => {}) // duplicate check is a bonus; the form still works without it
     return () => {
       active = false
     }
@@ -280,7 +282,9 @@ export default function LocationPicker({
     setMessage('')
     try {
       // known issues first, so search also works offline with the mock data
-      const known = (await getIssues({ search: q })).find((i) => typeof i.lat === 'number')
+      // if the list fails, go straight to the place search
+      const list = await getIssues({ search: q }).catch(() => [])
+      const known = list.find((i) => typeof i.lat === 'number')
       if (known) {
         moveTo({ lat: known.lat, lng: known.lng })
         return
@@ -328,7 +332,9 @@ export default function LocationPicker({
     const { issue } = match
     await upvoteIssue(issue.id)
     setDismissed((list) => [...list, issue.id])
-    getIssues().then(setIssues)
+    getIssues()
+      .then(setIssues)
+      .catch(() => {}) // keep the list we already have
     onToast?.(`Upvoted "${issue.title}". No need to report it again.`)
   }
 
@@ -357,13 +363,14 @@ export default function LocationPicker({
         <FlyTo target={flyTarget} />
         <ClickToPlace onPlace={setPosition} />
 
+        {/* Leaflet reads className and interactive only when the layer is
+            created, so they are direct props, not pathOptions (which react-leaflet
+            applies later with setStyle). */}
         <Circle
           center={markerPosition}
           radius={MATCH_RADIUS_M}
-          pathOptions={{
-            interactive: false,
-            className: 'stroke-forest fill-forest/10 stroke-2 [stroke-dasharray:6_6]',
-          }}
+          interactive={false}
+          className="stroke-forest fill-forest/10 stroke-2 [stroke-dasharray:6_6]"
         />
 
         {match && (

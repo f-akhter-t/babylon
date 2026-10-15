@@ -6,6 +6,7 @@ import NotificationBell from './NotificationBell'
 import Button from '../ui/Button'
 import { getSession, homePathFor, logout } from '../../services/auth'
 import { useProfile } from '../../hooks/useProfile'
+import { usePendingIdentityCount } from '../../hooks/usePendingIdentityCount'
 import { confirmLeave } from '../../utils/leaveGuard'
 
 const citizenLinks = [
@@ -19,7 +20,30 @@ const departmentLinks = [{ label: 'Department panel', to: '/department' }]
 const adminLinks = [
   { label: 'Verify resolutions', to: '/admin/verify' },
   { label: 'Accountability', to: '/admin/accountability' },
+  { label: 'Identity checks', to: '/admin/identity', count: 'identity' },
 ]
+
+// "Identity checks" with the number waiting. Only rendered in admin links,
+// so only admins run the count.
+function IdentityChecksLabel({ label }) {
+  const waiting = usePendingIdentityCount()
+  if (!waiting) return label
+  return (
+    <>
+      <span className="sr-only">{`${label}, ${waiting} waiting`}</span>
+      <span aria-hidden="true">
+        {label}
+        <span className="ml-2 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-amber px-1.5 text-xs font-bold text-navy">
+          {waiting}
+        </span>
+      </span>
+    </>
+  )
+}
+
+function linkLabel(link) {
+  return link.count === 'identity' ? <IdentityChecksLabel label={link.label} /> : link.label
+}
 
 const linksByVariant = {
   admin: adminLinks,
@@ -147,7 +171,7 @@ export default function Navbar({
                 )
               }
             >
-              {link.label}
+              {linkLabel(link)}
             </NavLink>
           ))}
         </nav>
@@ -270,7 +294,7 @@ export default function Navbar({
                 )
               }
             >
-              {link.label}
+              {linkLabel(link)}
             </NavLink>
           ))}
 

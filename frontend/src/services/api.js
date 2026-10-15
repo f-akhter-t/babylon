@@ -352,8 +352,8 @@ export async function sendReopenedToQueue(id) {
 }
 
 // Dev only: sessionStorage 'babylon:failLoads' makes the Department, Verify
-// and Accountability pages fail to load, to try their error screens. Not in
-// production builds.
+// and Accountability pages and getIssues (Map, Feed, Report) fail to load, to
+// try their error screens. Not in production builds.
 function failLoadsForTesting() {
   if (!import.meta.env.DEV) return
   let on = false
@@ -410,6 +410,7 @@ const sum = (list, key) => list.reduce((total, item) => total + item[key], 0)
 
 // category and status: 'All' or a real value. search matches title or street.
 export async function getIssues({ category = 'All', status = 'All', search = '' } = {}) {
+  failLoadsForTesting()
   const query = search.trim().toLowerCase()
   const list = all.filter(
     (issue) =>

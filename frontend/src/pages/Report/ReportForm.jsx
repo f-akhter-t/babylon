@@ -270,6 +270,8 @@ export default function ReportForm({
           type="file"
           accept="image/*"
           className="sr-only"
+          tabIndex={-1}
+          aria-hidden="true"
           disabled={locked}
           onChange={(e) => handleFile(e.target.files?.[0])}
         />
@@ -337,7 +339,7 @@ export default function ReportForm({
         )}
 
         {photoError && (
-          <p role="alert" className="font-body text-xs font-semibold text-amber-dark">
+          <p role="alert" className="font-body text-xs font-semibold text-danger">
             {photoError}
           </p>
         )}
@@ -419,7 +421,7 @@ export default function ReportForm({
         <p
           className={clsx(
             'text-right font-body text-xs transition-colors',
-            description.length >= NEAR_LIMIT ? 'font-semibold text-amber-dark' : 'text-muted',
+            description.length >= NEAR_LIMIT ? 'font-semibold text-danger' : 'text-muted',
           )}
         >
           {description.length}/{MAX_DESCRIPTION}
@@ -443,12 +445,12 @@ export default function ReportForm({
           submitButton
         )}
         {submitError && (
-          <p role="alert" className="text-center font-body text-xs font-semibold text-amber-dark">
+          <p role="alert" className="text-center font-body text-xs font-semibold text-danger">
             {submitError}
           </p>
         )}
         {locked ? (
-          <p className="text-center font-body text-xs font-semibold text-amber-dark">
+          <p className="text-center font-body text-xs font-semibold text-danger">
             {lockedReason}
           </p>
         ) : (

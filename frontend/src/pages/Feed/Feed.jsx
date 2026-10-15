@@ -1,13 +1,15 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import Navbar from '../../components/layout/Navbar'
 import Footer from '../../components/layout/Footer'
 import AnimatedBackground from '../../components/ui/AnimatedBackground'
 import StaircaseIcon from '../../components/ui/StaircaseIcon'
+import LoadError from '../../components/ui/LoadError'
 import FeedFilters from './FeedFilters'
 import FeedGrid from './FeedGrid'
 import { useViewer } from '../Map/useViewer'
 import { useStoredIds } from '../Map/useStoredIds'
 import { getIssues } from '../../services/api'
+import { useAsync } from '../../hooks/useAsync'
 
 const pageStyle = `
   @keyframes cardIn {
@@ -28,33 +30,35 @@ const pageStyle = `
   }
 `
 
+const LOAD_FAILED = 'We could not load the issues. Check your connection and try again.'
+
 export default function Feed() {
   const [category, setCategory] = useState('All')
   const [status, setStatus] = useState('All')
   const [search, setSearch] = useState('')
-  const [issues, setIssues] = useState([])
-  const [loading, setLoading] = useState(true)
   const [toast, setToast] = useState(null)
 
   const viewer = useViewer()
   // Same key as Map and Issue detail, so a vote shows the same everywhere.
   const [votedIds, toggleVote] = useStoredIds(viewer.storageKey('voted'))
 
-  useEffect(() => {
-    let active = true
-    Promise.resolve().then(() => {
-      if (active) setLoading(true)
-    })
-    getIssues({ category, status, search }).then((list) => {
-      if (active) {
-        setIssues(list)
-        setLoading(false)
-      }
-    })
-    return () => {
-      active = false
-    }
-  }, [category, status, search])
+  // Each result (or failure) is tagged with the filters it was loaded for.
+  // useAsync keeps the last result while the next one loads, so a tag that does
+  // not match the current filters means "still loading". Retry keeps the filters.
+  const filterKey = JSON.stringify([category, status, search])
+  const load = useCallback(
+    () =>
+      getIssues({ category, status, search }).then(
+        (list) => ({ key: filterKey, list }),
+        (cause) => Promise.reject({ key: filterKey, cause }),
+      ),
+    [category, status, search, filterKey],
+  )
+  const { data, error, loading: fetching, retry } = useAsync(load)
+  const stale = (data && data.key !== filterKey) || (error && error.key !== filterKey)
+  const loading = fetching || Boolean(stale)
+  const failed = Boolean(error) && !loading
+  const issues = loading || failed ? [] : data.list
 
   useEffect(() => {
     if (!toast) return
@@ -105,19 +109,26 @@ export default function Feed() {
               search={search}
               onSearch={setSearch}
               loading={loading}
-              resultCount={issues.length}
+              resultCount={failed ? null : issues.length}
             />
 
-            <FeedGrid
-              issues={shownIssues}
-              loading={loading}
-              onUpvote={handleUpvote}
-              onClearFilters={() => {
-                setCategory('All')
-                setStatus('All')
-                setSearch('')
-              }}
-            />
+            <h2 className="sr-only">Issues</h2>
+            {failed ? (
+              <div className="mt-8">
+                <LoadError message={LOAD_FAILED} onRetry={retry} />
+              </div>
+            ) : (
+              <FeedGrid
+                issues={shownIssues}
+                loading={loading}
+                onUpvote={handleUpvote}
+                onClearFilters={() => {
+                  setCategory('All')
+                  setStatus('All')
+                  setSearch('')
+                }}
+              />
+            )}
           </div>
         </section>
       </main>
