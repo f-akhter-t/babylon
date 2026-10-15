@@ -81,7 +81,7 @@ export default function NotificationBell({ reportsPath = '/my-reports' }) {
                 Mark all as read
               </button>
             )}
-            <button type="button" onClick={() => setOpen(false)} aria-label="Close" className="-my-2 -mr-2 grid size-11 place-items-center rounded-full hover:bg-mint">
+            <button type="button" onClick={() => setOpen(false)} aria-label="Close" className="-my-2 -mr-2 grid size-11 shrink-0 place-items-center rounded-full hover:bg-mint">
               <CloseIcon />
             </button>
           </div>
@@ -121,7 +121,7 @@ export default function NotificationBell({ reportsPath = '/my-reports' }) {
             <button
               type="button"
               onClick={() => { setOpen(false); navigate(reportsPath) }}
-              className="p-1 text-sm font-bold text-forest underline underline-offset-[3px]"
+              className="min-h-11 px-1 text-sm font-bold text-forest underline underline-offset-[3px]"
             >
               View my reports
             </button>

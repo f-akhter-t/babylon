@@ -73,7 +73,7 @@ export default function Footer() {
                   <li key={link.label}>
                     <Link
                       to={link.to}
-                      className="inline-flex min-h-11 items-center font-medium text-white transition-colors hover:text-brand"
+                      className="inline-flex min-h-11 min-w-11 items-center font-medium text-white transition-colors hover:text-brand"
                     >
                       {link.label}
                     </Link>
