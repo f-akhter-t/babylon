@@ -1,5 +1,5 @@
 import { divIcon } from 'leaflet'
-import { PIN_WRAPPER_CLASSES, pinHtml, SVG_CLASSES } from './pinMarkup'
+import { DRAFT_PIN_SIZE, draftPinHtml, pinHtml } from './pinMarkup'
 
 // Leaflet pins are plain HTML strings, not React. The issue pin itself is
 // drawn in pinMarkup.js (shared with the My reports cards). Tailwind still
@@ -31,16 +31,9 @@ export function draftPinIcon() {
   if (!cache.draft) {
     cache.draft = divIcon({
       className: '',
-      html: `
-        <div class="${PIN_WRAPPER_CLASSES}">
-          <svg viewBox="0 0 28 36" class="${SVG_CLASSES}">
-            <path d="M14 35C14 35 2 22 2 13a12 12 0 0 1 24 0c0 9-12 22-12 22z"
-              class="fill-navy stroke-white" stroke-width="2.5" />
-            <circle cx="14" cy="13" r="5" class="fill-brand" />
-          </svg>
-        </div>`,
-      iconSize: [38, 48],
-      iconAnchor: [19, 48],
+      html: draftPinHtml(),
+      iconSize: DRAFT_PIN_SIZE,
+      iconAnchor: [DRAFT_PIN_SIZE[0] / 2, DRAFT_PIN_SIZE[1]],
     })
   }
   return cache.draft

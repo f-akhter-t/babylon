@@ -58,3 +58,22 @@ export function pinHtml(status, selected) {
       </svg>
     </div>`
 }
+
+// The citizen's own "report here" pin: navy with a green dot, the same shape
+// as the issue pins. Used by the Map's Drop pin and the Report picker.
+export const DRAFT_PIN_SIZE = [38, 48] // the tip sits on the spot
+export const draftPinSvg = `
+  <svg viewBox="0 0 28 36" class="${SVG_CLASSES}">
+    <path d="M14 35C14 35 2 22 2 13a12 12 0 0 1 24 0c0 9-12 22-12 22z"
+      class="fill-navy stroke-white" stroke-width="2.5" />
+    <circle cx="14" cy="13" r="5" class="fill-brand" />
+  </svg>`
+
+export function draftPinHtml() {
+  return `<div class="${PIN_WRAPPER_CLASSES}">${draftPinSvg}</div>`
+}
+
+const STATUS_WORD = { open: 'Open', 'in-progress': 'In progress', resolved: 'Resolved' }
+
+// The accessible name of a clickable issue pin, e.g. "Deep pothole near Wasa Circle, Open."
+export const pinName = (title, status) => `${title}, ${STATUS_WORD[status] ?? STATUS_WORD.open}.`
