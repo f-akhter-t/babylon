@@ -16,8 +16,10 @@ import MapPreviewSection from './MapPreviewSection'
 import HowItWorksSection from './HowItWorksSection'
 import FixedThisWeekSection from './FixedThisWeekSection'
 import FinalCtaBand from './FinalCtaBand'
+import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 
 export default function Home() {
+  useDocumentTitle('Babylon · Report. Track. Resolve.', { full: true })
   const [data, setData] = useState(null)
   const [failed, setFailed] = useState(false)
 
