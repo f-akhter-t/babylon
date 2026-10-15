@@ -16,7 +16,31 @@ export const departments = [
   { name: 'Electricity', assigned: 37, resolved: 33, avgDays: 2.4, reopened: 1 },
 ]
 
-export const accountabilityPeriod = 'Last 8 weeks'
+// The periods on the Accountability screen. 8 weeks is the default, so the
+// screen and Home show the same figures.
+export const ACCOUNTABILITY_PERIODS = [
+  { weeks: 4, label: 'Last 4 weeks' },
+  { weeks: 8, label: 'Last 8 weeks' },
+]
+export const DEFAULT_PERIOD_WEEKS = 8
+
+// The last 4 weeks, made up to match the last 4 points of weeklyReports below
+// (124 received, 104 resolved). Counts are each department's 8-week share,
+// rounded so they add up exactly; days and reopened are a little better than
+// over 8 weeks, like the rising resolved line.
+const departmentsLast4Weeks = [
+  { name: 'Roads & Highways', assigned: 47, resolved: 36, avgDays: 5.8, reopened: 2 },
+  { name: 'Waste Management', assigned: 35, resolved: 31, avgDays: 2.9, reopened: 1 },
+  { name: 'Water Supply', assigned: 22, resolved: 18, avgDays: 4.5, reopened: 1 },
+  { name: 'Electricity', assigned: 20, resolved: 19, avgDays: 2.2, reopened: 0 },
+]
+
+// The single source for each period: the stat cards and the table come from
+// these rows, and their totals match the chart's weeks.
+export const departmentsByPeriod = {
+  4: departmentsLast4Weeks,
+  8: departments,
+}
 
 export const waitingLongest = [
   { title: 'Broken drain cover by Chaktai Khal', department: 'Water Supply', days: 21 },

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useCallback, useState } from 'react'
 import { Link } from 'react-router-dom'
 import clsx from 'clsx'
 import {
@@ -12,17 +12,31 @@ import {
 } from 'recharts'
 import AdminLayout from '../../components/layout/AdminLayout'
 import LoadError from '../../components/ui/LoadError'
-import { loadAccountability } from '../../services/api'
+import {
+  ACCOUNTABILITY_PERIODS,
+  DEFAULT_PERIOD_WEEKS,
+  loadAccountability,
+} from '../../services/api'
 import { useAsync } from '../../hooks/useAsync'
 import RequireRole from '../Auth/RequireRole'
 import { useDocumentTitle } from '../IssueDetail/useDocumentTitle'
 import { fit, REGION_FOCUS, useFitMode } from '../../components/layout/staffFit'
 import { usePrefersReducedMotion } from '../Feed/feedMotionHooks'
 
-const PERIODS = [
-  { label: 'Last 4 weeks', weeks: 4 },
-  { label: 'Last 8 weeks', weeks: 8 },
-]
+// Every string that names the period, each one whole template so a
+// translation can put the number wherever its grammar needs it.
+const TEXT = {
+  received: (weeks) => `Reports received in the last ${weeks} weeks`,
+  resolved: (weeks) => `Resolved and verified in the last ${weeks} weeks`,
+  avgDays: (weeks) => `Average time to resolve in the last ${weeks} weeks`,
+  reopened: (weeks) => `Reopened after closing in the last ${weeks} weeks`,
+  caption: (weeks) => `Reports received and resolved in each of the last ${weeks} weeks`,
+  loading: (weeks) => `Loading the figures for the last ${weeks} weeks.`,
+  showing: (weeks) => `Showing the last ${weeks} weeks.`,
+  loadError: (weeks) => `We could not load the figures for the last ${weeks} weeks. Please try again.`,
+  days: (days) => `${days} days`,
+  percent: (value) => `${value}%`,
+}
 
 function StatCard({ label, children, valueClass }) {
   return (
@@ -116,7 +130,7 @@ function trendSentence(weekly) {
 // The chart is a picture for sighted users. Screen readers get the sentence
 // and the table instead, so the chart itself is hidden from them and its
 // keyboard layer is off. The lines do not animate when less motion is asked for.
-function WeeklyChart({ weekly }) {
+function WeeklyChart({ weekly, weeks }) {
   const reducedMotion = usePrefersReducedMotion()
   const [showTable, setShowTable] = useState(false)
   const summary = trendSentence(weekly)
@@ -197,7 +211,7 @@ function WeeklyChart({ weekly }) {
       </button>
       <div id="weekly-table" hidden={!showTable} className="mt-3 overflow-x-auto">
         <table className="w-full font-body text-sm text-navy">
-          <caption className="mb-2 text-left font-bold">Reports received and resolved each week</caption>
+          <caption className="mb-2 text-left font-bold">{TEXT.caption(weeks)}</caption>
           <thead>
             <tr className="border-b border-navy/20 text-left">
               <th scope="col" className="py-2 pr-4 font-semibold">Week</th>
@@ -281,11 +295,22 @@ export default function Accountability() {
 
 function AccountabilityPage() {
   useDocumentTitle('Accountability')
-  const [weeks, setWeeks] = useState(8)
-  const { data, error, loading, retry } = useAsync(loadAccountability)
+  const [weeks, setWeeks] = useState(DEFAULT_PERIOD_WEEKS)
+  // Keyed on the period: useAsync ignores the answer of an earlier load.
+  const load = useCallback(() => loadAccountability(weeks), [weeks])
+  const { data, error, retry } = useAsync(load)
   const fitMode = useFitMode()
 
-  const weekly = data ? data.weekly.slice(-weeks) : []
+  // Figures are only ever labelled with their own period. While the new
+  // period loads, the old figures stay (marked busy) under their old labels.
+  const ready = Boolean(data) && data.weeks === weeks && !error
+  const busy = !error && !ready
+
+  // One polite live region, so each change is announced once: first the
+  // loading message, then the showing message once the figures are on screen.
+  let liveText = ''
+  if (busy) liveText = TEXT.loading(weeks)
+  else if (ready) liveText = TEXT.showing(weeks)
 
   return (
     <AdminLayout
@@ -304,45 +329,44 @@ function AccountabilityPage() {
             </p>
           </div>
 
-          <select
-            value={weeks}
-            onChange={(e) => setWeeks(Number(e.target.value))}
-            aria-label="Period"
-            className="min-h-11 w-full rounded-full border border-navy bg-white px-5 py-2 font-body text-sm font-bold text-navy focus:outline-none focus:ring-2 focus:ring-forest sm:w-auto"
-          >
-            {PERIODS.map((p) => (
-              <option key={p.weeks} value={p.weeks}>
-                {p.label}
-              </option>
-            ))}
-          </select>
+          {/* Outside the area that reloads, so it keeps focus after a change.
+              The status line sits under it, in the height the heading already uses. */}
+          <div className="flex w-full flex-col items-stretch gap-1 sm:w-auto sm:items-end">
+            <select
+              value={weeks}
+              onChange={(e) => setWeeks(Number(e.target.value))}
+              aria-label="Period"
+              className="min-h-11 w-full rounded-full border border-navy bg-white px-5 py-2 font-body text-sm font-bold text-navy focus:outline-none focus:ring-2 focus:ring-forest sm:w-auto"
+            >
+              {ACCOUNTABILITY_PERIODS.map((p) => (
+                <option key={p.weeks} value={p.weeks}>
+                  {p.label}
+                </option>
+              ))}
+            </select>
+            {/* Always rendered (never hidden), so screen readers catch each change. */}
+            <p role="status" aria-live="polite" className="font-body text-sm font-bold text-navy">
+              {liveText}
+            </p>
+          </div>
         </div>
 
         {error && (
           <div className="mt-6">
-            <LoadError
-              message="We could not load the accountability figures. Please try again."
-              onRetry={retry}
-            />
+            <LoadError message={TEXT.loadError(weeks)} onRetry={retry} />
           </div>
         )}
 
-        {loading && (
-          <p role="status" className="mt-6 font-body text-base text-navy">
-            Loading the accountability figures.
-          </p>
-        )}
-
-        {data && (
-          <>
+        {data && !error && (
+          <div aria-busy={busy || undefined} className={clsx(fit.column, fit.grow)}>
             <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              <StatCard label="Reports received">{data.stats.received}</StatCard>
-              <StatCard label="Resolved and verified" valueClass="text-brand">
+              <StatCard label={TEXT.received(data.weeks)}>{data.stats.received}</StatCard>
+              <StatCard label={TEXT.resolved(data.weeks)} valueClass="text-brand">
                 {data.stats.resolved}
               </StatCard>
-              <StatCard label="Average time to resolve">{`${data.stats.avgDays} days`}</StatCard>
-              <StatCard label="Reopened after closing" valueClass="text-amber">
-                {data.stats.reopenedPercent}%
+              <StatCard label={TEXT.avgDays(data.weeks)}>{TEXT.days(data.stats.avgDays)}</StatCard>
+              <StatCard label={TEXT.reopened(data.weeks)} valueClass="text-amber">
+                {TEXT.percent(data.stats.reopenedPercent)}
               </StatCard>
             </div>
 
@@ -362,11 +386,12 @@ function AccountabilityPage() {
                 className={clsx('min-w-0 rounded-panel bg-mint p-4 sm:p-6', fit.scroll, REGION_FOCUS)}
               >
                 <DepartmentTable departments={data.departments} />
-                <WeeklyChart weekly={weekly} />
+                <WeeklyChart weekly={data.weekly} weeks={data.weeks} />
               </div>
+              {/* The current state: the same for every period. */}
               <WaitingLongest items={data.waitingLongest} fitMode={fitMode} />
             </div>
-          </>
+          </div>
         )}
       </div>
     </AdminLayout>
