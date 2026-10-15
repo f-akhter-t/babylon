@@ -112,6 +112,7 @@ export default function Feed() {
               resultCount={failed ? null : issues.length}
             />
 
+            <h2 className="sr-only">Issues</h2>
             {failed ? (
               <div className="mt-8">
                 <LoadError message={LOAD_FAILED} onRetry={retry} />

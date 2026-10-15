@@ -57,6 +57,7 @@ export default function MyReports() {
           <p className="pb-2 text-muted">Track and manage the issues you've reported.</p>
         </div>
 
+        <h2 className="sr-only">Your progress</h2>
         <div className="mt-5 grid gap-4 md:grid-cols-[1fr_1.3fr]">
           <Reveal><LevelCard user={user} /></Reveal>
           <Reveal delay={180}><EarnCard items={earn} /></Reveal>
@@ -114,13 +115,16 @@ export default function MyReports() {
         {loading ? (
           <p className="mt-6 text-center text-muted">Loading your reports…</p>
         ) : list.length > 0 ? (
-          <div className="mt-5 grid grid-cols-[repeat(auto-fill,minmax(300px,1fr))] gap-4 max-sm:grid-cols-1">
-            {list.map((r, i) => (
-              <Reveal key={r.id} delay={100 + (i % 3) * 80} className="h-full">
-                <ReportCard report={r} onOpen={open} />
-              </Reveal>
-            ))}
-          </div>
+          <>
+            <h2 className="sr-only">Your reports</h2>
+            <div className="mt-5 grid grid-cols-[repeat(auto-fill,minmax(300px,1fr))] gap-4 max-sm:grid-cols-1">
+              {list.map((r, i) => (
+                <Reveal key={r.id} delay={100 + (i % 3) * 80} className="h-full">
+                  <ReportCard report={r} onOpen={open} />
+                </Reveal>
+              ))}
+            </div>
+          </>
         ) : (
           <Reveal className="mt-5">
             <div className="rounded-panel bg-mint px-5 py-12 text-center">
