@@ -363,13 +363,14 @@ export default function LocationPicker({
         <FlyTo target={flyTarget} />
         <ClickToPlace onPlace={setPosition} />
 
+        {/* Leaflet reads className and interactive only when the layer is
+            created, so they are direct props, not pathOptions (which react-leaflet
+            applies later with setStyle). */}
         <Circle
           center={markerPosition}
           radius={MATCH_RADIUS_M}
-          pathOptions={{
-            interactive: false,
-            className: 'stroke-forest fill-forest/10 stroke-2 [stroke-dasharray:6_6]',
-          }}
+          interactive={false}
+          className="stroke-forest fill-forest/10 stroke-2 [stroke-dasharray:6_6]"
         />
 
         {match && (
