@@ -5,9 +5,11 @@
 import { CATEGORIES, issues as rawIssues, MAP_CENTER } from '../mock/issues'
 import { heroSlides, heroSearchCategories } from '../mock/heroSlides'
 import {
+  ACCOUNTABILITY_PERIODS,
   CATEGORY_DEPARTMENT,
+  DEFAULT_PERIOD_WEEKS,
   departments,
-  accountabilityPeriod,
+  departmentsByPeriod,
   waitingLongest,
   weeklyReports,
 } from '../mock/departments'
@@ -363,6 +365,20 @@ function failLoadsForTesting() {
   if (on) throw new Error('Load failed on purpose (babylon:failLoads).')
 }
 
+// Dev only: sessionStorage 'babylon:slowPeriod' = '4' or '8' makes the
+// Accountability load for that period wait 1.5 s, to check that a slow answer
+// never replaces a newer one. Not in production builds.
+async function slowPeriodForTesting(weeks) {
+  if (!import.meta.env.DEV) return
+  let slow = null
+  try {
+    slow = window.sessionStorage.getItem('babylon:slowPeriod')
+  } catch {
+    // storage blocked: never slow down on purpose
+  }
+  if (slow === String(weeks)) await new Promise((resolve) => setTimeout(resolve, 1500))
+}
+
 function makeTitle(description) {
   const firstSentence = description.split(/[.!?\n]/)[0].trim()
   if (!firstSentence) return 'New report'
@@ -604,18 +620,24 @@ export async function getRecentActivity(limit = 8) {
     }))
 }
 
-export async function getStats() {
-  const received = sum(departments, 'assigned')
-  const resolved = sum(departments, 'resolved')
-  const reopened = sum(departments, 'reopened')
-  const avgDays =
-    departments.reduce((total, d) => total + d.avgDays * d.resolved, 0) / resolved
+// The stat cards, from department rows: totals, and averages weighted by the
+// number resolved. Only these two averages are rounded (one decimal).
+function statsFrom(rows) {
+  const received = sum(rows, 'assigned')
+  const resolved = sum(rows, 'resolved')
+  const reopened = sum(rows, 'reopened')
+  const avgDays = rows.reduce((total, d) => total + d.avgDays * d.resolved, 0) / resolved
   return {
-    received, // 228
-    resolved, // 176
-    avgDays: Math.round(avgDays * 10) / 10, // 4.3
-    reopenedPercent: Math.round((reopened / resolved) * 1000) / 10, // 4.5
+    received,
+    resolved,
+    avgDays: Math.round(avgDays * 10) / 10,
+    reopenedPercent: Math.round((reopened / resolved) * 1000) / 10,
   }
+}
+
+// Home's figures: always the last 8 weeks (228, 176, 4.3 days, 4.5%).
+export async function getStats() {
+  return statsFrom(departments)
 }
 
 // ---------- Department panel ----------
@@ -687,20 +709,27 @@ export async function getAdminCounts() {
   return { queue: queue.length, reopened: reopened.length }
 }
 
-export async function getAccountability() {
-  return {
-    period: accountabilityPeriod,
-    stats: await getStats(),
-    departments,
-    waitingLongest,
-    weekly: weeklyReports,
-  }
-}
+export { ACCOUNTABILITY_PERIODS, DEFAULT_PERIOD_WEEKS }
 
-// Everything the Accountability page shows, in one load.
-export async function loadAccountability() {
+// Everything the Accountability page shows for one period, in one load.
+// The department rows are the single source: the cards are computed from them,
+// and their totals match the chart's weeks. Waiting longest is the current
+// state, the same for every period. With a real backend this becomes one
+// fetch(`/api/accountability?weeks=${weeks}`).
+export async function loadAccountability(weeks = DEFAULT_PERIOD_WEEKS) {
   failLoadsForTesting()
-  return getAccountability()
+  await slowPeriodForTesting(weeks)
+  const period = ACCOUNTABILITY_PERIODS.find((p) => p.weeks === weeks)
+  const rows = departmentsByPeriod[weeks]
+  if (!period || !rows) throw new Error('This period is not available.')
+  return {
+    weeks,
+    label: period.label,
+    stats: statsFrom(rows),
+    departments: rows,
+    weekly: weeklyReports.slice(-weeks),
+    waitingLongest,
+  }
 }
 
 // ---------- Citizen (My reports, points and alerts) ----------
