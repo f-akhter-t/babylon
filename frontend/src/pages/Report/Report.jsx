@@ -53,7 +53,7 @@ function ReportPage() {
 
   // Mock backend: the report is saved in the browser and shows up in the feed.
   // If this throws, the form keeps what the citizen typed and shows the message.
-  async function handleSubmit({ photo, category: chosen, description }) {
+  async function handleSubmit({ photo, category: chosen, description, report }) {
     if (!location) throw new Error('Pick a location on the map first.')
     const photoUrl = await resizeImage(photo)
     await createIssue({
@@ -62,6 +62,7 @@ function ReportPage() {
       photoUrl,
       location,
       reporter: viewer.session?.name, // CHANGE 3
+      legacyReportId: report?.id, // links the old My reports store record (see deleteIssue)
     })
     toast.info(`Your report is submitted. You earned ${POINTS_PER_REPORT} points.`) // CHANGE 3
   }
