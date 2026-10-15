@@ -188,7 +188,7 @@ function DepartmentPanelPage() {
       <div
         className={clsx(
           // The last row grows to fit a tall panel, so the heading rows never stretch.
-          'grid gap-5 p-4 sm:gap-6 sm:p-6 lg:grid-rows-[auto_auto_1fr] lg:p-8',
+          'grid grid-cols-1 gap-5 p-4 sm:gap-6 sm:p-6 lg:grid-rows-[auto_auto_1fr] lg:p-8',
           panelOpen ? 'lg:grid-cols-[minmax(0,1fr)_min(22.5rem,40%)]' : 'lg:grid-cols-1',
           fit.departmentGrid,
         )}

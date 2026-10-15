@@ -17,7 +17,7 @@ const PRIORITY_LABEL = {
 function StatusCell({ issue }) {
   if (issue.verification === 'awaiting') {
     return (
-      <span className="inline-flex items-center gap-2 rounded-full bg-slate/15 px-3 py-1 font-body text-sm font-semibold text-navy">
+      <span className="inline-flex max-w-full items-center gap-2 rounded-full bg-slate/15 px-3 py-1 font-body text-sm font-semibold text-navy">
         <StaircaseIcon level={3} className="text-slate" />
         Awaiting check
       </span>
@@ -25,7 +25,7 @@ function StatusCell({ issue }) {
   }
   if (issue.sentBack) {
     return (
-      <span className="inline-flex items-center gap-2 rounded-full bg-slate/15 px-3 py-1 font-body text-sm font-semibold text-navy">
+      <span className="inline-flex max-w-full items-center gap-2 rounded-full bg-slate/15 px-3 py-1 font-body text-sm font-semibold text-navy">
         <StaircaseIcon level={2} className="text-slate" />
         Sent back
       </span>

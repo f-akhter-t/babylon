@@ -159,7 +159,7 @@ function VerifyResolutionsPage() {
           // both scroll inside themselves and the review's buttons stay pinned.
           <div
             className={clsx(
-              'mt-6 grid gap-6 lg:grid-cols-[16.25rem_minmax(0,1fr)]',
+              'mt-6 grid grid-cols-1 gap-6 lg:grid-cols-[16.25rem_minmax(0,1fr)]',
               fit.grow,
               fit.rows,
               fit.min80,

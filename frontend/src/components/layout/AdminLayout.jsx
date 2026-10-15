@@ -188,8 +188,9 @@ export default function AdminLayout({
   const navProps = { variant, active, onSelect, department, note, counts }
 
   return (
-    <div className="min-h-screen bg-page font-body lg:flex">
-      <div className="flex items-center justify-between gap-3 bg-navy px-4 py-3 lg:hidden">
+    // break-words: with very large text, long words wrap instead of widening the page.
+    <div className="min-h-screen break-words bg-page font-body lg:flex">
+      <div className="flex flex-wrap items-center justify-between gap-3 bg-navy px-4 py-3 lg:hidden">
         <div className="min-w-0">
           <p className="font-heading text-2xl font-extrabold text-mint">Babylon</p>
           <p className="font-body text-xs font-bold uppercase tracking-widest text-brand">

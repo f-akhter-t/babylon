@@ -295,7 +295,7 @@ function AccountabilityPage() {
             {/* Below lg everything stacks: table, chart, then Waiting longest. */}
             <div
               className={clsx(
-                'mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_18.75rem]',
+                'mt-6 grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_18.75rem]',
                 fit.grow,
                 fit.rows,
                 fit.min64,
