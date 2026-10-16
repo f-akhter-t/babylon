@@ -37,6 +37,12 @@ export function useHeldList(items, { containerRef, scrollerRef, resetKey, update
     latest.current = items
   })
 
+  // A first load, a reload or new filters: take the items at once, during
+  // render, so the list is drawn once (a layout effect would draw it twice).
+  if ((!live || resetKey !== state.resetKey) && (state.source !== items || state.resetKey !== resetKey)) {
+    setState({ resetKey, items, ghosts: new Set(), waiting: [], source: items })
+  }
+
   const isHeld = useCallback(() => {
     const box = containerRef.current
     if (!box) return false
@@ -52,11 +58,8 @@ export function useHeldList(items, { containerRef, scrollerRef, resetKey, update
   // layout effect is for, hence the setState calls in it.
   /* eslint-disable react-hooks/set-state-in-effect */
   useLayoutEffect(() => {
-    if (items === state.source) return
-    if (resetKey !== state.resetKey || !live) {
-      setState({ resetKey, items, ghosts: new Set(), waiting: [], source: items })
-      return
-    }
+    // Only live updates are decided here; the rest was taken during render.
+    if (items === state.source || !live || resetKey !== state.resetKey) return
     const fresh = new Map(items.map((item) => [String(item.id), item]))
     const shownIds = new Set(state.items.map((item) => String(item.id)))
     const hasWaiting = state.waiting.length > 0 || state.ghosts.size > 0

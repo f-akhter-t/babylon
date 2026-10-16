@@ -36,13 +36,16 @@ function ClusterMarker({ cluster, onClick }) {
 export default function PinLayer({ issues, selectedId, onSelect }) {
   const map = useMap()
   const [zoom, setZoom] = useState(() => map.getZoom())
-  const [pins, setPins] = useState({ issues, leaving: [] })
-  if (issues !== pins.issues) {
+  // Compared by ids, not by array: the page passes a new array on every
+  // render, and only a pin that really went needs to fade out.
+  const ids = issues.map((issue) => String(issue.id)).join(',')
+  const [pins, setPins] = useState({ ids, issues, leaving: [] })
+  if (ids !== pins.ids) {
     const now = new Set(issues.map((issue) => String(issue.id)))
     const quiet = prefersLessMotion() || document.visibilityState === 'hidden'
     const gone = quiet ? [] : pins.issues.filter((issue) => !now.has(String(issue.id)))
     const stillLeaving = pins.leaving.filter((issue) => !now.has(String(issue.id)))
-    setPins({ issues, leaving: [...stillLeaving, ...gone] })
+    setPins({ ids, issues, leaving: [...stillLeaving, ...gone] })
   }
   const leavingCount = pins.leaving.length
   useEffect(() => {
