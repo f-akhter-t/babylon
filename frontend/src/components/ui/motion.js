@@ -22,6 +22,13 @@ export function animate(element, keyframes, options) {
   return element.animate(keyframes, options)
 }
 
+// A CSS entrance as an inline style, for things that come in one after
+// another: style={enter('rise-in', 0.1)}. The keyframes live in index.css,
+// so the reduced-motion rule there covers them.
+export function enter(name = 'rise-in', delay = 0, duration = 'var(--duration-slow)') {
+  return { animation: `${name} ${duration} var(--ease-calm) ${delay}s both` }
+}
+
 // Pins and badges drop in from a little above.
 export const DROP_IN = [
   { opacity: 0, transform: 'translateY(-14px) scale(0.6)' },

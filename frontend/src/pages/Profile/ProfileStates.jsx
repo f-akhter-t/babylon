@@ -1,6 +1,6 @@
 import Button from '../../components/ui/Button'
 
-const BLOCK = 'rounded-card bg-white/50 motion-safe:animate-pulse'
+const BLOCK = 'skeleton rounded-card bg-white/50'
 
 // Grey shapes in the same places as the real page, while the profile loads.
 export function ProfileLoading() {

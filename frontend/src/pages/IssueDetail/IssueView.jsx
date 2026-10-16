@@ -1,4 +1,4 @@
-import { RISE_IN } from '../Map/motion'
+import { RISE_IN } from '../../components/ui/motion'
 import { useEntrance } from './useEntrance'
 import BackLink from './BackLink'
 import ShareButton from './ShareButton'

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef } from 'react'
 import clsx from 'clsx'
 import Button from '../../components/ui/Button'
-import { animate, RISE_IN, SPRING } from './motion'
+import { animate, RISE_IN, SPRING } from '../../components/ui/motion'
 
 const TITLES = {
   upvote: 'Log in to upvote',

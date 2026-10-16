@@ -4,7 +4,7 @@ import StatusPill from '../../components/ui/StatusPill'
 import PriorityBadge from '../../components/ui/PriorityBadge'
 import { formatDistance } from '../../utils/format'
 import { ArrowUpIcon } from './MapIcons'
-import { animate, RISE_IN } from './motion'
+import { animate, RISE_IN } from '../../components/ui/motion'
 
 export default function IssueCard({ issue, selected, onSelect }) {
   const ref = useRef(null)

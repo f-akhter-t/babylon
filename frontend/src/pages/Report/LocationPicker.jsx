@@ -17,6 +17,7 @@ import { distanceInMeters } from '../../utils/geo'
 import { DRAFT_PIN_SIZE, draftPinSvg } from '../Map/pinMarkup'
 import { pinIcon } from '../Map/statusPin'
 import MiniMapZoom from '../IssueDetail/MiniMapZoom'
+import { enter } from '../../components/ui/motion'
 
 const START = { lat: MAP_CENTER[0], lng: MAP_CENTER[1] }
 const MATCH_RADIUS_M = 120 // an open issue this close counts as a possible duplicate
@@ -35,25 +36,8 @@ const dragPinIcon = L.divIcon({
   tooltipAnchor: [0, -DRAFT_PIN_SIZE[1]],
 })
 
+// The draft pin's parts. Its animations are the shared ones in index.css.
 const pickerStyle = `
-  @keyframes pickerIn {
-    from { opacity: 0; transform: translateY(18px); }
-    to { opacity: 1; transform: none; }
-  }
-  @keyframes pickerPop {
-    from { opacity: 0; transform: translateY(10px) scale(0.97); }
-    to { opacity: 1; transform: none; }
-  }
-  @keyframes pinPulse {
-    0% { transform: scale(0.5); opacity: 0.5; }
-    100% { transform: scale(3); opacity: 0; }
-  }
-  @keyframes pinDrop {
-    0% { transform: translateY(-20px); }
-    55% { transform: translateY(0) scaleY(0.9); }
-    100% { transform: translateY(0); }
-  }
-
   /* the pin: lifts on hover, floats while dragged, bounces when it lands */
   .report-pin { background: transparent; border: 0; }
   .report-pin .pin-wrap { position: relative; width: 100%; height: 100%; }
@@ -61,11 +45,11 @@ const pickerStyle = `
     position: absolute;
     inset: 0;
     transform-origin: 50% 100%;
-    transition: transform 0.2s ease-out;
+    transition: transform var(--duration-fast) var(--ease-calm);
   }
   .report-pin:hover .pin-body { transform: translateY(-4px); }
   .report-pin.is-dragging .pin-body { transform: translateY(-12px) scale(1.1); }
-  .report-pin .pin-body.pin-drop { animation: pinDrop 0.45s ease-out; }
+  .report-pin .pin-body.pin-drop { animation: drop-in var(--duration-slow) var(--ease-spring); }
   .report-pin .pin-shadow {
     position: absolute;
     left: 50%;
@@ -88,7 +72,7 @@ const pickerStyle = `
     margin-left: -7px;
     border-radius: 9999px;
     background: var(--color-forest);
-    animation: pinPulse 1.8s ease-out infinite;
+    animation: ring-out 1.8s var(--ease-calm) infinite;
   }
   .report-pin.is-dragging .pin-pulse { display: none; }
 `
@@ -317,7 +301,7 @@ export default function LocationPicker({
     <section
       aria-label="Choose the location"
       className="relative isolate min-h-[560px] overflow-hidden rounded-card bg-mint shadow-sm transition-shadow duration-300 hover:shadow-xl"
-      style={{ animation: 'pickerIn 0.55s ease-out 0.2s both' }}
+      style={enter('rise-in', 0.2)}
     >
       <style>{pickerStyle}</style>
 
@@ -443,7 +427,7 @@ export default function LocationPicker({
           <div
             key={match.issue.id}
             className="pointer-events-auto max-w-sm rounded-2xl border-2 border-amber-dark bg-white p-4 shadow-lg transition hover:-translate-y-0.5 hover:shadow-xl"
-            style={{ animation: 'pickerPop 0.35s ease-out both' }}
+            style={enter('rise-in', 0, 'var(--duration-base)')}
           >
             <div className="flex items-center gap-2">
               <StaircaseIcon level={1} className="h-5 w-5 text-amber-dark" />
@@ -484,7 +468,7 @@ export default function LocationPicker({
           <p
             key={label}
             className="font-body text-sm font-bold text-navy"
-            style={{ animation: 'pickerPop 0.3s ease-out both' }}
+            style={enter('rise-in', 0, 'var(--duration-base)')}
           >
             {label}
             {ward ? `, ${ward}` : ''}

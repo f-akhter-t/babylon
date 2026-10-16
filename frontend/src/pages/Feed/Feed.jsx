@@ -13,21 +13,6 @@ import { useAsync } from '../../hooks/useAsync'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import { useToast } from '../../components/ui/toast'
 
-const pageStyle = `
-  @keyframes cardIn {
-    from { opacity: 0; transform: translateY(16px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-  @keyframes voteBump {
-    0% { transform: scale(1); }
-    40% { transform: scale(1.35); }
-    100% { transform: scale(1); }
-  }
-  @media (prefers-reduced-motion: reduce) {
-    * { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; }
-  }
-`
-
 const LOAD_FAILED = 'We could not load the issues. Check your connection and try again.'
 
 export default function Feed() {
@@ -74,7 +59,6 @@ export default function Feed() {
 
   return (
     <>
-      <style>{pageStyle}</style>
       <AnimatedBackground />
       <Navbar />
 

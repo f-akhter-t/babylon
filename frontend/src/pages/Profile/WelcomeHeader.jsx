@@ -1,6 +1,6 @@
 import Button from '../../components/ui/Button'
 import CompletenessMeter from './CompletenessMeter'
-import { pageRise } from './profileMotion'
+import { enter } from '../../components/ui/motion'
 
 // The first-time view of /profile, right after a new citizen signs up.
 // "Skip for now" is a normal link, so unsaved changes are asked about first.
@@ -9,7 +9,7 @@ export default function WelcomeHeader({ name, profile, onSkip }) {
     <section
       aria-labelledby="welcome-heading"
       className="flex flex-col gap-6 rounded-panel bg-mint/90 p-6 shadow-sm backdrop-blur-sm md:flex-row md:items-center md:justify-between md:gap-10 md:p-8"
-      style={pageRise(0)}
+      style={enter('rise-in', 0)}
     >
       <div className="max-w-xl">
         <h1

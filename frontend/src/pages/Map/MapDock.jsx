@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react'
 import { useMap } from 'react-leaflet'
 import { DomEvent } from 'leaflet'
 import { edgePadding, GAP } from './placement'
-import { animate, SLIDE_IN, SPRING } from './motion'
+import { animate, SLIDE_IN, SPRING } from '../../components/ui/motion'
 
 // Phones: the popup content as a card docked at the bottom of the map.
 // left-18 keeps the zoom buttons free; the max height keeps the

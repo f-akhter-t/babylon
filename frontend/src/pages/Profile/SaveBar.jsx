@@ -1,3 +1,5 @@
+import { enter } from '../../components/ui/motion'
+
 // Phones only: "Unsaved changes" with Save and Discard, stuck to the bottom of
 // the screen while Personal details has changes. It sits at the end of the
 // page content (sticky, not fixed), so it stops above the footer. The buttons
@@ -7,7 +9,7 @@ export default function SaveBar({ formId, canSave, saving }) {
     <div
       data-toast-clearance
       className="sticky bottom-0 z-[1000] -mx-4 mt-6 sm:-mx-6 md:-mx-10 lg:hidden"
-      style={{ animation: 'saveBarIn 0.3s ease-out both' }}
+      style={enter('slide-up', 0, 'var(--duration-base)')}
     >
       <div
         className="flex items-center justify-between gap-3 border-t border-mint/15 bg-navy px-4 pt-3 shadow-lg sm:px-6 md:px-10"

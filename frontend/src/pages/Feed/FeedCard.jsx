@@ -11,11 +11,11 @@ export default function FeedCard({ issue, onUpvote }) {
   function handleClick() {
     onUpvote(issue)
     setBump(true)
-    setTimeout(() => setBump(false), 300)
+    setTimeout(() => setBump(false), 450)
   }
 
   return (
-    <article className="group flex h-full flex-col overflow-hidden rounded-card border border-navy/5 bg-mint shadow-sm transition-all duration-300 hover:-translate-y-1.5 hover:shadow-xl">
+    <article className="group flex h-full flex-col overflow-hidden rounded-card border border-navy/5 bg-mint shadow-sm lift">
       <div className="relative h-40 shrink-0 overflow-hidden bg-slate/20">
         {isFixed ? (
           <BeforeAfterSlider before={issue.beforeImg} after={issue.afterImg} alt={issue.title} />
@@ -54,7 +54,7 @@ export default function FeedCard({ issue, onUpvote }) {
             <StatusPill status={issue.status} />
             {issue.status !== 'resolved' && (
               <span className="relative flex h-1.5 w-1.5">
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-amber opacity-75" />
+                <span className="absolute inline-flex h-full w-full animate-ring-out rounded-full bg-amber opacity-75" />
                 <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-amber-dark" />
               </span>
             )}
@@ -78,7 +78,8 @@ export default function FeedCard({ issue, onUpvote }) {
             >
               ↑{' '}
               <span
-                style={bump ? { display: 'inline-block', animation: 'voteBump 0.3s ease-out' } : undefined}
+                className="inline-block"
+                style={bump ? { animation: 'vote-bump var(--duration-slow) var(--ease-spring)' } : undefined}
               >
                 {issue.votes}
               </span>

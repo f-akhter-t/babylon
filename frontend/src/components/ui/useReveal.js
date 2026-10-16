@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 
 // Turns "shown" to true once, when the element scrolls into view.
-// Reduced-motion users (and old browsers) see it at once.
+// Reduced-motion users (and old browsers) see it at once: the preference is
+// read when the element first renders.
 export default function useReveal() {
   const ref = useRef(null)
   const [shown, setShown] = useState(

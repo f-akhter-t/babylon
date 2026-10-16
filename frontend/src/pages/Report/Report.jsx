@@ -11,20 +11,7 @@ import { resizeImage } from '../../utils/resizeImage'
 import { useToast } from '../../components/ui/toast'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import RequireCitizen from '../Auth/RequireCitizen'
-
-const pageStyle = `
-  @keyframes pageRise {
-    from { opacity: 0; transform: translateY(14px); }
-    to { opacity: 1; transform: none; }
-  }
-  @media (prefers-reduced-motion: reduce) {
-    * {
-      animation-duration: 0.001ms !important;
-      animation-iteration-count: 1 !important;
-      transition-duration: 0.001ms !important;
-    }
-  }
-`
+import { enter } from '../../components/ui/motion'
 
 // Citizens only: guests log in first and come back here, staff go to their panel.
 export default function Report() {
@@ -68,7 +55,6 @@ function ReportPage() {
 
   return (
     <>
-      <style>{pageStyle}</style>
       <AnimatedBackground />
       <Navbar />
 
@@ -77,7 +63,7 @@ function ReportPage() {
           <Link
             to="/map"
             className="group inline-flex min-h-11 items-center gap-1 font-body text-sm font-semibold text-navy/70 transition hover:text-navy focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest/50"
-            style={{ animation: 'pageRise 0.45s ease-out both' }}
+            style={enter('rise-in', 0)}
           >
             <span
               aria-hidden="true"
@@ -90,7 +76,7 @@ function ReportPage() {
 
           <div
             className="mt-3 flex flex-wrap items-baseline gap-x-4 gap-y-1"
-            style={{ animation: 'pageRise 0.5s ease-out 0.05s both' }}
+            style={enter('rise-in', 0.05)}
           >
             <h1 className="font-heading text-4xl font-extrabold text-navy md:text-5xl">
               Report an issue

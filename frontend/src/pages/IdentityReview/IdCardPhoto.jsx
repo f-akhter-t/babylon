@@ -108,7 +108,7 @@ export default function IdCardPhoto({ photo, name, noteId, onUseReason }) {
 
   if (photo.kind === 'loading') {
     return (
-      <div role="status" className={clsx(FRAME, 'bg-white/60 motion-safe:animate-pulse')}>
+      <div role="status" className={clsx(FRAME, 'skeleton bg-white/60')}>
         <span className="sr-only">Loading the card photo…</span>
       </div>
     )

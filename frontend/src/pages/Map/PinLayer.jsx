@@ -4,7 +4,7 @@ import { latLngBounds } from 'leaflet'
 import IssueMarker from './IssueMarker'
 import { clusterIcon } from './statusPin'
 import { groupNearby } from './clusters'
-import { animate, DROP_IN, SPRING } from './motion'
+import { animate, DROP_IN, SPRING } from '../../components/ui/motion'
 
 function ClusterMarker({ cluster, onClick }) {
   const markerRef = useRef(null)

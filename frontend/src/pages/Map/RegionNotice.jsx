@@ -1,13 +1,5 @@
 import { useEffect, useRef } from 'react'
-import { animate, SPRING } from './motion'
-
-const SHAKE = [
-  { transform: 'translateX(0)' },
-  { transform: 'translateX(-6px)' },
-  { transform: 'translateX(6px)' },
-  { transform: 'translateX(-3px)' },
-  { transform: 'translateX(0)' },
-]
+import { animate, SHAKE, SPRING } from '../../components/ui/motion'
 
 // Red message over the map when a pin is dropped outside the region.
 // attempt goes up on every blocked try, so the box shakes again each time.

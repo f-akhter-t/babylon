@@ -76,10 +76,16 @@ export default function SummaryCard({ profile, showMeter = true }) {
             aria-valuenow={Math.round(progress)}
             className="mt-4 h-2 overflow-hidden rounded-full bg-mint/15"
           >
+            {/* Scaled, not resized, so the bar never changes the layout. */}
             <div
-              className="h-full rounded-full bg-brand transition-all duration-500"
-              style={{ width: `${progress}%`, animation: 'barFill 1.1s ease-out 0.3s both' }}
-            />
+              className="h-full origin-left transition-transform duration-500"
+              style={{ transform: `scaleX(${progress / 100})` }}
+            >
+              <div
+                className="h-full origin-left rounded-full bg-brand"
+                style={{ animation: 'grow-x 1.1s var(--ease-calm) 0.3s both' }}
+              />
+            </div>
           </div>
           <p className="mt-2 font-body text-xs text-mint/70">
             {maxed
@@ -90,8 +96,8 @@ export default function SummaryCard({ profile, showMeter = true }) {
       ) : (
         <div role="status" className="flex flex-col gap-2">
           <span className="sr-only">Loading your points…</span>
-          <div aria-hidden="true" className="h-5 w-32 rounded-full bg-mint/10 motion-safe:animate-pulse" />
-          <div aria-hidden="true" className="h-12 w-24 rounded-tile bg-mint/10 motion-safe:animate-pulse" />
+          <div aria-hidden="true" className="h-5 w-32 rounded-full bg-mint/10 skeleton" />
+          <div aria-hidden="true" className="h-12 w-24 rounded-tile bg-mint/10 skeleton" />
         </div>
       )}
 

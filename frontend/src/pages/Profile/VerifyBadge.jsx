@@ -25,7 +25,7 @@ export default function VerifyBadge({ status, onDark = false, label }) {
   return (
     <span
       key={pops}
-      style={pops ? { animation: 'badgePop 0.45s cubic-bezier(0.2, 1.4, 0.4, 1)' } : undefined}
+      style={pops ? { animation: 'pop var(--duration-slow) var(--ease-spring)' } : undefined}
       className={clsx(
         'inline-flex items-center gap-1.5 rounded-full px-3 py-1 font-body text-xs font-bold',
         onDark ? tone.dark : tone.light,

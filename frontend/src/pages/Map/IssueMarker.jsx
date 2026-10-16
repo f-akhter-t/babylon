@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react'
 import { Marker } from 'react-leaflet'
 import { pinIcon } from './statusPin'
 import { pinName } from './pinMarkup'
-import { animate, DROP_IN, SPRING } from './motion'
+import { animate, DROP_IN, SPRING } from '../../components/ui/motion'
 
 export default function IssueMarker({ issue, selected, onSelect }) {
   const markerRef = useRef(null)

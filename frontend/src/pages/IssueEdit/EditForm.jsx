@@ -9,21 +9,11 @@ import { hasGuardEntry, useUnsavedChanges } from '../Profile/useUnsavedChanges'
 import { setIssueNotice } from '../IssueDetail/issueNotice'
 import ConfirmDialog from '../../components/ui/ConfirmDialog'
 import { useToast } from '../../components/ui/toast'
+import { enter } from '../../components/ui/motion'
 
 const LEAVE_MESSAGE = 'You have changes that are not saved. Leave this page anyway?'
 const SAVED_MESSAGE = 'Your changes are saved.'
 const DELETED_MESSAGE = 'Your report was deleted.'
-
-// Motion for the heading. The form and the map bring their own.
-const pageStyle = `
-  @keyframes editRise {
-    from { opacity: 0; transform: translateY(14px); }
-    to { opacity: 1; transform: none; }
-  }
-  @media (prefers-reduced-motion: reduce) {
-    .edit-rise { animation: none !important; }
-  }
-`
 
 // The form for one issue the logged-in citizen may edit (IssueEdit checks that).
 export default function EditForm({ issue, email }) {
@@ -163,13 +153,12 @@ export default function EditForm({ issue, email }) {
 
   return (
     <>
-      <style>{pageStyle}</style>
       <button
         type="button"
         onClick={handleCancel}
         // min-h-11 -my-3: a 44px tap area without moving the heading below.
-        className="edit-rise group -my-3 inline-flex min-h-11 items-center gap-1 rounded-full font-body text-sm font-semibold text-navy/70 transition hover:text-navy focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest/50"
-        style={{ animation: 'editRise 0.45s ease-out both' }}
+        className="group -my-3 inline-flex min-h-11 items-center gap-1 rounded-full font-body text-sm font-semibold text-navy/70 transition hover:text-navy focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest/50"
+        style={enter('rise-in', 0)}
       >
         <span
           aria-hidden="true"
@@ -181,8 +170,8 @@ export default function EditForm({ issue, email }) {
       </button>
 
       <div
-        className="edit-rise mt-3 flex flex-wrap items-baseline gap-x-4 gap-y-1"
-        style={{ animation: 'editRise 0.5s ease-out 0.05s both' }}
+        className="mt-3 flex flex-wrap items-baseline gap-x-4 gap-y-1"
+        style={enter('rise-in', 0.05)}
       >
         <h1
           ref={headingRef}

@@ -1,7 +1,6 @@
 import { useEffect, useRef } from 'react'
 import clsx from 'clsx'
-import { animate } from '../Map/motion'
-import { SHAKE } from './profileMotion'
+import { animate, SHAKE } from '../../components/ui/motion'
 
 const OTP_LENGTH = 6
 

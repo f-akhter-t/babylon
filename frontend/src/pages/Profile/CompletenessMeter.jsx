@@ -1,5 +1,6 @@
 import clsx from 'clsx'
 import { profileProgress } from './profileProgress'
+import { enter } from '../../components/ui/motion'
 
 // Three steps of a staircase, one per section. Each turns green when that
 // section is done; identity under review shows amber.
@@ -51,7 +52,7 @@ export default function CompletenessMeter({ profile, tone = 'dark', size = 'md' 
                 HEIGHTS[size][index],
                 BAR[tone][step.state],
               )}
-              style={{ animation: `stepGrow 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) ${0.3 + index * 0.15}s both` }}
+              style={enter('grow-y', 0.3 + index * 0.15)}
             />
             <span
               className={clsx(

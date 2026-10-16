@@ -1,6 +1,6 @@
 import Button from '../../components/ui/Button'
 
-const BLOCK = 'rounded-panel bg-white/50 motion-safe:animate-pulse'
+const BLOCK = 'skeleton rounded-panel bg-white/50'
 
 // Grey shapes in the same places as the real page, while the issue loads.
 export function DetailLoading() {

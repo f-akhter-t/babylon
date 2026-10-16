@@ -53,7 +53,7 @@ export default function ProgressStep({ step, last, reachedNext }) {
         {look === 'done' && <CheckIcon size={18} />}
         {look === 'current' && (
           <>
-            <span className="absolute size-3 rounded-full bg-brand/60 motion-safe:animate-ping" />
+            <span className="absolute size-3 rounded-full bg-brand/60 animate-ring-out" />
             <span className="relative size-3 rounded-full bg-brand" />
           </>
         )}

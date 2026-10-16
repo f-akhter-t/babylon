@@ -3,7 +3,7 @@ import { Popup } from 'react-leaflet'
 import clsx from 'clsx'
 import { POPUP_CLASSES, SIDE_CLASSES } from './popupStyles'
 import { usePopupPlacement } from './usePopupPlacement'
-import { animate, SLIDE_IN, SPRING } from './motion'
+import { animate, SLIDE_IN, SPRING } from '../../components/ui/motion'
 
 // A Leaflet popup that opens beside its pin (side: 'right' | 'left').
 // React decides when it is open, so Leaflet's own closing is turned off.

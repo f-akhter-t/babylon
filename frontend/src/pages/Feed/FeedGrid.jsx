@@ -1,23 +1,20 @@
 import FeedCard from './FeedCard'
-import { FadeUpCard } from './feedMotion'
-import { usePrefersReducedMotion } from '../../hooks/usePrefersReducedMotion'
+import Reveal from '../../components/ui/Reveal'
 
 function SkeletonCard() {
   return (
-    <div className="overflow-hidden rounded-card bg-mint/60">
-      <div className="h-40 animate-pulse bg-slate/20" />
+    <div className="skeleton rounded-card bg-mint/60">
+      <div className="h-40 bg-slate/20" />
       <div className="space-y-2 p-4">
-        <div className="h-4 w-3/4 animate-pulse rounded bg-slate/20" />
-        <div className="h-3 w-1/2 animate-pulse rounded bg-slate/20" />
-        <div className="mt-3 h-6 w-full animate-pulse rounded-full bg-slate/10" />
+        <div className="h-4 w-3/4 rounded bg-slate/20" />
+        <div className="h-3 w-1/2 rounded bg-slate/20" />
+        <div className="mt-3 h-6 w-full rounded-full bg-slate/10" />
       </div>
     </div>
   )
 }
 
 export default function FeedGrid({ issues, loading, onUpvote, onClearFilters }) {
-  const reducedMotion = usePrefersReducedMotion()
-
   return (
     <>
       <div className="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
@@ -25,9 +22,9 @@ export default function FeedGrid({ issues, loading, onUpvote, onClearFilters }) 
 
         {!loading &&
           issues.map((issue, index) => (
-            <FadeUpCard key={issue.id} index={index} reducedMotion={reducedMotion}>
+            <Reveal key={issue.id} index={index} className="h-full">
               <FeedCard issue={issue} onUpvote={onUpvote} />
-            </FadeUpCard>
+            </Reveal>
           ))}
       </div>
 
