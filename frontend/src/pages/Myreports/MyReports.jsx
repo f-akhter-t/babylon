@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import clsx from 'clsx'
 import useMyData from './useMyData'
@@ -7,7 +7,9 @@ import Reveal from '../../components/ui/Reveal'
 import { BarsIcon, PinIcon } from '../../components/ui/icons'
 import ReportCard from './ReportCard'
 import ReportModal from './ReportModal'
-import { DURATION, usePresence } from '../../components/ui/motion'
+import { DURATION, prefersLessMotion, usePresence } from '../../components/ui/motion'
+import NewReportsBar from '../../components/ui/NewReportsBar'
+import { useHeldList } from '../../hooks/useHeldList'
 import { EarnCard, LevelCard } from './LevelCard'
 import Navbar from '../../components/layout/Navbar'
 import Footer from '../../components/layout/Footer'
@@ -27,17 +29,31 @@ export default function MyReports() {
 
 function MyReportsPage() {
   useDocumentTitle('My reports')
-  const { reports, user, earn, loading, email } = useMyData()
+  const { reports, user, earn, loading, update, email } = useMyData()
   const [filter, setFilter] = useState('All')
   const [query, setQuery] = useState('')
   // the bell links here with ?report=<id>, so the modal opens straight from a notification
   const [params, setParams] = useSearchParams()
   const openId = params.get('report')
   const openReport = reports.find((r) => String(r.id) === openId)
-  // The details stay on screen for a moment after closing, while they fade.
-  const modal = usePresence(Boolean(openReport), DURATION.base)
   const [shownReport, setShownReport] = useState(openReport)
   if (openReport && openReport !== shownReport) setShownReport(openReport)
+  // The open report was deleted in another tab: the details stay open and say
+  // so, until they are closed. Remembered, because a later update (another
+  // write from the same delete) no longer lists it as removed.
+  const [deletedId, setDeletedId] = useState(null)
+  if (
+    openId &&
+    deletedId !== openId &&
+    !openReport &&
+    String(shownReport?.id) === openId &&
+    update?.removed.includes(openId)
+  ) {
+    setDeletedId(openId)
+  }
+  const deletedOpen = Boolean(openId) && deletedId === openId && !openReport
+  // The details stay on screen for a moment after closing, while they fade.
+  const modal = usePresence(Boolean(openReport) || deletedOpen, DURATION.base)
 
   const open = (id) => setParams({ report: id })
   const close = () => setParams({})
@@ -58,6 +74,23 @@ function MyReportsPage() {
         (r.title + r.location).toLowerCase().includes(q)
     )
   }, [reports, filter, query])
+
+  // While someone is using the list it holds still, like the feed (see
+  // useHeldList): a removed report keeps its slot as a faded, unreachable
+  // ghost, and new ones wait behind "Show N new reports".
+  const gridRef = useRef(null)
+  const headingRef = useRef(null)
+  const held = useHeldList(list, { containerRef: gridRef, resetKey: JSON.stringify([filter, query]), update, headingRef })
+  const focusNew = useRef(null)
+  useEffect(() => {
+    const id = focusNew.current
+    const grid = gridRef.current
+    if (!id || !grid) return
+    focusNew.current = null
+    const card = grid.querySelector(`[data-live-id="${CSS.escape(id)}"]`)
+    card?.scrollIntoView({ block: 'nearest', behavior: prefersLessMotion() ? 'instant' : 'smooth' })
+    card?.querySelector('a[href], button')?.focus({ preventScroll: true })
+  })
 
   const noReportsAtAll = reports.length === 0
   const loggedOut = !email
@@ -131,15 +164,41 @@ function MyReportsPage() {
 
         {loading ? (
           <p className="mt-6 text-center text-muted">Loading your reports…</p>
-        ) : list.length > 0 ? (
+        ) : held.items.length > 0 ? (
           <>
-            <h2 className="sr-only">Your reports</h2>
-            <div className="mt-5 grid grid-cols-[repeat(auto-fill,minmax(300px,1fr))] gap-4 max-sm:grid-cols-1">
-              {list.map((r, i) => (
-                <Reveal key={r.id} delay={100 + (i % 3) * 80} className="h-full">
-                  <ReportCard report={r} onOpen={open} />
-                </Reveal>
-              ))}
+            <h2 id="my-reports-heading" ref={headingRef} tabIndex={-1} className="sr-only">
+              Your reports
+            </h2>
+            <p role="status" className="sr-only">
+              {held.message}
+            </p>
+            <NewReportsBar
+              count={held.waiting}
+              onShow={() => {
+                focusNew.current = held.showNew()[0] ?? null
+              }}
+              className="top-20"
+            />
+            <div
+              ref={gridRef}
+              className="mt-5 grid grid-cols-[repeat(auto-fill,minmax(300px,1fr))] gap-4 max-sm:grid-cols-1"
+            >
+              {held.items.map((r, i) => {
+                const ghost = held.isGhost(r.id)
+                return (
+                  <Reveal
+                    key={r.id}
+                    data-live-id={r.id}
+                    delay={ghost ? 0 : 100 + (i % 3) * 80}
+                    instant={Boolean(update) && !update.animate}
+                    inert={ghost}
+                    aria-hidden={ghost || undefined}
+                    className={ghost ? 'pointer-events-none h-full opacity-0 transition-opacity duration-300' : 'h-full'}
+                  >
+                    <ReportCard report={r} onOpen={open} />
+                  </Reveal>
+                )
+              })}
             </div>
             <p className="mt-3 text-xs text-muted">Map images © OpenStreetMap contributors</p>
           </>
@@ -173,7 +232,7 @@ function MyReportsPage() {
         )}
 
         {modal.mounted && shownReport && (
-          <ReportModal report={shownReport} open={!modal.closing} onClose={close} />
+          <ReportModal report={shownReport} open={!modal.closing} deleted={deletedOpen} onClose={close} />
         )}
       </main>
 

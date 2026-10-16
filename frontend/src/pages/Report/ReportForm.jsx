@@ -54,6 +54,9 @@ function StepHeading({ number, done, children }) {
 //   pinChanged: the map pin moved, which counts as a change.
 //   onDirtyChange(dirty): true while the fields differ from initialValues.
 //   lockedReason: a message. The form is shown but cannot be changed or sent.
+//   deleted: the report was deleted elsewhere. The title and description stay
+//            readable and can be copied (read-only, not disabled), and there
+//            is no Save button.
 export default function ReportForm({
   onSubmit,
   onCategoryChange,
@@ -63,9 +66,11 @@ export default function ReportForm({
   pinChanged = false,
   onDirtyChange,
   lockedReason,
+  deleted = false,
 }) {
   const editing = Boolean(initialValues)
-  const locked = Boolean(lockedReason)
+  const locked = Boolean(lockedReason) || deleted
+  const textLock = deleted ? { readOnly: true } : { disabled: locked }
   // { file, url }. A photo kept from the saved report has no file.
   const [photo, setPhoto] = useState(() =>
     initialValues?.photoUrl ? { file: null, url: initialValues.photoUrl } : null,
@@ -373,7 +378,7 @@ export default function ReportForm({
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value.slice(0, TITLE_MAX))}
-              disabled={locked}
+              {...textLock}
               aria-describedby="report-title-help"
               className="w-full rounded-full border border-navy/15 bg-white px-4 py-3 font-body text-sm text-navy transition hover:border-forest/50 focus:border-forest focus:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest/40 disabled:opacity-50"
             />
@@ -387,7 +392,7 @@ export default function ReportForm({
         </label>
         <textarea
           id="report-description"
-          disabled={locked}
+          {...textLock}
           value={description}
           onChange={(e) => setDescription(e.target.value.slice(0, MAX_DESCRIPTION))}
           rows={4}
@@ -415,10 +420,10 @@ export default function ReportForm({
             >
               Cancel
             </button>
-            {submitButton}
+            {!deleted && submitButton}
           </div>
         ) : (
-          submitButton
+          !deleted && submitButton
         )}
         {submitError && (
           <p role="alert" className="text-center font-body text-xs font-semibold text-danger">

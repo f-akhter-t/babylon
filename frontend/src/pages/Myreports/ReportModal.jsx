@@ -18,7 +18,9 @@ const actionClass =
 // Escape, Close and a click on the dimmed backdrop all call onClose.
 // open=false closes it at once (focus goes back to the card) while it fades
 // out; the page removes it a moment later.
-export default function ReportModal({ report, open = true, onClose }) {
+// deleted: the report was deleted in another tab while this was open. The
+// details give way to a short message, which takes focus; Close stays.
+export default function ReportModal({ report, open = true, deleted = false, onClose }) {
   const dialogRef = useRef(null)
   const closeRef = useRef(null)
   const titleId = useId()
@@ -31,11 +33,18 @@ export default function ReportModal({ report, open = true, onClose }) {
     closeRef.current?.focus()
     return () => {
       if (dialog.open) dialog.close()
-      // Still on My reports: back to the card. After a move to another page the
-      // card is gone and nothing happens.
-      document.getElementById(cardTitleId(id))?.focus()
+      // Still on My reports: back to the card. If the card has gone (deleted),
+      // to the list heading instead. After a move to another page, nothing.
+      const card = document.getElementById(cardTitleId(id))
+      if (card && !card.closest('[inert]')) card.focus()
+      else document.getElementById('my-reports-heading')?.focus()
     }
   }, [id, open])
+
+  const deletedRef = useRef(null)
+  useEffect(() => {
+    if (deleted) deletedRef.current?.focus()
+  }, [deleted])
 
   // Tab and Shift+Tab wrap around inside the dialog, so focus never leaves it.
   function keepTabInside(event) {
@@ -72,93 +81,111 @@ export default function ReportModal({ report, open = true, onClose }) {
           <CloseIcon />
         </button>
 
-        <div className="mb-1.5 flex items-center gap-1.5">
-          <ReportStatusPill status={r.status} />
-          <span className="rounded-full border-[1.5px] border-navy px-[9px] text-xs font-bold">{r.category}</span>
-        </div>
-        <h2 id={titleId} className="max-w-[90%] font-heading text-[32px] font-extrabold leading-tight tracking-tight">{r.title}</h2>
-        <p className="mt-1 text-[13px] text-muted">
-          Reported on {r.dateLabel} · {r.upvotes} upvote{r.upvotes === 1 ? '' : 's'}
-        </p>
-        {/* The same rule as the card and the edit page (canEditIssue). */}
-        <div className="mt-3 flex flex-wrap gap-2">
-          <Link
-            to={`/issues/${r.id}`}
-            aria-label={`Open issue page: ${r.title}`}
-            className={actionClass}
-          >
-            Open issue page
-          </Link>
-          {r.editState === 'ok' && (
-            <Link
-              to={`/issues/${r.id}/edit`}
-              aria-label={`Edit report: ${r.title}`}
-              className={actionClass}
+        {deleted ? (
+          <div className="py-6 pr-12">
+            <h2
+              ref={deletedRef}
+              id={titleId}
+              tabIndex={-1}
+              className="font-heading text-[32px] font-extrabold leading-tight tracking-tight focus:outline-none"
             >
-              Edit report
-            </Link>
-          )}
-        </div>
-        {r.editState === 'locked' && (
-          <p className="mt-2 text-sm font-semibold text-navy">{LOCKED_MESSAGE}</p>
-        )}
-
-        <div className="mt-2 grid gap-5 md:grid-cols-2">
-          <div>
-            <div className="relative grid h-[220px] place-items-center rounded-[20px] bg-slate text-mint">
-              {r.photoUrl ? (
-                <img src={r.photoUrl} alt={`Photo of ${r.title}`} className="absolute inset-0 h-full w-full rounded-[20px] object-cover" />
-              ) : (
-                <span className="flex items-center gap-1.5"><CameraIcon size={20} />No photo added</span>
+              This report was deleted.
+            </h2>
+            <p className="mt-2 text-muted">
+              It was deleted in another tab, so it is no longer on the map, in the feed or in your reports.
+            </p>
+          </div>
+        ) : (
+          <>
+            <div className="mb-1.5 flex items-center gap-1.5">
+              <ReportStatusPill status={r.status} />
+              <span className="rounded-full border-[1.5px] border-navy px-[9px] text-xs font-bold">{r.category}</span>
+            </div>
+            <h2 id={titleId} className="max-w-[90%] font-heading text-[32px] font-extrabold leading-tight tracking-tight">{r.title}</h2>
+            <p className="mt-1 text-[13px] text-muted">
+              Reported on {r.dateLabel} · {r.upvotes} upvote{r.upvotes === 1 ? '' : 's'}
+            </p>
+            {/* The same rule as the card and the edit page (canEditIssue). */}
+            <div className="mt-3 flex flex-wrap gap-2">
+              <Link
+                to={`/issues/${r.id}`}
+                aria-label={`Open issue page: ${r.title}`}
+                className={actionClass}
+              >
+                Open issue page
+              </Link>
+              {r.editState === 'ok' && (
+                <Link
+                  to={`/issues/${r.id}/edit`}
+                  aria-label={`Edit report: ${r.title}`}
+                  className={actionClass}
+                >
+                  Edit report
+                </Link>
               )}
-              <em className="absolute bottom-3 left-3 rounded-full bg-navy px-[11px] py-1.5 text-[11px] font-bold not-italic tracking-[.1em]">BEFORE</em>
             </div>
-            <div className="relative mt-2.5 h-[150px] overflow-hidden rounded-[20px]">
-              <span className="absolute left-2.5 top-2.5 z-10 rounded-full bg-white px-3 py-1.5 text-xs font-bold">{r.location || 'Location not set'}</span>
-              <StaticMap
-                lat={r.lat}
-                lng={r.lng}
-                status={r.mapStatus}
-                cover={{ width: 460, height: 150 }}
-                className="h-full w-full"
-              />
-            </div>
-            {/* The page's own credit is hidden behind the dialog. */}
-            <p className="mt-1 text-right text-xs text-muted">Map © OpenStreetMap contributors</p>
-          </div>
+            {r.editState === 'locked' && (
+              <p className="mt-2 text-sm font-semibold text-navy">{LOCKED_MESSAGE}</p>
+            )}
 
-          <div>
-            <p className="leading-normal">{r.description || 'No description added.'}</p>
+            <div className="mt-2 grid gap-5 md:grid-cols-2">
+              <div>
+                <div className="relative grid h-[220px] place-items-center rounded-[20px] bg-slate text-mint">
+                  {r.photoUrl ? (
+                    <img src={r.photoUrl} alt={`Photo of ${r.title}`} className="absolute inset-0 h-full w-full rounded-[20px] object-cover" />
+                  ) : (
+                    <span className="flex items-center gap-1.5"><CameraIcon size={20} />No photo added</span>
+                  )}
+                  <em className="absolute bottom-3 left-3 rounded-full bg-navy px-[11px] py-1.5 text-[11px] font-bold not-italic tracking-[.1em]">BEFORE</em>
+                </div>
+                <div className="relative mt-2.5 h-[150px] overflow-hidden rounded-[20px]">
+                  <span className="absolute left-2.5 top-2.5 z-10 rounded-full bg-white px-3 py-1.5 text-xs font-bold">{r.location || 'Location not set'}</span>
+                  <StaticMap
+                    lat={r.lat}
+                    lng={r.lng}
+                    status={r.mapStatus}
+                    cover={{ width: 460, height: 150 }}
+                    className="h-full w-full"
+                  />
+                </div>
+                {/* The page's own credit is hidden behind the dialog. */}
+                <p className="mt-1 text-right text-xs text-muted">Map © OpenStreetMap contributors</p>
+              </div>
 
-            <div className="mt-3.5 rounded-[18px] bg-white px-4 py-3.5">
-              <h3 className="mb-2 font-heading text-lg font-extrabold tracking-tight">Status history</h3>
-              {r.history.map(({ label, note }, i) => {
-                const last = i === r.history.length - 1
-                return (
-                  <div key={label + i} className="relative flex gap-3 pb-3 last:pb-0">
-                    {!last && <span className="absolute bottom-0 left-1.5 top-4 w-0.5 bg-mint-deep" aria-hidden="true" />}
-                    <i className={clsx('mt-[3px] h-3.5 w-3.5 flex-none rounded-full', last ? 'bg-navy ring-[3px] ring-brand' : 'bg-forest')} />
-                    <div>
-                      <b className="block">{label}</b>
-                      {note && <span className="text-[13px] text-muted">{note}</span>}
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
+              <div>
+                <p className="leading-normal">{r.description || 'No description added.'}</p>
 
-            <div className="mt-3.5 rounded-[18px] bg-white px-4 py-3.5">
-              <h3 className="mb-2 font-heading text-lg font-extrabold tracking-tight">Department response</h3>
-              <span className="text-muted">
-                {r.department ? (
-                  <><b className="text-navy">{r.department}</b> — {r.updateText}</>
-                ) : (
-                  'No response yet. You will be notified when a department picks this up.'
-                )}
-              </span>
+                <div className="mt-3.5 rounded-[18px] bg-white px-4 py-3.5">
+                  <h3 className="mb-2 font-heading text-lg font-extrabold tracking-tight">Status history</h3>
+                  {r.history.map(({ label, note }, i) => {
+                    const last = i === r.history.length - 1
+                    return (
+                      <div key={label + i} className="relative flex gap-3 pb-3 last:pb-0">
+                        {!last && <span className="absolute bottom-0 left-1.5 top-4 w-0.5 bg-mint-deep" aria-hidden="true" />}
+                        <i className={clsx('mt-[3px] h-3.5 w-3.5 flex-none rounded-full', last ? 'bg-navy ring-[3px] ring-brand' : 'bg-forest')} />
+                        <div>
+                          <b className="block">{label}</b>
+                          {note && <span className="text-[13px] text-muted">{note}</span>}
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+
+                <div className="mt-3.5 rounded-[18px] bg-white px-4 py-3.5">
+                  <h3 className="mb-2 font-heading text-lg font-extrabold tracking-tight">Department response</h3>
+                  <span className="text-muted">
+                    {r.department ? (
+                      <><b className="text-navy">{r.department}</b> — {r.updateText}</>
+                    ) : (
+                      'No response yet. You will be notified when a department picks this up.'
+                    )}
+                  </span>
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
+          </>
+        )}
       </div>
     </dialog>
   )
