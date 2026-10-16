@@ -12,7 +12,8 @@ const tones = {
 // A small status label for the phone and identity sections.
 // Pass onDark when it sits on a navy background.
 // It pops once when the status changes (not when the page first opens).
-export default function VerifyBadge({ status, onDark = false }) {
+// label replaces the usual wording, for example "Department verified".
+export default function VerifyBadge({ status, onDark = false, label }) {
   const tone = tones[status] ?? tones['not-verified']
   const [shown, setShown] = useState(status)
   const [pops, setPops] = useState(0)
@@ -44,7 +45,7 @@ export default function VerifyBadge({ status, onDark = false }) {
           <path d="m5 12 5 5 9-10" />
         </svg>
       )}
-      {tone.label}
+      {label ?? tone.label}
     </span>
   )
 }

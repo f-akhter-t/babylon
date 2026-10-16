@@ -18,6 +18,7 @@ const DepartmentPanel = lazy(() => import('./pages/DepartmentPanel/DepartmentPan
 const VerifyResolutions = lazy(() => import('./pages/VerifyResolutions/VerifyResolutions'))
 const Accountability = lazy(() => import('./pages/Accountability/Accountability'))
 const IdentityReview = lazy(() => import('./pages/IdentityReview/IdentityReview'))
+const StaffProfile = lazy(() => import('./pages/StaffProfile/StaffProfile'))
 const Login = lazy(() => import('./pages/Auth/Login'))
 const Signup = lazy(() => import('./pages/Auth/Signup'))
 const StaffLogin = lazy(() => import('./pages/Auth/StaffLogin'))
@@ -50,6 +51,8 @@ export default function App() {
             <Route path="/admin/verify" element={<VerifyResolutions />} />
             <Route path="/admin/accountability" element={<Accountability />} />
             <Route path="/admin/identity" element={<IdentityReview />} />
+            <Route path="/department/profile" element={<StaffProfile role="department" />} />
+            <Route path="/admin/profile" element={<StaffProfile role="admin" />} />
             {Styleguide && <Route path="/styleguide" element={<Styleguide />} />}
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />

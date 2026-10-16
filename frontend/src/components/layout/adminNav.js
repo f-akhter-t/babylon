@@ -13,6 +13,7 @@ export const ADMIN_NAV = {
         badge: 'awaiting',
       },
       { label: 'Completed', to: '/department?status=completed' },
+      { label: 'Profile', to: '/department/profile' },
     ],
   },
   admin: {
@@ -28,6 +29,7 @@ export const ADMIN_NAV = {
       },
       { label: 'Accountability', to: '/admin/accountability' },
       { label: 'Identity checks', to: '/admin/identity', badge: 'identity' },
+      { label: 'Profile', to: '/admin/profile' },
     ],
   },
 }
