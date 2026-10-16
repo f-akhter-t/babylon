@@ -131,6 +131,19 @@
   from { opacity: 0.6; transform: scale(1); }
   to { opacity: 0; transform: scale(2.4); }
 }
+/* The page background (components/ui/AnimatedBackground.jsx). */
+@keyframes drift {
+  0%, 100% { transform: translate(0, 0); }
+  50% { transform: translate(-25%, -25%); }
+}
+@keyframes float-a {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(5vw, 6vh) scale(1.07); }
+}
+@keyframes float-b {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(-6vw, -5vh) scale(1.05); }
+}
 @keyframes shimmer {
   from { transform: translateX(-100%); }
   to { transform: translateX(100%); }
