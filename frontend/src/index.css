@@ -34,7 +34,6 @@
   --animate-rise-in: rise-in var(--duration-slow) var(--ease-calm) both;
   --animate-pop: pop var(--duration-slow) var(--ease-spring) both;
   --animate-drop-in: drop-in var(--duration-slow) var(--ease-spring) both;
-  --animate-vote-bump: vote-bump var(--duration-slow) var(--ease-spring);
   --animate-grow-x: grow-x var(--duration-reveal) var(--ease-calm) both;
   --animate-grow-y: grow-y var(--duration-slow) var(--ease-calm) both;
   --animate-slide-up: slide-up var(--duration-base) var(--ease-calm) both;
@@ -105,11 +104,6 @@
 @keyframes drop-in {
   from { opacity: 0; transform: translateY(-14px) scale(0.6); }
   to { opacity: 1; transform: none; }
-}
-@keyframes vote-bump {
-  0% { transform: scale(1); }
-  40% { transform: scale(1.35); }
-  100% { transform: scale(1); }
 }
 @keyframes grow-x {
   from { transform: scaleX(0); }
