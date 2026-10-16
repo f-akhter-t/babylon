@@ -4,6 +4,7 @@ import { DomEvent } from 'leaflet'
 import clsx from 'clsx'
 import { MAP_CENTER } from '../../mock/issues'
 import { LocateIcon, MinusIcon, PinIcon, PlusIcon } from './MapIcons'
+import { flyTo, prefersLessMotion } from '../../components/ui/motion'
 
 const TILE =
   'flex size-11 items-center justify-center transition duration-150 ease-out motion-safe:active:scale-90'
@@ -31,7 +32,7 @@ export default function MapControls({ report, dropping, onToggleDrop }) {
         <button
           type="button"
           aria-label="Zoom in"
-          onClick={() => map.zoomIn()}
+          onClick={() => map.zoomIn(1, { animate: !prefersLessMotion() })}
           className={clsx(TILE, IDLE)}
         >
           <PlusIcon />
@@ -40,7 +41,7 @@ export default function MapControls({ report, dropping, onToggleDrop }) {
         <button
           type="button"
           aria-label="Zoom out"
-          onClick={() => map.zoomOut()}
+          onClick={() => map.zoomOut(1, { animate: !prefersLessMotion() })}
           className={clsx(TILE, IDLE)}
         >
           <MinusIcon />
@@ -52,7 +53,7 @@ export default function MapControls({ report, dropping, onToggleDrop }) {
         aria-label="Back to my area"
         title="Back to my area"
         // Keep the current zoom: only move, don't zoom out.
-        onClick={() => map.flyTo(MAP_CENTER, map.getZoom(), { duration: 0.8 })}
+        onClick={() => flyTo(map, MAP_CENTER, map.getZoom(), { duration: 0.8 })}
         className={clsx(TILE, IDLE, SINGLE)}
       >
         <LocateIcon />

@@ -5,6 +5,7 @@ import clsx from 'clsx'
 import 'leaflet/dist/leaflet.css'
 import { pinIcon } from '../Map/statusPin'
 import { pinName } from '../Map/pinMarkup'
+import { mapMotionOptions } from '../../components/ui/motion'
 
 export default function PreviewMap({ issues, className, fade = false }) {
   // "isolate" keeps Leaflet's high z-index inside this box, so it never covers the navbar.
@@ -25,6 +26,7 @@ export default function PreviewMap({ issues, className, fade = false }) {
   return (
     <div className={frame}>
       <MapContainer
+        {...mapMotionOptions()}
         // "bounds" is only read once, so a new key rebuilds the map when the pins change.
         key={issues.map((i) => i.id).join('-')}
         bounds={bounds}

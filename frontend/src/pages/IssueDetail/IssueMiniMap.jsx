@@ -6,6 +6,7 @@ import { pinIcon } from '../Map/statusPin'
 import { PinIcon } from '../Map/MapIcons'
 import MiniMapZoom from './MiniMapZoom'
 import { ExternalLinkIcon } from './DetailIcons'
+import { mapMotionOptions } from '../../components/ui/motion'
 
 // Same tiles and credit as the big map (IssueMap.jsx).
 const ATTRIBUTION =
@@ -23,6 +24,7 @@ export default function IssueMiniMap({ issue }) {
       {/* isolate keeps Leaflet's own z-index values inside this box (under the navbar). */}
       <div className="relative isolate h-60 overflow-hidden rounded-panel shadow-lg shadow-navy/10 lg:h-64">
         <MapContainer
+          {...mapMotionOptions()}
           center={position}
           zoom={16}
           zoomControl={false}

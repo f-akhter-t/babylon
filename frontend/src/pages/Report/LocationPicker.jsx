@@ -17,7 +17,7 @@ import { distanceInMeters } from '../../utils/geo'
 import { DRAFT_PIN_SIZE, draftPinSvg } from '../Map/pinMarkup'
 import { pinIcon } from '../Map/statusPin'
 import MiniMapZoom from '../IssueDetail/MiniMapZoom'
-import { enter } from '../../components/ui/motion'
+import { enter, flyTo, mapMotionOptions } from '../../components/ui/motion'
 
 const START = { lat: MAP_CENTER[0], lng: MAP_CENTER[1] }
 const MATCH_RADIUS_M = 120 // an open issue this close counts as a possible duplicate
@@ -81,7 +81,7 @@ const pickerStyle = `
 function FlyTo({ target }) {
   const map = useMap()
   useEffect(() => {
-    if (target) map.flyTo([target.lat, target.lng], target.zoom, { duration: 0.8 })
+    if (target) flyTo(map, [target.lat, target.lng], target.zoom, { duration: 0.8 })
   }, [target, map])
   return null
 }
@@ -306,6 +306,7 @@ export default function LocationPicker({
       <style>{pickerStyle}</style>
 
       <MapContainer
+        {...mapMotionOptions()}
         center={markerPosition}
         zoom={16}
         scrollWheelZoom

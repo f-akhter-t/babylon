@@ -4,7 +4,7 @@ import { latLngBounds } from 'leaflet'
 import IssueMarker from './IssueMarker'
 import { clusterIcon } from './statusPin'
 import { groupNearby } from './clusters'
-import { animate, DROP_IN, SPRING } from '../../components/ui/motion'
+import { animate, DROP_IN, flyToBounds, SPRING } from '../../components/ui/motion'
 
 function ClusterMarker({ cluster, onClick }) {
   const markerRef = useRef(null)
@@ -40,7 +40,7 @@ export default function PinLayer({ issues, selectedId, onSelect }) {
 
   const zoomInto = (cluster) => {
     const bounds = latLngBounds(cluster.issues.map((issue) => [issue.lat, issue.lng]))
-    map.flyToBounds(bounds, { padding: [80, 80], maxZoom: 18, duration: 0.8 })
+    flyToBounds(map, bounds, { padding: [80, 80], maxZoom: 18, duration: 0.8 })
   }
 
   return (
