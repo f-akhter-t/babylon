@@ -14,7 +14,9 @@ export default function DepartmentCodeCard({ profile, onDirtyChange, announce })
   const [focusRequest, setFocusRequest] = useState(null) // { target, n }
   const inputRef = useRef(null)
   const doneRef = useRef(null)
-  const verified = profile.departmentVerified
+  // Shown as verified at once, before the profile reloads with it.
+  const [justVerified, setJustVerified] = useState(false)
+  const verified = profile.departmentVerified || justVerified
 
   useEffect(() => {
     onDirtyChange(!verified && code.trim() !== '')
@@ -32,6 +34,7 @@ export default function DepartmentCodeCard({ profile, onDirtyChange, announce })
     setError('')
     try {
       await verifyDepartmentCode(profile.email, code)
+      setJustVerified(true)
       setCode('')
       announce('Your department is verified.', { toast: true })
       setFocusRequest({ target: 'done', n: Date.now() })

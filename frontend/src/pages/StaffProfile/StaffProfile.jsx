@@ -48,12 +48,15 @@ function StaffProfilePage({ role }) {
   const navigate = useNavigate()
   const toast = useToast()
   // Sent here by the gate from another page: say why, and start at the heading.
-  const gated = Boolean(location.state?.gated) && !onboarded
+  // Keyed on the arrival, not the state object: the unsaved-changes guard's
+  // own Back step hands the router a new copy of the same state.
+  const arrivedGated = Boolean(location.state?.gated)
+  const gated = arrivedGated && !onboarded
   const headingRef = useRef(null)
 
   useEffect(() => {
-    if (location.state?.gated) headingRef.current?.focus()
-  }, [location.key, location.state])
+    if (arrivedGated) headingRef.current?.focus()
+  }, [location.key, arrivedGated])
 
   // Which sections have changes that are not saved yet.
   const [dirty, setDirty] = useState({})
