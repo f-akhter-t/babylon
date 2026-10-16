@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import clsx from 'clsx'
 import CategoryChip from '../../components/ui/CategoryChip'
-import { createReport, fileToDataUrl } from '../../services/reportsStore'
 import { TITLE_MAX, TITLE_MIN } from '../../services/api'
 
 const REPORT_CATEGORIES = ['Roads', 'Waste', 'Water', 'Lighting', 'Bridges', 'Other']
@@ -58,7 +57,6 @@ function StepHeading({ number, done, children }) {
 
 // The optional props after onCategoryChange are for editing a report
 // (the Edit issue page). The Report page leaves them out.
-//   location: the pin picked on the map: { name: 'Station Road, Ward 4', lat, lng }.
 //     Without it the report is saved with no pin (and no pin points).
 //   initialValues: { title, category, description, photoUrl } fills the form
 //     and adds a Title field. Save then needs a change, and the form is not
@@ -70,7 +68,6 @@ function StepHeading({ number, done, children }) {
 export default function ReportForm({
   onSubmit,
   onCategoryChange,
-  location,
   initialValues,
   submitLabel = 'Submit report',
   onCancel,
@@ -161,19 +158,8 @@ export default function ReportForm({
         return // the page moves on to the issue
       }
 
-      // 1. save the report. This puts a card on My reports, adds points
-      //    and sends the bell notification.
-      const photoUrl = await fileToDataUrl(photo.file)
-      const report = createReport({
-        category,
-        description: trimmed,
-        location: location?.name || '',
-        pinned: Boolean(location?.name),
-        photoUrl,
-      })
-
-      // 2. let the page react (for example go to My reports)
-      await onSubmit?.({ photo: photo.file, category, description: trimmed, report })
+      // the page saves the report (Report.jsx)
+      await onSubmit?.({ photo: photo.file, category, description: trimmed })
       removePhoto()
       setCategory('')
       onCategoryChange?.('')

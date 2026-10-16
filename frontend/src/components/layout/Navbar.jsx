@@ -237,7 +237,13 @@ export default function Navbar({
             </div>
           )}
 
-          {current === 'citizen' && <NotificationBell email={session?.email} />}
+          {/* Every signed-in account has a bell; staff get a link to their panel in it. */}
+          {session && (
+            <NotificationBell
+              email={session.email}
+              {...(isCitizen ? {} : { homeLink: homePathFor(session.role), homeLabel: 'Open your panel' })}
+            />
+          )}
 
           {current !== 'logged-out' && (
             <Avatar

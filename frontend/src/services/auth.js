@@ -55,6 +55,14 @@ function allUsers() {
   return [...DEMO_USERS, ...readStored()]
 }
 
+// Read-only: the emails of the staff accounts with this role (and, for a
+// department, this department). Used to send each of them a notification.
+export function staffEmails({ role, department } = {}) {
+  return allUsers()
+    .filter((u) => u.role === role && (role !== 'department' || u.department === department))
+    .map((u) => u.email)
+}
+
 function readNames() {
   try {
     return JSON.parse(localStorage.getItem(NAMES_KEY)) ?? {}
