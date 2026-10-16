@@ -2,15 +2,16 @@ import { useCallback, useEffect, useState } from 'react'
 import { getSession } from '../services/auth'
 import { getProfile, PROFILE_EVENT } from '../services/api'
 
-// The logged-in citizen's profile. Any component can use it, for example
+// The logged-in account's profile (citizens and staff). Any component can use it, for example
 // the navbar for the name and a Verified badge:
 //   const { name, isVerified } = useProfile()
 // Updates by itself when the profile changes (this tab or another one).
-// Returns empty values for guests, departments and admins.
+// Returns empty values for guests. Staff profiles also carry jobTitle,
+// photo, departmentVerified and onboarded (see buildProfile in api.js).
 export function useProfile() {
   const [session, setSession] = useState(getSession)
   const [version, setVersion] = useState(0)
-  const email = session?.role === 'citizen' ? session.email : null
+  const email = session?.email ?? null
   const key = `${email}|${version}`
 
   // Remember which request the result belongs to, so loading is derived from it.

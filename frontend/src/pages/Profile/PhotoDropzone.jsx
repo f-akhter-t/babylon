@@ -2,11 +2,22 @@ import { useRef, useState } from 'react'
 import clsx from 'clsx'
 import Button from '../../components/ui/Button'
 
-// Photo picker for the NID card: drop a file or browse, like the Report form.
-// The preview stays blurred until it is hovered or focused, or until
-// "Show preview" is pressed (for touch screens and keyboards).
-//   photo: { file, url } or null
-export default function PhotoDropzone({ id, labelId, photo, error, onFile, onRemove }) {
+// Photo picker: drop a file or browse, like the Report form.
+// For the NID card (the default), the preview stays blurred until it is
+// hovered or focused, or until "Show preview" is pressed (for touch screens
+// and keyboards). avatar: a round, unblurred preview for a profile photo.
+//   photo: { file, url } or null (file may be missing for a saved photo)
+export default function PhotoDropzone({
+  id,
+  labelId,
+  photo,
+  error,
+  onFile,
+  onRemove,
+  avatar = false,
+  alt = 'Preview of your NID card photo',
+  busy = false,
+}) {
   const inputRef = useRef(null)
   const [dragging, setDragging] = useState(false)
   const [revealed, setRevealed] = useState(false)
@@ -38,33 +49,45 @@ export default function PhotoDropzone({ id, labelId, photo, error, onFile, onRem
 
       {photo ? (
         <div className="flex flex-wrap items-center gap-4 rounded-tile bg-white/70 p-3">
-          <div className="group relative h-24 w-36 shrink-0 overflow-hidden rounded-chip bg-navy/10">
+          {avatar ? (
             <img
               src={photo.url}
-              alt="Preview of your NID card photo"
-              tabIndex={0}
-              className={clsx(
-                'h-full w-full object-cover transition duration-300 focus:outline-none',
-                revealed ? 'blur-0' : 'scale-110 blur-md group-hover:scale-100 group-hover:blur-0 focus:scale-100 focus:blur-0',
-              )}
+              alt={alt}
+              className="size-24 shrink-0 rounded-full bg-navy/10 object-cover"
             />
-          </div>
+          ) : (
+            <div className="group relative h-24 w-36 shrink-0 overflow-hidden rounded-chip bg-navy/10">
+              <img
+                src={photo.url}
+                alt={alt}
+                tabIndex={0}
+                className={clsx(
+                  'h-full w-full object-cover transition duration-300 focus:outline-none',
+                  revealed ? 'blur-0' : 'scale-110 blur-md group-hover:scale-100 group-hover:blur-0 focus:scale-100 focus:blur-0',
+                )}
+              />
+            </div>
+          )}
           <div className="flex min-w-0 flex-1 flex-col gap-2">
-            <span className="truncate font-body text-xs text-navy">{photo.file.name}</span>
+            {photo.file && (
+              <span className="truncate font-body text-xs text-navy">{photo.file.name}</span>
+            )}
             <div className="flex flex-wrap gap-2">
-              <button
-                type="button"
-                aria-pressed={revealed}
-                onClick={() => setRevealed((value) => !value)}
-                className="rounded-full px-3 py-1 font-body text-xs font-semibold text-forest transition hover:bg-forest/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest/50"
-              >
-                {revealed ? 'Hide preview' : 'Show preview'}
-              </button>
-              <Button variant="outline" onClick={() => inputRef.current?.click()}>
-                Choose another
+              {!avatar && (
+                <button
+                  type="button"
+                  aria-pressed={revealed}
+                  onClick={() => setRevealed((value) => !value)}
+                  className="rounded-full px-3 py-1 font-body text-xs font-semibold text-forest transition hover:bg-forest/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest/50"
+                >
+                  {revealed ? 'Hide preview' : 'Show preview'}
+                </button>
+              )}
+              <Button variant="outline" disabled={busy} onClick={() => inputRef.current?.click()}>
+                {avatar ? 'Choose another photo' : 'Choose another'}
               </Button>
-              <Button variant="outline" onClick={onRemove}>
-                Remove
+              <Button variant="outline" disabled={busy} onClick={onRemove}>
+                {avatar ? 'Remove photo' : 'Remove'}
               </Button>
             </div>
           </div>
@@ -73,6 +96,7 @@ export default function PhotoDropzone({ id, labelId, photo, error, onFile, onRem
         <button
           type="button"
           aria-describedby={labelId}
+          disabled={busy}
           onClick={() => inputRef.current?.click()}
           onDragOver={(e) => {
             e.preventDefault()
