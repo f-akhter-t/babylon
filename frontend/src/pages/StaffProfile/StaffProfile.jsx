@@ -7,7 +7,7 @@ import RequireRole from '../Auth/RequireRole'
 import { useViewer } from '../Map/useViewer'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import { useProfile } from '../../hooks/useProfile'
-import { completeOnboarding } from '../../services/api'
+import { completeOnboarding, verifyEmployeeId } from '../../services/api'
 import { homePathFor, isOnboarded } from '../../services/auth'
 import ProfileCard from '../Profile/ProfileCard'
 import PhoneCard from '../Profile/PhoneCard'
@@ -18,6 +18,7 @@ import { useUnsavedChanges } from '../Profile/useUnsavedChanges'
 import { formRise, pageRise, profileStyle } from '../Profile/profileMotion'
 import StaffDetailsCard from './StaffDetailsCard'
 import DepartmentCodeCard from './DepartmentCodeCard'
+import VerifyCodeCard from './VerifyCodeCard'
 import ProfilePhotoCard from './ProfilePhotoCard'
 import SetupChecklist from './SetupChecklist'
 
@@ -68,6 +69,7 @@ function StaffProfilePage({ role }) {
   const onDirty = useMemo(
     () => ({
       phone: (value) => markDirty('phone', value),
+      employeeId: (value) => markDirty('employeeId', value),
       department: (value) => markDirty('department', value),
     }),
     [markDirty],
@@ -129,6 +131,7 @@ function StaffProfilePage({ role }) {
   const sections = [
     { label: 'Details', id: 'staff-details' },
     { label: 'Phone', id: 'profile-phone' },
+    { label: 'Employee ID', id: 'staff-employee-id' },
     ...(isDepartment ? [{ label: 'Department', id: 'staff-department' }] : []),
     { label: 'Photo', id: 'staff-photo' },
     { label: 'Security', id: 'profile-security' },
@@ -153,8 +156,9 @@ function StaffProfilePage({ role }) {
             <p className="mt-1 font-body text-sm text-slate">
               {onboarded
                 ? 'Keep your details up to date so citizens and other staff know who is handling their reports.'
-                : 'Before you start, add your job title and verify your phone number' +
-                  (isDepartment ? ' and your department.' : '.')}
+                : isDepartment
+                  ? 'Before you start, add your job title and verify your phone number, your Employee ID and your department.'
+                  : 'Before you start, add your job title and verify your phone number and your Employee ID.'}
             </p>
           </div>
 
@@ -203,6 +207,28 @@ function StaffProfilePage({ role }) {
                     onDirtyChange={onDirty.phone}
                     announce={announce}
                     intro="Your team can reach you on this number. We check it with a one-time code."
+                  />
+                </div>
+                <div style={formRise(0.22)}>
+                  <VerifyCodeCard
+                    id="staff-employee-id"
+                    inputId="staff-employee-id-input"
+                    title="Employee ID"
+                    intro="Enter the ID from your staff card once, so we know this account is really yours."
+                    note={
+                      onboarded && !profile.employeeIdVerified
+                        ? 'Your account is already set up. Please verify your Employee ID when you can.'
+                        : undefined
+                    }
+                    badgeLabel="Employee ID verified"
+                    label="Employee ID"
+                    hint="Your Employee ID is on your staff card."
+                    verified={profile.employeeIdVerified}
+                    done={{ label: 'Your Employee ID', value: profile.employeeId }}
+                    verify={async (code) => (await verifyEmployeeId(email, code)).employeeId}
+                    successText="Your Employee ID is verified."
+                    onDirtyChange={onDirty.employeeId}
+                    announce={announce}
                   />
                 </div>
                 {isDepartment && (
