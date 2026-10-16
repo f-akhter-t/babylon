@@ -4,7 +4,7 @@ import { latLngBounds } from 'leaflet'
 import IssueMarker from './IssueMarker'
 import { clusterIcon } from './statusPin'
 import { groupNearby } from './clusters'
-import { animate, DROP_IN, flyToBounds, SPRING } from '../../components/ui/motion'
+import { animate, DROP_IN, DURATION, flyToBounds, prefersLessMotion, SPRING } from '../../components/ui/motion'
 
 function ClusterMarker({ cluster, onClick }) {
   const markerRef = useRef(null)
@@ -30,9 +30,26 @@ function ClusterMarker({ cluster, onClick }) {
 
 // Draws every pin. Pins that would overlap at the current zoom become one
 // round count badge; clicking the badge zooms in until they split apart.
+// Pins are keyed by report id. A pin whose report has gone (deleted in another
+// tab, or filtered out) fades out briefly before it is removed; reduced
+// motion or a hidden tab removes it at once.
 export default function PinLayer({ issues, selectedId, onSelect }) {
   const map = useMap()
   const [zoom, setZoom] = useState(() => map.getZoom())
+  const [pins, setPins] = useState({ issues, leaving: [] })
+  if (issues !== pins.issues) {
+    const now = new Set(issues.map((issue) => String(issue.id)))
+    const quiet = prefersLessMotion() || document.visibilityState === 'hidden'
+    const gone = quiet ? [] : pins.issues.filter((issue) => !now.has(String(issue.id)))
+    const stillLeaving = pins.leaving.filter((issue) => !now.has(String(issue.id)))
+    setPins({ issues, leaving: [...stillLeaving, ...gone] })
+  }
+  const leavingCount = pins.leaving.length
+  useEffect(() => {
+    if (!leavingCount) return
+    const timer = setTimeout(() => setPins((current) => ({ ...current, leaving: [] })), DURATION.base)
+    return () => clearTimeout(timer)
+  }, [leavingCount])
 
   useMapEvents({ zoomend: () => setZoom(map.getZoom()) })
 
@@ -52,6 +69,10 @@ export default function PinLayer({ issues, selectedId, onSelect }) {
           selected={issue.id === selectedId}
           onSelect={onSelect}
         />
+      ))}
+
+      {pins.leaving.map((issue) => (
+        <IssueMarker key={issue.id} issue={issue} leaving onSelect={() => {}} />
       ))}
 
       {clusters.map((cluster) => (

@@ -42,6 +42,7 @@ export const RISE_IN = [
 ]
 
 export const FADE_IN = [{ opacity: 0 }, { opacity: 1 }]
+export const FADE_OUT = [{ opacity: 1 }, { opacity: 0, transform: 'scale(0.8)' }]
 
 // A vote count that changed.
 export const VOTE_BUMP = [
