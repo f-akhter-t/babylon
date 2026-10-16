@@ -31,7 +31,13 @@ function DrawnCheck() {
 }
 
 // step: 'view' (a verified number), 'edit' (typing a number), 'code' (waiting for the code)
-export default function PhoneCard({ profile, onDirtyChange, announce }) {
+// intro: the line under the heading (staff pages pass their own).
+export default function PhoneCard({
+  profile,
+  onDirtyChange,
+  announce,
+  intro = 'A verified number lets departments call you about your reports.',
+}) {
   const [step, setStep] = useState(profile.phone ? 'view' : 'edit')
   const [phoneInput, setPhoneInput] = useState('')
   const [touched, setTouched] = useState(false)
@@ -171,7 +177,7 @@ export default function PhoneCard({ profile, onDirtyChange, announce }) {
     <ProfileCard
       id="profile-phone"
       title="Mobile number"
-      intro="A verified number lets departments call you about your reports."
+      intro={intro}
       badge={<VerifyBadge status={verifiedPhone ? 'verified' : 'not-verified'} />}
     >
       <div className="flex flex-col gap-4">

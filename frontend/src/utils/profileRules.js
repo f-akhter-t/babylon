@@ -23,6 +23,18 @@ export function checkName(value) {
   return ''
 }
 
+export const JOB_TITLE_MIN = 2
+export const JOB_TITLE_MAX = 60
+
+// Staff only: the job title shown on their profile.
+export function checkJobTitle(value) {
+  const title = value.trim()
+  if (!title) return 'Please enter your job title.'
+  if (title.length < JOB_TITLE_MIN) return `Your job title needs at least ${JOB_TITLE_MIN} characters.`
+  if (title.length > JOB_TITLE_MAX) return `Your job title can be at most ${JOB_TITLE_MAX} characters.`
+  return ''
+}
+
 export function checkAddress(value) {
   if (value.trim().length > ADDRESS_MAX) {
     return `The address can be at most ${ADDRESS_MAX} characters.`

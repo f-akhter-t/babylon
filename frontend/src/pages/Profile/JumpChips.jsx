@@ -9,9 +9,11 @@ const SECTIONS = [
 
 // Phones: chips under the title that jump to a section and move focus to its
 // heading. Buttons, not #links, so the address and history stay the same.
-// The Security chip shows only when that section is on the page.
-export default function JumpChips({ withSecurity = false }) {
-  const sections = withSecurity ? SECTIONS : SECTIONS.filter((s) => s.id !== 'profile-security')
+// The Security chip shows only when that section is on the page. Another
+// page can pass its own list: sections={[{ label, id }]}.
+export default function JumpChips({ withSecurity = false, sections: own }) {
+  const sections =
+    own ?? (withSecurity ? SECTIONS : SECTIONS.filter((s) => s.id !== 'profile-security'))
 
   function jump(id) {
     const heading = document.getElementById(id)

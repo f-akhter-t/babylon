@@ -7,7 +7,7 @@ import AdminSignOut from './AdminSignOut'
 import Logo from './Logo'
 import NotificationBell from './NotificationBell'
 import { useViewer } from '../../pages/Map/useViewer'
-import { homePathFor } from '../../services/auth'
+import { homePathFor, isOnboarded } from '../../services/auth'
 import { fit } from './staffFit'
 
 const LG_QUERY = '(min-width: 64rem)'
@@ -79,8 +79,11 @@ function NavItem({ item, isActive, onSelect, onNavigate }) {
 
 // Everything in the sidebar: used by the desktop sidebar and the drawer.
 // bell: the notification bell, shown beside the logo (desktop sidebar only).
-function StaffNav({ variant, active, onSelect, department, note, counts, onNavigate, bell }) {
+// locked: the account has not finished its profile, so only Profile and
+// Log out are offered (the logo is not a link and there is no bell).
+function StaffNav({ variant, active, onSelect, department, note, counts, onNavigate, bell, locked }) {
   const config = ADMIN_NAV[variant]
+  const items = locked ? config.items.filter((item) => item.label === 'Profile') : config.items
 
   return (
     <>
@@ -88,11 +91,11 @@ function StaffNav({ variant, active, onSelect, department, note, counts, onNavig
         <div className="flex items-center justify-between gap-2">
           <Logo
             size="lg"
-            to={homePathFor(variant)}
-            label={LOGO_LABELS[variant]}
+            to={locked ? null : homePathFor(variant)}
+            label={locked ? undefined : LOGO_LABELS[variant]}
             onClick={onNavigate}
           />
-          {bell}
+          {!locked && bell}
         </div>
         <p className="mt-1 font-body text-xs font-bold uppercase tracking-widest text-brand">
           {config.label}
@@ -107,7 +110,7 @@ function StaffNav({ variant, active, onSelect, department, note, counts, onNavig
       )}
 
       <nav aria-label={config.label} className="mt-6 flex flex-col gap-2">
-        {config.items.map((item) => (
+        {items.map((item) => (
           <NavItem
             key={item.label}
             item={item.badge ? { ...item, count: counts[item.badge] } : item}
@@ -146,8 +149,9 @@ export default function AdminLayout({
   const config = ADMIN_NAV[variant]
   const counts = useAdminCounts(variant, department)
   const { session } = useViewer()
+  const locked = Boolean(session) && !isOnboarded(session.email)
   // The same bell as the citizen's, for this staff account; its last link opens the panel.
-  const bell = session ? (
+  const bell = session && !locked ? (
     <NotificationBell email={session.email} homeLink={homePathFor(variant)} homeLabel="Open your panel" />
   ) : null
   const location = useLocation()
@@ -233,7 +237,7 @@ export default function AdminLayout({
     dialogRef.current?.close()
   }
 
-  const navProps = { variant, active, onSelect, department, note, counts }
+  const navProps = { variant, active, onSelect, department, note, counts, locked }
 
   return (
     // break-words: with very large text, long words wrap instead of widening the page.
@@ -245,7 +249,10 @@ export default function AdminLayout({
         className="top-0 z-20 flex flex-wrap items-center justify-between gap-3 bg-navy px-4 py-3 max-lg:[@media(min-height:30rem)]:sticky lg:hidden"
       >
         <div className="min-w-0">
-          <Logo to={homePathFor(variant)} label={LOGO_LABELS[variant]} />
+          <Logo
+            to={locked ? null : homePathFor(variant)}
+            label={locked ? undefined : LOGO_LABELS[variant]}
+          />
           <p className="font-body text-xs font-bold uppercase tracking-widest text-brand">
             {config.label}
           </p>
