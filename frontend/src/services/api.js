@@ -10,6 +10,7 @@ import {
   DEFAULT_PERIOD_WEEKS,
   DEPARTMENT_CODES,
   departments,
+  EMPLOYEE_ROSTER,
   departmentsByPeriod,
   waitingLongest,
   weeklyReports,
@@ -1116,11 +1117,13 @@ const STAFF_DEMO_PROFILES = {
   'roads@babylon.test': {
     jobTitle: 'Road maintenance officer',
     phone: '01811000201',
+    employeeId: 'E-RH-1001',
     departmentVerified: true,
   },
   'admin@babylon.test': {
     jobTitle: 'City operations administrator',
     phone: '01911000302',
+    employeeId: 'E-AD-9001',
   },
 }
 
@@ -1144,6 +1147,8 @@ function buildProfile(email) {
     jobTitle: stored.jobTitle ?? '',
     photo: stored.photo ?? '', // a small data: URL, or ''
     departmentVerified: Boolean(stored.departmentVerified),
+    employeeId: stored.employeeId ?? '', // only set once the ID is verified
+    employeeIdVerified: Boolean(stored.employeeId),
     onboarded: isOnboarded(email),
   }
 }
@@ -1199,6 +1204,51 @@ export async function verifyDepartmentCode(email, code) {
     )
   }
   writeProfile(email, { departmentVerified: true })
+  return buildProfile(email)
+}
+
+export const EMPLOYEE_ID_EMPTY = 'Enter your Employee ID.'
+const EMPLOYEE_ID_TAKEN =
+  'That Employee ID is already linked to another account. Check the ID, or ask the person who issued it.'
+
+const normalizeEmployeeId = (value) => value.trim().toUpperCase()
+
+// The email that already holds this Employee ID, other than `email`, or null.
+// Looks at every saved profile and at the demo accounts' built-in IDs.
+function employeeIdHolder(employeeId, email) {
+  const own = email.toLowerCase()
+  const holders = { ...STAFF_DEMO_PROFILES, ...readProfiles() }
+  for (const [holder, stored] of Object.entries(holders)) {
+    const id = stored.employeeId ?? STAFF_DEMO_PROFILES[holder]?.employeeId
+    if (id && normalizeEmployeeId(id) === employeeId && holder.toLowerCase() !== own) return holder
+  }
+  return null
+}
+
+// Mock only: the roster is checked in the browser. A server must check it.
+// An ID can belong to one account only. Returns the profile, or throws a
+// whole-sentence message.
+export async function verifyEmployeeId(email, value) {
+  await wait()
+  const account = getAccount(email)
+  if (account?.role !== 'department' && account?.role !== 'admin') {
+    throw new Error('Only staff accounts have an Employee ID.')
+  }
+  const employeeId = normalizeEmployeeId(value)
+  if (!employeeId) throw new Error(EMPLOYEE_ID_EMPTY)
+  const isAdmin = account.role === 'admin'
+  const roster = EMPLOYEE_ROSTER[isAdmin ? 'admin' : account.department] ?? []
+  if (!roster.includes(employeeId)) {
+    throw new Error(
+      isAdmin
+        ? 'That Employee ID is not on the admin staff list. Check the ID, or ask the person who issued it.'
+        : `That Employee ID is not on the ${account.department} staff list. Check it with your department head.`,
+    )
+  }
+  // The check and the save run together with no pause in between, so two
+  // tabs cannot both claim the same ID.
+  if (employeeIdHolder(employeeId, email)) throw new Error(EMPLOYEE_ID_TAKEN)
+  writeProfile(email, { employeeId })
   return buildProfile(email)
 }
 
@@ -1260,6 +1310,7 @@ export function setupMissing(profile) {
   if (checkName(profile.name)) missing.push('a valid name')
   if (checkJobTitle(profile.jobTitle)) missing.push('a job title')
   if (!profile.phoneVerified) missing.push('a verified phone number')
+  if (!profile.employeeIdVerified) missing.push('a verified Employee ID')
   if (profile.role === 'department' && !profile.departmentVerified) {
     missing.push('a verified department code')
   }

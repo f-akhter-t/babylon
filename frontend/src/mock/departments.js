@@ -26,6 +26,18 @@ export const DEPARTMENT_CODES = {
   Electricity: 'EL-2764',
 }
 
+// Mock only: the staff list each Employee ID is checked against. Department
+// accounts use their department's list, admins the 'admin' list. The first ID
+// in the Roads & Highways and admin lists belongs to the demo accounts.
+// A real backend would keep this list on the server and check IDs there.
+export const EMPLOYEE_ROSTER = {
+  'Roads & Highways': ['E-RH-1001', 'E-RH-1002', 'E-RH-1003', 'E-RH-1004', 'E-RH-1005'],
+  'Waste Management': ['E-WM-2001', 'E-WM-2002', 'E-WM-2003', 'E-WM-2004', 'E-WM-2005'],
+  'Water Supply': ['E-WS-3001', 'E-WS-3002', 'E-WS-3003', 'E-WS-3004', 'E-WS-3005'],
+  Electricity: ['E-EL-4001', 'E-EL-4002', 'E-EL-4003', 'E-EL-4004', 'E-EL-4005'],
+  admin: ['E-AD-9001', 'E-AD-9002', 'E-AD-9003', 'E-AD-9004', 'E-AD-9005'],
+}
+
 // The periods on the Accountability screen. 8 weeks is the default, so the
 // screen and Home show the same figures.
 export const ACCOUNTABILITY_PERIODS = [
