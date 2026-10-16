@@ -3,6 +3,7 @@ import { Routes, Route, useLocation } from 'react-router-dom'
 import ErrorBoundary from './components/layout/ErrorBoundary'
 import PageLoading from './components/layout/PageLoading'
 import ScrollToTop from './components/layout/ScrollToTop'
+import RouteFade from './components/ui/RouteFade'
 import OnboardingGate from './components/layout/OnboardingGate'
 import Toaster from './components/ui/Toaster'
 
@@ -37,6 +38,7 @@ export default function App() {
   return (
     <>
       <ScrollToTop />
+      <RouteFade />
       <ErrorBoundary resetKey={pathname}>
         <Suspense fallback={<PageLoading />}>
           {/* Staff who have not finished their profile can open only that page. */}
