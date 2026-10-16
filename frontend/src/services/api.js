@@ -24,8 +24,8 @@ import {
   readPhoto,
   savePhoto,
 } from './identityPhotos'
-import { getAccountName, getSession, renameAccount } from './auth'
-import { removeReport as removeOldStoreReport } from './reportsStore'
+import { getAccountName, getSession, renameAccount, staffEmails } from './auth'
+import { notify, notifyEach, removeForIssue } from './notifications'
 import {
   checkDetails,
   checkIdPhoto,
@@ -262,6 +262,30 @@ function saveWorkflow(issue, changes) {
   notifyIssuesChanged()
 }
 
+// ---------- Notifications ----------
+// Every notice is one whole sentence with a link, sent to one account (copied
+// to each staff account of a department, or to every admin).
+const reportLink = (issue) => `/my-reports?report=${issue.id}`
+
+function tellReporter(issue, kind, text) {
+  if (issue.reporterEmail) notify(issue.reporterEmail, { kind, text, link: reportLink(issue), issueId: issue.id })
+}
+
+function tellDepartment(issue, kind, text, link = '/department') {
+  notifyEach(staffEmails({ role: 'department', department: issue.department }), { kind, text, link, issueId: issue.id })
+}
+
+// A reason as the end of a sentence: trailing full stops and spaces trimmed,
+// then one full stop, unless it already ends with ? or !.
+function reasonSentence(reason) {
+  const text = reason.trim().replace(/[.\s]+$/, '')
+  return /[?!]$/.test(text) ? text : `${text}.`
+}
+
+function tellAdmins(issue, kind, text) {
+  notifyEach(staffEmails({ role: 'admin' }), { kind, text, link: '/admin/verify', issueId: issue.id })
+}
+
 // Department: an Open issue becomes In progress. The citizen can no longer edit it.
 export async function startWork(id) {
   await wait()
@@ -277,6 +301,7 @@ export async function startWork(id) {
     startedOn: shortDate(),
     startedAt: new Date().toISOString(),
   })
+  tellReporter(issue, 'in-progress', `Work has started on your report "${issue.title}".`)
   return withStaffDetails(present(issue))
 }
 
@@ -302,6 +327,8 @@ export async function submitForVerification(id, { note = '', photoUrl } = {}) {
     pendingAfterImg: photoUrl,
     sentBack: null,
   })
+  tellReporter(issue, 'fix-submitted', `A fix for your report "${issue.title}" is waiting for the admin's check.`)
+  tellAdmins(issue, 'fix-waiting', `A fix is waiting for your check: ${issue.title}.`)
   return withStaffDetails(present(issue))
 }
 
@@ -327,6 +354,8 @@ export async function approveResolution(id) {
     pendingAfterImg: null,
     sentBack: null,
   })
+  tellReporter(issue, 'resolved', `Your report "${issue.title}" is resolved and verified.`)
+  tellDepartment(issue, 'fix-verified', `The admin verified your fix for "${issue.title}".`)
   return present(issue)
 }
 
@@ -357,6 +386,9 @@ export async function rejectResolution(id, reason = '') {
     // Its priority before it was reopened was not kept, so it becomes High.
     ...(issue.priority === 'reopened' ? { priority: 'high' } : {}),
   })
+  const why = reasonSentence(text)
+  tellReporter(issue, 'sent-back', `The department's fix for "${issue.title}" was sent back. Reason: ${why}`)
+  tellDepartment(issue, 'sent-back', `The admin sent back your fix for "${issue.title}". Reason: ${why}`, '/department?status=in-progress')
   return present(issue)
 }
 
@@ -473,9 +505,7 @@ export async function getIssueById(id) {
 // the logged-in account's email, read here the way a backend reads its login.
 // photoUrl is a (small) data URL of the photo. Severity is a placeholder
 // ('medium') until the AI severity engine exists.
-// legacyReportId: the same report's id in the old My reports store
-// (services/reportsStore.js), so deleting it can remove that record too.
-export async function createIssue({ category, description, photoUrl, location, reporter, legacyReportId }) {
+export async function createIssue({ category, description, photoUrl, location, reporter }) {
   const today = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
 
   const issue = {
@@ -501,12 +531,24 @@ export async function createIssue({ category, description, photoUrl, location, r
     reporter: reporter || 'You',
     reporterEmail: getSession()?.email ?? null,
     description,
-    ...(legacyReportId ? { legacyReportId } : {}),
   }
+
+  const email = issue.reporterEmail
+  const levelBefore = email ? getLevel(ownReports(email).length * POINTS_PER_REPORT) : null
 
   submitted.push(issue)
   saveSubmitted(submitted)
   all.push(withDepartment(issue))
+
+  // The same POINTS_PER_REPORT as the Report page's toast.
+  tellReporter(issue, 'filed', `Your report "${issue.title}" is filed. You earned ${POINTS_PER_REPORT} points.`)
+  tellDepartment(withDepartment(issue), 'new-report', `A new report is waiting in your department: ${issue.title}.`)
+  if (email) {
+    const levelAfter = getLevel(ownReports(email).length * POINTS_PER_REPORT)
+    if (levelAfter.level > levelBefore.level) {
+      notify(email, { kind: 'level-up', text: `You reached Level ${levelAfter.level}, ${levelAfter.role}.`, link: '/my-reports' })
+    }
+  }
   notifyIssuesChanged()
   return issue
 }
@@ -677,7 +719,7 @@ export async function deleteIssue(id, email) {
   delete edits[key]
   workflow = nextWorkflow
   dropFromMemory(key)
-  if (issue.legacyReportId) removeOldStoreReport(issue.legacyReportId)
+  removeForIssue(key) // every notice about it, for every account
   notifyIssuesChanged()
 }
 
@@ -1282,9 +1324,19 @@ export async function reviewIdentity(submission, { decision, reason = '' }) {
     )
   if (!stillPending()) throw new Error(ALREADY_REVIEWED)
 
+  // The citizen hears the outcome in their bell, with a link to their profile.
+  const why = decision === 'reject' ? reasonSentence(reason) : ''
+  const tellCitizen = () =>
+    notify(submission.email, {
+      kind: status === 'verified' ? 'identity-verified' : 'identity-rejected',
+      text: status === 'verified' ? 'Your identity is verified.' : `Your identity was not approved. Reason: ${why}`,
+      link: '/profile',
+    })
+
   if (submission.sample) {
     sampleDecisions.set(submission.id, status)
     window.dispatchEvent(new Event(PROFILE_EVENT))
+    tellCitizen()
     return { ...submission, status, photoDeleted: true }
   }
 
@@ -1304,6 +1356,7 @@ export async function reviewIdentity(submission, { decision, reason = '' }) {
       reviewedAt: new Date().toISOString(),
     },
   })
+  tellCitizen()
 
   let photoDeleted = true
   try {
