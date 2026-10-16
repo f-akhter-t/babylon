@@ -18,6 +18,8 @@ import SaveBar from './SaveBar'
 import { useToast } from '../../components/ui/toast'
 import { ProfileError, ProfileLoading } from './ProfileStates'
 import WelcomeHeader from './WelcomeHeader'
+import ProfileCard from './ProfileCard'
+import ChangePasswordCard from '../../components/ui/ChangePasswordCard'
 
 const LEAVE_MESSAGE = 'You have changes that are not saved. Leave this page anyway?'
 const DETAILS_FORM_ID = 'profile-details-form'
@@ -147,7 +149,7 @@ function ProfilePage({ viewer }) {
 
           {profile && (
             <div style={pageRise(0.05)}>
-              <JumpChips />
+              <JumpChips withSecurity={!firstTime} />
             </div>
           )}
 
@@ -180,6 +182,19 @@ function ProfilePage({ viewer }) {
                     announce={announce}
                   />
                 </div>
+                {/* Not part of the first-time welcome step. Its own form and button,
+                    so it never marks the profile as unsaved. */}
+                {!firstTime && (
+                  <div style={formRise(0.45)}>
+                    <ProfileCard
+                      id="profile-security"
+                      title="Security"
+                      intro="Change the password you use to log in. You stay logged in on this device."
+                    >
+                      <ChangePasswordCard email={email} />
+                    </ProfileCard>
+                  </div>
+                )}
               </div>
             </div>
           )}
