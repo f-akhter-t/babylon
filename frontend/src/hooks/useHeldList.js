@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { usePoliteMessage } from './usePoliteMessage'
 
 // Keeps a live list steady while someone is using it, so nothing jumps under
 // the pointer. The list is "held" while it is scrolled past its top, or while
@@ -28,7 +29,7 @@ export function useHeldList(items, { containerRef, scrollerRef, resetKey, update
   const live = Boolean(update)
   const remote = Boolean(update?.remote)
   const [state, setState] = useState(() => ({ resetKey, items, ghosts: new Set(), waiting: [], source: items }))
-  const [message, setMessage] = useState('')
+  const [message, say] = usePoliteMessage()
   const pointerInside = useRef(false)
   const latest = useRef(items)
   const focusAfter = useRef(null) // id of the report that should take focus, or 'heading'
@@ -44,11 +45,6 @@ export function useHeldList(items, { containerRef, scrollerRef, resetKey, update
     if (scroller && scroller.scrollHeight > scroller.clientHeight + 1) return scroller.scrollTop > 8
     return box.getBoundingClientRect().top < TOP_GAP
   }, [containerRef, scrollerRef])
-
-  const say = useCallback((text) => {
-    setMessage('')
-    setTimeout(() => setMessage(text), 60) // cleared first, so a repeat is read again
-  }, [])
 
   // New data arrived. Decide before paint, while the old DOM is still there,
   // so a focused report that is about to fade out can hand its focus on.

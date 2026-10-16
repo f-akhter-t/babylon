@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef } from 'react'
+import { usePoliteMessage } from '../../hooks/usePoliteMessage'
 import Navbar from '../../components/layout/Navbar'
 import IssuesSidebar from './IssuesSidebar'
 import IssueMap from './IssueMap'
@@ -62,16 +63,12 @@ export default function Map() {
 
   // The report in the open popup was deleted in another tab: close the popup
   // and say so (politely).
-  const [spoken, setSpoken] = useState('')
-  const speakTimer = useRef(0)
-  useEffect(() => () => clearTimeout(speakTimer.current), [])
+  const [spoken, say] = usePoliteMessage()
   const deletedOpen = Boolean(selectedId) && Boolean(allUpdate?.removed.includes(String(selectedId)))
   useEffect(() => {
     if (!deletedOpen) return
     update({ issue: null })
-    // Not cleared when the popup closes: the sentence must still be said.
-    clearTimeout(speakTimer.current)
-    speakTimer.current = setTimeout(() => setSpoken('This report was deleted.'), 60)
+    say('This report was deleted.')
   }, [deletedOpen]) // eslint-disable-line react-hooks/exhaustive-deps -- update is a new function each render
 
   return (
