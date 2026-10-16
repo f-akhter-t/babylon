@@ -146,7 +146,7 @@ function StaffProfilePage({ role }) {
               ref={headingRef}
               tabIndex={-1}
               aria-describedby={gated ? GATE_BANNER_ID : undefined}
-              className="rounded-chip break-words font-heading text-3xl font-extrabold text-navy focus:outline-none focus-visible:ring-2 focus-visible:ring-forest/50 sm:text-4xl"
+              className="w-fit max-w-full rounded-chip break-words font-heading text-3xl font-extrabold text-navy focus:outline-none focus-visible:ring-2 focus-visible:ring-forest/50 sm:text-4xl"
             >
               {onboarded ? 'Your profile' : 'Set up your profile'}
             </h1>
