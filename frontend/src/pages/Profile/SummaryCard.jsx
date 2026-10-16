@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import StaircaseIcon from '../../components/ui/StaircaseIcon'
-import useCountUp from '../Home/useCountUp'
+import CountUp from '../../components/ui/CountUp'
 import VerifyBadge from './VerifyBadge'
 import CompletenessMeter from './CompletenessMeter'
 import { getCurrentUser } from '../../services/api'
@@ -19,7 +19,6 @@ function initialsFor(name) {
 // showMeter: false during first-time setup, where the welcome block shows it.
 export default function SummaryCard({ profile, showMeter = true }) {
   const [user, setUser] = useState(null)
-  const { ref: pointsRef, value: pointsShown } = useCountUp(user?.points, { duration: 1200 })
 
   useEffect(() => {
     let ignore = false
@@ -61,9 +60,9 @@ export default function SummaryCard({ profile, showMeter = true }) {
               {`Level ${user.level} · ${user.role}`}
             </p>
           </div>
-          <p ref={pointsRef} className="mt-2 font-heading text-5xl font-extrabold leading-none">
-            <span aria-hidden="true">{Math.round(pointsShown)}</span>
-            <span className="sr-only">{`${user.points} points`}</span>
+          <p className="mt-2 font-heading text-5xl font-extrabold leading-none">
+            <CountUp value={user.points} duration={1200} />
+            <span className="sr-only"> points</span>
           </p>
           <p className="mt-1 font-body text-sm text-mint/80">
             {user.reports === 1 ? 'points from 1 report' : `points from ${user.reports} reports`}

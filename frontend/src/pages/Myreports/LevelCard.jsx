@@ -1,5 +1,6 @@
 import { CheckIcon } from '../../components/ui/icons'
 import { POINTS_PER_REPORT } from '../../services/api'
+import CountUp from '../../components/ui/CountUp'
 
 const lift = 'transition duration-150 hover:-translate-y-0.5 hover:shadow-lift'
 
@@ -20,7 +21,9 @@ export function LevelCard({ user }) {
         <div className="text-xs font-bold uppercase tracking-[.16em] text-brand">
           Level {user?.level ?? 1} · {user?.role ?? 'Newcomer'}
         </div>
-        <div className="my-1 font-heading text-[56px] font-extrabold leading-none tracking-tight">{points}</div>
+        <div className="my-1 font-heading text-[56px] font-extrabold leading-none tracking-tight">
+          <CountUp value={points} duration={1200} />
+        </div>
         <p className="text-[13px] opacity-90">
           {toNext === null ? 'You reached the top tier' : `${toNext} points to add the next tier`}
         </p>

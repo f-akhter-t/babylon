@@ -12,6 +12,7 @@ import {
 } from 'recharts'
 import AdminLayout from '../../components/layout/AdminLayout'
 import LoadError from '../../components/ui/LoadError'
+import CountUp from '../../components/ui/CountUp'
 import {
   ACCOUNTABILITY_PERIODS,
   DEFAULT_PERIOD_WEEKS,
@@ -360,13 +361,21 @@ function AccountabilityPage() {
         {data && !error && (
           <div aria-busy={busy || undefined} className={clsx(fit.column, fit.grow)}>
             <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              <StatCard label={TEXT.received(data.weeks)}>{data.stats.received}</StatCard>
-              <StatCard label={TEXT.resolved(data.weeks)} valueClass="text-brand">
-                {data.stats.resolved}
+              {/* They count up the first time; another period shows its numbers at once. */}
+              <StatCard label={TEXT.received(data.weeks)}>
+                <CountUp value={data.stats.received} />
               </StatCard>
-              <StatCard label={TEXT.avgDays(data.weeks)}>{TEXT.days(data.stats.avgDays)}</StatCard>
+              <StatCard label={TEXT.resolved(data.weeks)} valueClass="text-brand">
+                <CountUp value={data.stats.resolved} />
+              </StatCard>
+              <StatCard label={TEXT.avgDays(data.weeks)}>
+                <CountUp value={data.stats.avgDays} format={(n) => TEXT.days(Number(n.toFixed(1)))} />
+              </StatCard>
               <StatCard label={TEXT.reopened(data.weeks)} valueClass="text-amber">
-                {TEXT.percent(data.stats.reopenedPercent)}
+                <CountUp
+                  value={data.stats.reopenedPercent}
+                  format={(n) => TEXT.percent(Math.round(n))}
+                />
               </StatCard>
             </div>
 
