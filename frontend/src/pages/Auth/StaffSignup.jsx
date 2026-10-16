@@ -8,7 +8,7 @@ import AuthShell, {
   SubmitButton,
   authLinkClass,
 } from './AuthShell'
-import { DEMO_STAFF_CODE, STAFF_ROLES, homePathFor, signup } from '../../services/auth'
+import { DEMO_STAFF_CODE, STAFF_ROLES, profilePathFor, signup } from '../../services/auth'
 import { departments } from '../../mock/departments'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import GuestOnly from './GuestOnly'
@@ -49,7 +49,8 @@ function StaffSignupPage() {
     setBusy(true)
     try {
       const user = await signup({ name, email, password, role, department, accessCode })
-      navigate(homePathFor(user.role))
+      // New staff start with their profile setup.
+      navigate(profilePathFor(user.role), { replace: true })
     } catch (err) {
       setError(err.message)
     } finally {

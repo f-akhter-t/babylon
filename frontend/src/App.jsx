@@ -3,6 +3,7 @@ import { Routes, Route, useLocation } from 'react-router-dom'
 import ErrorBoundary from './components/layout/ErrorBoundary'
 import PageLoading from './components/layout/PageLoading'
 import ScrollToTop from './components/layout/ScrollToTop'
+import OnboardingGate from './components/layout/OnboardingGate'
 import Toaster from './components/ui/Toaster'
 
 // Each page's code loads only when someone opens it.
@@ -38,28 +39,31 @@ export default function App() {
       <ScrollToTop />
       <ErrorBoundary resetKey={pathname}>
         <Suspense fallback={<PageLoading />}>
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/map" element={<Map />} />
-            <Route path="/issues/:id" element={<IssueDetail />} />
-            <Route path="/issues/:id/edit" element={<IssueEdit />} />
-            <Route path="/report" element={<Report />} />
-            <Route path="/feed" element={<Feed />} />
-            <Route path="/my-reports" element={<MyReports />} />
-            <Route path="/profile" element={<Profile />} />
-            <Route path="/department" element={<DepartmentPanel />} />
-            <Route path="/admin/verify" element={<VerifyResolutions />} />
-            <Route path="/admin/accountability" element={<Accountability />} />
-            <Route path="/admin/identity" element={<IdentityReview />} />
-            <Route path="/department/profile" element={<StaffProfile role="department" />} />
-            <Route path="/admin/profile" element={<StaffProfile role="admin" />} />
-            {Styleguide && <Route path="/styleguide" element={<Styleguide />} />}
-            <Route path="/login" element={<Login />} />
-            <Route path="/signup" element={<Signup />} />
-            <Route path="/staff/login" element={<StaffLogin />} />
-            <Route path="/staff/signup" element={<StaffSignup />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
+          {/* Staff who have not finished their profile can open only that page. */}
+          <OnboardingGate>
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/map" element={<Map />} />
+              <Route path="/issues/:id" element={<IssueDetail />} />
+              <Route path="/issues/:id/edit" element={<IssueEdit />} />
+              <Route path="/report" element={<Report />} />
+              <Route path="/feed" element={<Feed />} />
+              <Route path="/my-reports" element={<MyReports />} />
+              <Route path="/profile" element={<Profile />} />
+              <Route path="/department" element={<DepartmentPanel />} />
+              <Route path="/admin/verify" element={<VerifyResolutions />} />
+              <Route path="/admin/accountability" element={<Accountability />} />
+              <Route path="/admin/identity" element={<IdentityReview />} />
+              <Route path="/department/profile" element={<StaffProfile role="department" />} />
+              <Route path="/admin/profile" element={<StaffProfile role="admin" />} />
+              {Styleguide && <Route path="/styleguide" element={<Styleguide />} />}
+              <Route path="/login" element={<Login />} />
+              <Route path="/signup" element={<Signup />} />
+              <Route path="/staff/login" element={<StaffLogin />} />
+              <Route path="/staff/signup" element={<StaffSignup />} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </OnboardingGate>
         </Suspense>
       </ErrorBoundary>
       {/* Outside the boundary and Suspense, so toasts survive a page change or a crash. */}
