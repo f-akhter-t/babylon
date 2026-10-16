@@ -4,11 +4,15 @@ const SECTIONS = [
   { label: 'Details', id: 'profile-details' },
   { label: 'Phone', id: 'profile-phone' },
   { label: 'Identity', id: 'profile-identity' },
+  { label: 'Security', id: 'profile-security' },
 ]
 
 // Phones: chips under the title that jump to a section and move focus to its
 // heading. Buttons, not #links, so the address and history stay the same.
-export default function JumpChips() {
+// The Security chip shows only when that section is on the page.
+export default function JumpChips({ withSecurity = false }) {
+  const sections = withSecurity ? SECTIONS : SECTIONS.filter((s) => s.id !== 'profile-security')
+
   function jump(id) {
     const heading = document.getElementById(id)
     if (!heading) return
@@ -21,7 +25,7 @@ export default function JumpChips() {
 
   return (
     <nav aria-label="Profile sections" className="mt-4 flex flex-wrap gap-2 lg:hidden">
-      {SECTIONS.map((section) => (
+      {sections.map((section) => (
         <button
           key={section.id}
           type="button"
