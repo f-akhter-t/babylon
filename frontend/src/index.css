@@ -28,11 +28,61 @@
     to { transform: translateX(-50%); }
   }
 
+  /* Motion: the one shared set (see "Motion" below for the tokens). Only
+     transform and opacity move, so nothing shifts the layout. */
+  --animate-fade-in: fade-in var(--duration-base) var(--ease-calm) both;
+  --animate-rise-in: rise-in var(--duration-slow) var(--ease-calm) both;
+  --animate-pop: pop var(--duration-slow) var(--ease-spring) both;
+  --animate-drop-in: drop-in var(--duration-slow) var(--ease-spring) both;
+  --animate-vote-bump: vote-bump var(--duration-slow) var(--ease-spring);
+  --animate-grow-x: grow-x var(--duration-reveal) var(--ease-calm) both;
+  --animate-grow-y: grow-y var(--duration-slow) var(--ease-calm) both;
+  --animate-slide-up: slide-up var(--duration-base) var(--ease-calm) both;
+  --animate-float: float 3s ease-in-out infinite;
+  --animate-shimmer: shimmer 1.4s linear infinite;
   /* Toasts rise in (components/ui/Toaster.jsx) */
-  --animate-toast-in: toast-in 0.25s ease-out;
-  @keyframes toast-in {
-    from { opacity: 0; transform: translateY(8px); }
+  --animate-toast-in: rise-in var(--duration-base) var(--ease-calm);
+  @keyframes fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  @keyframes rise-in {
+    from { opacity: 0; transform: translateY(12px); }
     to { opacity: 1; transform: none; }
+  }
+  @keyframes pop {
+    0% { opacity: 0; transform: scale(0.7); }
+    60% { opacity: 1; transform: scale(1.12); }
+    100% { opacity: 1; transform: scale(1); }
+  }
+  @keyframes drop-in {
+    from { opacity: 0; transform: translateY(-14px) scale(0.6); }
+    to { opacity: 1; transform: none; }
+  }
+  @keyframes vote-bump {
+    0% { transform: scale(1); }
+    40% { transform: scale(1.35); }
+    100% { transform: scale(1); }
+  }
+  @keyframes grow-x {
+    from { transform: scaleX(0); }
+    to { transform: scaleX(1); }
+  }
+  @keyframes grow-y {
+    from { transform: scaleY(0); }
+    to { transform: scaleY(1); }
+  }
+  @keyframes slide-up {
+    from { opacity: 0; transform: translateY(100%); }
+    to { opacity: 1; transform: none; }
+  }
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-6px); }
+  }
+  @keyframes shimmer {
+    from { transform: translateX(-100%); }
+    to { transform: translateX(100%); }
   }
 
   /* Corner radii: 14, 18, 22, 24, 32 px */
@@ -74,12 +124,128 @@
   }
 }
 
-/* Calm hover lift for cards. */
+/* ---------- Motion ----------
+   Durations and easings for every animation and transition in the app.
+   Reduced motion is handled once, by the rule at the end of this file. */
+:root {
+  --duration-fast: 150ms;
+  --duration-base: 250ms;
+  --duration-slow: 450ms;
+  --duration-reveal: 700ms;
+  --ease-calm: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --ease-spring: cubic-bezier(0.2, 1.4, 0.4, 1);
+  --stagger-step: 40ms;
+}
+
+/* Calm hover lift for cards. Only where hovering exists, so a tap on a
+   phone never leaves a card stuck in the air. */
 @utility lift {
-  transition: transform 300ms ease, box-shadow 300ms ease;
-  &:hover {
-    transform: translateY(-6px);
-    box-shadow: 0 20px 40px color-mix(in srgb, var(--color-navy) 25%, transparent);
+  transition:
+    transform var(--duration-slow) var(--ease-calm),
+    box-shadow var(--duration-slow) var(--ease-calm);
+  @media (hover: hover) {
+    &:hover {
+      transform: translateY(-6px);
+      box-shadow: 0 20px 40px color-mix(in srgb, var(--color-navy) 25%, transparent);
+    }
+  }
+}
+
+/* A small press for buttons and cards. */
+@utility press {
+  transition: transform var(--duration-fast) var(--ease-calm);
+  &:active {
+    transform: scale(0.97);
+  }
+}
+
+/* List items one after another: set --i (0, 1, 2...) on each. Only the first
+   ten wait; the rest come in with the tenth. */
+@utility stagger {
+  animation-delay: calc(min(var(--i, 0), 9) * var(--stagger-step));
+}
+
+/* Scrolls into view (components/ui/Reveal.jsx): hidden until data-shown. */
+@utility reveal {
+  transition:
+    opacity var(--duration-reveal) var(--ease-calm),
+    transform var(--duration-reveal) var(--ease-calm);
+  &:not([data-shown]) {
+    opacity: 0;
+    transform: translateY(1.5rem);
+  }
+}
+
+/* Loading blocks: a soft light sweeps across. Static under reduced motion. */
+@utility skeleton {
+  position: relative;
+  overflow: hidden;
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      color-mix(in srgb, white 45%, transparent),
+      transparent
+    );
+    animation: var(--animate-shimmer);
+  }
+}
+
+/* Native dialogs and the staff drawer: close() takes effect at once (focus,
+   inert, scroll), and only the picture fades out after it. Browsers without
+   @starting-style or overlay simply close at once. */
+dialog.motion-dialog {
+  transition:
+    opacity var(--duration-base) var(--ease-calm),
+    transform var(--duration-base) var(--ease-calm),
+    overlay var(--duration-base) allow-discrete,
+    display var(--duration-base) allow-discrete;
+}
+dialog.motion-dialog:not([open]) {
+  opacity: 0;
+  transform: scale(0.97);
+  pointer-events: none;
+}
+dialog.motion-dialog::backdrop {
+  transition:
+    opacity var(--duration-base) var(--ease-calm),
+    overlay var(--duration-base) allow-discrete,
+    display var(--duration-base) allow-discrete;
+}
+dialog.motion-dialog:not([open])::backdrop {
+  opacity: 0;
+}
+@starting-style {
+  dialog.motion-dialog[open] {
+    opacity: 0;
+    transform: scale(0.97);
+  }
+  dialog.motion-dialog[open]::backdrop {
+    opacity: 0;
+  }
+}
+/* The drawer slides in from the side instead of growing. */
+dialog.motion-drawer {
+  transform: none;
+}
+dialog.motion-drawer:not([open]) {
+  transform: none;
+}
+dialog.motion-drawer .motion-drawer-panel {
+  transition: transform var(--duration-base) var(--ease-calm);
+}
+dialog.motion-drawer:not([open]) .motion-drawer-panel {
+  transform: translateX(-100%);
+}
+@starting-style {
+  dialog.motion-drawer[open] {
+    transform: none;
+  }
+  dialog.motion-drawer[open] .motion-drawer-panel {
+    transform: translateX(-100%);
   }
 }
 
@@ -188,7 +354,10 @@ textarea:not(:disabled),
 .leaflet-container .leaflet-tooltip-left::before { border-left-color: var(--color-navy); }
 .leaflet-container .leaflet-tooltip-right::before { border-right-color: var(--color-navy); }
 
-/* Safety net: people who ask for less motion get almost none. */
+/* The one reduced-motion rule for the whole app: every CSS animation and
+   transition ends at once. Motion started from JavaScript (element.animate,
+   map moves, count-up, the background) checks the preference itself, at the
+   moment it runs (components/ui/motion.js). */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
