@@ -22,17 +22,18 @@ export const DEMO_STAFF_CODE = STAFF_ACCESS_CODE
 
 const isStaffRole = (role) => role !== 'citizen'
 
-// Demo accounts so every role can be tried without signing up first.
+// Demo accounts so every role can be tried without signing up first. The demo
+// staff count as onboarded: their profiles come with demo details (api.js).
 const DEMO_USERS = [
   { name: 'Nadia R.', email: 'citizen@babylon.test', password: 'password123', role: 'citizen' },
   {
-    name: 'Roads & Highways',
+    name: 'Rafiq Hasan',
     email: 'roads@babylon.test',
     password: 'password123',
     role: 'department',
     department: 'Roads & Highways',
   },
-  { name: 'Admin', email: 'admin@babylon.test', password: 'password123', role: 'admin' },
+  { name: 'Tahmina Akter', email: 'admin@babylon.test', password: 'password123', role: 'admin' },
 ]
 
 // Demo accounts listed on each sign-in page: citizens on /login, staff on /staff/login.
@@ -89,10 +90,50 @@ function passwordOf(user) {
   return readPasswords()[user.email.toLowerCase()] ?? user.password
 }
 
-function publicUser({ password, ...user }) {
+// The session never holds the password or the onboarding flag. The flag is
+// read from the account each time (isOnboarded), so a stale copy in a
+// session can never let anyone past the setup.
+function publicUser({ password, onboarded, ...user }) {
   void password
+  void onboarded
   const renamed = readNames()[user.email.toLowerCase()]
   return renamed ? { ...user, name: renamed } : user
+}
+
+function findUser(email) {
+  if (!email) return null
+  return allUsers().find((u) => u.email.toLowerCase() === email.trim().toLowerCase()) ?? null
+}
+
+// The account's public details (no password), or null.
+export function getAccount(email) {
+  const user = findUser(email)
+  return user ? publicUser(user) : null
+}
+
+// Staff must finish their profile before using the app. Citizens and the
+// demo staff count as done; a stored staff account counts as done only once
+// its flag is set, so an older account with no flag goes through the setup.
+// Client-side only: a real backend must refuse a staff member's data until then.
+export function isOnboarded(email) {
+  const user = findUser(email)
+  if (!user || !isStaffRole(user.role)) return true
+  if (DEMO_USERS.includes(user)) return true
+  return user.onboarded === true
+}
+
+// Set once, by completeOnboarding in api.js. Nothing ever clears it.
+export function markOnboarded(email) {
+  const key = email.toLowerCase()
+  const stored = readStored().map((u) => (u.email.toLowerCase() === key ? { ...u, onboarded: true } : u))
+  localStorage.setItem(USERS_KEY, JSON.stringify(stored))
+}
+
+// Each staff account's own profile page.
+export function profilePathFor(role) {
+  if (role === 'department') return '/department/profile'
+  if (role === 'admin') return '/admin/profile'
+  return '/profile'
 }
 
 export function homePathFor(role) {
@@ -157,6 +198,8 @@ export async function signup({ name, email, password, role, department, accessCo
     password,
     role,
     ...(role === 'department' ? { department } : {}),
+    // New staff start with the profile setup.
+    ...(isStaffRole(role) ? { onboarded: false } : {}),
   }
   localStorage.setItem(USERS_KEY, JSON.stringify([...readStored(), user]))
   localStorage.setItem(SESSION_KEY, JSON.stringify(publicUser(user)))
