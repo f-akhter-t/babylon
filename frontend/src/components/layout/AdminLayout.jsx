@@ -5,6 +5,8 @@ import { useAdminCounts } from '../../hooks/useAdminCounts'
 import { ADMIN_NAV } from './adminNav'
 import AdminSignOut from './AdminSignOut'
 import Logo from './Logo'
+import NotificationBell from './NotificationBell'
+import { useViewer } from '../../pages/Map/useViewer'
 import { homePathFor } from '../../services/auth'
 import { fit } from './staffFit'
 
@@ -76,18 +78,22 @@ function NavItem({ item, isActive, onSelect, onNavigate }) {
 }
 
 // Everything in the sidebar: used by the desktop sidebar and the drawer.
-function StaffNav({ variant, active, onSelect, department, note, counts, onNavigate }) {
+// bell: the notification bell, shown beside the logo (desktop sidebar only).
+function StaffNav({ variant, active, onSelect, department, note, counts, onNavigate, bell }) {
   const config = ADMIN_NAV[variant]
 
   return (
     <>
       <div className="px-2">
-        <Logo
-          size="lg"
-          to={homePathFor(variant)}
-          label={LOGO_LABELS[variant]}
-          onClick={onNavigate}
-        />
+        <div className="flex items-center justify-between gap-2">
+          <Logo
+            size="lg"
+            to={homePathFor(variant)}
+            label={LOGO_LABELS[variant]}
+            onClick={onNavigate}
+          />
+          {bell}
+        </div>
         <p className="mt-1 font-body text-xs font-bold uppercase tracking-widest text-brand">
           {config.label}
         </p>
@@ -139,6 +145,11 @@ export default function AdminLayout({
 }) {
   const config = ADMIN_NAV[variant]
   const counts = useAdminCounts(variant, department)
+  const { session } = useViewer()
+  // The same bell as the citizen's, for this staff account; its last link opens the panel.
+  const bell = session ? (
+    <NotificationBell email={session.email} homeLink={homePathFor(variant)} homeLabel="Open your panel" />
+  ) : null
   const location = useLocation()
   // The drawer belongs to the page it was opened on: moving to another page
   // (or another filter) closes it.
@@ -239,17 +250,20 @@ export default function AdminLayout({
             {config.label}
           </p>
         </div>
-        <button
-          ref={menuButtonRef}
-          type="button"
-          aria-expanded={menuOpen}
-          aria-controls={MENU_ID}
-          onClick={() => setOpenOn(location.key)}
-          className="flex min-h-11 min-w-11 shrink-0 items-center gap-2 rounded-full border border-mint/40 px-4 font-body text-sm font-bold text-mint transition-colors hover:bg-mint/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-mint motion-reduce:transition-none"
-        >
-          <MenuIcon />
-          Menu
-        </button>
+        <div className="flex shrink-0 items-center gap-2">
+          {bell}
+          <button
+            ref={menuButtonRef}
+            type="button"
+            aria-expanded={menuOpen}
+            aria-controls={MENU_ID}
+            onClick={() => setOpenOn(location.key)}
+            className="flex min-h-11 min-w-11 shrink-0 items-center gap-2 rounded-full border border-mint/40 px-4 font-body text-sm font-bold text-mint transition-colors hover:bg-mint/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-mint motion-reduce:transition-none"
+          >
+            <MenuIcon />
+            Menu
+          </button>
+        </div>
       </header>
 
       <dialog
@@ -275,7 +289,7 @@ export default function AdminLayout({
       </dialog>
 
       <aside aria-label="Staff menu" className="hidden w-[250px] shrink-0 flex-col overflow-y-auto bg-navy px-3.5 py-6 lg:sticky lg:top-0 lg:flex lg:h-dvh">
-        <StaffNav {...navProps} />
+        <StaffNav {...navProps} bell={bell} />
       </aside>
 
       {/* Fields scrolled into view keep clear of the sticky action bars. */}
