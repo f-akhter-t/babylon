@@ -1,9 +1,11 @@
 // Mock login. Accounts live in the browser (localStorage) until the backend exists.
 // Later, each function becomes a fetch() call to Express and pages will not change.
+import { validatePassword } from '../pages/Auth/validateNewAccount'
 
 const USERS_KEY = 'babylon-users'
 const SESSION_KEY = 'babylon-session'
 const NAMES_KEY = 'babylon-names' // names changed on the Profile page, by email
+const PASSWORDS_KEY = 'babylon-passwords' // changed passwords of the demo accounts, by email
 
 // Roles that sign up through the staff pages (/staff/login, /staff/signup).
 // Citizens use /login and /signup.
@@ -71,6 +73,22 @@ function readNames() {
   }
 }
 
+function readPasswords() {
+  try {
+    return JSON.parse(localStorage.getItem(PASSWORDS_KEY)) ?? {}
+  } catch {
+    return {}
+  }
+}
+
+const isDemoUser = (email) => DEMO_USERS.some((u) => u.email.toLowerCase() === email.toLowerCase())
+
+// An account's current password. Every password check goes through here,
+// so a changed demo password is honoured everywhere.
+function passwordOf(user) {
+  return readPasswords()[user.email.toLowerCase()] ?? user.password
+}
+
 function publicUser({ password, ...user }) {
   void password
   const renamed = readNames()[user.email.toLowerCase()]
@@ -103,7 +121,7 @@ function wrongDoor(message, code) {
 // its own accounts. The account type is revealed only after the right password.
 export async function login({ email, password, door }) {
   const user = allUsers().find((u) => u.email.toLowerCase() === email.trim().toLowerCase())
-  if (!user || user.password !== password) {
+  if (!user || passwordOf(user) !== password) {
     throw new Error('That email and password do not match an account.')
   }
   if (door === 'citizen' && isStaffRole(user.role)) {
@@ -143,6 +161,42 @@ export async function signup({ name, email, password, role, department, accessCo
   localStorage.setItem(USERS_KEY, JSON.stringify([...readStored(), user]))
   localStorage.setItem(SESSION_KEY, JSON.stringify(publicUser(user)))
   return publicUser(user)
+}
+
+// Thrown by changePassword. `field` ('current' or 'new') tells the form
+// which field the message belongs to.
+function fieldError(message, field) {
+  const error = new Error(message)
+  error.field = field
+  return error
+}
+
+// Changes the password of any account, citizen or staff. The session stays
+// as it is, so the person remains signed in. Passwords are never trimmed.
+// Demo accounts are built in, so their new password is kept in a separate
+// list; accounts made through sign-up are updated where they are stored.
+export async function changePassword({ email, currentPassword, newPassword }) {
+  const user = allUsers().find((u) => u.email.toLowerCase() === email.trim().toLowerCase())
+  if (!user) throw new Error('We could not find your account. Please log in again.')
+  if (passwordOf(user) !== currentPassword) {
+    throw fieldError('Your current password is not correct.', 'current')
+  }
+  // confirm is the new password itself, so this only checks the rules.
+  const problem = validatePassword({ password: newPassword, confirm: newPassword })
+  if (problem) throw fieldError(problem, 'new')
+  if (newPassword === currentPassword) {
+    throw fieldError('Your new password must be different from your current password.', 'new')
+  }
+
+  const key = user.email.toLowerCase()
+  if (isDemoUser(key)) {
+    localStorage.setItem(PASSWORDS_KEY, JSON.stringify({ ...readPasswords(), [key]: newPassword }))
+  } else {
+    const stored = readStored().map((u) =>
+      u.email.toLowerCase() === key ? { ...u, password: newPassword } : u,
+    )
+    localStorage.setItem(USERS_KEY, JSON.stringify(stored))
+  }
 }
 
 export function logout() {
