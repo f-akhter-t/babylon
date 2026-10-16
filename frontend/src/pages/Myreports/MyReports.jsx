@@ -7,6 +7,7 @@ import Reveal from '../../components/ui/Reveal'
 import { BarsIcon, PinIcon } from '../../components/ui/icons'
 import ReportCard from './ReportCard'
 import ReportModal from './ReportModal'
+import { DURATION, usePresence } from '../../components/ui/motion'
 import { EarnCard, LevelCard } from './LevelCard'
 import Navbar from '../../components/layout/Navbar'
 import Footer from '../../components/layout/Footer'
@@ -33,6 +34,10 @@ function MyReportsPage() {
   const [params, setParams] = useSearchParams()
   const openId = params.get('report')
   const openReport = reports.find((r) => String(r.id) === openId)
+  // The details stay on screen for a moment after closing, while they fade.
+  const modal = usePresence(Boolean(openReport), DURATION.base)
+  const [shownReport, setShownReport] = useState(openReport)
+  if (openReport && openReport !== shownReport) setShownReport(openReport)
 
   const open = (id) => setParams({ report: id })
   const close = () => setParams({})
@@ -167,7 +172,9 @@ function MyReportsPage() {
           </Reveal>
         )}
 
-        {openReport && <ReportModal report={openReport} onClose={close} />}
+        {modal.mounted && shownReport && (
+          <ReportModal report={shownReport} open={!modal.closing} onClose={close} />
+        )}
       </main>
 
       <Footer />

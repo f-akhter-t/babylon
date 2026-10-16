@@ -75,7 +75,7 @@ export default function ConfirmDialog({
       onCancel={handleCancelEvent}
       onClose={handleClose}
       onKeyDown={handleKeyDown}
-      className="m-auto w-[min(28rem,calc(100vw-2rem))] rounded-panel bg-mint p-6 font-body text-navy shadow-xl backdrop:bg-navy/60 sm:p-8"
+      className="motion-dialog m-auto w-[min(28rem,calc(100vw-2rem))] rounded-panel bg-mint p-6 font-body text-navy shadow-xl backdrop:bg-navy/60 sm:p-8"
     >
       <h2 id={titleId} className="font-heading text-2xl font-extrabold">
         {title}

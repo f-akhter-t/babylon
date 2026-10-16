@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom'
 import clsx from 'clsx'
 import { ArrowUpIcon, BarsIcon, BellIcon, CheckIcon, CloseIcon, ReopenIcon, UserIcon } from '../ui/icons'
 import { useNotifications } from '../../hooks/useNotifications'
+import { enter, usePresence } from '../ui/motion'
 import { markAllRead, markRead, timeAgo } from '../../services/notifications'
 
 // One icon and colour per kind of notice (services/notifications.js).
@@ -37,9 +38,9 @@ export default function NotificationBell({ email, homeLink = '/my-reports', home
   const buttonRef = useRef(null)
   const panelRef = useRef(null)
 
+  // The panel keeps its place while it fades out; it is measured again on opening.
   const close = useCallback((returnFocus) => {
     setOpen(false)
-    setPlace(null)
     if (returnFocus) buttonRef.current?.focus()
   }, [])
 
@@ -72,6 +73,7 @@ export default function NotificationBell({ email, homeLink = '/my-reports', home
   // Once the panel is on screen (it is drawn after it is measured), focus moves
   // into it; Escape or a click outside closes it.
   const shown = open && place !== null
+  const panel = usePresence(shown)
   useEffect(() => {
     if (!shown) return
     panelRef.current?.focus()
@@ -131,16 +133,29 @@ export default function NotificationBell({ email, homeLink = '/my-reports', home
         )}
       </button>
 
-      {open && place && createPortal(
+      {panel.mounted && place && createPortal(
         <section
           ref={panelRef}
           role="dialog"
           aria-label="Notifications"
           tabIndex={-1}
+          inert={panel.closing}
+          aria-hidden={panel.closing || undefined}
           onBlur={onPanelBlur}
           onKeyDown={onPanelKeyDown}
-          style={{ top: place.top, left: place.left, width: place.width, maxHeight: place.maxHeight }}
-          className="fixed z-[1300] flex flex-col overflow-hidden rounded-[20px] bg-white font-body text-navy shadow-xl focus:outline-none"
+          style={{
+            top: place.top,
+            left: place.left,
+            width: place.width,
+            maxHeight: place.maxHeight,
+            ...(panel.closing
+              ? enter('fade-out', 0, 'var(--duration-fast)')
+              : enter('rise-in', 0, 'var(--duration-base)')),
+          }}
+          className={clsx(
+            'fixed z-[1300] flex flex-col overflow-hidden rounded-[20px] bg-white font-body text-navy shadow-xl focus:outline-none',
+            panel.closing && 'pointer-events-none',
+          )}
         >
           <div className="flex shrink-0 items-center gap-2 border-b border-slate/15 bg-white px-[18px] pb-3 pt-4">
             <h2 className="font-heading text-xl font-extrabold tracking-tight">Notifications</h2>

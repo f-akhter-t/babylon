@@ -16,7 +16,9 @@ const actionClass =
 // issue page). Focus starts on Close and goes back to that report's card;
 // Tab wraps inside it.
 // Escape, Close and a click on the dimmed backdrop all call onClose.
-export default function ReportModal({ report, onClose }) {
+// open=false closes it at once (focus goes back to the card) while it fades
+// out; the page removes it a moment later.
+export default function ReportModal({ report, open = true, onClose }) {
   const dialogRef = useRef(null)
   const closeRef = useRef(null)
   const titleId = useId()
@@ -24,6 +26,7 @@ export default function ReportModal({ report, onClose }) {
 
   useEffect(() => {
     const dialog = dialogRef.current
+    if (!open) return
     if (!dialog.open) dialog.showModal()
     closeRef.current?.focus()
     return () => {
@@ -32,7 +35,7 @@ export default function ReportModal({ report, onClose }) {
       // card is gone and nothing happens.
       document.getElementById(cardTitleId(id))?.focus()
     }
-  }, [id])
+  }, [id, open])
 
   // Tab and Shift+Tab wrap around inside the dialog, so focus never leaves it.
   function keepTabInside(event) {
@@ -62,7 +65,7 @@ export default function ReportModal({ report, onClose }) {
       // fills it.
       onMouseDown={(e) => e.target === e.currentTarget && onClose()}
       onKeyDown={keepTabInside}
-      className="m-auto max-h-[calc(100dvh-32px)] w-[860px] max-w-[calc(100vw-2rem)] overflow-hidden rounded-[26px] bg-mint p-0 text-navy backdrop:bg-navy/55"
+      className="motion-dialog m-auto max-h-[calc(100dvh-32px)] w-[860px] max-w-[calc(100vw-2rem)] overflow-hidden rounded-[26px] bg-mint p-0 text-navy backdrop:bg-navy/55"
     >
       <div className="relative max-h-[calc(100dvh-32px)] overflow-auto p-6">
         <button ref={closeRef} type="button" onClick={onClose} aria-label="Close" className="absolute right-4 top-4 grid size-11 place-items-center rounded-full bg-white">

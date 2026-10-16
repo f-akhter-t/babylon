@@ -9,6 +9,7 @@ import { useViewer } from '../../pages/Map/useViewer'
 import { useProfile } from '../../hooks/useProfile'
 import { usePendingIdentityCount } from '../../hooks/usePendingIdentityCount'
 import { confirmLeave } from '../../utils/leaveGuard'
+import { enter, usePresence } from '../ui/motion'
 
 const citizenLinks = [
   { label: 'Map', to: '/map' },
@@ -155,6 +156,9 @@ export default function Navbar({
     }
   }, [open])
 
+  // The menu fades out after closing; it is inert from the moment it closes.
+  const menu = usePresence(open)
+
   const current = session?.role ?? 'logged-out'
   // A staff account still setting up its profile: only the avatar (to that
   // profile) and Log out are offered. The gate keeps it off these pages
@@ -293,13 +297,23 @@ export default function Navbar({
         </div>
       </div>
 
-      {open && (
+      {menu.mounted && (
         <div
           id="mobile-menu"
+          inert={menu.closing}
+          aria-hidden={menu.closing || undefined}
           onClick={(event) => {
             if (event.target.closest('a')) setOpen(false)
           }}
-          className="flex flex-col gap-1 border-t border-white/10 px-5 pb-5 pt-3 lg:hidden"
+          style={
+            menu.closing
+              ? enter('fade-out', 0, 'var(--duration-fast)')
+              : enter('rise-in', 0, 'var(--duration-base)')
+          }
+          className={clsx(
+            'flex flex-col gap-1 border-t border-white/10 px-5 pb-5 pt-3 lg:hidden',
+            menu.closing && 'pointer-events-none',
+          )}
         >
           <nav aria-label="Main" className="flex flex-col gap-1">
             {session && (
