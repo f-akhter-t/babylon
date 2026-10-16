@@ -1,17 +1,38 @@
-import { useState } from 'react'
+import { useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import StatusPill from '../../components/ui/StatusPill'
 import PriorityBadge from '../../components/ui/PriorityBadge'
 import BeforeAfterSlider from './BeforeAfterSlider'
+import { animate, DURATION, SPRING, VOTE_BUMP } from '../../components/ui/motion'
 
+// The vote count bumps when it changes: once for this person's own click,
+// and once when another tab changes it. The live update that follows a click
+// in this tab does not bump it a second time.
 export default function FeedCard({ issue, onUpvote }) {
-  const [bump, setBump] = useState(false)
+  const votesRef = useRef(null)
+  const lastVotes = useRef(issue.votes)
+  const clicked = useRef(false)
   const isFixed = issue.status === 'resolved' && issue.afterImg
 
+  useEffect(() => {
+    if (issue.votes === lastVotes.current) return
+    lastVotes.current = issue.votes
+    if (clicked.current) {
+      clicked.current = false
+      return
+    }
+    bumpVotes() // changed somewhere else
+  }, [issue.votes])
+
+  // Skipped for reduced motion and while the tab is hidden (see animate).
+  function bumpVotes() {
+    animate(votesRef.current, VOTE_BUMP, { duration: DURATION.slow, easing: SPRING })
+  }
+
   function handleClick() {
+    clicked.current = true
     onUpvote(issue)
-    setBump(true)
-    setTimeout(() => setBump(false), 450)
+    bumpVotes()
   }
 
   return (
@@ -78,8 +99,8 @@ export default function FeedCard({ issue, onUpvote }) {
             >
               ↑{' '}
               <span
+                ref={votesRef}
                 className="inline-block"
-                style={bump ? { animation: 'vote-bump var(--duration-slow) var(--ease-spring)' } : undefined}
               >
                 {issue.votes}
               </span>

@@ -14,18 +14,33 @@ function SkeletonCard() {
   )
 }
 
-export default function FeedGrid({ issues, loading, onUpvote, onClearFilters }) {
+// isGhost(id): a report removed while the list was in use. It keeps its
+// slot, faded out, and cannot be reached (inert) until the list lets go.
+// instant: new cards show without an entrance (a change made while the tab
+// was hidden).
+export default function FeedGrid({ ref, issues, isGhost = () => false, instant = false, loading, onUpvote, onClearFilters }) {
   return (
     <>
-      <div className="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+      <div ref={ref} className="mt-8 grid scroll-mt-24 grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
         {loading && Array.from({ length: 6 }).map((_, i) => <SkeletonCard key={i} />)}
 
         {!loading &&
-          issues.map((issue, index) => (
-            <Reveal key={issue.id} index={index} className="h-full">
-              <FeedCard issue={issue} onUpvote={onUpvote} />
-            </Reveal>
-          ))}
+          issues.map((issue, index) => {
+            const ghost = isGhost(issue.id)
+            return (
+              <Reveal
+                key={issue.id}
+                data-live-id={issue.id}
+                index={ghost ? undefined : index}
+                instant={instant}
+                inert={ghost}
+                aria-hidden={ghost || undefined}
+                className={ghost ? 'pointer-events-none h-full opacity-0 transition-opacity duration-300' : 'h-full'}
+              >
+                <FeedCard issue={issue} onUpvote={onUpvote} />
+              </Reveal>
+            )
+          })}
       </div>
 
       {!loading && issues.length === 0 && (

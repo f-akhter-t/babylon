@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import Navbar from '../../components/layout/Navbar'
 import Footer from '../../components/layout/Footer'
 import AnimatedBackground from '../../components/ui/AnimatedBackground'
@@ -9,10 +9,14 @@ import FeedGrid from './FeedGrid'
 import { useViewer } from '../Map/useViewer'
 import { useStoredIds } from '../Map/useStoredIds'
 import { getIssues } from '../../services/api'
-import { useAsync } from '../../hooks/useAsync'
+import { useLiveIssues } from '../../hooks/useLiveIssues'
+import { useHeldList } from '../../hooks/useHeldList'
+import NewReportsBar from '../../components/ui/NewReportsBar'
+import { prefersLessMotion } from '../../components/ui/motion'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import { useToast } from '../../components/ui/toast'
 
+const EMPTY = []
 const LOAD_FAILED = 'We could not load the issues. Check your connection and try again.'
 
 export default function Feed() {
@@ -26,23 +30,41 @@ export default function Feed() {
   // Same key as Map and Issue detail, so a vote shows the same everywhere.
   const [votedIds, toggleVote] = useStoredIds(viewer.storageKey('voted'))
 
-  // Each result (or failure) is tagged with the filters it was loaded for.
-  // useAsync keeps the last result while the next one loads, so a tag that does
-  // not match the current filters means "still loading". Retry keeps the filters.
+  // Live: another tab's new, changed or deleted report shows up here without a
+  // reload. New filters load afresh; retry keeps the filters.
   const filterKey = JSON.stringify([category, status, search])
-  const load = useCallback(
-    () =>
-      getIssues({ category, status, search }).then(
-        (list) => ({ key: filterKey, list }),
-        (cause) => Promise.reject({ key: filterKey, cause }),
-      ),
-    [category, status, search, filterKey],
-  )
-  const { data, error, loading: fetching, retry } = useAsync(load)
-  const stale = (data && data.key !== filterKey) || (error && error.key !== filterKey)
-  const loading = fetching || Boolean(stale)
+  const load = useCallback(() => getIssues({ category, status, search }), [category, status, search])
+  const { data, error, loading, retry, update } = useLiveIssues(load, { list: (list) => list })
   const failed = Boolean(error) && !loading
-  const issues = loading || failed ? [] : data.list
+  const issues = loading || failed ? EMPTY : data
+
+  // While someone is using the list it holds still (see useHeldList).
+  const gridRef = useRef(null)
+  const headingRef = useRef(null)
+  const held = useHeldList(issues, { containerRef: gridRef, resetKey: filterKey, update, headingRef })
+  const focusNew = useRef(null) // the first new report, after "Show new reports"
+
+  function showNew() {
+    focusNew.current = held.showNew()[0] ?? null
+  }
+
+  // After "Show new reports": back to the top of the list, and focus on the
+  // first new report, so focus is not lost when the button goes. If that
+  // report ranks too low to be seen from the top, it is scrolled into view
+  // instead, so focus is never off screen.
+  useEffect(() => {
+    const id = focusNew.current
+    const grid = gridRef.current
+    if (!id || !grid) return
+    focusNew.current = null
+    const card = grid.querySelector(`[data-live-id="${CSS.escape(id)}"]`)
+    if (!card) return
+    const behavior = prefersLessMotion() ? 'instant' : 'smooth'
+    const fits = card.getBoundingClientRect().bottom - grid.getBoundingClientRect().top <= window.innerHeight - 96
+    if (fits) grid.scrollIntoView({ block: 'start', behavior })
+    else card.scrollIntoView({ block: 'center', behavior })
+    card.querySelector('a[href]')?.focus({ preventScroll: true })
+  })
 
   function handleUpvote(issue) {
     if (issue.status === 'resolved') return
@@ -52,7 +74,7 @@ export default function Feed() {
   }
 
   // Overlay this viewer's own vote on top of the fetched count — same math as Map.
-  const shownIssues = issues.map((issue) => {
+  const shownIssues = held.items.map((issue) => {
     const voted = votedIds.includes(issue.id)
     return { ...issue, votes: issue.votes + (voted ? 1 : 0), voted }
   })
@@ -89,14 +111,23 @@ export default function Feed() {
               resultCount={failed ? null : issues.length}
             />
 
-            <h2 className="sr-only">Issues</h2>
+            <h2 ref={headingRef} tabIndex={-1} className="sr-only">
+              Issues
+            </h2>
+            <p role="status" className="sr-only">
+              {held.message}
+            </p>
+            <NewReportsBar count={held.waiting} onShow={showNew} className="top-20" />
             {failed ? (
               <div className="mt-8">
                 <LoadError message={LOAD_FAILED} onRetry={retry} />
               </div>
             ) : (
               <FeedGrid
+                ref={gridRef}
                 issues={shownIssues}
+                isGhost={held.isGhost}
+                instant={Boolean(update) && !update.animate}
                 loading={loading}
                 onUpvote={handleUpvote}
                 onClearFilters={() => {

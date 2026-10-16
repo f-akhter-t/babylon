@@ -43,6 +43,13 @@ export const RISE_IN = [
 
 export const FADE_IN = [{ opacity: 0 }, { opacity: 1 }]
 
+// A vote count that changed.
+export const VOTE_BUMP = [
+  { transform: 'scale(1)' },
+  { transform: 'scale(1.35)', offset: 0.4 },
+  { transform: 'scale(1)' },
+]
+
 // Map popups slide out from their pin's side; the phone card slides up.
 export const SLIDE_IN = {
   right: [
