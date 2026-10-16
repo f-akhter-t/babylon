@@ -1,104 +1,99 @@
 import { useEffect, useRef, useState } from 'react'
+import { prefersLessMotion } from './motion'
 
-const styles = `
-  @keyframes meshDrift {
-    0%   { background-position: 0% 0%; }
-    50%  { background-position: 100% 100%; }
-    100% { background-position: 0% 0%; }
-  }
-  @keyframes orbFloatA {
-    0%, 100% { transform: translate(0, 0) scale(1); }
-    50%      { transform: translate(5vw, 6vh) scale(1.07); }
-  }
-  @keyframes orbFloatB {
-    0%, 100% { transform: translate(0, 0) scale(1); }
-    50%      { transform: translate(-6vw, -5vh) scale(1.05); }
-  }
-  @media (prefers-reduced-motion: reduce) {
-    .ab-animate { animation: none !important; }
-  }
-`
+// Fixed, full-window decorative background: an ash-grey gradient that drifts
+// slowly, two soft glows in the theme's slate and navy, and a faint glow that
+// follows the pointer. Purely visual: no pointer events, behind everything,
+// and `contain: strict`, so it never costs the page any layout.
+// Only transform moves (the drift and float keyframes in index.css). The
+// glows are soft radial gradients, so nothing is blurred while it moves.
+// It pauses while the tab is hidden and stays still for reduced motion.
+const GRADIENT =
+  'linear-gradient(135deg, color-mix(in srgb, var(--color-page) 80%, white) 0%, color-mix(in srgb, var(--color-page) 95%, var(--color-slate)) 35%, color-mix(in srgb, var(--color-page) 86%, var(--color-slate)) 65%, color-mix(in srgb, var(--color-page) 74%, var(--color-slate)) 100%)'
+const glow = (color, strength) =>
+  `radial-gradient(circle closest-side, color-mix(in srgb, ${color} ${strength}%, transparent), transparent)`
 
-/**
- * Fixed, full-viewport decorative background — darker ash/grey gradient,
- * slowly drifting, plus a subtle mouse-following glow.
- * Purely visual: pointer-events-none, negative z-index, no layout effect.
- */
 export default function AnimatedBackground() {
-  const [reducedMotion, setReducedMotion] = useState(
-    () => window.matchMedia('(prefers-reduced-motion: reduce)').matches,
-  )
-  const glowRef = useRef(null)
-  const rafRef = useRef(null)
-  const target = useRef({ x: 50, y: 50 })
-  const current = useRef({ x: 50, y: 50 })
+  const [still, setStill] = useState(prefersLessMotion)
+  const [hidden, setHidden] = useState(() => document.visibilityState === 'hidden')
+  const pointerRef = useRef(null)
 
   useEffect(() => {
     const mq = window.matchMedia('(prefers-reduced-motion: reduce)')
-    const onChange = () => setReducedMotion(mq.matches)
-    mq.addEventListener('change', onChange)
-    return () => mq.removeEventListener('change', onChange)
+    const onMotion = () => setStill(mq.matches)
+    const onVisibility = () => setHidden(document.visibilityState === 'hidden')
+    mq.addEventListener('change', onMotion)
+    document.addEventListener('visibilitychange', onVisibility)
+    return () => {
+      mq.removeEventListener('change', onMotion)
+      document.removeEventListener('visibilitychange', onVisibility)
+    }
   }, [])
 
+  // The pointer glow eases towards the pointer, and the loop stops once it
+  // has caught up, so an idle page does no work.
   useEffect(() => {
-    if (reducedMotion) return
-
-    function onMove(e) {
-      target.current = {
-        x: (e.clientX / window.innerWidth) * 100,
-        y: (e.clientY / window.innerHeight) * 100,
-      }
-    }
+    if (still || hidden) return
+    const target = { x: window.innerWidth / 2, y: window.innerHeight / 2 }
+    const current = { ...target }
+    let frame = 0
 
     function tick() {
-      current.current.x += (target.current.x - current.current.x) * 0.06
-      current.current.y += (target.current.y - current.current.y) * 0.06
-      if (glowRef.current) {
-        glowRef.current.style.setProperty('--mx', `${current.current.x}%`)
-        glowRef.current.style.setProperty('--my', `${current.current.y}%`)
+      current.x += (target.x - current.x) * 0.06
+      current.y += (target.y - current.y) * 0.06
+      if (pointerRef.current) {
+        pointerRef.current.style.transform = `translate3d(${current.x}px, ${current.y}px, 0) translate(-50%, -50%)`
       }
-      rafRef.current = requestAnimationFrame(tick)
+      const settled = Math.abs(target.x - current.x) < 0.5 && Math.abs(target.y - current.y) < 0.5
+      frame = settled ? 0 : requestAnimationFrame(tick)
+    }
+    function onMove(e) {
+      target.x = e.clientX
+      target.y = e.clientY
+      if (!frame) frame = requestAnimationFrame(tick)
     }
 
-    window.addEventListener('mousemove', onMove, { passive: true })
-    rafRef.current = requestAnimationFrame(tick)
+    window.addEventListener('pointermove', onMove, { passive: true })
+    frame = requestAnimationFrame(tick)
     return () => {
-      window.removeEventListener('mousemove', onMove)
-      if (rafRef.current) cancelAnimationFrame(rafRef.current)
+      window.removeEventListener('pointermove', onMove)
+      cancelAnimationFrame(frame)
     }
-  }, [reducedMotion])
+  }, [still, hidden])
+
+  const play = (animation) => (still ? undefined : { animation, animationPlayState: hidden ? 'paused' : 'running' })
 
   return (
-    <div aria-hidden="true" className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
-      <style>{styles}</style>
-
-      {/* darker ash/grey gradient, slowly drifting */}
+    <div
+      aria-hidden="true"
+      className="pointer-events-none fixed inset-0 -z-10 overflow-hidden"
+      style={{ contain: 'strict' }}
+    >
+      {/* the ash-grey gradient, twice the window, drifting slowly */}
       <div
-        className="ab-animate absolute inset-0"
-        style={{
-          backgroundImage:
-            'linear-gradient(135deg, color-mix(in srgb, var(--color-page) 80%, white) 0%, color-mix(in srgb, var(--color-page) 95%, var(--color-slate)) 35%, color-mix(in srgb, var(--color-page) 86%, var(--color-slate)) 65%, color-mix(in srgb, var(--color-page) 74%, var(--color-slate)) 100%)',
-          backgroundSize: '200% 200%',
-          animation: reducedMotion ? 'none' : 'meshDrift 30s ease-in-out infinite',
-        }}
+        className="absolute -inset-1/2 will-change-transform"
+        style={{ backgroundImage: GRADIENT, ...play('drift 30s ease-in-out infinite') }}
       />
 
-      {/* two soft glows, darker ash palette */}
+      {/* two soft glows */}
       <div
-        className="ab-animate absolute -left-32 -top-32 h-[32rem] w-[32rem] rounded-full bg-slate-400/40 blur-3xl"
-        style={{ animation: reducedMotion ? 'none' : 'orbFloatA 26s ease-in-out infinite' }}
+        className="absolute -left-32 -top-32 size-[32rem] will-change-transform"
+        style={{ backgroundImage: glow('var(--color-slate)', 40), ...play('float-a 26s ease-in-out infinite') }}
       />
       <div
-        className="ab-animate absolute -right-32 bottom-[-10%] h-[32rem] w-[32rem] rounded-full bg-zinc-500/30 blur-3xl"
-        style={{ animation: reducedMotion ? 'none' : 'orbFloatB 32s ease-in-out infinite' }}
+        className="absolute -right-32 bottom-[-10%] size-[32rem] will-change-transform"
+        style={{ backgroundImage: glow('var(--color-navy)', 22), ...play('float-b 32s ease-in-out infinite') }}
       />
 
-      {/* subtle mouse-following glow */}
-      {!reducedMotion && (
+      {/* the faint glow that follows the pointer */}
+      {!still && (
         <div
-          ref={glowRef}
-          className="absolute h-[28vw] w-[28vw] -translate-x-1/2 -translate-y-1/2 rounded-full bg-white/25 blur-3xl"
-          style={{ left: 'var(--mx, 50%)', top: 'var(--my, 50%)' }}
+          ref={pointerRef}
+          className="absolute left-0 top-0 size-[28vw] will-change-transform"
+          style={{
+            backgroundImage: glow('white', 25),
+            transform: 'translate3d(50vw, 50vh, 0) translate(-50%, -50%)',
+          }}
         />
       )}
     </div>

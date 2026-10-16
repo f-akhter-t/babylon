@@ -9,6 +9,7 @@ import MapPopup from './MapPopup'
 import MapControls from './MapControls'
 import MapOverlays from './MapOverlays'
 import DropPin from './DropPin'
+import { mapMotionOptions } from '../../components/ui/motion'
 
 const ATTRIBUTION =
   '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
@@ -45,6 +46,7 @@ export default function IssueMap({
     // isolate keeps Leaflet's own z-index values inside this box.
     <div className={clsx('relative isolate', className)}>
       <MapContainer
+        {...mapMotionOptions()}
         center={MAP_CENTER}
         zoom={14}
         zoomControl={false}

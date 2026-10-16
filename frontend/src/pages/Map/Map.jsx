@@ -1,3 +1,5 @@
+import { useEffect, useRef } from 'react'
+import { usePoliteMessage } from '../../hooks/usePoliteMessage'
 import Navbar from '../../components/layout/Navbar'
 import IssuesSidebar from './IssuesSidebar'
 import IssueMap from './IssueMap'
@@ -12,10 +14,26 @@ const NO_FILTERS = { category: 'All', status: 'All', q: '' }
 
 export default function Map() {
   const { category, status, search, selectedId, update } = useMapFilters()
-  const { issues, allIssues, loading, error, retry } = useIssues({ category, status, search })
+  const { issues, allIssues, loading, error, retry, update: liveUpdate, allUpdate } = useIssues({
+    category,
+    status,
+    search,
+  })
   const viewer = useViewer()
   // Each account has its own votes and follows.
-  const [votedIds, toggleVote] = useStoredIds(viewer.storageKey('voted'))
+  const [votedIds, toggleStoredVote] = useStoredIds(viewer.storageKey('voted'))
+  // This person's own vote in this tab: the sidebar card does not pop for it
+  // (the button they pressed already answered). Another tab's vote does pop.
+  const ownVote = useRef(null)
+  const toggleVote = (id) => {
+    ownVote.current = id
+    toggleStoredVote(id)
+  }
+  const isOwnVote = (id) => {
+    const own = ownVote.current === id
+    if (own) ownVote.current = null
+    return own
+  }
   const [followedIds, toggleFollow] = useStoredIds(viewer.storageKey('followed'))
   useDocumentTitle('Issues near you') // the same words as the page heading
 
@@ -43,6 +61,16 @@ export default function Map() {
 
   useListKeys(shownIssues, selectedId, select)
 
+  // The report in the open popup was deleted in another tab: close the popup
+  // and say so (politely).
+  const [spoken, say] = usePoliteMessage()
+  const deletedOpen = Boolean(selectedId) && Boolean(allUpdate?.removed.includes(String(selectedId)))
+  useEffect(() => {
+    if (!deletedOpen) return
+    update({ issue: null })
+    say('This report was deleted.')
+  }, [deletedOpen]) // eslint-disable-line react-hooks/exhaustive-deps -- update is a new function each render
+
   return (
     <div className="flex min-h-dvh flex-col font-body lg:h-dvh">
       {/* With a login, the Navbar uses it. Without one, show the logged-out version. */}
@@ -50,7 +78,8 @@ export default function Map() {
       <main className="flex flex-1 flex-col lg:min-h-0 lg:flex-row">
         <IssuesSidebar
           className="order-2 lg:order-1"
-          issues={shownIssues}
+          issues={issues}
+          withMine={withMine}
           loading={loading}
           error={error}
           category={category}
@@ -62,6 +91,8 @@ export default function Map() {
           selectedId={selectedId}
           onSelect={select}
           onRetry={retry}
+          update={liveUpdate}
+          isOwnVote={isOwnVote}
           onClearFilters={() => update(NO_FILTERS)}
         />
         <IssueMap
@@ -76,6 +107,9 @@ export default function Map() {
           onUpvoteInstead={upvoteInstead}
         />
       </main>
+      <p role="status" className="sr-only">
+        {spoken}
+      </p>
     </div>
   )
 }

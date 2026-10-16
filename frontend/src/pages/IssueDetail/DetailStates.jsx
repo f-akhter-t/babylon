@@ -1,6 +1,7 @@
+import { useEffect, useRef } from 'react'
 import Button from '../../components/ui/Button'
 
-const BLOCK = 'rounded-panel bg-white/50 motion-safe:animate-pulse'
+const BLOCK = 'skeleton rounded-panel bg-white/50'
 
 // Grey shapes in the same places as the real page, while the issue loads.
 export function DetailLoading() {
@@ -21,18 +22,34 @@ export function DetailLoading() {
   )
 }
 
-// "Issue not found" (wrong id), or a loading error.
-export function DetailMessage({ error = false }) {
+// "Issue not found" (wrong id), a loading error, or a report that was
+// deleted while it was open (deleted: its heading takes focus, so the change
+// is heard and reading starts there).
+export function DetailMessage({ error = false, deleted = false }) {
+  const headingRef = useRef(null)
+  useEffect(() => {
+    if (deleted) headingRef.current?.focus()
+  }, [deleted])
+
+  let title = 'Issue not found'
+  let text = 'There is no issue with this number. The link may be wrong, or the issue was removed.'
+  if (error) {
+    title = 'Could not load this issue'
+    text = 'Something went wrong. Please try again in a moment.'
+  } else if (deleted) {
+    title = 'This report was deleted.'
+    text = 'The citizen who filed it deleted it, so it is no longer on the map or in the feed.'
+  }
   return (
     <section className="mx-auto mt-10 flex max-w-md flex-col items-center gap-4 rounded-panel bg-white p-8 text-center">
-      <h1 className="font-heading text-3xl font-extrabold text-navy">
-        {error ? 'Could not load this issue' : 'Issue not found'}
+      <h1
+        ref={headingRef}
+        tabIndex={deleted ? -1 : undefined}
+        className="font-heading text-3xl font-extrabold text-navy focus:outline-none"
+      >
+        {title}
       </h1>
-      <p className="text-sm text-slate">
-        {error
-          ? 'Something went wrong. Please try again in a moment.'
-          : 'There is no issue with this number. The link may be wrong, or the issue was removed.'}
-      </p>
+      <p className="text-sm text-slate">{text}</p>
       <Button to="/map" variant="dark">
         Back to map
       </Button>

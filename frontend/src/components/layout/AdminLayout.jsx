@@ -281,9 +281,9 @@ export default function AdminLayout({
         onClick={(e) => {
           if (e.target === e.currentTarget) dialogRef.current?.close() // the backdrop
         }}
-        className="m-0 h-dvh max-h-none w-full max-w-none bg-transparent p-0 backdrop:bg-navy/60 lg:hidden"
+        className="motion-dialog motion-drawer m-0 h-dvh max-h-none w-full max-w-none bg-transparent p-0 backdrop:bg-navy/60 lg:hidden"
       >
-        <div className="flex h-full w-[min(20rem,85vw)] flex-col overflow-y-auto bg-navy px-3.5 py-6">
+        <div className="motion-drawer-panel flex h-full w-[min(20rem,85vw)] flex-col overflow-y-auto bg-navy px-3.5 py-6">
           <button
             type="button"
             onClick={() => dialogRef.current?.close()}

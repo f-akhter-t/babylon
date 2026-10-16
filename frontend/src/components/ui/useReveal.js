@@ -1,11 +1,15 @@
 import { useEffect, useRef, useState } from 'react'
 
 // Turns "shown" to true once, when the element scrolls into view.
-// Reduced-motion users (and old browsers) see it at once.
-export default function useReveal() {
+// Reduced-motion users (and old browsers) see it at once: the preference is
+// read when the element first renders.
+// instant: show at once, with no entrance (for example a live update that
+// arrived while the tab was hidden).
+export default function useReveal(instant = false) {
   const ref = useRef(null)
   const [shown, setShown] = useState(
     () =>
+      instant ||
       window.matchMedia('(prefers-reduced-motion: reduce)').matches ||
       !('IntersectionObserver' in window),
   )

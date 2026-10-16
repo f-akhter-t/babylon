@@ -1,4 +1,4 @@
-import { prefersLessMotion } from '../Map/motion'
+import { prefersLessMotion } from '../../components/ui/motion'
 
 const SECTIONS = [
   { label: 'Details', id: 'profile-details' },

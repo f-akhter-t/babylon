@@ -8,7 +8,7 @@ import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import { useProfile } from '../../hooks/useProfile'
 import { endSetup, homePathFor, isInSetup } from '../../services/auth'
 import { useUnsavedChanges } from './useUnsavedChanges'
-import { formRise, pageRise, profileStyle } from './profileMotion'
+import { enter } from '../../components/ui/motion'
 import PersonalDetailsCard from './PersonalDetailsCard'
 import PhoneCard from './PhoneCard'
 import IdentityCard from './IdentityCard'
@@ -127,8 +127,7 @@ function ProfilePage({ viewer }) {
   }, [showSaveBar])
 
   return (
-    <div className="profile-page">
-      <style>{profileStyle}</style>
+    <div>
       <AnimatedBackground />
       <Navbar />
 
@@ -137,7 +136,7 @@ function ProfilePage({ viewer }) {
           {firstTime ? (
             <WelcomeHeader name={welcomeName} profile={profile} onSkip={() => endSetup(email)} />
           ) : (
-            <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1" style={pageRise(0)}>
+            <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1" style={enter('rise-in', 0)}>
               <h1 className="font-heading text-4xl font-extrabold text-navy md:text-5xl">
                 Your profile
               </h1>
@@ -148,7 +147,7 @@ function ProfilePage({ viewer }) {
           )}
 
           {profile && (
-            <div style={pageRise(0.05)}>
+            <div style={enter('rise-in', 0.05)}>
               <JumpChips withSecurity={!firstTime} />
             </div>
           )}
@@ -159,12 +158,12 @@ function ProfilePage({ viewer }) {
           {profile && (
             <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_340px] lg:items-start">
               {/* first on phones, right-hand column on wide screens */}
-              <div className="lg:sticky lg:top-24 lg:col-start-2 lg:row-start-1" style={formRise(0.1)}>
+              <div className="lg:sticky lg:top-24 lg:col-start-2 lg:row-start-1" style={enter('rise-in', 0.1)}>
                 <SummaryCard profile={profile} showMeter={!firstTime} />
               </div>
 
               <div className="flex min-w-0 flex-col gap-6 lg:col-start-1 lg:row-start-1">
-                <div style={formRise(0.15)}>
+                <div style={enter('rise-in', 0.15)}>
                   <PersonalDetailsCard
                     profile={profile}
                     formId={DETAILS_FORM_ID}
@@ -172,10 +171,10 @@ function ProfilePage({ viewer }) {
                     announce={announce}
                   />
                 </div>
-                <div style={formRise(0.25)}>
+                <div style={enter('rise-in', 0.25)}>
                   <PhoneCard profile={profile} onDirtyChange={onDirty.phone} announce={announce} />
                 </div>
-                <div style={formRise(0.35)}>
+                <div style={enter('rise-in', 0.35)}>
                   <IdentityCard
                     profile={profile}
                     onDirtyChange={onDirty.identity}
@@ -185,7 +184,7 @@ function ProfilePage({ viewer }) {
                 {/* Not part of the first-time welcome step. Its own form and button,
                     so it never marks the profile as unsaved. */}
                 {!firstTime && (
-                  <div style={formRise(0.45)}>
+                  <div style={enter('rise-in', 0.45)}>
                     <ProfileCard
                       id="profile-security"
                       title="Security"

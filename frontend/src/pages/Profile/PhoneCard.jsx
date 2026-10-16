@@ -6,6 +6,7 @@ import FormNotice from './FormNotice'
 import VerifyBadge from './VerifyBadge'
 import OtpInput from './OtpInput'
 import CountdownRing from './CountdownRing'
+import { enter } from '../../components/ui/motion'
 import { DEMO_OTP, OTP_RESEND_SECONDS, requestOtp, verifyOtp } from '../../services/api'
 import { checkPhone, normalizePhone } from '../../utils/profileRules'
 
@@ -14,7 +15,10 @@ const emptyCode = () => Array.from({ length: DEMO_OTP.length }, () => '')
 // A check mark that draws itself, shown right after a number is verified.
 function DrawnCheck() {
   return (
-    <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-brand/25 text-forest">
+    <span
+      className="flex size-9 shrink-0 items-center justify-center rounded-full bg-brand/25 text-forest"
+      style={enter('pop', 0.15)}
+    >
       <svg viewBox="0 0 24 24" className="size-5" fill="none" aria-hidden="true">
         <path
           d="M5 12.5 9.5 17 19 7"
@@ -22,8 +26,6 @@ function DrawnCheck() {
           strokeWidth="3"
           strokeLinecap="round"
           strokeLinejoin="round"
-          strokeDasharray="24"
-          style={{ animation: 'checkDraw 0.5s ease-out 0.15s both' }}
         />
       </svg>
     </span>

@@ -3,7 +3,7 @@ export default function FixedIssueSkeleton() {
   return (
     <div
       aria-hidden="true"
-      className="animate-pulse overflow-hidden rounded-card bg-mint motion-reduce:animate-none"
+      className="skeleton rounded-card bg-mint"
     >
       <div className="h-[164px] bg-mint-deep" />
       <div className="space-y-3 p-[22px]">

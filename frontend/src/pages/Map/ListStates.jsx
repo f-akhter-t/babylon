@@ -5,7 +5,7 @@ export function SkeletonCards({ count = 4 }) {
   return (
     <div aria-hidden="true" className="flex flex-col gap-3">
       {Array.from({ length: count }, (_, i) => (
-        <div key={i} className="flex animate-pulse gap-3 rounded-tile bg-mint p-4">
+        <div key={i} className="skeleton flex gap-3 rounded-tile bg-mint p-4">
           <div className="h-8 w-6 rounded-md bg-mint-deep" />
           <div className="flex flex-1 flex-col gap-2.5">
             <div className="h-4 w-4/5 rounded-full bg-mint-deep" />

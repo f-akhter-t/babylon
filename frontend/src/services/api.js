@@ -178,6 +178,18 @@ for (const [id, changes] of Object.entries(edits)) {
   if (index !== -1) all[index] = withDepartment({ ...all[index], ...changes })
 }
 
+// Another tab saved an edit: apply it here too. Read-only: it only reads the
+// store and tells the pages, and never writes storage, so it cannot loop.
+window.addEventListener('storage', (e) => {
+  if (e.key !== EDITS_KEY) return
+  for (const [id, changes] of Object.entries(loadEdits())) {
+    edits[id] = changes
+    const index = all.findIndex((issue) => String(issue.id) === id)
+    if (index !== -1) all[index] = withDepartment({ ...all[index], ...changes })
+  }
+  notifyIssuesChanged()
+})
+
 // ---------- Department and admin workflow ----------
 // Start work, submit for verification, approve and reject, saved by issue id
 // on top of the issues above (like the edits). Citizens see the status change

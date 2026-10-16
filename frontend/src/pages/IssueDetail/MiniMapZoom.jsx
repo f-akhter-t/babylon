@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react'
 import { useMap } from 'react-leaflet'
 import { DomEvent } from 'leaflet'
 import { MinusIcon, PlusIcon } from '../Map/MapIcons'
+import { prefersLessMotion } from '../../components/ui/motion'
 
 // 44px on phones and tablets (tap size), 40px from lg up as before.
 const BUTTON =
@@ -25,11 +26,11 @@ export default function MiniMapZoom({ position = 'right-3 top-3' }) {
       ref={ref}
       className={`absolute ${position} z-1000 flex flex-col overflow-hidden rounded-chip border border-navy/20 shadow-md`}
     >
-      <button type="button" aria-label="Zoom in" onClick={() => map.zoomIn()} className={BUTTON}>
+      <button type="button" aria-label="Zoom in" onClick={() => map.zoomIn(1, { animate: !prefersLessMotion() })} className={BUTTON}>
         <PlusIcon size={16} />
       </button>
       <span className="h-px bg-navy/15" />
-      <button type="button" aria-label="Zoom out" onClick={() => map.zoomOut()} className={BUTTON}>
+      <button type="button" aria-label="Zoom out" onClick={() => map.zoomOut(1, { animate: !prefersLessMotion() })} className={BUTTON}>
         <MinusIcon size={16} />
       </button>
     </div>

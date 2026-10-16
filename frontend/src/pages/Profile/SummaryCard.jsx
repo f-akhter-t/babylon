@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import StaircaseIcon from '../../components/ui/StaircaseIcon'
-import useCountUp from '../Home/useCountUp'
+import CountUp from '../../components/ui/CountUp'
 import VerifyBadge from './VerifyBadge'
 import CompletenessMeter from './CompletenessMeter'
 import { getCurrentUser } from '../../services/api'
@@ -19,7 +19,6 @@ function initialsFor(name) {
 // showMeter: false during first-time setup, where the welcome block shows it.
 export default function SummaryCard({ profile, showMeter = true }) {
   const [user, setUser] = useState(null)
-  const { ref: pointsRef, value: pointsShown } = useCountUp(user?.points, { duration: 1200 })
 
   useEffect(() => {
     let ignore = false
@@ -61,9 +60,9 @@ export default function SummaryCard({ profile, showMeter = true }) {
               {`Level ${user.level} · ${user.role}`}
             </p>
           </div>
-          <p ref={pointsRef} className="mt-2 font-heading text-5xl font-extrabold leading-none">
-            <span aria-hidden="true">{Math.round(pointsShown)}</span>
-            <span className="sr-only">{`${user.points} points`}</span>
+          <p className="mt-2 font-heading text-5xl font-extrabold leading-none">
+            <CountUp value={user.points} duration={1200} />
+            <span className="sr-only"> points</span>
           </p>
           <p className="mt-1 font-body text-sm text-mint/80">
             {user.reports === 1 ? 'points from 1 report' : `points from ${user.reports} reports`}
@@ -76,10 +75,16 @@ export default function SummaryCard({ profile, showMeter = true }) {
             aria-valuenow={Math.round(progress)}
             className="mt-4 h-2 overflow-hidden rounded-full bg-mint/15"
           >
+            {/* Scaled, not resized, so the bar never changes the layout. */}
             <div
-              className="h-full rounded-full bg-brand transition-all duration-500"
-              style={{ width: `${progress}%`, animation: 'barFill 1.1s ease-out 0.3s both' }}
-            />
+              className="h-full origin-left transition-transform duration-500"
+              style={{ transform: `scaleX(${progress / 100})` }}
+            >
+              <div
+                className="h-full origin-left rounded-full bg-brand"
+                style={{ animation: 'grow-x 1.1s var(--ease-calm) 0.3s both' }}
+              />
+            </div>
           </div>
           <p className="mt-2 font-body text-xs text-mint/70">
             {maxed
@@ -90,8 +95,8 @@ export default function SummaryCard({ profile, showMeter = true }) {
       ) : (
         <div role="status" className="flex flex-col gap-2">
           <span className="sr-only">Loading your points…</span>
-          <div aria-hidden="true" className="h-5 w-32 rounded-full bg-mint/10 motion-safe:animate-pulse" />
-          <div aria-hidden="true" className="h-12 w-24 rounded-tile bg-mint/10 motion-safe:animate-pulse" />
+          <div aria-hidden="true" className="h-5 w-32 rounded-full bg-mint/10 skeleton" />
+          <div aria-hidden="true" className="h-12 w-24 rounded-tile bg-mint/10 skeleton" />
         </div>
       )}
 

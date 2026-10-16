@@ -1,8 +1,8 @@
 import { useEffect, useRef } from 'react'
-import { animate, RISE_IN } from '../Map/motion'
+import { animate, RISE_IN } from '../../components/ui/motion'
 
 // Plays a short animation once, when the element first appears.
-// Skipped for people who turned on "reduce motion" (see Map/motion.js).
+// Skipped for people who turned on "reduce motion" (see components/ui/motion.js).
 //   const ref = useEntrance(RISE_IN, { delay: 120 })
 //   <div ref={ref}>…</div>
 export function useEntrance(keyframes = RISE_IN, { delay = 0, duration = 450 } = {}) {

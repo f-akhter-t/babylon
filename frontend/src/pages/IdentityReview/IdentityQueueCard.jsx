@@ -23,7 +23,7 @@ export function QueueSkeleton() {
   return (
     <div className="flex flex-col gap-3" aria-hidden="true">
       {[0, 1, 2].map((n) => (
-        <div key={n} className="rounded-card bg-mint p-4 motion-safe:animate-pulse">
+        <div key={n} className="skeleton rounded-card bg-mint p-4">
           <div className="h-4 w-2/3 rounded-full bg-navy/10" />
           <div className="mt-2 h-3 w-5/6 rounded-full bg-navy/10" />
           <div className="mt-4 h-3 w-1/2 rounded-full bg-navy/10" />

@@ -1,19 +1,25 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import Navbar from '../../components/layout/Navbar'
 import { canEditIssue } from '../../services/api'
 import { useViewer } from '../Map/useViewer'
 import { useStoredIds } from '../Map/useStoredIds'
 import { useIssue } from './useIssue'
+import { usePoliteMessage } from '../../hooks/usePoliteMessage'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import { DetailLoading, DetailMessage } from './DetailStates'
 import PageBackdrop from './PageBackdrop'
 import IssueView from './IssueView'
 import { clearIssueNotice, peekIssueNotice } from './issueNotice'
 
+// Status words for the live announcement, as the progress card shows them.
+const STATUS_WORDS = { open: 'Open', 'in-progress': 'In progress', resolved: 'Resolved' }
+// A burst of changes from another tab settles before it is announced.
+const SETTLE_MS = 400
+
 export default function IssueDetail() {
   const { id } = useParams()
-  const { issue, loading, error } = useIssue(id)
+  const { issue, loading, error, update, deleted } = useIssue(id)
   const viewer = useViewer()
   // A message from the Edit page ("Your changes are saved."), shown once.
   const [notice] = useState(() => ({ id, message: peekIssueNotice(id) }))
@@ -33,7 +39,26 @@ export default function IssueDetail() {
 
   let tabTitle = null // keep the old tab title while loading
   if (shown) tabTitle = shown.title
+  else if (deleted) tabTitle = 'Report deleted'
   else if (!loading) tabTitle = error ? 'Could not load issue' : 'Issue not found'
+
+  // Another tab moved the report on: say its new status, politely. A burst of
+  // changes is said once, with the final status.
+  const [spoken, say] = usePoliteMessage()
+  const lastStatus = useRef(null)
+  const settleTimer = useRef(0)
+  const status = issue?.status
+  useEffect(() => {
+    const before = lastStatus.current
+    lastStatus.current = status
+    if (!status || !before || before === status || !update?.remote) return
+    clearTimeout(settleTimer.current)
+    settleTimer.current = setTimeout(() => say(`This report is now ${STATUS_WORDS[status] ?? status}.`), SETTLE_MS)
+  }, [status, update, say])
+  useEffect(() => () => clearTimeout(settleTimer.current), [])
+  useEffect(() => {
+    lastStatus.current = null // a new id starts fresh
+  }, [id])
   useDocumentTitle(tabTitle)
 
   // The reporter may edit while the issue is Open ('ok'), or sees why not ('locked').
@@ -58,9 +83,10 @@ export default function IssueDetail() {
               {noticeText}
             </p>
           )}
+          <span className="sr-only">{spoken}</span>
         </div>
         {loading && <DetailLoading />}
-        {!loading && !shown && <DetailMessage error={error} />}
+        {!loading && !shown && <DetailMessage error={error} deleted={deleted} />}
 
         {/* key: a new id starts fresh (photo, map position, animations) */}
         {shown && (

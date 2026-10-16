@@ -15,7 +15,7 @@ import JumpChips from '../Profile/JumpChips'
 import SaveBar from '../Profile/SaveBar'
 import { ProfileError, ProfileLoading } from '../Profile/ProfileStates'
 import { useUnsavedChanges } from '../Profile/useUnsavedChanges'
-import { formRise, pageRise, profileStyle } from '../Profile/profileMotion'
+import { enter } from '../../components/ui/motion'
 import StaffDetailsCard from './StaffDetailsCard'
 import DepartmentCodeCard from './DepartmentCodeCard'
 import VerifyCodeCard from './VerifyCodeCard'
@@ -140,10 +140,9 @@ function StaffProfilePage({ role }) {
 
   return (
     <AdminLayout variant={role} active="Profile" department={session.department}>
-      <div className="profile-page px-4 pt-6 pb-8 sm:px-6 md:px-10 lg:px-8 lg:pt-8">
-        <style>{profileStyle}</style>
+      <div className="px-4 pt-6 pb-8 sm:px-6 md:px-10 lg:px-8 lg:pt-8">
         <div className="mx-auto max-w-5xl">
-          <div style={pageRise(0)}>
+          <div style={enter('rise-in', 0)}>
             <h1
               id={HEADING_ID}
               ref={headingRef}
@@ -172,7 +171,7 @@ function StaffProfilePage({ role }) {
           )}
 
           {ready && (
-            <div style={pageRise(0.05)}>
+            <div style={enter('rise-in', 0.05)}>
               <JumpChips sections={sections} />
             </div>
           )}
@@ -183,7 +182,7 @@ function StaffProfilePage({ role }) {
           {ready && (
             <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_300px] lg:items-start">
               {!onboarded && (
-                <div className="lg:sticky lg:top-6 lg:col-start-2 lg:row-start-1" style={formRise(0.1)}>
+                <div className="lg:sticky lg:top-6 lg:col-start-2 lg:row-start-1" style={enter('rise-in', 0.1)}>
                   <SetupChecklist
                     profile={profile}
                     detailsDirty={details.dirty}
@@ -193,7 +192,7 @@ function StaffProfilePage({ role }) {
               )}
 
               <div className="flex min-w-0 flex-col gap-6 lg:col-start-1 lg:row-start-1">
-                <div style={formRise(0.15)}>
+                <div style={enter('rise-in', 0.15)}>
                   <StaffDetailsCard
                     profile={profile}
                     formId={DETAILS_FORM_ID}
@@ -201,7 +200,7 @@ function StaffProfilePage({ role }) {
                     announce={announce}
                   />
                 </div>
-                <div style={formRise(0.2)}>
+                <div style={enter('rise-in', 0.2)}>
                   <PhoneCard
                     profile={profile}
                     onDirtyChange={onDirty.phone}
@@ -209,7 +208,7 @@ function StaffProfilePage({ role }) {
                     intro="Your team can reach you on this number. We check it with a one-time code."
                   />
                 </div>
-                <div style={formRise(0.22)}>
+                <div style={enter('rise-in', 0.22)}>
                   <VerifyCodeCard
                     id="staff-employee-id"
                     inputId="staff-employee-id-input"
@@ -232,7 +231,7 @@ function StaffProfilePage({ role }) {
                   />
                 </div>
                 {isDepartment && (
-                  <div style={formRise(0.25)}>
+                  <div style={enter('rise-in', 0.25)}>
                     <DepartmentCodeCard
                       profile={profile}
                       onDirtyChange={onDirty.department}
@@ -240,10 +239,10 @@ function StaffProfilePage({ role }) {
                     />
                   </div>
                 )}
-                <div style={formRise(0.3)}>
+                <div style={enter('rise-in', 0.3)}>
                   <ProfilePhotoCard profile={profile} announce={announce} />
                 </div>
-                <div style={formRise(0.35)}>
+                <div style={enter('rise-in', 0.35)}>
                   <ProfileCard
                     id="profile-security"
                     title="Security"

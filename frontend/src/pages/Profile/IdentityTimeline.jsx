@@ -87,7 +87,7 @@ function Step({ step, number, last, reachedNext }) {
         )}
         {step.look === 'current' && (
           <>
-            <span className="absolute size-3 rounded-full bg-brand/60 motion-safe:animate-ping" />
+            <span className="absolute size-3 rounded-full bg-brand/60 animate-ring-out" />
             <span className="relative size-3 rounded-full bg-brand" />
           </>
         )}

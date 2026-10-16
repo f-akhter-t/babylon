@@ -1,21 +1,42 @@
-import { useState } from 'react'
+import { useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import StatusPill from '../../components/ui/StatusPill'
 import PriorityBadge from '../../components/ui/PriorityBadge'
 import BeforeAfterSlider from './BeforeAfterSlider'
+import { animate, DURATION, SPRING, VOTE_BUMP } from '../../components/ui/motion'
 
+// The vote count bumps when it changes: once for this person's own click,
+// and once when another tab changes it. The live update that follows a click
+// in this tab does not bump it a second time.
 export default function FeedCard({ issue, onUpvote }) {
-  const [bump, setBump] = useState(false)
+  const votesRef = useRef(null)
+  const lastVotes = useRef(issue.votes)
+  const clicked = useRef(false)
   const isFixed = issue.status === 'resolved' && issue.afterImg
 
+  useEffect(() => {
+    if (issue.votes === lastVotes.current) return
+    lastVotes.current = issue.votes
+    if (clicked.current) {
+      clicked.current = false
+      return
+    }
+    bumpVotes() // changed somewhere else
+  }, [issue.votes])
+
+  // Skipped for reduced motion and while the tab is hidden (see animate).
+  function bumpVotes() {
+    animate(votesRef.current, VOTE_BUMP, { duration: DURATION.slow, easing: SPRING })
+  }
+
   function handleClick() {
+    clicked.current = true
     onUpvote(issue)
-    setBump(true)
-    setTimeout(() => setBump(false), 300)
+    bumpVotes()
   }
 
   return (
-    <article className="group flex h-full flex-col overflow-hidden rounded-card border border-navy/5 bg-mint shadow-sm transition-all duration-300 hover:-translate-y-1.5 hover:shadow-xl">
+    <article className="group flex h-full flex-col overflow-hidden rounded-card border border-navy/5 bg-mint shadow-sm lift">
       <div className="relative h-40 shrink-0 overflow-hidden bg-slate/20">
         {isFixed ? (
           <BeforeAfterSlider before={issue.beforeImg} after={issue.afterImg} alt={issue.title} />
@@ -54,7 +75,7 @@ export default function FeedCard({ issue, onUpvote }) {
             <StatusPill status={issue.status} />
             {issue.status !== 'resolved' && (
               <span className="relative flex h-1.5 w-1.5">
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-amber opacity-75" />
+                <span className="absolute inline-flex h-full w-full animate-ring-out rounded-full bg-amber opacity-75" />
                 <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-amber-dark" />
               </span>
             )}
@@ -78,7 +99,8 @@ export default function FeedCard({ issue, onUpvote }) {
             >
               ↑{' '}
               <span
-                style={bump ? { display: 'inline-block', animation: 'voteBump 0.3s ease-out' } : undefined}
+                ref={votesRef}
+                className="inline-block"
               >
                 {issue.votes}
               </span>

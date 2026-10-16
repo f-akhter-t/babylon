@@ -179,7 +179,7 @@ function IdentityReviewPage() {
               <QueueSkeleton />
             </QueueSection>
             <div
-              className="hidden h-96 min-w-0 flex-1 rounded-panel bg-mint motion-safe:animate-pulse lg:block"
+              className="hidden h-96 min-w-0 flex-1 rounded-panel bg-mint skeleton lg:block"
               aria-hidden="true"
             />
           </div>
