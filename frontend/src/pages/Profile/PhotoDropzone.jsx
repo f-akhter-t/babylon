@@ -68,7 +68,8 @@ export default function PhotoDropzone({
               />
             </div>
           )}
-          <div className="flex min-w-0 flex-1 flex-col gap-2">
+          {/* Avatar: the buttons move under the photo when the row is too narrow. */}
+          <div className={clsx('flex min-w-0 flex-1 flex-col gap-2', avatar && 'basis-48')}>
             {photo.file && (
               <span className="truncate font-body text-xs text-navy">{photo.file.name}</span>
             )}
