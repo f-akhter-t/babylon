@@ -16,6 +16,16 @@ export const departments = [
   { name: 'Electricity', assigned: 37, resolved: 33, avgDays: 2.4, reopened: 1 },
 ]
 
+// Mock only: the code a department officer enters on their profile to prove
+// which department they work for. Every department in the list above has one.
+// A real backend would check the code itself and never ship it to the browser.
+export const DEPARTMENT_CODES = {
+  'Roads & Highways': 'RH-4821',
+  'Waste Management': 'WM-3307',
+  'Water Supply': 'WS-5190',
+  Electricity: 'EL-2764',
+}
+
 // The periods on the Accountability screen. 8 weeks is the default, so the
 // screen and Home show the same figures.
 export const ACCOUNTABILITY_PERIODS = [

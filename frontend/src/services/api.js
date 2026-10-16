@@ -8,6 +8,7 @@ import {
   ACCOUNTABILITY_PERIODS,
   CATEGORY_DEPARTMENT,
   DEFAULT_PERIOD_WEEKS,
+  DEPARTMENT_CODES,
   departments,
   departmentsByPeriod,
   waitingLongest,
@@ -16,7 +17,7 @@ import {
 import { earnPoints } from '../mock/user'
 import { sampleIdentitySubmissions } from '../mock/identitySubmissions'
 import { distanceInMeters } from '../utils/geo'
-import { prepareIdPhoto } from '../utils/idPhoto'
+import { prepareIdPhoto, UNREADABLE_PHOTO } from '../utils/idPhoto'
 import {
   deleteOtherPhotos,
   deletePhoto,
@@ -24,11 +25,21 @@ import {
   readPhoto,
   savePhoto,
 } from './identityPhotos'
-import { getAccountName, getSession, renameAccount, staffEmails } from './auth'
+import {
+  getAccount,
+  getAccountName,
+  getSession,
+  isOnboarded,
+  markOnboarded,
+  renameAccount,
+  staffEmails,
+} from './auth'
 import { notify, notifyEach, removeForIssue } from './notifications'
 import {
   checkDetails,
   checkIdPhoto,
+  checkJobTitle,
+  checkName,
   checkNid,
   checkPhone,
   checkRejectReason,
@@ -1099,18 +1110,41 @@ function writeProfile(email, changes) {
   window.dispatchEvent(new Event(PROFILE_EVENT))
 }
 
+// The demo staff are onboarded, so their profiles start filled in. Changes
+// they make are saved on top of these, like any other profile.
+const STAFF_DEMO_PROFILES = {
+  'roads@babylon.test': {
+    jobTitle: 'Road maintenance officer',
+    phone: '01811000201',
+    departmentVerified: true,
+  },
+  'admin@babylon.test': {
+    jobTitle: 'City operations administrator',
+    phone: '01911000302',
+  },
+}
+
 function buildProfile(email) {
-  const stored = readProfiles()[email.toLowerCase()] ?? {}
+  const key = email.toLowerCase()
+  const stored = { ...STAFF_DEMO_PROFILES[key], ...readProfiles()[key] }
   const identity = { ...EMPTY_IDENTITY, ...stored.identity }
+  const account = getAccount(email)
   return {
     email,
     name: getAccountName(email) ?? '',
+    role: account?.role ?? 'citizen',
+    department: account?.department ?? null,
     address: stored.address ?? '',
     ward: stored.ward ?? '',
     phone: stored.phone ?? '', // only set once the number is verified
     phoneVerified: Boolean(stored.phone),
     identity,
     isVerified: identity.status === 'verified',
+    // Staff only
+    jobTitle: stored.jobTitle ?? '',
+    photo: stored.photo ?? '', // a small data: URL, or ''
+    departmentVerified: Boolean(stored.departmentVerified),
+    onboarded: isOnboarded(email),
   }
 }
 
@@ -1130,6 +1164,118 @@ export async function saveProfile(email, details) {
   const name = details.name.trim()
   if (name !== getAccountName(email)) renameAccount(email, name)
   writeProfile(email, { address: details.address.trim(), ward: details.ward })
+  return buildProfile(email)
+}
+
+// ---------- Staff profiles ----------
+// Department and admin accounts: name, job title, phone (the same code check
+// as citizens), a department code for department accounts, and a photo.
+
+// details: { name, jobTitle }. Checked again here, like a backend would.
+export async function saveStaffDetails(email, details) {
+  await wait()
+  if (checkName(details.name) || checkJobTitle(details.jobTitle)) {
+    throw new Error('Some details are not valid. Please check the form.')
+  }
+  const name = details.name.trim()
+  writeProfile(email, { jobTitle: details.jobTitle.trim() })
+  if (name !== getAccountName(email)) renameAccount(email, name)
+  return buildProfile(email)
+}
+
+export const DEPARTMENT_CODE_EMPTY = 'Enter your department code.'
+
+// Mock only: the code is compared in the browser. A server must check it.
+// Returns the profile, or throws a whole-sentence message.
+export async function verifyDepartmentCode(email, code) {
+  await wait()
+  const account = getAccount(email)
+  if (account?.role !== 'department') throw new Error('Only department accounts have a department code.')
+  const typed = code.trim().toUpperCase()
+  if (!typed) throw new Error(DEPARTMENT_CODE_EMPTY)
+  if (typed !== DEPARTMENT_CODES[account.department]?.toUpperCase()) {
+    throw new Error(
+      `That code does not match the ${account.department} department. Ask your department head for the code.`,
+    )
+  }
+  writeProfile(email, { departmentVerified: true })
+  return buildProfile(email)
+}
+
+const AVATAR_EDGE = 192 // px, square: plenty for a 40px circle on a sharp screen
+
+// A square, centred crop of the photo, made small enough to keep in the
+// profile. WebP keeps any transparency, so nothing is painted behind it.
+async function shrinkToAvatar(file) {
+  let bitmap
+  try {
+    bitmap = await createImageBitmap(file)
+  } catch {
+    throw new Error(UNREADABLE_PHOTO)
+  }
+  const side = Math.min(bitmap.width, bitmap.height)
+  const canvas = document.createElement('canvas')
+  canvas.width = AVATAR_EDGE
+  canvas.height = AVATAR_EDGE
+  const context = canvas.getContext('2d')
+  if (!context || !side) throw new Error(UNREADABLE_PHOTO)
+  context.drawImage(
+    bitmap,
+    (bitmap.width - side) / 2,
+    (bitmap.height - side) / 2,
+    side,
+    side,
+    0,
+    0,
+    AVATAR_EDGE,
+    AVATAR_EDGE,
+  )
+  bitmap.close?.()
+  return canvas.toDataURL('image/webp', 0.85)
+}
+
+// file: an image File, or null to remove the photo. If the photo cannot be
+// read or kept, this throws a whole-sentence message and the old photo stays.
+export async function saveStaffPhoto(email, file) {
+  await wait(300)
+  if (!file) {
+    writeProfile(email, { photo: '' })
+    return buildProfile(email)
+  }
+  const problem = checkIdPhoto(file)
+  if (problem) throw new Error(problem)
+  const photo = await shrinkToAvatar(file)
+  try {
+    writeProfile(email, { photo })
+  } catch {
+    throw new Error('This device has no space left for your photo, so your old photo is kept.')
+  }
+  return buildProfile(email)
+}
+
+// What a staff profile still needs before the setup can finish, as short
+// phrases ('a job title'). Empty when it is complete.
+export function setupMissing(profile) {
+  const missing = []
+  if (checkName(profile.name)) missing.push('a valid name')
+  if (checkJobTitle(profile.jobTitle)) missing.push('a job title')
+  if (!profile.phoneVerified) missing.push('a verified phone number')
+  if (profile.role === 'department' && !profile.departmentVerified) {
+    missing.push('a verified department code')
+  }
+  return missing
+}
+
+// Ends the staff setup. Checks everything again from storage first, the way
+// a backend would, and refuses with a whole-sentence message if not ready.
+export async function completeOnboarding(email) {
+  await wait(300)
+  const missing = setupMissing(buildProfile(email))
+  if (missing.length) {
+    throw new Error('Your profile is not complete yet. Please finish every step first.')
+  }
+  markOnboarded(email)
+  window.dispatchEvent(new Event(PROFILE_EVENT))
   return buildProfile(email)
 }
 
