@@ -4,7 +4,7 @@ import clsx from 'clsx'
 import Logo from './Logo'
 import NotificationBell from './NotificationBell'
 import Button from '../ui/Button'
-import { homePathFor, logout } from '../../services/auth'
+import { homePathFor, isOnboarded, logout, profilePathFor } from '../../services/auth'
 import { useViewer } from '../../pages/Map/useViewer'
 import { useProfile } from '../../hooks/useProfile'
 import { usePendingIdentityCount } from '../../hooks/usePendingIdentityCount'
@@ -51,12 +51,6 @@ const linksByVariant = {
   department: departmentLinks,
 }
 
-// Staff avatars open their own panel. The path comes from homePathFor, like the login redirect.
-const staffAvatarLabels = {
-  department: 'Open your department panel',
-  admin: 'Open the admin panel',
-}
-
 function initialsFor(name, fallback) {
   const letters = (name ?? '')
     .split(/\s+/)
@@ -69,9 +63,10 @@ function initialsFor(name, fallback) {
 }
 
 
-// With `to`, the avatar is a link (citizens: their profile, staff: their panel).
+// With `to`, the avatar is a link to the account's own profile page.
 // `label` is the link's accessible name. `verified` adds a small check on the corner.
-function Avatar({ name, text, to, label, verified }) {
+// `photo` (staff) shows instead of the initials; the initials stay in the name.
+function Avatar({ name, text, to, label, verified, photo }) {
   const circle =
     'flex size-10 shrink-0 items-center justify-center rounded-full bg-forest text-sm font-semibold text-white max-lg:size-11'
   const check = verified && (
@@ -103,7 +98,11 @@ function Avatar({ name, text, to, label, verified }) {
         aria-label={`${label}, ${text}`}
         className={clsx(circle, 'relative transition hover:ring-2 hover:ring-brand')}
       >
-        {text}
+        {photo ? (
+          <img src={photo} alt="" className="size-full rounded-full object-cover" />
+        ) : (
+          text
+        )}
         {check}
       </Link>
     )
@@ -157,27 +156,26 @@ export default function Navbar({
   }, [open])
 
   const current = session?.role ?? 'logged-out'
-  const links = linksByVariant[current] ?? citizenLinks
-  const canReport = current !== 'admin' && current !== 'department'
-  // Citizens: name and Verified status from their profile, so a rename shows at once.
+  // A staff account still setting up its profile: only the avatar (to that
+  // profile) and Log out are offered. The gate keeps it off these pages
+  // anyway; this is a backstop so nothing here ever leads to a redirect.
+  const locked = Boolean(session) && !isOnboarded(session.email)
+  const links = locked ? [] : (linksByVariant[current] ?? citizenLinks)
+  const canReport = current !== 'admin' && current !== 'department' && !locked
+  // Name, photo and Verified status from the profile, so a change shows at once.
   const profile = useProfile()
   const isCitizen = session?.role === 'citizen'
-  const displayName = isCitizen ? profile.name || session.name : session?.name
+  const displayName = session ? profile.name || session.name : ''
   const avatarText = session ? initialsFor(displayName, initials) : initials
-  // Citizens: their profile. Staff: their own panel. Guests have no avatar.
-  const staffLabel = staffAvatarLabels[session?.role]
-  let avatarTo
-  let avatarLabel
-  if (isCitizen) {
-    avatarTo = '/profile'
-    avatarLabel = profile.isVerified ? 'Your profile, verified' : 'Your profile'
-  } else if (staffLabel) {
-    avatarTo = homePathFor(session.role)
-    avatarLabel = staffLabel
-  }
+  // Every account's avatar opens its own profile page. Guests have no avatar.
+  const profilePath = session ? profilePathFor(session.role) : null
+  const avatarLabel = isCitizen && profile.isVerified ? 'Your profile, verified' : 'Your profile'
+  const avatarPhoto = !isCitizen ? profile.profile?.photo : ''
 
   function handleLogout() {
-    if (!confirmLeave()) return // unsaved changes on this page: stay
+    // Unsaved changes on this page: ask first. Not while a staff account is
+    // setting up its profile, where Log out must never be held up.
+    if (!locked && !confirmLeave()) return
     logout()
     // Tell every live reader of the session in this tab (this bar, the footer,
     // the page guards) the same way another tab's logout would.
@@ -190,7 +188,7 @@ export default function Navbar({
     <header ref={headerRef} className="sticky top-0 z-[1100] border-b border-white/10 bg-navy font-body">
       <div className="flex flex-wrap items-center gap-4 px-5 py-3 lg:gap-8 lg:px-10">
         <div className="shrink-0">
-          <Logo />
+          <Logo {...(locked ? { to: null } : {})} />
         </div>
 
         <nav aria-label="Main" className="hidden items-center gap-2 lg:flex">
@@ -238,7 +236,7 @@ export default function Navbar({
           )}
 
           {/* Every signed-in account has a bell; staff get a link to their panel in it. */}
-          {session && (
+          {session && !locked && (
             <NotificationBell
               email={session.email}
               {...(isCitizen ? {} : { homeLink: homePathFor(session.role), homeLabel: 'Open your panel' })}
@@ -249,9 +247,10 @@ export default function Navbar({
             <Avatar
               name={displayName}
               text={avatarText}
-              to={avatarTo}
+              to={profilePath}
               label={avatarLabel}
               verified={isCitizen && profile.isVerified}
+              photo={avatarPhoto}
             />
           )}
 
@@ -303,9 +302,9 @@ export default function Navbar({
           className="flex flex-col gap-1 border-t border-white/10 px-5 pb-5 pt-3 lg:hidden"
         >
           <nav aria-label="Main" className="flex flex-col gap-1">
-            {isCitizen && (
+            {session && (
               <NavLink
-                to="/profile"
+                to={profilePath}
                 className={({ isActive }) =>
                   clsx(
                     'flex items-center justify-between gap-3 rounded-tile px-4 py-3 transition-colors',
@@ -317,7 +316,7 @@ export default function Navbar({
                   <span className="block text-xs opacity-70">Your profile</span>
                   <span className="block truncate text-base font-semibold">{displayName}</span>
                 </span>
-                {profile.isVerified && (
+                {isCitizen && profile.isVerified && (
                   <span className="shrink-0 rounded-full bg-brand px-2.5 py-0.5 text-xs font-bold text-navy">
                     Verified
                   </span>
