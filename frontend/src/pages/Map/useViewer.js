@@ -6,6 +6,7 @@ import { getSession } from '../../services/auth'
 //   viewer.isGuest  -> nobody is logged in
 //   viewer.canAct   -> a citizen, who may upvote, follow and report
 //   viewer.role     -> 'guest' | 'citizen' | 'department' | 'admin'
+//   viewer.department -> the department a department account works for, else null
 //   viewer.storageKey('voted') -> a browser storage key for this account
 export function useViewer() {
   const [session, setSession] = useState(getSession)
@@ -24,6 +25,7 @@ export function useViewer() {
     role,
     isGuest: !session,
     canAct: role === 'citizen',
+    department: session?.department ?? null,
     storageKey: (name) => `babylon:${name}:${session?.email ?? 'guest'}`,
   }
 }

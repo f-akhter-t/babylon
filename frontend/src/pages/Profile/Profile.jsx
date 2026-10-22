@@ -1,0 +1,214 @@
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { Navigate } from 'react-router-dom'
+import Navbar from '../../components/layout/Navbar'
+import Footer from '../../components/layout/Footer'
+import AnimatedBackground from '../../components/ui/AnimatedBackground'
+import { useViewer } from '../Map/useViewer'
+import { useDocumentTitle } from '../../hooks/useDocumentTitle'
+import { useProfile } from '../../hooks/useProfile'
+import { endSetup, homePathFor, isInSetup } from '../../services/auth'
+import { useUnsavedChanges } from './useUnsavedChanges'
+import { enter } from '../../components/ui/motion'
+import PersonalDetailsCard from './PersonalDetailsCard'
+import PhoneCard from './PhoneCard'
+import IdentityCard from './IdentityCard'
+import SummaryCard from './SummaryCard'
+import JumpChips from './JumpChips'
+import SaveBar from './SaveBar'
+import { useToast } from '../../components/ui/toast'
+import { ProfileError, ProfileLoading } from './ProfileStates'
+import WelcomeHeader from './WelcomeHeader'
+import ProfileCard from './ProfileCard'
+import ChangePasswordCard from '../../components/ui/ChangePasswordCard'
+
+const LEAVE_MESSAGE = 'You have changes that are not saved. Leave this page anyway?'
+const DETAILS_FORM_ID = 'profile-details-form'
+
+// The setup flag is cleared a moment after the page closes. React's
+// development mode closes and reopens every page once on load; reopening
+// cancels the clear, so the welcome view is not lost. A refresh never runs
+// the clear at all, so the welcome view stays after reloading.
+let pendingSetupEnd = null
+
+function useFirstTimeSetup(email) {
+  const [firstTime] = useState(() => isInSetup(email))
+
+  useEffect(() => {
+    clearTimeout(pendingSetupEnd)
+    return () => {
+      pendingSetupEnd = setTimeout(() => endSetup(email), 0)
+    }
+  }, [email])
+
+  return firstTime
+}
+
+// Only citizens have a profile. Guests go to the login page, staff to their own panel.
+export default function Profile() {
+  const viewer = useViewer()
+  if (viewer.isGuest) return <Navigate to="/login" replace />
+  if (!viewer.canAct) return <Navigate to={homePathFor(viewer.role)} replace />
+  return <ProfilePage viewer={viewer} />
+}
+
+function ProfilePage({ viewer }) {
+  const { profile, loading, error, reload } = useProfile()
+  const email = viewer.session.email
+  const firstTime = useFirstTimeSetup(email)
+  useDocumentTitle(firstTime ? 'Welcome' : 'Your profile')
+  // A rename during setup shows straight away; the signup name until it loads.
+  const welcomeName = profile?.name || viewer.session.name
+
+  // Which sections have changes that are not saved yet.
+  const [dirty, setDirty] = useState({})
+  const markDirty = useCallback(
+    (section, value) =>
+      setDirty((current) => (current[section] === value ? current : { ...current, [section]: value })),
+    [],
+  )
+  const onDirty = useMemo(
+    () => ({
+      phone: (value) => markDirty('phone', value),
+      identity: (value) => markDirty('identity', value),
+    }),
+    [markDirty],
+  )
+
+  // Personal details also tell the phone save bar whether Save can be pressed.
+  const [details, setDetails] = useState({ dirty: false, canSave: false, saving: false })
+  const handleDetailsState = useCallback(
+    (next) => {
+      setDetails((current) =>
+        current.dirty === next.dirty &&
+        current.canSave === next.canSave &&
+        current.saving === next.saving
+          ? current
+          : next,
+      )
+      markDirty('details', next.dirty)
+    },
+    [markDirty],
+  )
+
+  useUnsavedChanges(Object.values(dirty).some(Boolean), LEAVE_MESSAGE)
+
+  // announce(text): read out by the page's own live region (form steps such
+  // as "We sent a code"). announce(text, { toast: true }): shown as a toast,
+  // which the shared Toaster also reads out, so it is never heard twice.
+  // Clearing the region first makes the same sentence be read out again.
+  const [spoken, setSpoken] = useState('')
+  const toast = useToast()
+  const timers = useRef([])
+  const announce = useCallback(
+    (text, { toast: showToast = false } = {}) => {
+      if (showToast) {
+        toast.info(text)
+        return
+      }
+      setSpoken('')
+      timers.current.push(setTimeout(() => setSpoken(text), 60))
+    },
+    [toast],
+  )
+  useEffect(() => {
+    const pending = timers.current
+    return () => pending.forEach(clearTimeout)
+  }, [])
+
+  // While the phone save bar shows, keep focused fields from hiding under it.
+  const showSaveBar = details.dirty
+  useEffect(() => {
+    if (!showSaveBar) return
+    const root = document.documentElement
+    root.style.scrollPaddingBottom = '6rem'
+    return () => {
+      root.style.scrollPaddingBottom = ''
+    }
+  }, [showSaveBar])
+
+  return (
+    <div>
+      <AnimatedBackground />
+      <Navbar />
+
+      <main className="relative min-h-[70vh] px-4 pt-8 pb-8 sm:px-6 md:px-10">
+        <div className="mx-auto max-w-6xl">
+          {firstTime ? (
+            <WelcomeHeader name={welcomeName} profile={profile} onSkip={() => endSetup(email)} />
+          ) : (
+            <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1" style={enter('rise-in', 0)}>
+              <h1 className="font-heading text-4xl font-extrabold text-navy md:text-5xl">
+                Your profile
+              </h1>
+              <p className="font-body text-sm text-muted">
+                A verified profile helps departments trust and act on your reports.
+              </p>
+            </div>
+          )}
+
+          {profile && (
+            <div style={enter('rise-in', 0.05)}>
+              <JumpChips withSecurity={!firstTime} />
+            </div>
+          )}
+
+          {loading && <ProfileLoading />}
+          {!loading && !profile && error && <ProfileError onRetry={reload} />}
+
+          {profile && (
+            <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_340px] lg:items-start">
+              {/* first on phones, right-hand column on wide screens */}
+              <div className="lg:sticky lg:top-24 lg:col-start-2 lg:row-start-1" style={enter('rise-in', 0.1)}>
+                <SummaryCard profile={profile} showMeter={!firstTime} />
+              </div>
+
+              <div className="flex min-w-0 flex-col gap-6 lg:col-start-1 lg:row-start-1">
+                <div style={enter('rise-in', 0.15)}>
+                  <PersonalDetailsCard
+                    profile={profile}
+                    formId={DETAILS_FORM_ID}
+                    onStateChange={handleDetailsState}
+                    announce={announce}
+                  />
+                </div>
+                <div style={enter('rise-in', 0.25)}>
+                  <PhoneCard profile={profile} onDirtyChange={onDirty.phone} announce={announce} />
+                </div>
+                <div style={enter('rise-in', 0.35)}>
+                  <IdentityCard
+                    profile={profile}
+                    onDirtyChange={onDirty.identity}
+                    announce={announce}
+                  />
+                </div>
+                {/* Not part of the first-time welcome step. Its own form and button,
+                    so it never marks the profile as unsaved. */}
+                {!firstTime && (
+                  <div style={enter('rise-in', 0.45)}>
+                    <ProfileCard
+                      id="profile-security"
+                      title="Security"
+                      intro="Change the password you use to log in. You stay logged in on this device."
+                    >
+                      <ChangePasswordCard email={email} />
+                    </ProfileCard>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {profile && showSaveBar && (
+            <SaveBar formId={DETAILS_FORM_ID} canSave={details.canSave} saving={details.saving} />
+          )}
+        </div>
+      </main>
+
+      <p role="status" aria-live="polite" className="sr-only">
+        {spoken}
+      </p>
+
+      <Footer />
+    </div>
+  )
+}

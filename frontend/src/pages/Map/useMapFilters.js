@@ -27,7 +27,7 @@ export function useMapFilters() {
     category: params.get('category') ?? 'All',
     status: params.get('status') ?? 'All',
     search: params.get('q') ?? '',
-    selectedId: issue ? Number(issue) : null,
+    selectedId: issue,
     update,
   }
 }

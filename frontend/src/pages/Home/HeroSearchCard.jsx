@@ -22,7 +22,7 @@ export default function HeroSearchCard({ categories = [] }) {
   return (
     <form
       onSubmit={handleSubmit}
-      className="w-full rounded-tile border border-slate bg-navy/80 p-6 backdrop-blur-md xl:w-[400px]"
+      className="w-full rounded-tile border border-slate bg-navy/80 p-6 backdrop-blur-md lg:w-[380px] xl:w-[400px]"
     >
       <h2 className="font-heading text-2xl font-extrabold text-mint">Find issues near you</h2>
 
@@ -38,7 +38,7 @@ export default function HeroSearchCard({ categories = [] }) {
         value={query}
         onChange={(e) => setQuery(e.target.value)}
         placeholder="e.g. Station Road"
-        className="mt-2 w-full border-b border-slate bg-transparent py-2 text-mint placeholder:text-mint/40 focus:border-brand focus:outline-none"
+        className="mt-2 w-full border-b border-slate bg-transparent py-2 text-mint placeholder:text-mint/60 focus:border-brand focus:outline-none max-md:min-h-11"
       />
 
       <p className="mt-6 text-xs font-bold uppercase tracking-widest text-mint/70">Category</p>
@@ -50,7 +50,7 @@ export default function HeroSearchCard({ categories = [] }) {
             aria-pressed={category === name}
             onClick={() => setCategory((c) => (c === name ? null : name))}
             className={clsx(
-              'rounded-full border px-4 py-1.5 text-sm font-semibold transition-colors',
+              'rounded-full border px-4 py-1.5 text-sm font-semibold transition-colors max-md:min-h-11',
               category === name
                 ? 'border-brand bg-brand text-navy'
                 : 'border-slate text-mint hover:border-mint',

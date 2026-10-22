@@ -9,6 +9,7 @@ import MapPopup from './MapPopup'
 import MapControls from './MapControls'
 import MapOverlays from './MapOverlays'
 import DropPin from './DropPin'
+import { mapMotionOptions } from '../../components/ui/motion'
 
 const ATTRIBUTION =
   '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
@@ -25,7 +26,7 @@ export default function IssueMap({
   className,
 }) {
   // Undefined when nothing is selected, or when a filter hid the selected issue.
-  const selected = issues.find((issue) => issue.id === selectedId)
+  const selected = issues.find((issue) => String(issue.id) === selectedId)
   const [dropping, setDropping] = useState(false) // "drop a pin" mode is on
   const [loginPrompt, setLoginPrompt] = useState(false) // "Log in to report" box
   const stopDropping = useCallback(() => setDropping(false), [])
@@ -45,6 +46,7 @@ export default function IssueMap({
     // isolate keeps Leaflet's own z-index values inside this box.
     <div className={clsx('relative isolate', className)}>
       <MapContainer
+        {...mapMotionOptions()}
         center={MAP_CENTER}
         zoom={14}
         zoomControl={false}

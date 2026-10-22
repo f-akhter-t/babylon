@@ -43,9 +43,10 @@ export default function BeforeAfterSlider({
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
       onPointerUp={() => (dragging.current = false)}
+      onPointerCancel={() => (dragging.current = false)}
       className={clsx(
         'relative select-none overflow-hidden bg-slate',
-        interactive && 'cursor-ew-resize touch-none',
+        interactive && 'cursor-ew-resize touch-pan-y',
         className,
       )}
     >
@@ -97,7 +98,7 @@ export default function BeforeAfterSlider({
             aria-valuemax={100}
             aria-valuenow={Math.round(pos)}
             onKeyDown={handleKeyDown}
-            className="absolute left-1/2 top-1/2 flex size-10 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border-[3px] border-navy bg-mint text-navy"
+            className="absolute left-1/2 top-1/2 flex size-11 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border-[3px] border-navy bg-mint text-navy"
           >
             <ChevronsIcon className="size-4" />
           </div>

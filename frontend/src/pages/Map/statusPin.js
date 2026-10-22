@@ -1,63 +1,9 @@
 import { divIcon } from 'leaflet'
+import { DRAFT_PIN_SIZE, draftPinHtml, pinHtml } from './pinMarkup'
 
-// Leaflet pins are plain HTML strings, not React. Tailwind still finds these
-// class names because each one is written out in full below.
-
-const pinFill = {
-  open: 'fill-amber',
-  'in-progress': 'fill-slate',
-  resolved: 'fill-forest',
-}
-
-const barFill = {
-  open: 'fill-navy',
-  'in-progress': 'fill-white',
-  resolved: 'fill-white',
-}
-
-// How many staircase bars are solid: more steps = closer to fixed.
-const level = { open: 1, 'in-progress': 2, resolved: 3 }
-
-const bars = [
-  { x: 1, y: 8, h: 5 },
-  { x: 6, y: 5, h: 8 },
-  { x: 11, y: 2, h: 11 },
-]
-
-function staircase(status) {
-  return bars
-    .map(
-      (bar, i) =>
-        `<rect x="${bar.x}" y="${bar.y}" width="3.5" height="${bar.h}" rx="1"
-          class="${barFill[status]}" opacity="${i < level[status] ? 1 : 0.35}" />`,
-    )
-    .join('')
-}
-
-// The ring sits under the pin's tip. Navy outline + strong amber fill so it
-// stays visible on OpenStreetMap's yellow and orange roads.
-const RING_CLASSES =
-  'absolute bottom-0 left-1/2 h-5 w-14 -translate-x-1/2 translate-y-1/2 rounded-full border-2 border-navy bg-amber/70 shadow-md'
-const SVG_CLASSES = 'relative block size-full drop-shadow-md'
-
-// Hovering a pin lifts it and grows it a little, anchored at its tip.
-const PIN_WRAPPER_CLASSES =
-  'relative size-full origin-bottom transition-transform duration-200 ease-out motion-safe:hover:-translate-y-1 motion-safe:hover:scale-115'
-
-function pinHtml(status, selected) {
-  const ring = selected ? `<span class="${RING_CLASSES}"></span>` : ''
-  const outline = selected ? 'stroke-navy' : 'stroke-white'
-
-  return `
-    <div class="${PIN_WRAPPER_CLASSES}">
-      ${ring}
-      <svg viewBox="0 0 28 36" class="${SVG_CLASSES}">
-        <path d="M14 35C14 35 2 22 2 13a12 12 0 0 1 24 0c0 9-12 22-12 22z"
-          class="${pinFill[status]} ${outline}" stroke-width="2.5" />
-        <svg x="6" y="6" width="16" height="14" viewBox="0 0 16 14">${staircase(status)}</svg>
-      </svg>
-    </div>`
-}
+// Leaflet pins are plain HTML strings, not React. The issue pin itself is
+// drawn in pinMarkup.js (shared with the My reports cards). Tailwind still
+// finds these class names because each one is written out in full below.
 
 const CLUSTER_CLASSES =
   'flex size-full items-center justify-center rounded-full border-3 border-white bg-navy font-heading text-base font-extrabold text-white shadow-lg ring-4 ring-navy/25 transition duration-200 ease-out hover:bg-slate hover:ring-8 motion-safe:hover:scale-115'
@@ -85,16 +31,9 @@ export function draftPinIcon() {
   if (!cache.draft) {
     cache.draft = divIcon({
       className: '',
-      html: `
-        <div class="${PIN_WRAPPER_CLASSES}">
-          <svg viewBox="0 0 28 36" class="${SVG_CLASSES}">
-            <path d="M14 35C14 35 2 22 2 13a12 12 0 0 1 24 0c0 9-12 22-12 22z"
-              class="fill-navy stroke-white" stroke-width="2.5" />
-            <circle cx="14" cy="13" r="5" class="fill-brand" />
-          </svg>
-        </div>`,
-      iconSize: [38, 48],
-      iconAnchor: [19, 48],
+      html: draftPinHtml(),
+      iconSize: DRAFT_PIN_SIZE,
+      iconAnchor: [DRAFT_PIN_SIZE[0] / 2, DRAFT_PIN_SIZE[1]],
     })
   }
   return cache.draft

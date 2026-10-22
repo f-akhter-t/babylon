@@ -1,45 +1,43 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import clsx from 'clsx'
-import AuthShell, { Field, RoleTabs } from './AuthShell'
-import { homePathFor, signup } from '../../services/auth'
-import { departments } from '../../mock/departments'
+import AuthShell, { Field, FormError, SubmitButton, authLinkClass } from './AuthShell'
+import { signup, startSetup } from '../../services/auth'
+import { useDocumentTitle } from '../../hooks/useDocumentTitle'
+import GuestOnly from './GuestOnly'
+import { validateNewAccount } from './validateNewAccount'
 
+// Citizen sign-up. Staff accounts are created at /staff/signup.
 export default function Signup() {
+  return (
+    <GuestOnly>
+      <SignupPage />
+    </GuestOnly>
+  )
+}
+
+function SignupPage() {
+  useDocumentTitle('Create account')
   const navigate = useNavigate()
-  const [role, setRole] = useState('citizen')
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
-  const [department, setDepartment] = useState(departments[0].name)
   const [password, setPassword] = useState('')
   const [confirm, setConfirm] = useState('')
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
 
-  const nameLabel = role === 'department' ? 'Officer name' : 'Full name'
   const ready = name.trim() && email.trim() && password && confirm
 
   async function handleSubmit(event) {
     event.preventDefault()
-    setError('')
-
-    if (!/^\S+@\S+\.\S+$/.test(email.trim())) {
-      setError('Enter a valid email address.')
-      return
-    }
-    if (password.length < 6) {
-      setError('Password must be at least 6 characters.')
-      return
-    }
-    if (password !== confirm) {
-      setError('The two passwords do not match.')
-      return
-    }
+    const problem = validateNewAccount({ email, password, confirm })
+    setError(problem ?? '')
+    if (problem) return
 
     setBusy(true)
     try {
-      const user = await signup({ name, email, password, role, department })
-      navigate(homePathFor(user.role))
+      const user = await signup({ name, email, password, role: 'citizen' })
+      startSetup(user.email) // first-time profile setup
+      navigate('/profile')
     } catch (err) {
       setError(err.message)
     } finally {
@@ -50,22 +48,25 @@ export default function Signup() {
   return (
     <AuthShell
       title="Create account"
-      subtitle="Choose your account type, then fill in your details."
+      subtitle="Join Babylon to report and follow issues in your area."
       footer={
         <>
           Already have an account?{' '}
-          <Link to="/login" className="font-bold underline">
+          <Link to="/login" className={authLinkClass}>
             Log in
           </Link>
         </>
       }
+      extra={
+        <Link to="/staff/login" className={authLinkClass}>
+          Government or admin staff? Sign in here.
+        </Link>
+      }
     >
-      <RoleTabs value={role} onChange={setRole} />
-
-      <form onSubmit={handleSubmit} className="mt-5 flex flex-col gap-4">
+      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         <Field
           id="name"
-          label={nameLabel}
+          label="Full name"
           autoComplete="name"
           placeholder="Your name"
           value={name}
@@ -80,22 +81,6 @@ export default function Signup() {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
         />
-
-        {role === 'department' && (
-          <Field
-            id="department"
-            label="Department"
-            value={department}
-            onChange={(e) => setDepartment(e.target.value)}
-          >
-            {departments.map((d) => (
-              <option key={d.name} value={d.name}>
-                {d.name}
-              </option>
-            ))}
-          </Field>
-        )}
-
         <Field
           id="password"
           label="Password"
@@ -115,18 +100,11 @@ export default function Signup() {
           onChange={(e) => setConfirm(e.target.value)}
         />
 
-        {error && <p className="font-body text-sm font-bold text-amber-dark">{error}</p>}
+        <FormError message={error} />
 
-        <button
-          type="submit"
-          disabled={!ready || busy}
-          className={clsx(
-            'rounded-full bg-navy px-6 py-3.5 font-body text-base font-bold text-mint transition-opacity',
-            !ready || busy ? 'cursor-not-allowed opacity-40' : 'hover:opacity-90',
-          )}
-        >
+        <SubmitButton disabled={!ready || busy}>
           {busy ? 'Creating account…' : 'Create account'}
-        </button>
+        </SubmitButton>
       </form>
     </AuthShell>
   )

@@ -1,7 +1,11 @@
+import { useEffect, useRef } from 'react'
 import clsx from 'clsx'
 import { CATEGORIES } from '../../mock/issues'
 import SearchBox from './SearchBox'
 import IssueCard from './IssueCard'
+import NewReportsBar from '../../components/ui/NewReportsBar'
+import { useHeldList } from '../../hooks/useHeldList'
+import { prefersLessMotion } from '../../components/ui/motion'
 import FilterRow from './FilterRow'
 import { SkeletonCards, StateMessage } from './ListStates'
 
@@ -28,9 +32,38 @@ export default function IssuesSidebar({
   onSelect,
   onRetry,
   onClearFilters,
+  update,
+  withMine = (list) => list,
+  isOwnVote,
   className,
 }) {
   const ready = !loading && !error
+
+  // The list holds still while someone uses it (see useHeldList). On wide
+  // screens it scrolls in its own box; on phones the page scrolls.
+  const listRef = useRef(null)
+  const headingRef = useRef(null)
+  const held = useHeldList(issues, {
+    containerRef: listRef,
+    scrollerRef: listRef,
+    resetKey: JSON.stringify([category, status, search]),
+    update,
+    headingRef,
+  })
+  const focusNew = useRef(null)
+  useEffect(() => {
+    const id = focusNew.current
+    if (!id) return
+    focusNew.current = null
+    const box = listRef.current
+    const card = box?.querySelector(`[data-live-id="${CSS.escape(id)}"]`)
+    if (!card) return
+    const behavior = prefersLessMotion() ? 'instant' : 'smooth'
+    if (box.scrollHeight > box.clientHeight + 1) box.scrollTo({ top: 0, behavior })
+    else box.scrollIntoView({ block: 'start', behavior })
+    card.scrollIntoView({ block: 'nearest', behavior })
+    card.querySelector('button')?.focus({ preventScroll: true })
+  })
 
   let list
   if (error) {
@@ -55,12 +88,14 @@ export default function IssuesSidebar({
       />
     )
   } else {
-    list = issues.map((issue) => (
+    list = withMine(held.items).map((issue) => (
       <IssueCard
         key={issue.id}
         issue={issue}
+        ghost={held.isGhost(issue.id)}
         selected={issue.id === selectedId}
         onSelect={onSelect}
+        isOwnVote={isOwnVote}
       />
     ))
   }
@@ -73,7 +108,11 @@ export default function IssuesSidebar({
       )}
     >
       <div className="flex items-start justify-between gap-3">
-        <h1 className="font-heading text-3xl font-extrabold tracking-tight text-navy">
+        <h1
+          ref={headingRef}
+          tabIndex={-1}
+          className="font-heading text-3xl font-extrabold tracking-tight text-navy focus:outline-none"
+        >
           Issues near you
         </h1>
         <span className="pt-2 text-sm font-medium text-slate">By priority</span>
@@ -95,7 +134,20 @@ export default function IssuesSidebar({
         {ready && `${issues.length} ${issues.length === 1 ? 'issue' : 'issues'}`}
       </span>
 
-      <div className="relative -mx-1 flex flex-col gap-3 px-1 pb-1 lg:flex-1 lg:overflow-y-auto">
+      <p role="status" className="sr-only">
+        {held.message}
+      </p>
+      <div
+        ref={listRef}
+        className="relative -mx-1 flex scroll-mt-24 flex-col gap-3 px-1 pb-1 lg:flex-1 lg:overflow-y-auto"
+      >
+        <NewReportsBar
+          count={ready ? held.waiting : 0}
+          onShow={() => {
+            focusNew.current = held.showNew()[0] ?? null
+          }}
+          className="top-20 lg:top-0"
+        />
         {list}
       </div>
     </aside>

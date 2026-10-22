@@ -1,48 +1,88 @@
-import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import Navbar from '../../components/layout/Navbar'
 import Footer from '../../components/layout/Footer'
-import CategoryChip from '../../components/ui/CategoryChip'
-import StatusPill from '../../components/ui/StatusPill'
-import PriorityBadge from '../../components/ui/PriorityBadge'
+import AnimatedBackground from '../../components/ui/AnimatedBackground'
 import StaircaseIcon from '../../components/ui/StaircaseIcon'
-import BeforeAfterSlider from './BeforeAfterSlider'
+import LoadError from '../../components/ui/LoadError'
+import FeedFilters from './FeedFilters'
+import FeedGrid from './FeedGrid'
+import { useViewer } from '../Map/useViewer'
+import { useStoredIds } from '../Map/useStoredIds'
 import { getIssues } from '../../services/api'
-import { CATEGORIES } from '../../mock/issues'
+import { useLiveIssues } from '../../hooks/useLiveIssues'
+import { useHeldList } from '../../hooks/useHeldList'
+import NewReportsBar from '../../components/ui/NewReportsBar'
+import { prefersLessMotion } from '../../components/ui/motion'
+import { useDocumentTitle } from '../../hooks/useDocumentTitle'
+import { useToast } from '../../components/ui/toast'
 
-const STATUSES = [
-  { value: 'All', label: 'All' },
-  { value: 'open', label: 'Open' },
-  { value: 'in-progress', label: 'In progress' },
-  { value: 'resolved', label: 'Resolved' },
-]
+const EMPTY = []
+const LOAD_FAILED = 'We could not load the issues. Check your connection and try again.'
 
 export default function Feed() {
+  useDocumentTitle('Issue feed')
   const [category, setCategory] = useState('All')
   const [status, setStatus] = useState('All')
-  const [issues, setIssues] = useState([])
-  const [votes, setVotes] = useState({})
+  const [search, setSearch] = useState('')
+  const toast = useToast()
 
-  useEffect(() => {
-    let active = true
-    getIssues({ category, status }).then((list) => {
-      if (active) setIssues(list)
-    })
-    return () => {
-      active = false
-    }
-  }, [category, status])
+  const viewer = useViewer()
+  // Same key as Map and Issue detail, so a vote shows the same everywhere.
+  const [votedIds, toggleVote] = useStoredIds(viewer.storageKey('voted'))
 
-  function handleUpvote(id, baseVotes) {
-    setVotes((prev) => {
-      const current = prev[id] ?? baseVotes
-      return { ...prev, [id]: current + 1 }
-    })
+  // Live: another tab's new, changed or deleted report shows up here without a
+  // reload. New filters load afresh; retry keeps the filters.
+  const filterKey = JSON.stringify([category, status, search])
+  const load = useCallback(() => getIssues({ category, status, search }), [category, status, search])
+  const { data, error, loading, retry, update } = useLiveIssues(load, { list: (list) => list })
+  const failed = Boolean(error) && !loading
+  const issues = loading || failed ? EMPTY : data
+
+  // While someone is using the list it holds still (see useHeldList).
+  const gridRef = useRef(null)
+  const headingRef = useRef(null)
+  const held = useHeldList(issues, { containerRef: gridRef, resetKey: filterKey, update, headingRef })
+  const focusNew = useRef(null) // the first new report, after "Show new reports"
+
+  function showNew() {
+    focusNew.current = held.showNew()[0] ?? null
   }
+
+  // After "Show new reports": back to the top of the list, and focus on the
+  // first new report, so focus is not lost when the button goes. If that
+  // report ranks too low to be seen from the top, it is scrolled into view
+  // instead, so focus is never off screen.
+  useEffect(() => {
+    const id = focusNew.current
+    const grid = gridRef.current
+    if (!id || !grid) return
+    focusNew.current = null
+    const card = grid.querySelector(`[data-live-id="${CSS.escape(id)}"]`)
+    if (!card) return
+    const behavior = prefersLessMotion() ? 'instant' : 'smooth'
+    const fits = card.getBoundingClientRect().bottom - grid.getBoundingClientRect().top <= window.innerHeight - 96
+    if (fits) grid.scrollIntoView({ block: 'start', behavior })
+    else card.scrollIntoView({ block: 'center', behavior })
+    card.querySelector('a[href]')?.focus({ preventScroll: true })
+  })
+
+  function handleUpvote(issue) {
+    if (issue.status === 'resolved') return
+    const wasVoted = votedIds.includes(issue.id)
+    toggleVote(issue.id)
+    toast.info(wasVoted ? 'Your vote was removed.' : 'You upvoted this issue.')
+  }
+
+  // Overlay this viewer's own vote on top of the fetched count — same math as Map.
+  const shownIssues = held.items.map((issue) => {
+    const voted = votedIds.includes(issue.id)
+    return { ...issue, votes: issue.votes + (voted ? 1 : 0), voted }
+  })
 
   return (
     <>
-      <Navbar variant="citizen" />
+      <AnimatedBackground />
+      <Navbar />
 
       <main>
         <section className="bg-navy px-6 py-16 text-white md:px-10">
@@ -58,118 +98,50 @@ export default function Feed() {
           </div>
         </section>
 
-        <section className="mx-auto max-w-6xl px-6 py-8 md:px-10">
-          <div className="flex flex-wrap gap-2">
-            <CategoryChip
-              label="All"
-              active={category === 'All'}
-              onClick={() => setCategory('All')}
+        <section className="relative px-6 pb-8 pt-4 md:px-10 md:pt-5">
+          <div className="relative mx-auto max-w-6xl">
+            <FeedFilters
+              category={category}
+              onCategory={setCategory}
+              status={status}
+              onStatus={setStatus}
+              search={search}
+              onSearch={setSearch}
+              loading={loading}
+              resultCount={failed ? null : issues.length}
             />
-            {CATEGORIES.map((c) => (
-              <CategoryChip
-                key={c}
-                label={c}
-                active={category === c}
-                onClick={() => setCategory(c)}
-              />
-            ))}
-          </div>
 
-          <div className="mt-3 flex flex-wrap gap-2">
-            {STATUSES.map((s) => (
-              <CategoryChip
-                key={s.value}
-                label={s.label}
-                tone="forest"
-                active={status === s.value}
-                onClick={() => setStatus(s.value)}
-              />
-            ))}
-          </div>
-
-          <div className="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {issues.map((issue) => (
-              <FeedCard
-                key={issue.id}
-                issue={issue}
-                votes={votes[issue.id] ?? issue.votes}
-                onUpvote={() => handleUpvote(issue.id, issue.votes)}
-              />
-            ))}
-          </div>
-
-          {issues.length === 0 && (
-            <p className="mt-10 text-center font-body text-muted">
-              No issues match these filters yet.
+            <h2 ref={headingRef} tabIndex={-1} className="sr-only">
+              Issues
+            </h2>
+            <p role="status" className="sr-only">
+              {held.message}
             </p>
-          )}
+            <NewReportsBar count={held.waiting} onShow={showNew} className="top-20" />
+            {failed ? (
+              <div className="mt-8">
+                <LoadError message={LOAD_FAILED} onRetry={retry} />
+              </div>
+            ) : (
+              <FeedGrid
+                ref={gridRef}
+                issues={shownIssues}
+                isGhost={held.isGhost}
+                instant={Boolean(update) && !update.animate}
+                loading={loading}
+                onUpvote={handleUpvote}
+                onClearFilters={() => {
+                  setCategory('All')
+                  setStatus('All')
+                  setSearch('')
+                }}
+              />
+            )}
+          </div>
         </section>
       </main>
 
       <Footer />
     </>
-  )
-}
-
-function FeedCard({ issue, votes, onUpvote }) {
-  const isFixed = issue.status === 'resolved' && issue.afterImg
-
-  return (
-    <article className="group overflow-hidden rounded-card bg-mint shadow-sm transition hover:-translate-y-1 hover:shadow-md">
-      <div className="relative h-40 overflow-hidden bg-slate/20">
-        {isFixed ? (
-          <BeforeAfterSlider
-            before={issue.beforeImg}
-            after={issue.afterImg}
-            alt={issue.title}
-          />
-        ) : (
-          <>
-            <img
-              src={issue.beforeImg}
-              alt={issue.title}
-              className="h-full w-full object-cover transition group-hover:scale-105"
-              onError={(e) => {
-                e.currentTarget.style.display = 'none'
-                e.currentTarget.nextSibling.style.display = 'flex'
-              }}
-            />
-            <div className="hidden h-full w-full items-center justify-center font-body text-xs text-slate">
-              Photo not available
-            </div>
-          </>
-        )}
-        <span className="absolute left-3 top-3 z-10 flex h-7 w-7 items-center justify-center rounded-full bg-navy font-body text-xs font-bold text-white">
-          {issue.rank}
-        </span>
-        <PriorityBadge priority={issue.priority} className="absolute right-3 top-3 z-10" />
-      </div>
-
-      <div className="flex flex-col gap-3 p-4">
-        <Link to={`/issues/${issue.id}`}>
-          <h3 className="font-heading text-base font-bold text-navy hover:underline">
-            {issue.title}
-          </h3>
-        </Link>
-        <p className="font-body text-sm text-muted">{issue.location}</p>
-
-        <div className="mt-1 flex items-center justify-between">
-          <StatusPill status={issue.status} />
-          {issue.status === 'resolved' ? (
-            <span className="flex items-center gap-1 rounded-full bg-mint-deep px-3 py-1.5 font-body text-xs font-semibold text-navy">
-              ✓ {votes}
-            </span>
-          ) : (
-            <button
-              type="button"
-              onClick={onUpvote}
-              className="flex items-center gap-1 rounded-full border-2 border-navy px-3 py-1.5 font-body text-xs font-semibold text-navy transition active:scale-95 hover:bg-navy/10"
-            >
-              ↑ {votes}
-            </button>
-          )}
-        </div>
-      </div>
-    </article>
   )
 }

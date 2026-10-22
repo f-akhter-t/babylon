@@ -1,27 +1,44 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import clsx from 'clsx'
+import { sentBackMessage } from './departmentFilters'
 
-export default function ResolvePanel({ issue, onSubmit }) {
+const NEEDS_PHOTO_ID = 'resolve-needs-photo'
+const SUBMIT_ERROR_ID = 'resolve-submit-error'
+
+// The body of the "Resolve with proof" panel. The panel's heading and its
+// Show or Hide button live in DepartmentPanel.
+// error: why the last submit failed (one sentence), or null.
+export default function ResolvePanel({ issue, onSubmit, busy = false, error = null }) {
   const [previewUrl, setPreviewUrl] = useState(null)
+  const [file, setFile] = useState(null) // sent to onSubmit, which shrinks it
   const [note, setNote] = useState('')
+  // The preview's object URL, freed when it is replaced and when the panel
+  // goes away (another issue, or after a successful submit). The photo that is
+  // sent is a separate, smaller copy made by resizeImage.
+  const previewRef = useRef(null)
+  useEffect(
+    () => () => {
+      if (previewRef.current) URL.revokeObjectURL(previewRef.current)
+    },
+    [],
+  )
 
   if (!issue) {
     return (
-      <p className="font-body text-base text-muted">
+      <p className="pb-4 font-body text-base text-muted sm:pb-6">
         Pick an issue from the table to resolve it with proof.
       </p>
     )
   }
 
+  const title = (
+    <h3 className="break-words font-heading text-2xl font-extrabold text-navy">{issue.title}</h3>
+  )
+
   if (issue.status === 'open') {
     return (
-      <div>
-        <p className="font-body text-xs font-bold uppercase tracking-widest text-forest">
-          Resolve with proof
-        </p>
-        <h2 className="mt-1 font-heading text-2xl font-extrabold text-navy">
-          {issue.title}
-        </h2>
+      <div className="pb-4 sm:pb-6">
+        {title}
         <p className="mt-4 font-body text-base text-muted">
           Click &quot;Start work&quot; on this issue first. Then you can add the after-photo.
         </p>
@@ -31,13 +48,8 @@ export default function ResolvePanel({ issue, onSubmit }) {
 
   if (issue.verification === 'awaiting') {
     return (
-      <div>
-        <p className="font-body text-xs font-bold uppercase tracking-widest text-forest">
-          Resolve with proof
-        </p>
-        <h2 className="mt-1 font-heading text-2xl font-extrabold text-navy">
-          {issue.title}
-        </h2>
+      <div className="pb-4 sm:pb-6">
+        {title}
         <p className="mt-4 font-body text-base text-muted">
           Sent to the admin. The issue stays In progress until the admin confirms the fix.
         </p>
@@ -46,30 +58,41 @@ export default function ResolvePanel({ issue, onSubmit }) {
   }
 
   function handleFile(event) {
-    const file = event.target.files?.[0]
-    if (!file) return
-    if (previewUrl) URL.revokeObjectURL(previewUrl)
-    setPreviewUrl(URL.createObjectURL(file))
+    const picked = event.target.files?.[0]
+    if (!picked) return
+    if (previewRef.current) URL.revokeObjectURL(previewRef.current)
+    previewRef.current = URL.createObjectURL(picked)
+    setPreviewUrl(previewRef.current)
+    setFile(picked)
   }
+
+  // Without a photo the button stays focusable (aria-disabled) so its reason
+  // is read out; while saving it is really disabled.
+  const needsPhoto = !previewUrl
+  const describedBy = [needsPhoto && NEEDS_PHOTO_ID, error && SUBMIT_ERROR_ID]
+    .filter(Boolean)
+    .join(' ')
 
   return (
     <div>
-      <p className="font-body text-xs font-bold uppercase tracking-widest text-forest">
-        Resolve with proof
-      </p>
-      <h2 className="mt-1 font-heading text-2xl font-extrabold text-navy">
-        {issue.title}
-      </h2>
+      {title}
+      {issue.sentBack && (
+        <p className="mt-4 min-w-0 break-words font-body text-sm font-bold text-danger">
+          {sentBackMessage(issue.sentBack)}
+        </p>
+      )}
 
-      <p className="mt-5 font-body text-sm font-bold text-navy">Before · from citizen</p>
+      <p className="mt-5 font-body text-sm font-bold text-navy">Before photo from the citizen</p>
       <div className="mt-2 flex h-32 items-center justify-center rounded-card bg-slate font-body text-sm font-semibold text-mint">
         Citizen photo
       </div>
 
       <p className="mt-5 font-body text-sm font-bold text-navy">
-        After-photo <span className="text-amber-dark">(required)</span>
+        After-photo <span className="text-danger">(required)</span>
       </p>
-      <label className="mt-2 flex h-36 cursor-pointer flex-col items-center justify-center overflow-hidden rounded-card border-2 border-dashed border-forest bg-white text-center">
+      {/* The file input covers the whole box (transparent), so the box is what
+          scrolls into view and shows the focus ring. */}
+      <label className="relative mt-2 flex h-36 cursor-pointer flex-col items-center justify-center overflow-hidden rounded-card border-2 border-dashed border-forest bg-white px-3 text-center focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-forest">
         {previewUrl ? (
           <img
             src={previewUrl}
@@ -86,7 +109,12 @@ export default function ResolvePanel({ issue, onSubmit }) {
             </span>
           </>
         )}
-        <input type="file" accept="image/*" className="sr-only" onChange={handleFile} />
+        <input
+          type="file"
+          accept="image/*"
+          className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
+          onChange={handleFile}
+        />
       </label>
 
       <label className="mt-5 block font-body text-sm font-bold text-navy" htmlFor="work-note">
@@ -98,23 +126,48 @@ export default function ResolvePanel({ issue, onSubmit }) {
         value={note}
         onChange={(e) => setNote(e.target.value)}
         placeholder="Filled and compacted. Surface sealed."
-        className="mt-2 w-full rounded-tile border border-navy/20 bg-white p-3 font-body text-sm text-navy placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-forest"
+        className="mt-2 w-full rounded-tile border border-navy/60 bg-white p-3 font-body text-sm text-navy placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-forest"
       />
-
-      <button
-        type="button"
-        disabled={!previewUrl}
-        onClick={() => onSubmit(issue.id, note)}
-        className={clsx(
-          'mt-5 w-full rounded-full bg-navy px-6 py-3.5 font-body text-base font-bold text-mint transition-opacity',
-          !previewUrl ? 'cursor-not-allowed opacity-40' : 'hover:opacity-90',
-        )}
-      >
-        Submit for verification
-      </button>
       <p className="mt-3 font-body text-sm text-muted">
         The issue stays In progress until the admin confirms the fix in the photo.
       </p>
+
+      {/* Stays on screen while the panel is in view: pinned to the bottom of
+          the panel (fit mode) or of the window (page scrolling). */}
+      <div data-toast-clearance className="sticky bottom-0 -mx-4 mt-4 border-t border-navy/10 bg-mint px-4 py-3 sm:-mx-6 sm:px-6 sm:pb-6">
+        <button
+          type="button"
+          disabled={busy}
+          aria-disabled={needsPhoto || undefined}
+          aria-describedby={describedBy || undefined}
+          onClick={() => {
+            if (needsPhoto) return
+            onSubmit(issue.id, { note, file })
+          }}
+          className={clsx(
+            'min-h-11 w-full rounded-full bg-navy px-6 py-3 font-body text-base font-bold text-mint transition-opacity motion-reduce:transition-none',
+            'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forest',
+            // ! beats the global "button:not(:disabled)" pointer rule in index.css.
+            needsPhoto || busy ? 'cursor-not-allowed! opacity-50' : 'hover:opacity-90',
+          )}
+        >
+          Submit for verification
+        </button>
+        {needsPhoto && (
+          <p id={NEEDS_PHOTO_ID} className="mt-2 font-body text-sm text-navy">
+            Add an after-photo to submit this fix.
+          </p>
+        )}
+        {error && (
+          <p
+            id={SUBMIT_ERROR_ID}
+            role="alert"
+            className="mt-2 min-w-0 break-words font-body text-sm font-bold text-danger"
+          >
+            {error}
+          </p>
+        )}
+      </div>
     </div>
   )
 }

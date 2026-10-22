@@ -40,7 +40,7 @@ export const heroSlides = [
     id: 'crew',
     badge: 'Photo proof to close',
     headline: ['Someone', 'is on it.'],
-    accent: ['Photo proof', 'closes every issue.'],
+    accent: ['Proof included.'],
     text: 'The department uploads an after-photo. An admin checks it before the issue can close. If the problem comes back, it reopens.',
     primary: { label: 'Report an issue', to: '/report' },
     secondary: { label: 'See fixed issues', to: '/feed' },

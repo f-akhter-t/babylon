@@ -1,9 +1,8 @@
-import { useEffect, useRef, useState } from 'react'
+import { useState } from 'react'
 import { latLng } from 'leaflet'
 import Button from '../../components/ui/Button'
 import StaircaseIcon from '../../components/ui/StaircaseIcon'
 import { ArrowUpIcon } from './MapIcons'
-import { animate, RISE_IN, SPRING } from './motion'
 
 const MATCH_RADIUS_M = 150
 
@@ -20,21 +19,15 @@ function nearestMatch(spot, issues) {
 }
 
 // Popup for the dropped pin: a duplicate warning first if a similar issue
-// is close by, otherwise "Report here".
+// is close by, otherwise "Report here". PopupShell places and animates it.
 export default function DraftCard({ spot, issues, onCancel, onUpvoteInstead }) {
-  const ref = useRef(null)
   const [dismissed, setDismissed] = useState(false) // "Mine is different"
   const match = dismissed ? null : nearestMatch(spot, issues)
-
-  useEffect(() => {
-    const card = ref.current?.closest('.leaflet-popup-content-wrapper')
-    animate(card, RISE_IN, { duration: 320, easing: SPRING })
-  }, [])
 
   if (match) {
     const { issue, meters } = match
     return (
-      <div ref={ref} className="flex flex-col gap-3 p-4 font-body text-navy">
+      <div className="flex flex-col gap-3 p-4 font-body text-navy">
         <div role="alert" className="flex flex-col gap-1.5 rounded-tile border-2 border-amber-dark bg-amber/20 p-3">
           <span className="flex items-center gap-2 font-heading text-base font-extrabold">
             <StaircaseIcon level={1} className="text-amber-dark" />
@@ -61,7 +54,7 @@ export default function DraftCard({ spot, issues, onCancel, onUpvoteInstead }) {
   const reportLink = `/report?lat=${spot.lat.toFixed(5)}&lng=${spot.lng.toFixed(5)}`
 
   return (
-    <div ref={ref} className="flex flex-col gap-3 p-4 font-body text-navy">
+    <div className="flex flex-col gap-3 p-4 font-body text-navy">
       <div className="flex flex-col gap-1">
         <h2 className="font-heading text-base font-extrabold leading-tight">
           Report an issue here?
