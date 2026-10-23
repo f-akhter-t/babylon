@@ -5,3 +5,4 @@ import { ADMIN_MESSAGES } from './admin.js'
 export const MSG = Object.freeze({
   ...ADMIN_MESSAGES,
 })
+export { COMMON } from './common.js'
