@@ -2,7 +2,7 @@
 
 Babylon is a civic issue reporting app for Chattogram. Citizens drop a pin on a map to report a problem such as a pothole, overflowing bins or a broken street light, then follow it until it is fixed. City departments work through the issues assigned to them, and an admin checks each fix against its photo before it is closed and keeps an eye on how every department is doing.
 
-> **Mock data.** There is no server yet. Every issue, account and report lives in the browser: sample data in `frontend/src/mock/`, and anything you create in `localStorage`, `sessionStorage` or IndexedDB. Clearing site data resets the app.
+> **Mock data, mostly.** Log-in, sign-up, log-out and change-password already talk to the backend (see "Frontend with the backend" below). Everything else is still mocked in the browser: sample data in `frontend/src/mock/`, and anything you create in `localStorage`, `sessionStorage` or IndexedDB. Each remaining function moves to the backend in its own step.
 
 ## Stack
 
@@ -32,6 +32,26 @@ Vite prints the local address, which is http://localhost:5173 by default.
 | `npm run build`   | Builds the production site into `frontend/dist`.   |
 | `npm run preview` | Serves the production build locally to check it.  |
 | `npm run lint`    | Runs ESLint over the frontend.                     |
+| `npm test`        | Runs the service tests (`frontend/tests/`).        |
+
+### Frontend with the backend
+
+Log-in, sign-up, log-out and change-password need the backend running. Start it first, then the frontend:
+
+```bash
+cd backend
+npm run seed:public   # the three demo accounts and the sample issues
+npm run dev           # http://localhost:5000
+```
+
+```bash
+cd frontend
+npm run dev           # http://localhost:5173
+```
+
+In development Vite forwards every `/api` request to `http://localhost:5000` (see `frontend/vite.config.js`), so there is nothing to configure. If your backend uses another port, change it there. For a deployed site, set `VITE_API_URL` to the backend address, for example `https://api.example.com/api`.
+
+All requests go through `frontend/src/services/http.js`. It adds the sign-in token, returns the reply's `data`, and turns every failure into an `Error` with `message`, `code` and (for forms) `field`.
 
 ### Backend
 
@@ -47,7 +67,7 @@ Every account uses the password `password123`.
 | Department | `roads@babylon.test`   | `/staff/login` |
 | Admin      | `admin@babylon.test`   | `/staff/login` |
 
-New staff accounts are created at `/staff/signup` with the access code `BABYLON-STAFF-2026`.
+Staff sign-up (`/staff/signup`) is closed for now: the backend only creates citizen accounts, and the staff-accounts step will bring it back.
 
 These accounts and the access code are for the demo only. They are not real credentials, and they are visible in the source on purpose. A real backend would give each staff member a personal invitation instead of one shared code.
 
