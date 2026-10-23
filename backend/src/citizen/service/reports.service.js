@@ -4,6 +4,7 @@ import Issue from '../../models/issue.model.js'
 import Vote from '../../models/vote.model.js'
 import AppError from '../../utils/AppError.js'
 import { notify, removeForIssue } from '../../shared/service/alerts.service.js'
+import { toIssueJSON, voteCounts, votedIssueIds } from '../../shared/service/issues.service.js'
 import { crossesLevel, levelFor, pointsFor } from '../../utils/points.js'
 import { CATEGORIES, CITIZEN_LIMITS } from '../../constants/limits.js'
 import { MESSAGES } from '../../constants/messages/citizen.js'
@@ -18,11 +19,25 @@ function makeTitle(description) {
   return title.charAt(0).toUpperCase() + title.slice(1)
 }
 
-// TEMP: replace with toIssueJSON from shared/service/issues.service.js (Farhana's kit).
-async function toReportJSON(issue) {
-  const votes = await Vote.countDocuments({ issueId: issue._id })
-  const { _id, __v, ...rest } = issue.toObject()
-  return { id: String(_id), ...rest, votes }
+// The owner's view of their own reports: the shared issue JSON plus the
+// history of fixes sent back.
+async function toMyReports(issues, email) {
+  const plain = issues.map((issue) => (typeof issue.toObject === 'function' ? issue.toObject() : issue))
+  const ids = plain.map((issue) => issue._id)
+  const [counts, voted] = await Promise.all([voteCounts(ids), votedIssueIds(ids, email)])
+  return plain.map((issue) => {
+    const json = toIssueJSON(issue, {
+      votes: counts.get(String(issue._id)) ?? 0,
+      voted: voted.has(String(issue._id)),
+      mine: true,
+    })
+    const history = issue.sentBackHistory ?? (issue.sentBack ? [issue.sentBack] : [])
+    return {
+      ...json,
+      sentBackHistory: history.map(({ reason, on }) => ({ reason, on })),
+      sentBackNow: Boolean(issue.sentBack),
+    }
+  })
 }
 
 // Every rule is checked here again, like a real backend, even if the form checked it.
@@ -68,7 +83,7 @@ export async function createReport(email, input = {}) {
   const description = check(input)
   const { category, photoUrl, location } = input
 
-  const before = await Issue.countDocuments({ reporterEmail: email })
+  const before = await Issue.countDocuments({ reporterEmail: clean(email) })
 
   const issue = await Issue.create({
     title: makeTitle(description),
@@ -82,28 +97,30 @@ export async function createReport(email, input = {}) {
     status: 'open',
     verification: 'none',
     priority: 'medium', // AI severity scoring plugs in here later (one clear hook)
-    reporterEmail: email,
+    reporterEmail: clean(email),
   })
 
-  await Vote.create({ issueId: issue._id, userEmail: email }) // the reporter's own vote
+  await Vote.create({ issueId: issue._id, userEmail: clean(email) }) // the reporter's own vote
   await notify(email, { kind: 'filed', text: MESSAGES.REPORT_FILED, issueId: issue._id })
 
   if (crossesLevel(before, before + 1)) {
     const { role } = levelFor(pointsFor(before + 1))
     await notify(email, { kind: 'level-up', text: MESSAGES.levelUp(role) })
   }
-  // TODO: notify the department's staff (kind 'new-report') once user.model exists.
+  // TODO: notify the department's staff (kind 'new-report') using user.model.
 
-  return toReportJSON(issue)
+  const [report] = await toMyReports([issue], email)
+  return report
 }
 
 export async function listMyReports(email) {
   const issues = await Issue.find({ reporterEmail: clean(email) }).sort({ createdAt: -1, _id: -1 })
-  return Promise.all(issues.map(toReportJSON))
+  return toMyReports(issues, email)
 }
 
 export async function getMyReport(email, id) {
-  return toReportJSON(await findOwned(email, id))
+  const [report] = await toMyReports([await findOwned(email, id)], email)
+  return report
 }
 
 export async function updateReport(email, id, input = {}) {
@@ -136,7 +153,8 @@ export async function updateReport(email, id, input = {}) {
     editedAt: new Date(),
   })
   await issue.save()
-  return toReportJSON(issue)
+  const [report] = await toMyReports([issue], email)
+  return report
 }
 
 export async function deleteReport(email, id) {
