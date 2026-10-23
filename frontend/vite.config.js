@@ -4,6 +4,11 @@ import tailwindcss from '@tailwindcss/vite'
 
 export default defineConfig({
   plugins: [react(), tailwindcss()],
+  server: {
+    // The browser calls /api on this server and Vite forwards it to the Express
+    // backend (backend/.env PORT, 5000 by default). No CORS, no second address.
+    proxy: { '/api': 'http://localhost:5000' },
+  },
   build: {
     rolldownOptions: {
       output: {
