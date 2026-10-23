@@ -1,10 +1,9 @@
+import Issue from '../../models/issue.model.js'
 import AppError from '../../utils/AppError.js'
 import { CATEGORY_DEPARTMENT } from '../../constants/departments.js'
 import { MSG } from '../../constants/messages/index.js'
 
-// Reopened issues belong to the admin until they decide. Skip them here.
-export const NOT_REOPENED = { $nor: [{ verification: 'reopened' }, { priority: 'reopened' }] }
-
+// Reopened issues belong to the admin until they decide. The department skips them.
 export const isReopened = (issue) => issue.verification === 'reopened' || issue.priority === 'reopened'
 
 export const departmentOfIssue = (issue) => CATEGORY_DEPARTMENT[issue.category] ?? null
@@ -20,8 +19,12 @@ function categoriesFor(department) {
     .map(([category]) => category)
 }
 
-export function scopeFilter(department, scope) {
+// The one place that decides which issues a department sees.
+// The list and the summary both use it, so their counts always match.
+// "projection" picks the fields to load (the summary does not need photos).
+export async function loadScope(department, scope, projection) {
   const category = { $in: categoriesFor(department) }
-  if (scope === 'completed') return { category, status: 'resolved', ...NOT_REOPENED }
-  return { category, status: { $in: ['open', 'in-progress'] }, ...NOT_REOPENED }
+  const status = scope === 'completed' ? 'resolved' : { $in: ['open', 'in-progress'] }
+  const issues = await Issue.find({ category, status }).select(projection).lean()
+  return issues.filter((issue) => !isReopened(issue))
 }

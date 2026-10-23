@@ -8,7 +8,7 @@ import { ROLES } from '../../constants/roles.js'
 import { MSG } from '../../constants/messages/index.js'
 import { toIssueJSON } from '../../shared/service/issues.service.js'
 import { notify, notifyMany } from '../../shared/service/alerts.service.js'
-import { NOT_REOPENED, departmentOfIssue, isReopened, requireDepartment, scopeFilter } from './scope.js'
+import { departmentOfIssue, isReopened, loadScope, requireDepartment } from './scope.js'
 
 // What the department pages read: the public issue plus two staff details.
 const staffView = (issue) => ({
@@ -40,7 +40,7 @@ async function findOwnedIssue(user, id) {
 export async function listIssues(user, scope) {
   const department = requireDepartment(user)
   // pendingAfterImg is a big photo. The list does not need it.
-  const issues = await Issue.find(scopeFilter(department, scope)).select('-pendingAfterImg').lean()
+  const issues = await loadScope(department, scope, '-pendingAfterImg')
   return rankIssues(issues.map(staffView)).map((item, index) => ({ ...item, rank: index + 1 }))
 }
 
@@ -51,8 +51,9 @@ export async function startWork(user, id) {
   if (isReopened(issue)) throw new AppError('conflict', 409, MSG.deptIsReopened)
   if (issue.status !== 'open') throw new AppError('conflict', 409, MSG.deptAlreadyStarted)
 
+  // The filter names the state we expect, so two quick clicks cannot both win.
   const updated = await Issue.findOneAndUpdate(
-    { _id: issue._id, status: 'open', ...NOT_REOPENED },
+    { _id: issue._id, status: 'open' },
     { $set: { status: 'in-progress', startedAt: new Date() } },
     { returnDocument: 'after' },
   )
@@ -82,8 +83,9 @@ export async function submitFix(user, id, { note, photoUrl }) {
   if (issue.verification === 'awaiting') throw new AppError('conflict', 409, MSG.deptAlreadySubmitted)
 
   const now = new Date()
+  // In progress and verification "none" means: started, and not waiting or reopened.
   const updated = await Issue.findOneAndUpdate(
-    { _id: issue._id, status: 'in-progress', verification: { $ne: 'awaiting' }, ...NOT_REOPENED },
+    { _id: issue._id, status: 'in-progress', verification: 'none' },
     {
       $set: {
         verification: 'awaiting',
@@ -99,14 +101,13 @@ export async function submitFix(user, id, { note, photoUrl }) {
     .lean()
   if (!updated) throw new AppError('conflict', 409, MSG.deptAlreadySubmitted)
 
-  const link = `/my-reports?report=${updated._id}`
   const issueId = String(updated._id)
   if (updated.reporterEmail) {
     await tell(() =>
       notify(updated.reporterEmail, {
         kind: 'fix-submitted',
         text: MSG.deptSubmittedForReporter(updated.title),
-        link,
+        link: `/my-reports?report=${issueId}`,
         issueId,
       }),
     )
