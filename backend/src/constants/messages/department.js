@@ -1,0 +1,22 @@
+// Department panel sentences. Keys start with "dept" so they never clash with other panels.
+export const DEPARTMENT_MESSAGES = {
+  deptIssuesLoaded: 'Your department issues are loaded.',
+  deptSummaryLoaded: 'Your department summary is loaded.',
+  deptStarted: 'Work has started on this issue.',
+  deptSubmitted: 'The fix was sent to the admin for checking.',
+  deptIssueGone: 'We could not find that issue.',
+  deptNotYours: 'This issue belongs to another department.',
+  deptAlreadyStarted: 'Work on this issue has already started.',
+  deptIsReopened: 'This issue was reopened. An admin must review it first.',
+  deptNotStarted: 'Start work on this issue before you send a fix.',
+  deptAlreadySubmitted: 'This fix is already waiting for the admin.',
+  deptScopeInvalid: 'Choose assigned or completed.',
+  deptStatusInvalid: 'Only "in-progress" is allowed here.',
+  deptPhotoNeeded: 'Add a photo of the finished fix.',
+  deptPhotoInvalid: 'The photo is not valid.',
+  deptPhotoTooLarge: 'The photo is too large.',
+  deptNoteTooLong: 'The note is too long.',
+  deptStartedForReporter: (title) => `Work has started on "${title}".`,
+  deptSubmittedForReporter: (title) => `The department sent a fix for "${title}". An admin will check it.`,
+  deptSubmittedForAdmin: (title) => `A fix for "${title}" is waiting for your check.`,
+}
