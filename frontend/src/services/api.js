@@ -3,13 +3,11 @@
 // because every function is already async.
 
 import { CATEGORIES, issues as rawIssues, MAP_CENTER } from '../mock/issues'
-import { heroSlides, heroSearchCategories } from '../mock/heroSlides'
 import {
   ACCOUNTABILITY_PERIODS,
   CATEGORY_DEPARTMENT,
   DEFAULT_PERIOD_WEEKS,
   DEPARTMENT_CODES,
-  departments,
   EMPLOYEE_ROSTER,
   departmentsByPeriod,
   waitingLongest,
@@ -761,29 +759,14 @@ export async function deleteIssue(id, email) {
 }
 
 // ---------- Home ----------
-
-export async function getHeroSlides() {
-  return heroSlides
-}
-export async function getHeroCategories() {
-  return heroSearchCategories
-}
-// Only issues with an after-photo: a reopened issue approved again has none.
-export async function getFixedThisWeek() {
-  return all.filter((issue) => issue.status === 'resolved' && issue.afterImg).slice(0, 3)
-}
-// Newest reports first. Used by the ticker on Home.
-export async function getRecentActivity(limit = 8) {
-  return [...all]
-    .sort((a, b) => ageMs(a) - ageMs(b))
-    .slice(0, limit)
-    .map((issue) => ({
-      id: issue.id,
-      title: issue.title,
-      status: issue.status,
-      time: timeAgo(issue),
-    }))
-}
+// Served by the backend now (publicApi.js). Pages still import them from here.
+export {
+  getFixedThisWeek,
+  getHeroCategories,
+  getHeroSlides,
+  getRecentActivity,
+  getStats,
+} from './publicApi'
 
 // The stat cards, from department rows: totals, and averages weighted by the
 // number resolved. Only these two averages are rounded (one decimal).
@@ -798,11 +781,6 @@ function statsFrom(rows) {
     avgDays: Math.round(avgDays * 10) / 10,
     reopenedPercent: Math.round((reopened / resolved) * 1000) / 10,
   }
-}
-
-// Home's figures: always the last 8 weeks (228, 176, 4.3 days, 4.5%).
-export async function getStats() {
-  return statsFrom(departments)
 }
 
 // ---------- Department panel ----------
