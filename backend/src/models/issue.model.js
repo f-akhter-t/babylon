@@ -42,6 +42,8 @@ const issueSchema = new mongoose.Schema(
     afterImg: { type: String },
     pendingAfterImg: { type: String },
     departmentNote: { type: String },
+    // Shown on the issue page: "A pothole here was marked resolved in August."
+    seenBefore: { type: String },
 
     // Admin sends a fix back: the latest reason, and every reason in order.
     sentBack: { type: sentBackSchema, default: undefined },
@@ -49,12 +51,14 @@ const issueSchema = new mongoose.Schema(
 
     // Lifecycle times. The *On fields are short display dates ("24 Sep").
     startedAt: { type: Date },
+    startedOn: { type: String },
     submittedAt: { type: Date },
     submittedOn: { type: String },
     resolvedAt: { type: Date },
     resolvedOn: { type: String },
     fixedInDays: { type: Number },
     reopenedAt: { type: Date },
+    reopenedFrom: { type: String },
     editedAt: { type: Date },
   },
   { timestamps: true, versionKey: false },
