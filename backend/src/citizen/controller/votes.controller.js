@@ -5,7 +5,7 @@ import { MESSAGES } from '../../constants/messages/citizen.js'
 export async function addVote(req, res, next) {
   try {
     const data = await service.addVote(req.user.email, req.params.id)
-    return success(res, 200, MESSAGES.VOTE_ADDED, data)
+    return success(res, MESSAGES.VOTE_ADDED, data)
   } catch (err) {
     return next(err)
   }
@@ -14,7 +14,7 @@ export async function addVote(req, res, next) {
 export async function removeVote(req, res, next) {
   try {
     const data = await service.removeVote(req.user.email, req.params.id)
-    return success(res, 200, MESSAGES.VOTE_REMOVED, data)
+    return success(res, MESSAGES.VOTE_REMOVED, data)
   } catch (err) {
     return next(err)
   }

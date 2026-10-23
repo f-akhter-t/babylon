@@ -7,7 +7,7 @@ import { MESSAGES } from '../../constants/messages/citizen.js'
 export async function createReport(req, res, next) {
   try {
     const report = await service.createReport(req.user.email, req.body)
-    return success(res, 201, MESSAGES.REPORT_CREATED, report)
+    return success(res, MESSAGES.REPORT_CREATED, report, 201)
   } catch (err) {
     return next(err)
   }
@@ -16,7 +16,7 @@ export async function createReport(req, res, next) {
 export async function listMyReports(req, res, next) {
   try {
     const reports = await service.listMyReports(req.user.email)
-    return success(res, 200, MESSAGES.REPORTS_LISTED, reports)
+    return success(res, MESSAGES.REPORTS_LISTED, reports)
   } catch (err) {
     return next(err)
   }
@@ -25,7 +25,7 @@ export async function listMyReports(req, res, next) {
 export async function getMyReport(req, res, next) {
   try {
     const report = await service.getMyReport(req.user.email, req.params.id)
-    return success(res, 200, MESSAGES.REPORT_LOADED, report)
+    return success(res, MESSAGES.REPORT_LOADED, report)
   } catch (err) {
     return next(err)
   }
@@ -34,7 +34,7 @@ export async function getMyReport(req, res, next) {
 export async function updateReport(req, res, next) {
   try {
     const report = await service.updateReport(req.user.email, req.params.id, req.body)
-    return success(res, 200, MESSAGES.REPORT_UPDATED, report)
+    return success(res, MESSAGES.REPORT_UPDATED, report)
   } catch (err) {
     return next(err)
   }
@@ -43,7 +43,7 @@ export async function updateReport(req, res, next) {
 export async function deleteReport(req, res, next) {
   try {
     const result = await service.deleteReport(req.user.email, req.params.id)
-    return success(res, 200, MESSAGES.REPORT_DELETED, result)
+    return success(res, MESSAGES.REPORT_DELETED, result)
   } catch (err) {
     return next(err)
   }

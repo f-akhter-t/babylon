@@ -7,3 +7,4 @@ export const MSG = Object.freeze({
   ...ADMIN_MESSAGES,
   ...CITIZEN_MESSAGES,
 })
+export { COMMON } from './common.js'
