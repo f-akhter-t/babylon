@@ -1,0 +1,1192 @@
+{
+  "info": {
+    "name": "Babylon: Admin panel",
+    "description": "Meheri's 11 admin endpoints. Before running: npm run seed:admin, then paste three tokens into the collection variables (npm run token -- admin, npm run token -- department, npm run token -- citizen). Run the folders in order with the Collection Runner. Re-run npm run seed:admin before every full run.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:5000"
+    },
+    {
+      "key": "adminToken",
+      "value": ""
+    },
+    {
+      "key": "departmentToken",
+      "value": ""
+    },
+    {
+      "key": "citizenToken",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "0. Setup: read the seeded data (run first, on a fresh npm run seed:admin)",
+      "item": [
+        {
+          "name": "Counts",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('3 waiting, 1 reopened', () => { pm.expect(body.data.queue).to.eql(3); pm.expect(body.data.reopened).to.eql(1); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/counts",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "counts"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Queue (save ids)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('3 fixes, newest first', () => { pm.expect(body.data).to.have.length(3); const t = body.data.map(i => new Date(i.submittedAt).getTime()); pm.expect(t).to.eql([...t].sort((a, b) => b - a)); });",
+                  "pm.collectionVariables.set('fixA', body.data[0].id); pm.collectionVariables.set('fixB', body.data[1].id); pm.collectionVariables.set('fixC', body.data[2].id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/verification-queue",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "verification-queue"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Reopened (save id)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('1 reopened', () => pm.expect(body.data).to.have.length(1)); pm.collectionVariables.set('reopenedId', body.data[0].id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/reopened",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "reopened"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Identity queue (save ids)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('4 waiting, oldest first, last 4 digits only', () => { pm.expect(body.data).to.have.length(4); pm.expect(body.data.map(i => i.nidLast4)).to.eql(['4821', '9034', '7390', '1156']); pm.expect(JSON.stringify(body)).to.not.include('photo'); });",
+                  "pm.collectionVariables.set('idPhoto', body.data[0].id); pm.collectionVariables.set('idNoPhoto', body.data[1].id); pm.collectionVariables.set('idOk', body.data[2].id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/identity",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "identity"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "1. Access",
+      "item": [
+        {
+          "name": "No token: 401",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 401', () => pm.response.to.have.status(401));",
+                  "pm.test('code is unauthorized', () => pm.expect(pm.response.json().code).to.eql('unauthorized'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/counts",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "counts"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Citizen token: 403",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 403', () => pm.response.to.have.status(403));",
+                  "pm.test('code is forbidden', () => pm.expect(pm.response.json().code).to.eql('forbidden'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{citizenToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/counts",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "counts"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Department token: 403",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 403', () => pm.response.to.have.status(403));",
+                  "pm.test('code is forbidden', () => pm.expect(pm.response.json().code).to.eql('forbidden'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{departmentToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/verification-queue",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "verification-queue"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Verification",
+      "item": [
+        {
+          "name": "Approve fix A",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('resolved and verified', () => { pm.expect(body.data.status).to.eql('resolved'); pm.expect(body.data.verification).to.eql('verified'); pm.expect(body.data.priority).to.eql('fix-verified'); pm.expect(body.data.afterImg).to.be.a('string'); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/issues/{{fixA}}/approve",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "issues",
+                "{{fixA}}",
+                "approve"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Approve fix A again: 409",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 409', () => pm.response.to.have.status(409));",
+                  "pm.test('code is conflict', () => pm.expect(pm.response.json().code).to.eql('conflict'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/issues/{{fixA}}/approve",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "issues",
+                "{{fixA}}",
+                "approve"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Approve unknown id: 404",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 404', () => pm.response.to.have.status(404));",
+                  "pm.test('code is not-found', () => pm.expect(pm.response.json().code).to.eql('not-found'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/issues/64b7f0a1c2d3e4f5a6b7c8d9/approve",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "issues",
+                "64b7f0a1c2d3e4f5a6b7c8d9",
+                "approve"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Reject fix B without a reason: 400",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 400', () => pm.response.to.have.status(400));",
+                  "pm.test('code is invalid', () => pm.expect(pm.response.json().code).to.eql('invalid'));",
+                  "pm.test('field is reason', () => pm.expect(pm.response.json().field).to.eql('reason'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/issues/{{fixB}}/reject",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "issues",
+                "{{fixB}}",
+                "reject"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Reject fix B with a reason",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('back to in progress with the reason kept', () => { pm.expect(body.data.verification).to.eql('none'); pm.expect(body.data.status).to.eql('in-progress'); pm.expect(body.data.sentBack.reason).to.include('still there'); pm.expect(body.data.sentBackHistory).to.have.length(1); pm.expect(body.data.pendingAfterImg).to.be.oneOf([undefined, null]); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"The pothole is still there after the patch.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/issues/{{fixB}}/reject",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "issues",
+                "{{fixB}}",
+                "reject"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Reject fix B again: 409",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 409', () => pm.response.to.have.status(409));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"Again\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/issues/{{fixB}}/reject",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "issues",
+                "{{fixB}}",
+                "reject"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Send fix C to queue (not reopened): 409",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 409', () => pm.response.to.have.status(409));",
+                  "pm.test('code is conflict', () => pm.expect(pm.response.json().code).to.eql('conflict'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/issues/{{fixC}}/send-to-queue",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "issues",
+                "{{fixC}}",
+                "send-to-queue"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Send the reopened issue to the queue",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('waiting, still reopened priority', () => { pm.expect(body.data.verification).to.eql('awaiting'); pm.expect(body.data.priority).to.eql('reopened'); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/issues/{{reopenedId}}/send-to-queue",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "issues",
+                "{{reopenedId}}",
+                "send-to-queue"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Counts after the decisions",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('queue 2 (C and the reopened one), reopened 0', () => { pm.expect(body.data.queue).to.eql(2); pm.expect(body.data.reopened).to.eql(0); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/counts",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "counts"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Accountability",
+      "item": [
+        {
+          "name": "8 weeks",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('cards equal the sum of the rows', () => { const d = body.data; pm.expect(d.departments).to.have.length(4); pm.expect(d.stats.received).to.eql(d.departments.reduce((n, r) => n + r.assigned, 0)); pm.expect(d.stats.resolved).to.eql(d.departments.reduce((n, r) => n + r.resolved, 0)); });",
+                  "pm.test('weekly has 8 entries that add up', () => { const d = body.data; pm.expect(d.weekly).to.have.length(8); pm.expect(d.weekly.reduce((n, w) => n + w.received, 0)).to.eql(d.stats.received); });",
+                  "pm.test('waiting longest is longest first', () => { const days = body.data.waitingLongest.map(w => w.days); pm.expect(days).to.eql([...days].sort((a, b) => b - a)); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/accountability?weeks=8",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "accountability"
+              ],
+              "query": [
+                {
+                  "key": "weeks",
+                  "value": "8"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "4 weeks",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('4 entries', () => { pm.expect(body.data.weekly).to.have.length(4); pm.expect(body.data.label).to.eql('Last 4 weeks'); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/accountability?weeks=4",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "accountability"
+              ],
+              "query": [
+                {
+                  "key": "weeks",
+                  "value": "4"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "No period (defaults to 8)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('8 weeks', () => pm.expect(body.data.weeks).to.eql(8));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/accountability",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "accountability"
+              ]
+            }
+          }
+        },
+        {
+          "name": "6 weeks: 400",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 400', () => pm.response.to.have.status(400));",
+                  "pm.test('code is invalid', () => pm.expect(pm.response.json().code).to.eql('invalid'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/accountability?weeks=6",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "accountability"
+              ],
+              "query": [
+                {
+                  "key": "weeks",
+                  "value": "6"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Identity",
+      "item": [
+        {
+          "name": "Photo of a pending submission",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('is an image, never cached', () => { pm.expect(pm.response.headers.get('Content-Type')).to.include('image/'); pm.expect(pm.response.headers.get('Cache-Control')).to.include('no-store'); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/identity/{{idPhoto}}/photo",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "identity",
+                "{{idPhoto}}",
+                "photo"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Photo of a submission without one: 404",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 404', () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/identity/{{idNoPhoto}}/photo",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "identity",
+                "{{idNoPhoto}}",
+                "photo"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Reject with a 3-character reason: 400",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 400', () => pm.response.to.have.status(400));",
+                  "pm.test('code is invalid', () => pm.expect(pm.response.json().code).to.eql('invalid'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"decision\": \"reject\",\n  \"reason\": \"bad\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/identity/{{idPhoto}}/review",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "identity",
+                "{{idPhoto}}",
+                "review"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Reject with a reason",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('rejected and the photo is deleted', () => { pm.expect(body.data.status).to.eql('rejected'); pm.expect(body.data.photoDeleted).to.eql(true); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"decision\": \"reject\",\n  \"reason\": \"The card photo is blurry.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/identity/{{idPhoto}}/review",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "identity",
+                "{{idPhoto}}",
+                "review"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Photo after the review: 404",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 404', () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/identity/{{idPhoto}}/photo",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "identity",
+                "{{idPhoto}}",
+                "photo"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Review the same one again: 409",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 409', () => pm.response.to.have.status(409));",
+                  "pm.test('code is conflict', () => pm.expect(pm.response.json().code).to.eql('conflict'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"decision\": \"approve\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/identity/{{idPhoto}}/review",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "identity",
+                "{{idPhoto}}",
+                "review"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Approve one without a photo: 409",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 409', () => pm.response.to.have.status(409));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"decision\": \"approve\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/identity/{{idNoPhoto}}/review",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "identity",
+                "{{idNoPhoto}}",
+                "review"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Approve one with a photo",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('verified', () => pm.expect(body.data.status).to.eql('verified'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"decision\": \"approve\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/identity/{{idOk}}/review",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "identity",
+                "{{idOk}}",
+                "review"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Identity count",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('2 left (the no-photo one and the newest)', () => pm.expect(body.data.count).to.eql(2));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/identity/count",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "identity",
+                "count"
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
