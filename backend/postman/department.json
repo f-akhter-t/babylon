@@ -1,0 +1,131 @@
+{
+  "info": {
+    "name": "Babylon: Department and Citizen Profile",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:5000/api" },
+    { "key": "deptToken", "value": "" },
+    { "key": "citizenToken", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "1 No token gives 401",
+      "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+        "pm.test('401', () => pm.response.to.have.status(401));"
+      ] } }],
+      "request": { "method": "GET", "header": [], "url": "{{baseUrl}}/department/issues" }
+    },
+    {
+      "name": "2 Citizen token on department route gives 403",
+      "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+        "pm.test('403', () => pm.response.to.have.status(403));"
+      ] } }],
+      "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{citizenToken}}" }], "url": "{{baseUrl}}/department/issues" }
+    },
+    {
+      "name": "3 Assigned list: 3 issues, ranked, no Waste",
+      "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+        "const d = pm.response.json().data;",
+        "pm.test('200', () => pm.response.to.have.status(200));",
+        "pm.test('3 issues', () => pm.expect(d.length).to.eql(3));",
+        "pm.test('no Waste, no reopened', () => pm.expect(d.every(i => i.category !== 'Waste' && i.verification !== 'reopened')).to.eql(true));",
+        "pm.test('ranks 1 to n', () => pm.expect(d.map(i => i.rank)).to.eql([1, 2, 3]));",
+        "pm.test('footbridge first', () => pm.expect(d[0].title).to.eql('Cracked footbridge rail'));"
+      ] } }],
+      "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{deptToken}}" }], "url": "{{baseUrl}}/department/issues?scope=assigned" }
+    },
+    {
+      "name": "4 Completed list: 1 resolved issue",
+      "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+        "const d = pm.response.json().data;",
+        "pm.test('1 resolved', () => pm.expect(d.length).to.eql(1));",
+        "pm.test('is resolved', () => pm.expect(d[0].status).to.eql('resolved'));"
+      ] } }],
+      "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{deptToken}}" }], "url": "{{baseUrl}}/department/issues?scope=completed" }
+    },
+    {
+      "name": "5 Bad scope gives 400",
+      "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+        "pm.test('400', () => pm.response.to.have.status(400));",
+        "pm.test('invalid code', () => pm.expect(pm.response.json().code).to.eql('invalid'));"
+      ] } }],
+      "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{deptToken}}" }], "url": "{{baseUrl}}/department/issues?scope=nonsense" }
+    },
+    {
+      "name": "6 Summary equals the list",
+      "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+        "const d = pm.response.json().data;",
+        "pm.test('counts', () => pm.expect([d.assigned, d.open, d.inProgress, d.awaiting, d.completed]).to.eql([3, 2, 1, 0, 1]));"
+      ] } }],
+      "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{deptToken}}" }], "url": "{{baseUrl}}/department/summary" }
+    },
+    {
+      "name": "7 Start work: first call 200",
+      "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+        "const d = pm.response.json().data;",
+        "pm.test('200', () => pm.response.to.have.status(200));",
+        "pm.test('in progress', () => pm.expect(d.status).to.eql('in-progress'));",
+        "pm.test('has startedAt', () => pm.expect(d.startedAt).to.be.a('string'));"
+      ] } }],
+      "request": { "method": "PATCH", "header": [{ "key": "Authorization", "value": "Bearer {{deptToken}}" }, { "key": "Content-Type", "value": "application/json" }], "url": "{{baseUrl}}/department/issues/a1b2c3000000000000000001/status", "body": { "mode": "raw", "raw": "{\"status\":\"in-progress\"}" } }
+    },
+    {
+      "name": "8 Start work: second call 409",
+      "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+        "pm.test('409', () => pm.response.to.have.status(409));",
+        "pm.test('conflict code', () => pm.expect(pm.response.json().code).to.eql('conflict'));"
+      ] } }],
+      "request": { "method": "PATCH", "header": [{ "key": "Authorization", "value": "Bearer {{deptToken}}" }, { "key": "Content-Type", "value": "application/json" }], "url": "{{baseUrl}}/department/issues/a1b2c3000000000000000001/status", "body": { "mode": "raw", "raw": "{\"status\":\"in-progress\"}" } }
+    },
+    {
+      "name": "9 Start work on a Waste issue gives 403",
+      "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+        "pm.test('403', () => pm.response.to.have.status(403));"
+      ] } }],
+      "request": { "method": "PATCH", "header": [{ "key": "Authorization", "value": "Bearer {{deptToken}}" }, { "key": "Content-Type", "value": "application/json" }], "url": "{{baseUrl}}/department/issues/a1b2c3000000000000000004/status", "body": { "mode": "raw", "raw": "{\"status\":\"in-progress\"}" } }
+    },
+    {
+      "name": "10 Submit without a photo gives 400",
+      "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+        "pm.test('400', () => pm.response.to.have.status(400));"
+      ] } }],
+      "request": { "method": "POST", "header": [{ "key": "Authorization", "value": "Bearer {{deptToken}}" }, { "key": "Content-Type", "value": "application/json" }], "url": "{{baseUrl}}/department/issues/a1b2c3000000000000000002/submit", "body": { "mode": "raw", "raw": "{\"note\":\"Patched\"}" } }
+    },
+    {
+      "name": "11 Submit with a photo gives 200",
+      "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+        "const d = pm.response.json().data;",
+        "pm.test('200', () => pm.response.to.have.status(200));",
+        "pm.test('awaiting admin', () => pm.expect(d.verification).to.eql('awaiting'));",
+        "pm.test('note saved', () => pm.expect(d.departmentNote).to.eql('Patched'));"
+      ] } }],
+      "request": { "method": "POST", "header": [{ "key": "Authorization", "value": "Bearer {{deptToken}}" }, { "key": "Content-Type", "value": "application/json" }], "url": "{{baseUrl}}/department/issues/a1b2c3000000000000000002/submit", "body": { "mode": "raw", "raw": "{\"note\":\"Patched\",\"photoUrl\":\"data:image/png;base64,iVBORw0KGgo=\"}" } }
+    },
+    {
+      "name": "12 Submit again gives 409",
+      "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+        "pm.test('409', () => pm.response.to.have.status(409));"
+      ] } }],
+      "request": { "method": "POST", "header": [{ "key": "Authorization", "value": "Bearer {{deptToken}}" }, { "key": "Content-Type", "value": "application/json" }], "url": "{{baseUrl}}/department/issues/a1b2c3000000000000000002/submit", "body": { "mode": "raw", "raw": "{\"note\":\"Patched\",\"photoUrl\":\"data:image/png;base64,iVBORw0KGgo=\"}" } }
+    },
+    {
+      "name": "13 Citizen profile gives 200, no NID photo",
+      "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+        "const d = pm.response.json().data;",
+        "pm.test('200', () => pm.response.to.have.status(200));",
+        "pm.test('division Dhaka', () => pm.expect(d.division).to.eql('Dhaka'));",
+        "pm.test('identity none', () => pm.expect(d.identity.status).to.eql('none'));",
+        "pm.test('no photo or hash', () => pm.expect(JSON.stringify(d)).to.not.match(/photo|passwordHash/));"
+      ] } }],
+      "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{citizenToken}}" }], "url": "{{baseUrl}}/citizen/profile" }
+    },
+    {
+      "name": "14 Profile with a department token gives 403",
+      "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+        "pm.test('403', () => pm.response.to.have.status(403));"
+      ] } }],
+      "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{deptToken}}" }], "url": "{{baseUrl}}/citizen/profile" }
+    }
+  ]
+}
