@@ -19,4 +19,9 @@ export const MESSAGES = {
   VOTE_CLOSED: 'This issue is resolved, so voting is closed.',
   ME_LOADED: 'Your profile summary.',
   POINTS_LOADED: 'Your points.',
+  ALERTS_LISTED: 'Your notices.',
+  ALERTS_UNREAD_COUNT: 'Unread notices counted.',
+  ALERT_MARKED_READ: 'Notice marked as read.',
+  ALERTS_ALL_READ: 'All notices marked as read.',
+  ALERT_NOT_FOUND: 'We could not find that notice.',
 }
