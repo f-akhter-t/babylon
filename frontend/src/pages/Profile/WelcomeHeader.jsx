@@ -19,7 +19,7 @@ export default function WelcomeHeader({ name, profile, onSkip }) {
           {`Welcome to Babylon, ${name}`}
         </h1>
         <p className="mt-2 font-body text-base text-navy">
-          Let&apos;s set up your profile. Start with your name and ward.
+          Let&apos;s set up your profile. Start with your name and division.
         </p>
         <p className="mt-1 font-body text-sm text-slate">
           Verifying your phone and identity is optional. You can do it any time from your

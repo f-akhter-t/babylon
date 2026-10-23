@@ -4,14 +4,15 @@ import ProfileCard from './ProfileCard'
 import TextField from './TextField'
 import FormNotice from './FormNotice'
 import { saveProfile } from '../../services/api'
-import { ADDRESS_MAX, NAME_MAX, WARDS, checkDetails } from '../../utils/profileRules'
+import { ADDRESS_MAX, NAME_MAX, checkDetails } from '../../utils/profileRules'
+import { DIVISIONS } from '../../utils/divisions'
 
-const FIELDS = ['name', 'address', 'ward']
+const FIELDS = ['name', 'address', 'division']
 
 const fromProfile = (profile) => ({
   name: profile.name,
   address: profile.address,
-  ward: profile.ward,
+  division: profile.division,
 })
 
 // onStateChange({ dirty, canSave, saving }) lets the page show the phone
@@ -74,7 +75,7 @@ export default function PersonalDetailsCard({ profile, formId, onStateChange, an
     <ProfileCard
       id="profile-details"
       title="Personal details"
-      intro="Departments see your name on your reports. Your address and ward help them find you."
+      intro="Departments see your name on your reports. Your division decides where you can report: only inside your own division."
     >
       <form
         id={formId}
@@ -120,22 +121,22 @@ export default function PersonalDetailsCard({ profile, formId, onStateChange, an
         />
 
         <TextField
-          id="profile-ward"
-          label="Ward"
+          id="profile-division"
+          label="Division"
           as="select"
-          value={form.ward}
-          onChange={(e) => update('ward', e.target.value)}
-          onBlur={() => blur('ward')}
-          error={shown('ward')}
-          hint="Chattogram City Corporation ward where you live."
+          value={form.division}
+          onChange={(e) => update('division', e.target.value)}
+          onBlur={() => blur('division')}
+          error={shown('division')}
+          hint="You can report problems only inside this division."
           className="sm:max-w-xs"
         >
           <option value="" disabled>
-            Choose your ward
+            Choose your division
           </option>
-          {WARDS.map((ward) => (
-            <option key={ward} value={ward}>
-              {ward}
+          {DIVISIONS.map((division) => (
+            <option key={division} value={division}>
+              {division}
             </option>
           ))}
         </TextField>

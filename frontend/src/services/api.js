@@ -18,6 +18,7 @@ import {
 import { earnPoints } from '../mock/user'
 import { sampleIdentitySubmissions } from '../mock/identitySubmissions'
 import { distanceInMeters } from '../utils/geo'
+import { checkReportDivision } from '../utils/divisions'
 import { prepareIdPhoto, UNREADABLE_PHOTO } from '../utils/idPhoto'
 import {
   deleteOtherPhotos,
@@ -524,12 +525,17 @@ export async function getIssueById(id) {
   return issue ? ownerDetails(present(issue)) : null
 }
 
-// A citizen's new report. location is { lat, lng, label, ward }.
+// A citizen's new report. location is { lat, lng, label, ward, division }.
+// The pin must be inside the division the citizen chose in their profile
+// (checked here again, the way the backend will).
 // reporter is the logged-in account's name (pass session.name). The owner is
 // the logged-in account's email, read here the way a backend reads its login.
 // photoUrl is a (small) data URL of the photo. Severity is a placeholder
 // ('medium') until the AI severity engine exists.
 export async function createIssue({ category, description, photoUrl, location, reporter }) {
+  const divisionProblem = checkReportDivision(citizenDivision(getSession()?.email), location.division)
+  if (divisionProblem) throw new Error(divisionProblem)
+
   const today = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
 
   const issue = {
@@ -543,6 +549,7 @@ export async function createIssue({ category, description, photoUrl, location, r
     votes: 1,
     location: location.label,
     ward: location.ward ?? '',
+    division: location.division,
     distanceM: Math.round(
       distanceInMeters(MAP_CENTER, [location.lat, location.lng]),
     ),
@@ -650,7 +657,8 @@ export async function getIssueForEdit(id) {
 
 // changes: { title, description, category, photoUrl, location }.
 // photoUrl: a new (small) data URL, or undefined to keep the photo.
-// location: { lat, lng, label, ward }, or undefined to keep the pin.
+// location: { lat, lng, label, ward, division }, or undefined to keep the pin.
+// A new pin must be inside the citizen's own division.
 // Throws an Error with code 'not-found' | 'forbidden' | 'locked' | 'invalid' | 'storage'.
 export async function updateIssue(id, changes) {
   await wait()
@@ -677,6 +685,10 @@ export async function updateIssue(id, changes) {
     photoUrl !== null &&
     (!location || (Number.isFinite(location.lat) && Number.isFinite(location.lng)))
   if (!valid) throw editError('invalid', 'Some details are not valid. Please check the form.')
+  if (location) {
+    const divisionProblem = checkReportDivision(citizenDivision(session.email), location.division)
+    if (divisionProblem) throw editError('invalid', divisionProblem)
+  }
 
   const key = String(issue.id)
   const edit = { ...edits[key], title, description, category, editedAt: new Date().toISOString() }
@@ -687,6 +699,7 @@ export async function updateIssue(id, changes) {
       lng: location.lng,
       location: location.label,
       ward: location.ward ?? '',
+      division: location.division,
       distanceM: Math.round(distanceInMeters(MAP_CENTER, [location.lat, location.lng])),
     })
   }
@@ -1139,6 +1152,12 @@ const STAFF_DEMO_PROFILES = {
   },
 }
 
+// The division a citizen chose in their profile, or '' if none yet.
+function citizenDivision(email) {
+  if (!email) return ''
+  return readProfiles()[email.toLowerCase()]?.division ?? ''
+}
+
 function buildProfile(email) {
   const key = email.toLowerCase()
   const stored = { ...STAFF_DEMO_PROFILES[key], ...readProfiles()[key] }
@@ -1150,7 +1169,7 @@ function buildProfile(email) {
     role: account?.role ?? 'citizen',
     department: account?.department ?? null,
     address: stored.address ?? '',
-    ward: stored.ward ?? '',
+    division: stored.division ?? '',
     phone: stored.phone ?? '', // only set once the number is verified
     phoneVerified: Boolean(stored.phone),
     identity,
@@ -1171,7 +1190,7 @@ export async function getProfile(email) {
   return buildProfile(email)
 }
 
-// details: { name, address, ward }. Checked again here, like a backend would.
+// details: { name, address, division }. Checked again here, like a backend would.
 export async function saveProfile(email, details) {
   await wait()
   const errors = checkDetails(details)
@@ -1180,7 +1199,7 @@ export async function saveProfile(email, details) {
   }
   const name = details.name.trim()
   if (name !== getAccountName(email)) renameAccount(email, name)
-  writeProfile(email, { address: details.address.trim(), ward: details.ward })
+  writeProfile(email, { address: details.address.trim(), division: details.division })
   return buildProfile(email)
 }
 
