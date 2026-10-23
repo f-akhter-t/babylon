@@ -40,7 +40,7 @@ async function findOwnedIssue(user, id) {
 export async function listIssues(user, scope) {
   const department = requireDepartment(user)
   // pendingAfterImg is a big photo. The list does not need it.
-  const issues = await loadScope(department, scope, '-pendingAfterImg')
+  const issues = await loadScope(department, scope, '-pendingAfterImg -beforeImg')
   return rankIssues(issues.map(staffView)).map((item, index) => ({ ...item, rank: index + 1 }))
 }
 
