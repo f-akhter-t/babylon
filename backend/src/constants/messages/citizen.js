@@ -1,0 +1,22 @@
+// Every sentence the citizen panel can show, written once. (Yours: no merge conflicts.)
+export const MESSAGES = {
+  REPORT_CREATED: 'Report submitted. You earned 60 points.',
+  REPORT_FILED: 'Your report was filed. Thank you for helping your city.',
+  PHOTO_REQUIRED: 'Please add a photo of the problem.',
+  CATEGORY_INVALID: 'Please choose what kind of problem it is.',
+  DESCRIPTION_INVALID: 'Please describe the problem in 10 to 500 characters.',
+  LOCATION_INVALID: 'Pick a location on the map first.',
+  levelUp: (role) => `You reached a new level: ${role}.`,
+  REPORTS_LISTED: 'Your reports.',
+  REPORT_LOADED: 'Report loaded.',
+  REPORT_UPDATED: 'Your report was updated.',
+  REPORT_DELETED: 'Your report was deleted.',
+  REPORT_NOT_FOUND: 'We could not find that report.',
+  REPORT_FORBIDDEN: 'You can only change your own reports.',
+  REPORT_LOCKED: 'This report can no longer be changed because work has started.',
+  VOTE_ADDED: 'Your vote was added.',
+  VOTE_REMOVED: 'Your vote was removed.',
+  VOTE_CLOSED: 'This issue is resolved, so voting is closed.',
+  ME_LOADED: 'Your profile summary.',
+  POINTS_LOADED: 'Your points.',
+}

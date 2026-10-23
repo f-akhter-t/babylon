@@ -18,3 +18,10 @@ export const ADMIN_LIMITS = Object.freeze({
   // Card photo of an identity submission.
   idPhotoMaxBytes: 5 * 1024 * 1024,
 })
+
+
+// --- citizen ---
+export const CITIZEN_LIMITS = Object.freeze({
+  title: { min: 5, max: 70 },
+  description: { min: 10, max: 500 },
+})
