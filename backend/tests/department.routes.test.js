@@ -278,7 +278,7 @@ test('profile: returns the signed-in citizen with division, and no NID photo', a
     phone: '01712345678',
     address: '12 Lake Road',
     division: 'Chattogram',
-    identity: { status: 'pending', nidLast4: '4821', reason: null },
+    identity: { status: 'pending', nidLast4: '4821', reason: '' },
   })
   const text = JSON.stringify(res.body)
   assert.equal(text.includes('secret-photo-bytes'), false)
