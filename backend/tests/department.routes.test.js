@@ -307,3 +307,87 @@ test('profile: the owner comes from the token, not from the query', async () => 
 test('profile: a token for an account that does not exist gives 404', async () => {
   assert.equal((await profile('stranger')).status, 404)
 })
+
+
+// ---------- profile: PATCH ----------
+
+const patchProfile = (body, who = 'citizen') =>
+  request(app).patch('/api/citizen/profile').set(as(who)).send(body)
+const userRow = (email) => fakes.user.rows.find((row) => row.email === email)
+
+test('profile update: no token gives 401, a department token gives 403', async () => {
+  assert.equal((await request(app).patch('/api/citizen/profile').send({ address: 'x' })).status, 401)
+  assert.equal((await patchProfile({ address: 'x' }, 'roads')).status, 403)
+})
+
+test('profile update: saves name, address and division, and returns the new profile', async () => {
+  const res = await patchProfile({ name: 'Nadia Rahman Khan', address: '14 Lake Road', division: 'Sylhet' })
+  assert.equal(res.status, 200)
+  assert.equal(res.body.data.name, 'Nadia Rahman Khan')
+  assert.equal(res.body.data.address, '14 Lake Road')
+  assert.equal(res.body.data.division, 'Sylhet')
+  assert.equal(userRow('nadia@babylon.test').division, 'Sylhet')
+})
+
+test('profile update: only the fields that were sent change', async () => {
+  const res = await patchProfile({ address: '  9 New Street  ' })
+  assert.equal(res.status, 200)
+  assert.equal(res.body.data.address, '9 New Street')
+  assert.equal(res.body.data.name, 'Nadia Rahman')
+  assert.equal(res.body.data.division, 'Chattogram')
+})
+
+test('profile update: an empty body gives 400 and changes nothing', async () => {
+  const res = await patchProfile({})
+  assert.equal(res.status, 400)
+  assert.equal(res.body.code, 'invalid')
+  assert.equal(userRow('nadia@babylon.test').address, '12 Lake Road')
+})
+
+test('profile update: a bad division gives 400 with the field name', async () => {
+  const res = await patchProfile({ division: 'Mars' })
+  assert.equal(res.status, 400)
+  assert.equal(res.body.field, 'division')
+  assert.equal(userRow('nadia@babylon.test').division, 'Chattogram')
+})
+
+test('profile update: an address over 120 characters gives 400', async () => {
+  const res = await patchProfile({ address: 'a'.repeat(121) })
+  assert.equal(res.status, 400)
+  assert.equal(res.body.field, 'address')
+  assert.equal((await patchProfile({ address: 'a'.repeat(120) })).status, 200)
+})
+
+test('profile update: a bad name gives 400', async () => {
+  for (const name of ['A', '12345', '<b>x</b>', 'x'.repeat(51)]) {
+    const res = await patchProfile({ name })
+    assert.equal(res.status, 400, name)
+    assert.equal(res.body.field, 'name', name)
+  }
+  assert.equal(userRow('nadia@babylon.test').name, 'Nadia Rahman')
+})
+
+test('profile update: phone and email in the body are ignored', async () => {
+  const res = await patchProfile({ address: '5 Ignore Road', phone: '01999999999', email: 'x@y.z' })
+  assert.equal(res.status, 200)
+  const row = userRow('nadia@babylon.test')
+  assert.equal(row.phone, '01712345678')
+  assert.equal(row.email, 'nadia@babylon.test')
+  assert.equal(row.address, '5 Ignore Road')
+})
+
+test('profile update: a body with only phone or email gives 400, not a fake "saved"', async () => {
+  assert.equal((await patchProfile({ phone: '01999999999' })).status, 400)
+  assert.equal((await patchProfile({ email: 'x@y.z' })).status, 400)
+})
+
+test('profile update: the owner comes from the token, not the body', async () => {
+  const res = await patchProfile({ email: 'arif@babylon.test', address: 'Mine only' })
+  assert.equal(res.status, 200)
+  assert.equal(userRow('nadia@babylon.test').address, 'Mine only')
+  assert.equal(userRow('arif@babylon.test').address, undefined)
+})
+
+test('profile update: a token for an account that does not exist gives 404', async () => {
+  assert.equal((await patchProfile({ address: 'x' }, 'stranger')).status, 404)
+})

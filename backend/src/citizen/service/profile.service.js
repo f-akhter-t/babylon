@@ -25,3 +25,9 @@ export async function getProfile(email) {
       : { status: 'none', nidLast4: null, reason: null },
   }
 }
+// Saves only the fields that were sent. The email comes from the token.
+export async function updateProfile(email, changes) {
+  const saved = await User.findOneAndUpdate({ email }, { $set: changes }, { new: true }).lean()
+  if (!saved) throw new AppError('not-found', 404, MSG.profileGone)
+  return getProfile(email)
+}
