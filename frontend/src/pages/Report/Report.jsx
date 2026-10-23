@@ -27,7 +27,7 @@ function ReportPage() {
   const viewer = useViewer() // CHANGE 2
   const toast = useToast()
   const [category, setCategory] = useState('')
-  const [location, setLocation] = useState(null) // { lat, lng, label, ward } from the map
+  const [location, setLocation] = useState(null) // { lat, lng, label, ward, division } from the map
   const [searchParams] = useSearchParams()
 
   // A pin dropped on the Map page arrives here as /report?lat=…&lng=…

@@ -8,8 +8,7 @@ export const ADDRESS_MAX = 120
 export const NID_LENGTHS = [10, 13, 17]
 export const MAX_ID_PHOTO_MB = 5
 
-// Chattogram City Corporation has 41 wards.
-export const WARDS = Array.from({ length: 41 }, (_, i) => `Ward ${i + 1}`)
+import { checkDivision } from './divisions'
 
 export function checkName(value) {
   const name = value.trim()
@@ -40,10 +39,6 @@ export function checkAddress(value) {
     return `The address can be at most ${ADDRESS_MAX} characters.`
   }
   return ''
-}
-
-export function checkWard(value) {
-  return WARDS.includes(value) ? '' : 'Please choose your ward.'
 }
 
 // Accepts "01712 345678", "01712-345678" or "+8801712345678" and returns
@@ -104,10 +99,10 @@ export function checkRejectReason(value) {
   return ''
 }
 
-export function checkDetails({ name, address, ward }) {
+export function checkDetails({ name, address, division }) {
   return {
     name: checkName(name),
     address: checkAddress(address),
-    ward: checkWard(ward),
+    division: checkDivision(division),
   }
 }

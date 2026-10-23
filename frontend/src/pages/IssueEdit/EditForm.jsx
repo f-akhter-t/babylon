@@ -23,7 +23,7 @@ export default function EditForm({ issue, email }) {
   const fromDetail = Boolean(useLocation().state?.fromDetail)
   const headingRef = useRef(null)
   const lockedRef = useRef(null)
-  const [location, setLocation] = useState(null) // { lat, lng, label, ward } from the map
+  const [location, setLocation] = useState(null) // { lat, lng, label, ward, division } from the map
   const [fieldsDirty, setFieldsDirty] = useState(false)
   const [lockedReason, setLockedReason] = useState('')
   const [exit, setExit] = useState(null) // { notice } once saved or cancelled, { to } once deleted
@@ -42,7 +42,7 @@ export default function EditForm({ issue, email }) {
     [issue],
   )
   const initialPin = useMemo(() => ({ lat: issue.lat, lng: issue.lng }), [issue])
-  const initialPlace = useMemo(() => ({ label: issue.location, ward: issue.ward }), [issue])
+  const initialPlace = useMemo(() => ({ label: issue.location, ward: issue.ward, division: issue.division }), [issue])
 
   const pinChanged = Boolean(location) && (location.lat !== issue.lat || location.lng !== issue.lng)
   useUnsavedChanges((fieldsDirty || pinChanged) && !lockedReason && !exit, LEAVE_MESSAGE)

@@ -14,6 +14,7 @@ import StaircaseIcon from '../../components/ui/StaircaseIcon'
 import { getIssues, upvoteIssue } from '../../services/api'
 import { MAP_CENTER } from '../../mock/issues'
 import { distanceInMeters } from '../../utils/geo'
+import { divisionFromPlaceName } from '../../utils/divisions'
 import { DRAFT_PIN_SIZE, draftPinSvg } from '../Map/pinMarkup'
 import { pinIcon } from '../Map/statusPin'
 import MiniMapZoom from '../IssueDetail/MiniMapZoom'
@@ -99,7 +100,7 @@ function ClickToPlace({ onPlace }) {
 // Optional, for editing a report (the Report page leaves them out):
 //   excludeId: the issue being edited, never counted as a match or as "nearest".
 //   showMatches: false hides the "Looks like a match nearby" card.
-//   initialPlace: { label, ward } shown while the pin is still at `initial`.
+//   initialPlace: { label, ward, division } shown while the pin is still at `initial`.
 export default function LocationPicker({
   category,
   onChange,
@@ -111,6 +112,7 @@ export default function LocationPicker({
 }) {
   const [position, setPosition] = useState(() => initial ?? START)
   const [placeName, setPlaceName] = useState('')
+  const [found, setFound] = useState(null) // { lat, lng, division } for the last pin we looked up
   const [issues, setIssues] = useState([])
   const [dismissed, setDismissed] = useState([])
   const [hintVisible, setHintVisible] = useState(true)
@@ -148,6 +150,11 @@ export default function LocationPicker({
         const data = await res.json()
         const a = data.address ?? {}
         setPlaceName(a.road || a.neighbourhood || a.suburb || a.city_district || '')
+        setFound({
+          lat: position.lat,
+          lng: position.lng,
+          division: divisionFromPlaceName(a.state),
+        })
       } catch (err) {
         if (err.name !== 'AbortError') setPlaceName('')
       }
@@ -196,9 +203,14 @@ export default function LocationPicker({
     ward = initialPlace.ward ?? ''
   }
 
+  // The division of the pin. Empty while it is still being looked up, or when
+  // the lookup failed, so a report is never sent with a guessed division.
+  const lookedUp = found && found.lat === position.lat && found.lng === position.lng
+  const division = atInitial && initialPlace.division ? initialPlace.division : lookedUp ? found.division : ''
+
   useEffect(() => {
-    onChange?.({ lat: position.lat, lng: position.lng, label, ward })
-  }, [position.lat, position.lng, label, ward, onChange])
+    onChange?.({ lat: position.lat, lng: position.lng, label, ward, division })
+  }, [position.lat, position.lng, label, ward, division, onChange])
 
   function moveTo(next) {
     setPosition(next)
@@ -473,6 +485,9 @@ export default function LocationPicker({
           >
             {label}
             {ward ? `, ${ward}` : ''}
+          </p>
+          <p className="font-body text-xs text-muted">
+            {division ? `${division} division` : 'Checking the division…'}
           </p>
         </div>
       </div>
