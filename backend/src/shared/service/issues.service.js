@@ -14,7 +14,7 @@ export { toIssueJSON, buildIssueFilter }
 
 // pendingAfterImg is a big photo and departmentNote is staff-only: the public
 // views never need them.
-const PUBLIC_FIELDS = '-pendingAfterImg -departmentNote'
+export const PUBLIC_FIELDS = '-pendingAfterImg -departmentNote'
 
 const clean = (email) => String(email).trim().toLowerCase()
 
