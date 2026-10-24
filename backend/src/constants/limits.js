@@ -69,5 +69,4 @@ export const TRANSLATE_LIMITS = Object.freeze({
   // Per signed-in user. Kept in the server's memory, so on a serverless host
   // each running copy counts for itself.
   rate: Object.freeze({ windowMs: 60 * 1000, max: 10 }),
-  timeoutMs: 10000,
 })

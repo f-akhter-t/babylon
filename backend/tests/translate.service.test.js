@@ -5,22 +5,24 @@ import assert from 'node:assert/strict'
 process.env.JWT_SECRET = 'test-secret-not-real'
 process.env.MONGODB_URI = 'mongodb://localhost/none'
 
-const { createTranslateService, buildPrompt } = await import('../src/admin/service/translate.service.js')
+const { createTranslateService, buildRequest } = await import('../src/admin/service/translate.service.js')
 const { rateLimit } = await import('../src/middlewares/rateLimit.js')
 
-test('the prompt holds the text and the language, and nothing else about the user', () => {
-  const prompt = buildPrompt('Deep pothole', 'bn')
-  assert.match(prompt, /Bangla/)
-  assert.match(prompt, /<text>\nDeep pothole\n<\/text>/)
+test('the instructions go in system, the report text alone in prompt', () => {
+  const request = buildRequest('Deep pothole', 'bn')
+  assert.match(request.system, /Bangla/)
+  assert.equal(request.prompt, 'Deep pothole')
+  assert.doesNotMatch(request.system, /pothole/)
 })
 
-test('returns the trimmed reply and passes a timeout', async () => {
+test('returns the trimmed reply and calls generateText with one object', async () => {
   let seen
   const svc = createTranslateService({
-    getGemini: async () => ({ generateText: async (prompt, opts) => { seen = [prompt, opts]; return '  গভীর গর্ত \n' } }),
+    getGemini: async () => ({ generateText: async (arg) => { seen = arg; return '  গভীর গর্ত \n' } }),
   })
   assert.deepEqual(await svc.translate('Deep pothole', 'bn'), { translation: 'গভীর গর্ত', to: 'bn' })
-  assert.equal(typeof seen[1].timeoutMs, 'number')
+  assert.equal(seen.prompt, 'Deep pothole')
+  assert.equal(typeof seen.system, 'string')
 })
 
 test('a missing service, a failure or an empty reply all become ai-unavailable 503', async () => {
