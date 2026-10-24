@@ -25,3 +25,11 @@ export const CITIZEN_LIMITS = Object.freeze({
   title: { min: 5, max: 70 },
   description: { min: 10, max: 500 },
 })
+
+// --- phone code (shared by citizen profile and staff onboarding) ---
+export const PHONE_CODE_LIMITS = Object.freeze({
+  devCode: '123456', // used only when PHONE_CODE_MODE=dev
+  resendSeconds: 30,
+  maxAttempts: 3,
+  lifeMinutes: 10,
+})

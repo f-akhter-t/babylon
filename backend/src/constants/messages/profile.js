@@ -5,4 +5,13 @@ export const PROFILE_MESSAGES = {
   profileNothing: 'Send at least one thing to change: name, address or division.',
   addressLong: 'The address can be at most 120 characters.',
   divisionInvalid: 'Please choose one of the 8 divisions.',
+  phoneCodeSent: 'We sent a code to your phone.',
+  phoneCodeWait: 'Please wait {seconds} seconds before asking for a new code.',
+  phoneCodeWrongOne: 'That code is not right. You have 1 try left.',
+  phoneCodeWrong: 'That code is not right. You have {left} tries left.',
+  phoneCodeExpired: 'This code has expired. Ask for a new code.',
+  phoneCodeLocked: 'Too many wrong codes. Ask for a new code to try again.',
+  phoneCodeOff: 'Phone codes are not available right now.',
+  phoneVerified: 'Your mobile number is verified.',
+  phoneAlreadyVerified: 'This number is already verified.',
 }
