@@ -2,11 +2,14 @@
 import mongoose from 'mongoose'
 import Issue from '../../models/issue.model.js'
 import Vote from '../../models/vote.model.js'
+import User from '../../models/user.model.js'
 import AppError from '../../utils/AppError.js'
-import { notify, removeForIssue } from '../../shared/service/alerts.service.js'
+import { notify, notifyMany, removeForIssue } from '../../shared/service/alerts.service.js'
 import { toIssueJSON, voteCounts, votedIssueIds } from '../../shared/service/issues.service.js'
 import { crossesLevel, levelFor, pointsFor } from '../../utils/points.js'
 import { CATEGORIES, CITIZEN_LIMITS } from '../../constants/limits.js'
+import { departmentForCategory } from '../../constants/departments.js'
+import { ROLES } from '../../constants/roles.js'
 import { MESSAGES } from '../../constants/messages/citizen.js'
 
 const clean = (email) => String(email).trim().toLowerCase()
@@ -62,6 +65,29 @@ function check({ category, description, photoUrl, location } = {}) {
   return text
 }
 
+// D1: the same rule as the frontend's checkReportDivision. The citizen's
+// division comes from the account, never from the request.
+async function citizenDivisionFor(email, pinDivision) {
+  const user = await User.findOne({ email: clean(email) }).select('division').lean()
+  const mine = user?.division ?? ''
+  if (!mine) throw new AppError('invalid', 400, MESSAGES.DIVISION_MISSING, 'location')
+  if (!pinDivision) throw new AppError('invalid', 400, MESSAGES.DIVISION_UNKNOWN, 'location')
+  if (pinDivision !== mine) {
+    throw new AppError('invalid', 400, MESSAGES.divisionMismatch(mine, pinDivision), 'location')
+  }
+  return mine
+}
+
+// D3: a title the edit form sends is kept. Returns null when none was sent.
+function readTitle(input) {
+  if (input.title === undefined) return null
+  const title = String(input.title).trim()
+  if (title.length < CITIZEN_LIMITS.title.min || title.length > CITIZEN_LIMITS.title.max) {
+    throw new AppError('invalid', 400, MESSAGES.TITLE_INVALID, 'title')
+  }
+  return title
+}
+
 // Unknown id -> 404. Someone else's report -> 403.
 async function findOwned(email, id) {
   if (!mongoose.isValidObjectId(id)) {
@@ -79,14 +105,34 @@ function assertOpen(issue) {
   if (issue.status !== 'open') throw new AppError('locked', 423, MESSAGES.REPORT_LOCKED)
 }
 
+// D2: tell the staff of the department that handles this category.
+// "Other" has no department, so nobody is told.
+async function notifyDepartment(issue) {
+  const department = departmentForCategory(issue.category)
+  if (!department) return
+  const staff = await User.find({ role: ROLES.DEPARTMENT, department }).select('email').lean()
+  if (staff.length === 0) return
+  await notifyMany(
+    staff.map((member) => member.email),
+    {
+      kind: 'new-report',
+      text: MESSAGES.newReport(issue.title),
+      link: `/issues/${issue._id}`,
+      issueId: issue._id,
+    },
+  )
+}
+
 export async function createReport(email, input = {}) {
   const description = check(input)
   const { category, photoUrl, location } = input
+  const division = await citizenDivisionFor(email, location.division)
+  const title = readTitle(input) ?? makeTitle(description)
 
   const before = await Issue.countDocuments({ reporterEmail: clean(email) })
 
   const issue = await Issue.create({
-    title: makeTitle(description),
+    title,
     category,
     description,
     beforeImg: photoUrl,
@@ -94,6 +140,7 @@ export async function createReport(email, input = {}) {
     lng: location.lng,
     location: location.label.trim(),
     ward: location.ward ?? '',
+    division,
     status: 'open',
     verification: 'none',
     priority: 'medium', // AI severity scoring plugs in here later (one clear hook)
@@ -101,13 +148,22 @@ export async function createReport(email, input = {}) {
   })
 
   await Vote.create({ issueId: issue._id, userEmail: clean(email) }) // the reporter's own vote
-  await notify(email, { kind: 'filed', text: MESSAGES.REPORT_FILED, issueId: issue._id })
+  await notify(email, {
+    kind: 'filed',
+    text: MESSAGES.reportFiled(issue.title),
+    link: '/my-reports',
+    issueId: issue._id,
+  })
 
   if (crossesLevel(before, before + 1)) {
-    const { role } = levelFor(pointsFor(before + 1))
-    await notify(email, { kind: 'level-up', text: MESSAGES.levelUp(role) })
+    const { level, role } = levelFor(pointsFor(before + 1))
+    await notify(email, {
+      kind: 'level-up',
+      text: MESSAGES.levelUp(level, role),
+      link: '/my-reports',
+    })
   }
-  // TODO: notify the department's staff (kind 'new-report') using user.model.
+  await notifyDepartment(issue)
 
   const [report] = await toMyReports([issue], email)
   return report
@@ -140,9 +196,14 @@ export async function updateReport(email, id, input = {}) {
     },
   }
   const description = check(merged)
+  // The division rule only applies when the pin moves.
+  const division = input.location
+    ? await citizenDivisionFor(email, input.location.division)
+    : issue.division
+  const title = readTitle(input) ?? issue.title
 
   issue.set({
-    title: makeTitle(description),
+    title,
     category: merged.category,
     description,
     beforeImg: merged.photoUrl,
@@ -150,6 +211,7 @@ export async function updateReport(email, id, input = {}) {
     lng: merged.location.lng,
     location: merged.location.label.trim(),
     ward: merged.location.ward ?? '',
+    division,
     editedAt: new Date(),
   })
   await issue.save()
