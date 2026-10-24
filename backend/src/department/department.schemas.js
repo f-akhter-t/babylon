@@ -1,10 +1,7 @@
 import { z } from 'zod'
 import { MSG } from '../constants/messages/index.js'
+import { DEPARTMENT_LIMITS } from '../constants/limits.js'
 
-export const DEPARTMENT_LIMITS = Object.freeze({
-  noteMax: 500,
-  photoMaxChars: 7_000_000, // about 5 MB of image as text
-})
 
 export const listQuery = z.object({
   scope: z.enum(['assigned', 'completed'], { error: MSG.deptScopeInvalid }).default('assigned'),
