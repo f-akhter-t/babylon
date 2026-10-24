@@ -1,12 +1,15 @@
 // Every rule and every database call for citizen reports lives here.
+// The shape of the request is checked by citizen.schemas.js before it gets here.
 import mongoose from 'mongoose'
 import Issue from '../../models/issue.model.js'
 import Vote from '../../models/vote.model.js'
+import User from '../../models/user.model.js'
 import AppError from '../../utils/AppError.js'
-import { notify, removeForIssue } from '../../shared/service/alerts.service.js'
+import { notify, notifyMany, removeForIssue } from '../../shared/service/alerts.service.js'
 import { toIssueJSON, voteCounts, votedIssueIds } from '../../shared/service/issues.service.js'
 import { crossesLevel, levelFor, pointsFor } from '../../utils/points.js'
-import { CATEGORIES, CITIZEN_LIMITS } from '../../constants/limits.js'
+import { departmentForCategory } from '../../constants/departments.js'
+import { ROLES } from '../../constants/roles.js'
 import { MESSAGES } from '../../constants/messages/citizen.js'
 
 const clean = (email) => String(email).trim().toLowerCase()
@@ -40,26 +43,17 @@ async function toMyReports(issues, email) {
   })
 }
 
-// Every rule is checked here again, like a real backend, even if the form checked it.
-function check({ category, description, photoUrl, location } = {}) {
-  if (typeof photoUrl !== 'string' || !photoUrl.startsWith('data:image/')) {
-    throw new AppError('invalid', 400, MESSAGES.PHOTO_REQUIRED, 'photoUrl')
+// D1: the same rule as the frontend's checkReportDivision. The citizen's
+// division comes from the account, never from the request.
+async function citizenDivisionFor(email, pinDivision) {
+  const user = await User.findOne({ email: clean(email) }).select('division').lean()
+  const mine = user?.division ?? ''
+  if (!mine) throw new AppError('invalid', 400, MESSAGES.DIVISION_MISSING, 'location')
+  if (!pinDivision) throw new AppError('invalid', 400, MESSAGES.DIVISION_UNKNOWN, 'location')
+  if (pinDivision !== mine) {
+    throw new AppError('invalid', 400, MESSAGES.divisionMismatch(mine, pinDivision), 'location')
   }
-  if (!CATEGORIES.includes(category)) {
-    throw new AppError('invalid', 400, MESSAGES.CATEGORY_INVALID, 'category')
-  }
-  const text = (description ?? '').trim()
-  if (text.length < CITIZEN_LIMITS.description.min || text.length > CITIZEN_LIMITS.description.max) {
-    throw new AppError('invalid', 400, MESSAGES.DESCRIPTION_INVALID, 'description')
-  }
-  const ok =
-    location &&
-    Number.isFinite(location.lat) &&
-    Number.isFinite(location.lng) &&
-    typeof location.label === 'string' &&
-    location.label.trim() !== ''
-  if (!ok) throw new AppError('invalid', 400, MESSAGES.LOCATION_INVALID, 'location')
-  return text
+  return mine
 }
 
 // Unknown id -> 404. Someone else's report -> 403.
@@ -79,21 +73,41 @@ function assertOpen(issue) {
   if (issue.status !== 'open') throw new AppError('locked', 423, MESSAGES.REPORT_LOCKED)
 }
 
-export async function createReport(email, input = {}) {
-  const description = check(input)
-  const { category, photoUrl, location } = input
+// D2: tell the staff of the department that handles this category.
+// "Other" has no department, so nobody is told.
+async function notifyDepartment(issue) {
+  const department = departmentForCategory(issue.category)
+  if (!department) return
+  const staff = await User.find({ role: ROLES.DEPARTMENT, department }).select('email').lean()
+  if (staff.length === 0) return
+  await notifyMany(
+    staff.map((member) => member.email),
+    {
+      kind: 'new-report',
+      text: MESSAGES.newReport(issue.title),
+      link: `/issues/${issue._id}`,
+      issueId: issue._id,
+    },
+  )
+}
+
+export async function createReport(email, input) {
+  const { category, description, photoUrl, location } = input
+  const division = await citizenDivisionFor(email, location.division)
+  const title = input.title ?? makeTitle(description)
 
   const before = await Issue.countDocuments({ reporterEmail: clean(email) })
 
   const issue = await Issue.create({
-    title: makeTitle(description),
+    title,
     category,
     description,
     beforeImg: photoUrl,
     lat: location.lat,
     lng: location.lng,
-    location: location.label.trim(),
+    location: location.label,
     ward: location.ward ?? '',
+    division,
     status: 'open',
     verification: 'none',
     priority: 'medium', // AI severity scoring plugs in here later (one clear hook)
@@ -101,13 +115,22 @@ export async function createReport(email, input = {}) {
   })
 
   await Vote.create({ issueId: issue._id, userEmail: clean(email) }) // the reporter's own vote
-  await notify(email, { kind: 'filed', text: MESSAGES.REPORT_FILED, issueId: issue._id })
+  await notify(email, {
+    kind: 'filed',
+    text: MESSAGES.reportFiled(issue.title),
+    link: '/my-reports',
+    issueId: issue._id,
+  })
 
   if (crossesLevel(before, before + 1)) {
-    const { role } = levelFor(pointsFor(before + 1))
-    await notify(email, { kind: 'level-up', text: MESSAGES.levelUp(role) })
+    const { level, role } = levelFor(pointsFor(before + 1))
+    await notify(email, {
+      kind: 'level-up',
+      text: MESSAGES.levelUp(level, role),
+      link: '/my-reports',
+    })
   }
-  // TODO: notify the department's staff (kind 'new-report') using user.model.
+  await notifyDepartment(issue)
 
   const [report] = await toMyReports([issue], email)
   return report
@@ -123,33 +146,31 @@ export async function getMyReport(email, id) {
   return report
 }
 
-export async function updateReport(email, id, input = {}) {
+export async function updateReport(email, id, input) {
   const issue = await findOwned(email, id)
   assertOpen(issue)
 
-  // Fields not sent keep their current value.
-  const merged = {
-    category: input.category ?? issue.category,
-    description: input.description ?? issue.description,
-    photoUrl: input.photoUrl ?? issue.beforeImg,
-    location: input.location ?? {
-      lat: issue.lat,
-      lng: issue.lng,
-      label: issue.location,
-      ward: issue.ward,
-    },
+  // The division rule only applies when the pin moves.
+  const division = input.location
+    ? await citizenDivisionFor(email, input.location.division)
+    : issue.division
+  const location = input.location ?? {
+    lat: issue.lat,
+    lng: issue.lng,
+    label: issue.location,
+    ward: issue.ward,
   }
-  const description = check(merged)
 
   issue.set({
-    title: makeTitle(description),
-    category: merged.category,
-    description,
-    beforeImg: merged.photoUrl,
-    lat: merged.location.lat,
-    lng: merged.location.lng,
-    location: merged.location.label.trim(),
-    ward: merged.location.ward ?? '',
+    title: input.title ?? issue.title,
+    category: input.category ?? issue.category,
+    description: input.description ?? issue.description,
+    beforeImg: input.photoUrl ?? issue.beforeImg,
+    lat: location.lat,
+    lng: location.lng,
+    location: location.label,
+    ward: location.ward ?? '',
+    division,
     editedAt: new Date(),
   })
   await issue.save()

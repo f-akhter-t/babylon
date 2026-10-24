@@ -1,12 +1,12 @@
 // Every sentence the citizen panel can show, written once. (Yours: no merge conflicts.)
 export const MESSAGES = {
   REPORT_CREATED: 'Report submitted. You earned 60 points.',
-  REPORT_FILED: 'Your report was filed. Thank you for helping your city.',
+  reportFiled: (title) => `Your report "${title}" is filed. You earned 60 points.`,
   PHOTO_REQUIRED: 'Please add a photo of the problem.',
   CATEGORY_INVALID: 'Please choose what kind of problem it is.',
   DESCRIPTION_INVALID: 'Please describe the problem in 10 to 500 characters.',
   LOCATION_INVALID: 'Pick a location on the map first.',
-  levelUp: (role) => `You reached a new level: ${role}.`,
+  levelUp: (level, role) => `You reached Level ${level}, ${role}.`,
   REPORTS_LISTED: 'Your reports.',
   REPORT_LOADED: 'Report loaded.',
   REPORT_UPDATED: 'Your report was updated.',
@@ -24,4 +24,10 @@ export const MESSAGES = {
   ALERT_MARKED_READ: 'Notice marked as read.',
   ALERTS_ALL_READ: 'All notices marked as read.',
   ALERT_NOT_FOUND: 'We could not find that notice.',
+  DIVISION_MISSING: 'Choose your division in your profile before you report.',
+  DIVISION_UNKNOWN:
+    'We could not confirm which division this pin is in. Check your connection and move the pin a little to try again.',
+  divisionMismatch: (mine, pin) => `You can only report inside your division (${mine}). This pin is in ${pin}.`,
+  TITLE_INVALID: 'Please give the report a title of 5 to 70 characters.',
+  newReport: (title) => `A new report is waiting in your department: ${title}.`,
 }
