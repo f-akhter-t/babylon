@@ -26,6 +26,10 @@ export const CITIZEN_LIMITS = Object.freeze({
   description: { min: 10, max: 500 },
 })
 
+export const DEPARTMENT_LIMITS = Object.freeze({
+  noteMax: 500,
+  photoMaxChars: 7_000_000, // about 5 MB of image as text
+})
 
 // --- phone code (shared by citizen profile and staff onboarding) ---
 export const PHONE_CODE_LIMITS = Object.freeze({

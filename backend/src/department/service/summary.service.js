@@ -12,7 +12,9 @@ export async function getSummary(user) {
     department,
     assigned: assigned.length,
     open: assigned.filter((issue) => issue.status === 'open').length,
-    inProgress: assigned.filter((issue) => issue.status === 'in-progress').length,
+    inProgress: assigned.filter(
+      (issue) => issue.status === 'in-progress' && issue.verification !== 'awaiting',
+    ).length,
     awaiting: assigned.filter((issue) => issue.verification === 'awaiting').length,
     completed: completed.length,
   }

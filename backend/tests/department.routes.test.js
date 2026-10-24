@@ -167,10 +167,15 @@ test('summary counts equal the list lengths', async () => {
     department: ROADS,
     assigned: assigned.length,
     open: 2,
-    inProgress: 2,
+    inProgress: 1,
     awaiting: 1,
     completed: completed.length,
   })
+  // After D9 an issue is in exactly one bucket, so the three add up.
+  assert.equal(
+    res.body.data.open + res.body.data.inProgress + res.body.data.awaiting,
+    res.body.data.assigned,
+  )
 })
 
 // ---------- start work ----------
