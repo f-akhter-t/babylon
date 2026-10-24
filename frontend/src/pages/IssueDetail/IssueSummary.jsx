@@ -1,6 +1,7 @@
 import StatusPill from '../../components/ui/StatusPill'
 import CategoryChip from '../../components/ui/CategoryChip'
 import PriorityBadge from '../../components/ui/PriorityBadge'
+import TranslateText from '../../components/ui/TranslateText'
 import { formatDate, formatDaysAgo } from '../../utils/format'
 
 // Chips, title, who reported it and when, and the description.
@@ -10,7 +11,7 @@ export default function IssueSummary({ issue }) {
       <div className="flex flex-wrap items-center gap-2">
         <StatusPill status={issue.status} />
         <CategoryChip label={issue.category} className="py-1" />
-        <PriorityBadge priority={issue.priority} />
+        <PriorityBadge priority={issue.priority} ai={issue.aiAssessed} />
       </div>
       <h1
         id="issue-title"
@@ -32,7 +33,7 @@ export default function IssueSummary({ issue }) {
           </>
         )}
       </p>
-      <p className="leading-relaxed text-navy">{issue.description}</p>
+      <TranslateText text={issue.description} />
     </div>
   )
 }

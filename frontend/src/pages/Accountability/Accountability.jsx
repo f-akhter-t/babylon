@@ -317,7 +317,7 @@ function AccountabilityPage() {
     <AdminLayout
       variant="admin"
       active="Accountability"
-      note="Numbers on this screen are sample data for the mockup."
+      note="Numbers on this screen come from the live reports."
     >
       <div className={clsx('p-4 sm:p-6 lg:p-8', fit.page)}>
         <div className="flex flex-wrap items-start justify-between gap-4">

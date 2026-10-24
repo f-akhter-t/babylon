@@ -1,7 +1,6 @@
 // Which department handles which category. Decided once, used everywhere
-// (copied from frontend/src/mock/departments.js). "Other" has no department,
-// so those reports are not in any department list or in the accountability
-// figures (open question 7 in the plan).
+// (copied from frontend/src/mock/departments.js). Every category has a
+// department.
 export const CATEGORY_DEPARTMENT = Object.freeze({
   Roads: 'Roads & Highways',
   Bridges: 'Roads & Highways',

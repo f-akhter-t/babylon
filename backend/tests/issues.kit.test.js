@@ -108,8 +108,8 @@ test('toIssueJSON: id is text, department comes from the category', () => {
   const json = toIssueJSON(issue, { now: NOW })
   assert.equal(json.id, String(issue._id))
   assert.equal(json.department, 'Roads & Highways')
-  assert.equal(toIssueJSON(doc({ category: 'Other' }), { now: NOW }).department, null)
-  assert.equal(toIssueJSON(doc({ category: 'Other' }), { now: NOW }).sentOn, null)
+  assert.equal(toIssueJSON(doc({ category: 'Unknown' }), { now: NOW }).department, null)
+  assert.equal(toIssueJSON(doc({ category: 'Unknown' }), { now: NOW }).sentOn, null)
 })
 
 test('toIssueJSON: is synchronous (other panels call it without await)', () => {

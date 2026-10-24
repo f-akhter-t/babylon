@@ -2,8 +2,8 @@
 // and by /api/home/stats, so the two screens can never disagree.
 //
 // The department rows are the single source: the stat cards are computed from
-// them, and the weekly chart covers the same weeks. Issues with no department
-// (category "Other") count nowhere, so the rows and the chart always add up.
+// them, and the weekly chart covers the same weeks, so the rows and the chart
+// always add up.
 import Issue from '../../models/issue.model.js'
 import AppError from '../../utils/AppError.js'
 import { DAY_MS, daysBetween } from '../../utils/dates.js'

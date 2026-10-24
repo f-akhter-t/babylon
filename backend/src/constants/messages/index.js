@@ -4,12 +4,14 @@ import { ADMIN_MESSAGES } from './admin.js'
 import { MESSAGES as CITIZEN_MESSAGES } from './citizen.js'
 import { DEPARTMENT_MESSAGES } from './department.js'
 import { PROFILE_MESSAGES } from './profile.js'
+import { TRANSLATE_MESSAGES } from './translate.js'
 
 export const MSG = Object.freeze({
   ...ADMIN_MESSAGES,
   ...CITIZEN_MESSAGES,
   ...DEPARTMENT_MESSAGES,
   ...PROFILE_MESSAGES,
+  ...TRANSLATE_MESSAGES,
 })
 
 export { COMMON } from './common.js'
