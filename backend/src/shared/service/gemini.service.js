@@ -5,8 +5,9 @@ import AppError from '../../utils/AppError.js'
 import { AI_MESSAGES } from '../../constants/messages/ai.js'
 
 const TIMEOUT_MS = 20_000
-const DEFAULT_MODEL = 'gemini-2.5-flash'
+const DEFAULT_MODEL = 'gemini-3.5-flash'
 const ENDPOINT = 'https://generativelanguage.googleapis.com/v1beta/models'
+const RETRY_WAIT_MS = 1000
 
 const unavailable = () => new AppError('ai-unavailable', 503, AI_MESSAGES.UNAVAILABLE)
 
@@ -25,9 +26,8 @@ async function call({ system, prompt, photoUrl, maxOutputTokens }) {
   if (photoUrl) parts.push({ inlineData: readDataUrl(photoUrl) })
 
   const model = process.env.GEMINI_MODEL || DEFAULT_MODEL
-  let response
-  try {
-    response = await fetch(`${ENDPOINT}/${model}:generateContent`, {
+  const request = () =>
+    fetch(`${ENDPOINT}/${model}:generateContent`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-goog-api-key': key },
       body: JSON.stringify({
@@ -37,6 +37,15 @@ async function call({ system, prompt, photoUrl, maxOutputTokens }) {
       }),
       signal: AbortSignal.timeout(TIMEOUT_MS),
     })
+
+  let response
+  try {
+    response = await request()
+    // A busy model answers 503 or 429. One short wait and one more try.
+    if (response.status === 503 || response.status === 429) {
+      await new Promise((resolve) => setTimeout(resolve, RETRY_WAIT_MS))
+      response = await request()
+    }
   } catch {
     throw unavailable() // network error or timeout
   }
