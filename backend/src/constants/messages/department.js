@@ -16,7 +16,7 @@ export const DEPARTMENT_MESSAGES = {
   deptPhotoInvalid: 'The photo is not valid.',
   deptPhotoTooLarge: 'The photo is too large.',
   deptNoteTooLong: 'The note is too long.',
-  deptStartedForReporter: (title) => `Work has started on "${title}".`,
-  deptSubmittedForReporter: (title) => `The department sent a fix for "${title}". An admin will check it.`,
-  deptSubmittedForAdmin: (title) => `A fix for "${title}" is waiting for your check.`,
+  deptStartedForReporter: (title) => `Work has started on your report "${title}".`,
+  deptSubmittedForReporter: (title) => `A fix for your report "${title}" is waiting for the admin's check.`,
+  deptSubmittedForAdmin: (title) => `A fix is waiting for your check: ${title}.`,
 }
