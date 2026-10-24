@@ -26,6 +26,15 @@ export const CITIZEN_LIMITS = Object.freeze({
   description: { min: 10, max: 500 },
 })
 
+
+// --- phone code (shared by citizen profile and staff onboarding) ---
+export const PHONE_CODE_LIMITS = Object.freeze({
+  devCode: '123456', // used only when PHONE_CODE_MODE=dev
+  resendSeconds: 30,
+  maxAttempts: 3,
+  lifeMinutes: 10,
+})
+
 // --- alerts (shared by citizen, department and admin) ---
 export const ALERT_LIMITS = Object.freeze({
   // Newest alerts kept per account; older ones are deleted when a new one arrives.
@@ -70,3 +79,4 @@ export const TRANSLATE_LIMITS = Object.freeze({
   // each running copy counts for itself.
   rate: Object.freeze({ windowMs: 60 * 1000, max: 10 }),
 })
+
