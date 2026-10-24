@@ -8,6 +8,7 @@ import { ROLES } from '../constants/roles.js'
 import verificationRoutes from './routes/verification.routes.js'
 import accountabilityRoutes from './routes/accountability.routes.js'
 import identityRoutes from './routes/identity.routes.js'
+import alertsRoutes from './routes/alerts.routes.js'
 
 const router = Router()
 
@@ -15,5 +16,6 @@ router.use(authenticate, authorize(ROLES.ADMIN))
 router.use(verificationRoutes)
 router.use(accountabilityRoutes)
 router.use(identityRoutes)
+router.use(alertsRoutes)
 
 export default router

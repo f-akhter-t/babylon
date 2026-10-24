@@ -37,7 +37,7 @@ export default function MapPopup({ issue, viewer, onClose, onToggleVote, onToggl
             </span>
             <div className="flex flex-wrap gap-1.5">
               <StatusPill status={issue.status} className="px-2.5 py-0.5 text-xs" />
-              <PriorityBadge priority={issue.priority} />
+              <PriorityBadge priority={issue.priority} ai={issue.aiAssessed} />
             </div>
           </div>
         </div>

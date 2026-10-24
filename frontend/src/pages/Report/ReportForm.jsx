@@ -4,7 +4,7 @@ import CategoryChip from '../../components/ui/CategoryChip'
 import { TITLE_MAX, TITLE_MIN } from '../../services/api'
 import { enter } from '../../components/ui/motion'
 
-const REPORT_CATEGORIES = ['Roads', 'Waste', 'Water', 'Lighting', 'Bridges', 'Other']
+const REPORT_CATEGORIES = ['Roads', 'Waste', 'Water', 'Lighting', 'Bridges']
 const MAX_PHOTO_MB = 5
 const MIN_DESCRIPTION = 10
 const MAX_DESCRIPTION = 500

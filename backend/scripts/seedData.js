@@ -43,8 +43,8 @@ export function buildSeed(now = new Date()) {
     division: 'Chattogram',
     reporter: users[i].name,
     reporterEmail: users[i].email,
-    beforeImg: '/images/reports/seed-before.jpg',
-    pendingAfterImg: TINY_PNG_DATA_URL,
+    beforeImg: '/images/reports/wasa-circle-pothole.jpg',
+    pendingAfterImg: '/images/fixed/bins-after.jpg',
     departmentNote,
     createdAt: ago(now, 12 * DAY + i * DAY),
     startedAt: ago(now, 8 * DAY),
@@ -66,11 +66,12 @@ export function buildSeed(now = new Date()) {
       division: 'Chattogram',
       reporter: users[3].name,
       reporterEmail: users[3].email,
-      beforeImg: '/images/reports/seed-before.jpg',
-      afterImg: '/images/reports/seed-after.jpg',
+      beforeImg: '/images/reports/wasa-circle-pothole.jpg',
+      afterImg: '/images/fixed/water-pipe-after.jpg',
       createdAt: ago(now, 18 * DAY),
       resolvedAt: ago(now, 6 * DAY),
       reopenedAt: ago(now, 1 * DAY),
+      reopenedFrom: shortDate(ago(now, 6 * DAY)),
     },
   ]
 
@@ -93,31 +94,12 @@ export function buildSeed(now = new Date()) {
       division: 'Chattogram',
       reporter: users[i % users.length].name,
       reporterEmail: users[i % users.length].email,
-      beforeImg: '/images/reports/seed-before.jpg',
+      beforeImg: '/images/reports/wasa-circle-pothole.jpg',
       createdAt,
       ...(resolved ? { resolvedAt, resolvedOn: shortDate(resolvedAt) } : {}),
       ...(resolved && i % 9 === 0 ? { reopenedAt: new Date(resolvedAt.getTime() + HOUR) } : {}),
     }
   })
-
-  // "Other" has no department: it must count nowhere.
-  const other = [
-    {
-      title: 'Stray dogs near the school gate',
-      category: 'Other',
-      description: 'No department handles this category.',
-      status: 'open',
-      priority: 'medium',
-      verification: 'none',
-      location: 'Chattogram',
-      ward: 'Ward 3',
-      division: 'Chattogram',
-      reporter: users[4].name,
-      reporterEmail: users[4].email,
-      beforeImg: '/images/reports/seed-before.jpg',
-      createdAt: ago(now, 5 * DAY),
-    },
-  ]
 
   // ---- Identity submissions ----
   const identities = [
@@ -130,5 +112,5 @@ export function buildSeed(now = new Date()) {
     { userEmail: users[4].email, status: 'verified', nidLast4: '2208', submittedAt: ago(now, 9 * DAY), reviewedAt: ago(now, 8 * DAY), reason: '' },
   ]
 
-  return { users, issues: [...awaiting, ...reopened, ...history, ...other], identities }
+  return { users, issues: [...awaiting, ...reopened, ...history], identities }
 }

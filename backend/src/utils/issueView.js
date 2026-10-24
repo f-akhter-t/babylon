@@ -37,6 +37,8 @@ export function toIssueJSON(issue, extras = {}) {
     department,
     status: doc.status,
     priority: doc.priority,
+    // true when the photo was scored by CLIP (F1); the screens then mark the priority "AI".
+    aiAssessed: doc.severityScore != null ? true : undefined,
     verification: doc.verification,
     votes,
     location: doc.location,

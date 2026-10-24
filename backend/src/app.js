@@ -3,6 +3,7 @@ import cors from 'cors'
 import { env } from './config/env.js'
 import routes from './routes.js'
 import errorHandler from './middlewares/errorHandler.js'
+import ensureDb from './middlewares/ensureDb.js'
 import AppError from './utils/AppError.js'
 import { COMMON } from './constants/messages/common.js'
 
@@ -14,7 +15,7 @@ app.use(express.json({ limit: '8mb' }))
 app.get('/api/health', (req, res) => {
   res.json({ success: true, message: 'The server is running.', data: { status: 'up' } })
 })
-app.use('/api', routes)
+app.use('/api', ensureDb, routes)
 app.use(() => {
   throw new AppError('not-found', 404, COMMON.notFound)
 })

@@ -15,8 +15,6 @@ const issues = [
   { title: 'B', category: 'Bridges', status: 'resolved', createdAt: daysAgo(20), resolvedAt: daysAgo(14), reopenedAt: daysAgo(13) },
   // Waste: still open, reported 30 days ago
   { title: 'C', category: 'Waste', status: 'open', priority: 'medium', createdAt: daysAgo(30) },
-  // Other: has no department, counts nowhere
-  { title: 'D', category: 'Other', status: 'open', createdAt: daysAgo(3) },
 ]
 
 test('department rows add up by hand over 8 weeks', () => {
@@ -52,7 +50,7 @@ test('weekly has one entry per week and matches the department totals', () => {
   assert.equal(weekly.reduce((n, w) => n + w.resolved, 0), 2)
 })
 
-test('waiting longest: unresolved only, longest first, no category Other', () => {
+test('waiting longest: unresolved only, longest first', () => {
   const list = waitingLongest(issues, NOW)
   assert.deepEqual(list, [{ title: 'C', department: 'Waste Management', days: 30 }])
 })
