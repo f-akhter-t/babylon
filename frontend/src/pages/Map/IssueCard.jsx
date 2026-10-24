@@ -73,7 +73,7 @@ export default function IssueCard({ issue, ghost = false, selected, onSelect, is
 
         <div className="flex flex-wrap items-center gap-2">
           <StatusPill status={issue.status} />
-          <PriorityBadge priority={issue.priority} />
+          <PriorityBadge priority={issue.priority} ai={issue.aiAssessed} />
           {/* Green when this citizen has upvoted it. */}
           <span
             ref={votesRef}

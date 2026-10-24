@@ -16,6 +16,10 @@ export const ADMIN_MESSAGES = Object.freeze({
   identityCountLoaded: 'Identity count loaded.',
   identityApproved: 'The identity is verified.',
   identityRejected: 'The identity was not approved, and the citizen will see the reason.',
+  adminAlertsListed: 'Your notices.',
+  adminAlertsUnreadCount: 'Unread notices counted.',
+  adminAlertMarkedRead: 'Notice marked as read.',
+  adminAlertsAllRead: 'All notices marked as read.',
 
   // errors (same sentences as the frontend)
   issueGone: 'This issue no longer exists.',

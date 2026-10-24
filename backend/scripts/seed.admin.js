@@ -9,7 +9,7 @@ import mongoose from 'mongoose'
 import Issue from '../src/models/issue.model.js'
 import User from '../src/models/user.model.js'
 import Identity from '../src/models/identity.model.js'
-import { buildSeed, SEED_DOMAIN } from './seedData.js'
+import { seedAdmin } from './seedAdminRun.js'
 
 const uri = process.env.MONGODB_URI
 if (!uri) {
@@ -17,28 +17,12 @@ if (!uri) {
   process.exit(1)
 }
 
-const fromSeed = new RegExp(`@${SEED_DOMAIN.replace(/\./g, '\\.')}$`)
-
 try {
   await mongoose.connect(uri)
   console.log(`Connected to database "${mongoose.connection.name}".`)
-
-  await Promise.all([
-    Issue.deleteMany({ reporterEmail: fromSeed }),
-    Identity.deleteMany({ userEmail: fromSeed }),
-    User.deleteMany({ email: fromSeed }),
-  ])
-
-  const { users, issues, identities } = buildSeed()
-  await User.insertMany(users, { timestamps: false })
-  await Issue.insertMany(issues, { timestamps: false })
-  await Identity.insertMany(identities)
-
-  const waiting = await Issue.countDocuments({ verification: 'awaiting' })
-  const reopened = await Issue.countDocuments({ verification: 'reopened' })
-  const pending = await Identity.countDocuments({ status: 'pending' })
-  console.log(`Seeded ${issues.length} issues, ${identities.length} identities, ${users.length} citizens.`)
-  console.log(`Now waiting for the admin: ${waiting} fixes, ${reopened} reopened, ${pending} identities.`)
+  const r = await seedAdmin({ Issue, User, Identity })
+  console.log(`Seeded ${r.issues} issues, ${r.identities} identities, ${r.users} citizens.`)
+  console.log(`Now waiting for the admin: ${r.waiting} fixes, ${r.reopened} reopened, ${r.pending} identities.`)
 } finally {
   await mongoose.disconnect()
 }

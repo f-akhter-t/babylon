@@ -9,20 +9,14 @@ import {
   DEFAULT_PERIOD_WEEKS,
   DEPARTMENT_CODES,
   EMPLOYEE_ROSTER,
-  departmentsByPeriod,
-  waitingLongest,
-  weeklyReports,
 } from '../mock/departments'
 import { earnPoints } from '../mock/user'
-import { sampleIdentitySubmissions } from '../mock/identitySubmissions'
 import { distanceInMeters } from '../utils/geo'
 import { checkReportDivision } from '../utils/divisions'
 import { prepareIdPhoto, UNREADABLE_PHOTO } from '../utils/idPhoto'
 import {
   deleteOtherPhotos,
   deletePhoto,
-  deleteStalePhotos,
-  readPhoto,
   savePhoto,
 } from './identityPhotos'
 import {
@@ -42,7 +36,6 @@ import {
   checkName,
   checkNid,
   checkPhone,
-  checkRejectReason,
   normalizeNid,
   normalizePhone,
 } from '../utils/profileRules'
@@ -298,13 +291,6 @@ function tellDepartment(issue, kind, text, link = '/department') {
   notifyEach(staffEmails({ role: 'department', department: issue.department }), { kind, text, link, issueId: issue.id })
 }
 
-// A reason as the end of a sentence: trailing full stops and spaces trimmed,
-// then one full stop, unless it already ends with ? or !.
-function reasonSentence(reason) {
-  const text = reason.trim().replace(/[.\s]+$/, '')
-  return /[?!]$/.test(text) ? text : `${text}.`
-}
-
 function tellAdmins(issue, kind, text) {
   notifyEach(staffEmails({ role: 'admin' }), { kind, text, link: '/admin/verify', issueId: issue.id })
 }
@@ -355,95 +341,12 @@ export async function submitForVerification(id, { note = '', photoUrl } = {}) {
   return withStaffDetails(present(issue))
 }
 
-function daysSinceReported(issue) {
-  return Math.max(1, Math.round(ageMs(issue) / 86400000))
-}
-
-// Admin: the fix is real. The issue closes and the after-photo becomes public.
-export async function approveResolution(id) {
-  await wait()
-  const issue = staffIssue(id, 'admin')
-  if (issue.verification !== 'awaiting') {
-    throw workflowError('conflict', 'This issue was already checked by another admin.')
-  }
-  const photo = workflow[String(issue.id)]?.pendingAfterImg
-  saveWorkflow(issue, {
-    status: 'resolved',
-    priority: 'fix-verified',
-    verification: 'verified',
-    resolvedOn: shortDate(),
-    fixedInDays: daysSinceReported(issue),
-    ...(photo ? { afterImg: photo } : {}),
-    pendingAfterImg: null,
-    sentBack: null,
-  })
-  tellReporter(issue, 'resolved', `Your report "${issue.title}" is resolved and verified.`)
-  tellDepartment(issue, 'fix-verified', `The admin verified your fix for "${issue.title}".`)
-  return present(issue)
-}
-
 export const REJECT_REASON_NEEDED = 'Write a reason before sending this back.'
-
-// Admin: the fix is not good enough. Back to In progress, with the reason.
-// The rejected photo is deleted.
-export async function rejectResolution(id, reason = '') {
-  await wait()
-  const text = reason.trim()
-  if (!text) throw workflowError('invalid', REJECT_REASON_NEEDED)
-  const issue = staffIssue(id, 'admin')
-  if (issue.verification !== 'awaiting') {
-    throw workflowError('conflict', 'This issue was already checked by another admin.')
-  }
-  saveWorkflow(issue, {
-    verification: 'none',
-    pendingAfterImg: null,
-    sentBack: { reason: text, on: shortDate() },
-    // Kept for the citizen who filed the report (see ownerDetails). Never
-    // cleared, unlike sentBack, which only describes the current send-back.
-    sentBackHistory: [
-      ...(workflow[String(issue.id)]?.sentBackHistory ?? []),
-      { reason: text, on: shortDate() },
-    ],
-    // A reopened issue goes to the department for the first time, so it must
-    // stop being "reopened" (the department list and Start work skip those).
-    // Its priority before it was reopened was not kept, so it becomes High.
-    ...(issue.priority === 'reopened' ? { priority: 'high' } : {}),
-  })
-  const why = reasonSentence(text)
-  tellReporter(issue, 'sent-back', `The department's fix for "${issue.title}" was sent back. Reason: ${why}`)
-  tellDepartment(issue, 'sent-back', `The admin sent back your fix for "${issue.title}". Reason: ${why}`, '/department?status=in-progress')
-  return present(issue)
-}
 
 // A reopened issue that the admin sent to the verification queue. Its
 // priority stays 'reopened' until the admin approves or rejects it.
 export function isReopenedInQueue(issue) {
   return issue.priority === 'reopened' && issue.verification === 'awaiting'
-}
-
-// Admin: put a reopened issue in the verification queue, where Approve keeps
-// the fix and Reject sends it to the department with a reason.
-export async function sendReopenedToQueue(id) {
-  await wait()
-  const issue = staffIssue(id, 'admin')
-  if (issue.verification !== 'reopened') {
-    throw workflowError('conflict', 'This issue is no longer reopened.')
-  }
-  const now = new Date()
-  try {
-    saveWorkflow(issue, {
-      verification: 'awaiting',
-      submittedOn: shortDate(),
-      submittedAt: now.toISOString(),
-    })
-  } catch (err) {
-    if (err.code !== 'storage') throw err
-    throw workflowError(
-      'storage',
-      'This could not be saved because the storage on this device is full. Clear old demo data and try again.',
-    )
-  }
-  return withStaffDetails(present(issue))
 }
 
 // Dev only: sessionStorage 'babylon:failLoads' makes the Department, Verify
@@ -458,20 +361,6 @@ function failLoadsForTesting() {
     // storage blocked: never fail on purpose
   }
   if (on) throw new Error('Load failed on purpose (babylon:failLoads).')
-}
-
-// Dev only: sessionStorage 'babylon:slowPeriod' = '4' or '8' makes the
-// Accountability load for that period wait 1.5 s, to check that a slow answer
-// never replaces a newer one. Not in production builds.
-async function slowPeriodForTesting(weeks) {
-  if (!import.meta.env.DEV) return
-  let slow = null
-  try {
-    slow = window.sessionStorage.getItem('babylon:slowPeriod')
-  } catch {
-    // storage blocked: never slow down on purpose
-  }
-  if (slow === String(weeks)) await new Promise((resolve) => setTimeout(resolve, 1500))
 }
 
 function makeTitle(description) {
@@ -498,8 +387,6 @@ function rankIssues(list) {
     )
     .map((issue, index) => ({ ...present(issue), rank: index + 1 }))
 }
-
-const sum = (list, key) => list.reduce((total, item) => total + item[key], 0)
 
 // ---------- Issues (Map, Feed, Detail) ----------
 
@@ -607,7 +494,7 @@ export const TITLE_MIN = 5
 export const TITLE_MAX = 70
 const DESCRIPTION_MIN = 10
 const DESCRIPTION_MAX = 500
-const EDIT_CATEGORIES = [...CATEGORIES, 'Other']
+const EDIT_CATEGORIES = [...CATEGORIES]
 export const LOCKED_MESSAGE = 'Work has started, so this report is locked.'
 
 function findIssue(id) {
@@ -768,21 +655,6 @@ export {
   getStats,
 } from './publicApi'
 
-// The stat cards, from department rows: totals, and averages weighted by the
-// number resolved. Only these two averages are rounded (one decimal).
-function statsFrom(rows) {
-  const received = sum(rows, 'assigned')
-  const resolved = sum(rows, 'resolved')
-  const reopened = sum(rows, 'reopened')
-  const avgDays = rows.reduce((total, d) => total + d.avgDays * d.resolved, 0) / resolved
-  return {
-    received,
-    resolved,
-    avgDays: Math.round(avgDays * 10) / 10,
-    reopenedPercent: Math.round((reopened / resolved) * 1000) / 10,
-  }
-}
-
 // ---------- Department panel ----------
 
 export async function getDepartmentIssues(departmentName) {
@@ -827,53 +699,23 @@ export async function getDepartmentSummary(departmentName) {
 
 // ---------- Admin ----------
 
-// Newest submission first, as in the Figma.
-export async function getVerificationQueue() {
-  return all
-    .filter((issue) => issue.verification === 'awaiting')
-    .sort((a, b) => b.submittedAt.localeCompare(a.submittedAt))
-    .map((issue) => withStaffDetails(present(issue)))
-}
-
-// Everything the Verify resolutions page shows, in one load.
-export async function loadVerification() {
-  failLoadsForTesting()
-  const [queue, reopened] = await Promise.all([getVerificationQueue(), getReopenedIssues()])
-  return { queue, reopened }
-}
-
-export async function getReopenedIssues() {
-  return all.filter((issue) => issue.verification === 'reopened')
-}
-
-export async function getAdminCounts() {
-  const queue = await getVerificationQueue()
-  const reopened = await getReopenedIssues()
-  return { queue: queue.length, reopened: reopened.length }
-}
-
 export { ACCOUNTABILITY_PERIODS, DEFAULT_PERIOD_WEEKS }
 
-// Everything the Accountability page shows for one period, in one load.
-// The department rows are the single source: the cards are computed from them,
-// and their totals match the chart's weeks. Waiting longest is the current
-// state, the same for every period. With a real backend this becomes one
-// fetch(`/api/accountability?weeks=${weeks}`).
-export async function loadAccountability(weeks = DEFAULT_PERIOD_WEEKS) {
-  failLoadsForTesting()
-  await slowPeriodForTesting(weeks)
-  const period = ACCOUNTABILITY_PERIODS.find((p) => p.weeks === weeks)
-  const rows = departmentsByPeriod[weeks]
-  if (!period || !rows) throw new Error('This period is not available.')
-  return {
-    weeks,
-    label: period.label,
-    stats: statsFrom(rows),
-    departments: rows,
-    weekly: weeklyReports.slice(-weeks),
-    waitingLongest,
-  }
-}
+// Served by the backend now (adminApi.js). Pages still import them from here.
+export {
+  approveResolution,
+  getAdminCounts,
+  getIdentityPhoto,
+  getIdentityQueue,
+  getIdentityQueueCount,
+  loadAccountability,
+  loadVerification,
+  rejectResolution,
+  reviewIdentity,
+  sendReopenedToQueue,
+  TRANSLATE_LANGUAGES,
+  translateText,
+} from './adminApi'
 
 // ---------- Citizen (My reports, points and alerts) ----------
 // Everything here belongs to the logged-in account only, found by its email
@@ -1444,131 +1286,7 @@ export async function submitIdentity(email, { nid, photo }) {
 // The queue never sees the full NID number. The card photo of a real
 // submission is read separately (getIdentityPhoto) and deleted after review.
 
-const sampleSubmissions = sampleIdentitySubmissions.map(({ submittedDaysAgo, ...item }) => ({
-  ...item,
-  sample: true,
-  submittedAt: new Date(Date.now() - submittedDaysAgo * 86400000 - 2 * 3600000).toISOString(),
-}))
-const sampleDecisions = new Map() // sample id -> 'verified' | 'rejected'
-
 export const ALREADY_REVIEWED = 'This submission was already reviewed.'
 export const NO_PHOTO_TO_APPROVE =
   'No card photo was saved with this submission, so it cannot be approved. Reject it and ask the citizen to send it again.'
-const PHOTO_UNREADABLE_FOR_REVIEW =
   'The card photo could not be loaded on this device, so this submission cannot be approved yet. Please try again.'
-
-const profileQueueId = (email) => `profile:${email}`
-
-function pendingSubmissions() {
-  const real = Object.entries(readProfiles())
-    .filter(([, stored]) => stored.identity?.status === 'pending')
-    .map(([email, stored]) => ({
-      id: profileQueueId(email),
-      email,
-      name: getAccountName(email) ?? email,
-      nidLast4: stored.identity.nidLast4,
-      submittedAt: stored.identity.submittedAt,
-      sample: false,
-    }))
-  const samples = sampleSubmissions.filter((item) => !sampleDecisions.has(item.id))
-  // Oldest first, so whoever has waited longest is checked first.
-  return [...real, ...samples].sort((a, b) => a.submittedAt.localeCompare(b.submittedAt))
-}
-
-// A photo may wait this long for its Pending write (another tab still sending)
-// before the cleanup may remove it.
-const PHOTO_CLEANUP_MIN_AGE_MS = 60 * 1000
-
-function isPendingSubmission(email, submittedAt) {
-  const identity = readProfiles()[email.toLowerCase()]?.identity
-  return identity?.status === 'pending' && identity.submittedAt === submittedAt
-}
-
-export async function getIdentityQueue() {
-  await wait(400)
-  // Removes photos a review could not delete at the time.
-  await deleteStalePhotos(isPendingSubmission, PHOTO_CLEANUP_MIN_AGE_MS).catch(() => {})
-  return pendingSubmissions()
-}
-
-// The card photo for a submission from getIdentityQueue():
-//   { kind: 'sample' }        made-up submission, no real photo
-//   { kind: 'photo', blob }   the photo, for this submission only
-//   { kind: 'missing' }       none was saved (sent before photos were kept)
-//   { kind: 'error' }         this browser's storage could not be read
-export async function getIdentityPhoto(submission) {
-  if (submission.sample) return { kind: 'sample' }
-  try {
-    const blob = await readPhoto(submission.email, submission.submittedAt)
-    return blob ? { kind: 'photo', blob } : { kind: 'missing' }
-  } catch {
-    return { kind: 'error' }
-  }
-}
-
-export async function getIdentityQueueCount() {
-  return pendingSubmissions().length
-}
-
-// submission is an item from getIdentityQueue().
-// decision: 'approve' | 'reject'. A reject needs a reason, which the citizen sees.
-// Throws if someone already reviewed it (for example in another tab), or if
-// the citizen has sent a new submission since this one was listed. A real
-// submission can only be approved once its card photo has been seen.
-// Returns { ...submission, status, photoDeleted }. The decision is saved
-// first, then the photo is deleted; photoDeleted is false if that delete
-// failed (the cleanup in getIdentityQueue removes it later).
-export async function reviewIdentity(submission, { decision, reason = '' }) {
-  await wait()
-  if (decision === 'reject' && checkRejectReason(reason)) {
-    throw new Error('Please write a reason for the citizen.')
-  }
-  const status = decision === 'approve' ? 'verified' : 'rejected'
-  const stillPending = () =>
-    pendingSubmissions().some(
-      (item) => item.id === submission.id && item.submittedAt === submission.submittedAt,
-    )
-  if (!stillPending()) throw new Error(ALREADY_REVIEWED)
-
-  // The citizen hears the outcome in their bell, with a link to their profile.
-  const why = decision === 'reject' ? reasonSentence(reason) : ''
-  const tellCitizen = () =>
-    notify(submission.email, {
-      kind: status === 'verified' ? 'identity-verified' : 'identity-rejected',
-      text: status === 'verified' ? 'Your identity is verified.' : `Your identity was not approved. Reason: ${why}`,
-      link: '/profile',
-    })
-
-  if (submission.sample) {
-    sampleDecisions.set(submission.id, status)
-    window.dispatchEvent(new Event(PROFILE_EVENT))
-    tellCitizen()
-    return { ...submission, status, photoDeleted: true }
-  }
-
-  if (decision === 'approve') {
-    const photo = await getIdentityPhoto(submission)
-    if (photo.kind === 'error') throw new Error(PHOTO_UNREADABLE_FOR_REVIEW)
-    if (photo.kind !== 'photo') throw new Error(NO_PHOTO_TO_APPROVE)
-    if (!stillPending()) throw new Error(ALREADY_REVIEWED) // reviewed elsewhere meanwhile
-  }
-
-  const { identity } = buildProfile(submission.email)
-  writeProfile(submission.email, {
-    identity: {
-      ...identity,
-      status,
-      reason: status === 'rejected' ? reason.trim() : '',
-      reviewedAt: new Date().toISOString(),
-    },
-  })
-  tellCitizen()
-
-  let photoDeleted = true
-  try {
-    await deletePhoto(submission.email, submission.submittedAt)
-  } catch {
-    photoDeleted = false
-  }
-  return { ...submission, status, photoDeleted }
-}

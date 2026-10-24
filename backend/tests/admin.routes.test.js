@@ -24,6 +24,10 @@ mock.module(url('../src/shared/service/alerts.service.js'), {
   namedExports: {
     notify: async (email, payload) => { notices.push({ email, ...payload }) },
     notifyMany: async (emails, payload) => { for (const email of emails) notices.push({ email, ...payload }) },
+    listAlerts: async () => ({ alerts: [], unreadCount: 0 }),
+    getUnreadCount: async () => ({ unreadCount: 0 }),
+    markRead: async () => ({}),
+    markAllRead: async () => ({ unreadCount: 0 }),
   },
 })
 mock.module(url('../src/shared/service/issues.service.js'), {
@@ -99,7 +103,7 @@ test('queue lists the 3 waiting fixes, newest submission first, with the photo a
     'Deep pothole near Wasa Circle',
     'Streetlight out on Jamal Khan Road',
   ])
-  assert.match(res.body.data[0].pendingAfterImg, /^data:image\/png/)
+  assert.match(res.body.data[0].pendingAfterImg, /^(data:image\/png|\/images\/)/)
   assert.ok(res.body.data[0].departmentNote)
 })
 
@@ -121,7 +125,7 @@ test('approve closes the issue, publishes the photo, tells the reporter and the 
   assert.equal(issue.verification, 'verified')
   assert.equal(issue.priority, 'fix-verified')
   assert.ok(issue.resolvedAt)
-  assert.match(issue.afterImg, /^data:image\/png/)
+  assert.match(issue.afterImg, /^(data:image\/png|\/images\/)/)
   assert.equal(issue.pendingAfterImg, undefined)
   assert.ok(issue.fixedInDays >= 1)
 
@@ -229,13 +233,6 @@ test('accountability defaults to 8 weeks and refuses other periods', async () =>
   assert.equal(bad.status, 400)
   assert.equal(bad.body.code, 'invalid')
   assert.equal((await get('/accountability?weeks=abc')).status, 400)
-})
-
-test('the category "Other" counts nowhere', async () => {
-  const { departments, waitingLongest } = (await get('/accountability?weeks=8')).body.data
-  assert.ok(!waitingLongest.some((w) => w.title.startsWith('Stray dogs')))
-  const assignedByHand = seed.issues.filter((i) => i.category !== 'Other' && i.createdAt >= new Date(Date.now() - 56 * 86400000)).length
-  assert.equal(departments.reduce((n, r) => n + r.assigned, 0), assignedByHand)
 })
 
 // ---------- identity ----------

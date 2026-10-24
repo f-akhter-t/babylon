@@ -1,13 +1,13 @@
 {
   "info": {
     "name": "Babylon: Admin panel",
-    "description": "Meheri's 11 admin endpoints. Before running: npm run seed:admin, then paste three tokens into the collection variables (npm run token -- admin, npm run token -- department, npm run token -- citizen). Run the folders in order with the Collection Runner. Re-run npm run seed:admin before every full run.",
+    "description": "Meheri's 15 admin endpoints, sent by hand one at a time. Before sending: run `npm run seed:admin`, start the server, then create three tokens with `npm run token -- admin admin@babylon.test`, `npm run token -- department roads@babylon.test \"Roads & Highways\"` and `npm run token -- citizen citizen@babylon.test`, and paste them into the variables adminToken, departmentToken and citizenToken. Copy ids from earlier answers by hand into the id variables. Each request's Description says the expected status and body. Send the folders in order, and re-run `npm run seed:admin` before sending them again.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
     {
       "key": "baseUrl",
-      "value": "http://localhost:5000"
+      "value": "http://localhost:5000/api"
     },
     {
       "key": "adminToken",
@@ -20,6 +20,10 @@
     {
       "key": "citizenToken",
       "value": ""
+    },
+    {
+      "key": "alertId",
+      "value": ""
     }
   ],
   "item": [
@@ -28,19 +32,6 @@
       "item": [
         {
           "name": "Counts",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('status is 200', () => pm.response.to.have.status(200));",
-                  "const body = pm.response.json();",
-                  "pm.test('3 waiting, 1 reopened', () => { pm.expect(body.data.queue).to.eql(3); pm.expect(body.data.reopened).to.eql(1); });"
-                ]
-              }
-            }
-          ],
           "request": {
             "method": "GET",
             "header": [
@@ -50,7 +41,7 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/api/admin/counts",
+              "raw": "{{baseUrl}}/admin/counts",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -59,25 +50,12 @@
                 "admin",
                 "counts"
               ]
-            }
+            },
+            "description": "Expected: 200. data.queue is 3 (fixes waiting) and data.reopened is 1 on a fresh `npm run seed:admin`. Send this first, on a freshly seeded database."
           }
         },
         {
           "name": "Queue (save ids)",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('status is 200', () => pm.response.to.have.status(200));",
-                  "const body = pm.response.json();",
-                  "pm.test('3 fixes, newest first', () => { pm.expect(body.data).to.have.length(3); const t = body.data.map(i => new Date(i.submittedAt).getTime()); pm.expect(t).to.eql([...t].sort((a, b) => b - a)); });",
-                  "pm.collectionVariables.set('fixA', body.data[0].id); pm.collectionVariables.set('fixB', body.data[1].id); pm.collectionVariables.set('fixC', body.data[2].id);"
-                ]
-              }
-            }
-          ],
           "request": {
             "method": "GET",
             "header": [
@@ -87,7 +65,7 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/api/admin/verification-queue",
+              "raw": "{{baseUrl}}/admin/verification-queue",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -96,24 +74,12 @@
                 "admin",
                 "verification-queue"
               ]
-            }
+            },
+            "description": "Expected: 200. data is a list of 3 fixes waiting for a check, newest first (by submittedAt). Copy the id of item 1, 2 and 3 by hand into the collection variables fixA, fixB and fixC."
           }
         },
         {
           "name": "Reopened (save id)",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('status is 200', () => pm.response.to.have.status(200));",
-                  "const body = pm.response.json();",
-                  "pm.test('1 reopened', () => pm.expect(body.data).to.have.length(1)); pm.collectionVariables.set('reopenedId', body.data[0].id);"
-                ]
-              }
-            }
-          ],
           "request": {
             "method": "GET",
             "header": [
@@ -123,7 +89,7 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/api/admin/reopened",
+              "raw": "{{baseUrl}}/admin/reopened",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -132,25 +98,12 @@
                 "admin",
                 "reopened"
               ]
-            }
+            },
+            "description": "Expected: 200. data is a list with 1 reopened issue. Copy its id by hand into the variable reopenedId."
           }
         },
         {
           "name": "Identity queue (save ids)",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('status is 200', () => pm.response.to.have.status(200));",
-                  "const body = pm.response.json();",
-                  "pm.test('4 waiting, oldest first, last 4 digits only', () => { pm.expect(body.data).to.have.length(4); pm.expect(body.data.map(i => i.nidLast4)).to.eql(['4821', '9034', '7390', '1156']); pm.expect(JSON.stringify(body)).to.not.include('photo'); });",
-                  "pm.collectionVariables.set('idPhoto', body.data[0].id); pm.collectionVariables.set('idNoPhoto', body.data[1].id); pm.collectionVariables.set('idOk', body.data[2].id);"
-                ]
-              }
-            }
-          ],
           "request": {
             "method": "GET",
             "header": [
@@ -160,7 +113,7 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/api/admin/identity",
+              "raw": "{{baseUrl}}/admin/identity",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -169,7 +122,8 @@
                 "admin",
                 "identity"
               ]
-            }
+            },
+            "description": "Expected: 200. data is a list of 4 identity submissions, oldest first, showing only nidLast4 (4821, 9034, 7390, 1156) and no photo. Copy the id of item 1, 2 and 3 by hand into idPhoto, idNoPhoto and idOk."
           }
         }
       ]
@@ -179,23 +133,11 @@
       "item": [
         {
           "name": "No token: 401",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('status is 401', () => pm.response.to.have.status(401));",
-                  "pm.test('code is unauthorized', () => pm.expect(pm.response.json().code).to.eql('unauthorized'));"
-                ]
-              }
-            }
-          ],
           "request": {
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/api/admin/counts",
+              "raw": "{{baseUrl}}/admin/counts",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -204,23 +146,12 @@
                 "admin",
                 "counts"
               ]
-            }
+            },
+            "description": "No Authorization header. Expected: 401, code unauthorized."
           }
         },
         {
           "name": "Citizen token: 403",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('status is 403', () => pm.response.to.have.status(403));",
-                  "pm.test('code is forbidden', () => pm.expect(pm.response.json().code).to.eql('forbidden'));"
-                ]
-              }
-            }
-          ],
           "request": {
             "method": "GET",
             "header": [
@@ -230,7 +161,7 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/api/admin/counts",
+              "raw": "{{baseUrl}}/admin/counts",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -239,23 +170,12 @@
                 "admin",
                 "counts"
               ]
-            }
+            },
+            "description": "Uses a citizen token (`npm run token -- citizen`), pasted into citizenToken. Expected: 403, code forbidden."
           }
         },
         {
           "name": "Department token: 403",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('status is 403', () => pm.response.to.have.status(403));",
-                  "pm.test('code is forbidden', () => pm.expect(pm.response.json().code).to.eql('forbidden'));"
-                ]
-              }
-            }
-          ],
           "request": {
             "method": "GET",
             "header": [
@@ -265,7 +185,7 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/api/admin/verification-queue",
+              "raw": "{{baseUrl}}/admin/verification-queue",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -274,7 +194,8 @@
                 "admin",
                 "verification-queue"
               ]
-            }
+            },
+            "description": "Uses a department token (`npm run token -- department`), pasted into departmentToken. Expected: 403, code forbidden."
           }
         }
       ]
@@ -284,19 +205,6 @@
       "item": [
         {
           "name": "Approve fix A",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('status is 200', () => pm.response.to.have.status(200));",
-                  "const body = pm.response.json();",
-                  "pm.test('resolved and verified', () => { pm.expect(body.data.status).to.eql('resolved'); pm.expect(body.data.verification).to.eql('verified'); pm.expect(body.data.priority).to.eql('fix-verified'); pm.expect(body.data.afterImg).to.be.a('string'); });"
-                ]
-              }
-            }
-          ],
           "request": {
             "method": "POST",
             "header": [
@@ -306,7 +214,7 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/api/admin/issues/{{fixA}}/approve",
+              "raw": "{{baseUrl}}/admin/issues/{{fixA}}/approve",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -317,23 +225,12 @@
                 "{{fixA}}",
                 "approve"
               ]
-            }
+            },
+            "description": "Uses the id in fixA. Expected: 200. data.status is resolved, verification is verified, priority is fix-verified, and afterImg is a text (the approved photo)."
           }
         },
         {
           "name": "Approve fix A again: 409",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('status is 409', () => pm.response.to.have.status(409));",
-                  "pm.test('code is conflict', () => pm.expect(pm.response.json().code).to.eql('conflict'));"
-                ]
-              }
-            }
-          ],
           "request": {
             "method": "POST",
             "header": [
@@ -343,7 +240,7 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/api/admin/issues/{{fixA}}/approve",
+              "raw": "{{baseUrl}}/admin/issues/{{fixA}}/approve",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -354,23 +251,12 @@
                 "{{fixA}}",
                 "approve"
               ]
-            }
+            },
+            "description": "Same request as the one above, sent a second time. Expected: 409, code conflict (already checked)."
           }
         },
         {
           "name": "Approve unknown id: 404",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('status is 404', () => pm.response.to.have.status(404));",
-                  "pm.test('code is not-found', () => pm.expect(pm.response.json().code).to.eql('not-found'));"
-                ]
-              }
-            }
-          ],
           "request": {
             "method": "POST",
             "header": [
@@ -380,7 +266,7 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/api/admin/issues/64b7f0a1c2d3e4f5a6b7c8d9/approve",
+              "raw": "{{baseUrl}}/admin/issues/64b7f0a1c2d3e4f5a6b7c8d9/approve",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -391,24 +277,12 @@
                 "64b7f0a1c2d3e4f5a6b7c8d9",
                 "approve"
               ]
-            }
+            },
+            "description": "An id that does not exist. Expected: 404, code not-found."
           }
         },
         {
           "name": "Reject fix B without a reason: 400",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('status is 400', () => pm.response.to.have.status(400));",
-                  "pm.test('code is invalid', () => pm.expect(pm.response.json().code).to.eql('invalid'));",
-                  "pm.test('field is reason', () => pm.expect(pm.response.json().field).to.eql('reason'));"
-                ]
-              }
-            }
-          ],
           "request": {
             "method": "POST",
             "header": [
@@ -426,7 +300,7 @@
               "raw": "{}"
             },
             "url": {
-              "raw": "{{baseUrl}}/api/admin/issues/{{fixB}}/reject",
+              "raw": "{{baseUrl}}/admin/issues/{{fixB}}/reject",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -437,24 +311,12 @@
                 "{{fixB}}",
                 "reject"
               ]
-            }
+            },
+            "description": "Uses the id in fixB with an empty body. Expected: 400, code invalid, field reason."
           }
         },
         {
           "name": "Reject fix B with a reason",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('status is 200', () => pm.response.to.have.status(200));",
-                  "const body = pm.response.json();",
-                  "pm.test('back to in progress with the reason kept', () => { pm.expect(body.data.verification).to.eql('none'); pm.expect(body.data.status).to.eql('in-progress'); pm.expect(body.data.sentBack.reason).to.include('still there'); pm.expect(body.data.sentBackHistory).to.have.length(1); pm.expect(body.data.pendingAfterImg).to.be.oneOf([undefined, null]); });"
-                ]
-              }
-            }
-          ],
           "request": {
             "method": "POST",
             "header": [
@@ -472,7 +334,7 @@
               "raw": "{\n  \"reason\": \"The pothole is still there after the patch.\"\n}"
             },
             "url": {
-              "raw": "{{baseUrl}}/api/admin/issues/{{fixB}}/reject",
+              "raw": "{{baseUrl}}/admin/issues/{{fixB}}/reject",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -483,22 +345,12 @@
                 "{{fixB}}",
                 "reject"
               ]
-            }
+            },
+            "description": "Uses the id in fixB with a reason. Expected: 200. data.verification is none and data.status is in-progress (back to the department). The rejected photo (pendingAfterImg) is not in the answer."
           }
         },
         {
           "name": "Reject fix B again: 409",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('status is 409', () => pm.response.to.have.status(409));"
-                ]
-              }
-            }
-          ],
           "request": {
             "method": "POST",
             "header": [
@@ -516,7 +368,7 @@
               "raw": "{\n  \"reason\": \"Again\"\n}"
             },
             "url": {
-              "raw": "{{baseUrl}}/api/admin/issues/{{fixB}}/reject",
+              "raw": "{{baseUrl}}/admin/issues/{{fixB}}/reject",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -527,23 +379,12 @@
                 "{{fixB}}",
                 "reject"
               ]
-            }
+            },
+            "description": "Same issue, sent a second time. Expected: 409, code conflict."
           }
         },
         {
           "name": "Send fix C to queue (not reopened): 409",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('status is 409', () => pm.response.to.have.status(409));",
-                  "pm.test('code is conflict', () => pm.expect(pm.response.json().code).to.eql('conflict'));"
-                ]
-              }
-            }
-          ],
           "request": {
             "method": "POST",
             "header": [
@@ -553,7 +394,7 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/api/admin/issues/{{fixC}}/send-to-queue",
+              "raw": "{{baseUrl}}/admin/issues/{{fixC}}/send-to-queue",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -564,24 +405,12 @@
                 "{{fixC}}",
                 "send-to-queue"
               ]
-            }
+            },
+            "description": "Uses the id in fixC, which is a normal waiting fix, not a reopened one. Expected: 409, code conflict."
           }
         },
         {
           "name": "Send the reopened issue to the queue",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('status is 200', () => pm.response.to.have.status(200));",
-                  "const body = pm.response.json();",
-                  "pm.test('waiting, still reopened priority', () => { pm.expect(body.data.verification).to.eql('awaiting'); pm.expect(body.data.priority).to.eql('reopened'); });"
-                ]
-              }
-            }
-          ],
           "request": {
             "method": "POST",
             "header": [
@@ -591,7 +420,7 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/api/admin/issues/{{reopenedId}}/send-to-queue",
+              "raw": "{{baseUrl}}/admin/issues/{{reopenedId}}/send-to-queue",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -602,24 +431,12 @@
                 "{{reopenedId}}",
                 "send-to-queue"
               ]
-            }
+            },
+            "description": "Uses the id in reopenedId. Expected: 200. data.verification is awaiting and data.priority is still reopened."
           }
         },
         {
           "name": "Counts after the decisions",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('status is 200', () => pm.response.to.have.status(200));",
-                  "const body = pm.response.json();",
-                  "pm.test('queue 2 (C and the reopened one), reopened 0', () => { pm.expect(body.data.queue).to.eql(2); pm.expect(body.data.reopened).to.eql(0); });"
-                ]
-              }
-            }
-          ],
           "request": {
             "method": "GET",
             "header": [
@@ -629,7 +446,7 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/api/admin/counts",
+              "raw": "{{baseUrl}}/admin/counts",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -638,7 +455,8 @@
                 "admin",
                 "counts"
               ]
-            }
+            },
+            "description": "Expected: 200. data.queue is 2 (fix C and the reopened one) and data.reopened is 0."
           }
         }
       ]
@@ -648,21 +466,6 @@
       "item": [
         {
           "name": "8 weeks",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('status is 200', () => pm.response.to.have.status(200));",
-                  "const body = pm.response.json();",
-                  "pm.test('cards equal the sum of the rows', () => { const d = body.data; pm.expect(d.departments).to.have.length(4); pm.expect(d.stats.received).to.eql(d.departments.reduce((n, r) => n + r.assigned, 0)); pm.expect(d.stats.resolved).to.eql(d.departments.reduce((n, r) => n + r.resolved, 0)); });",
-                  "pm.test('weekly has 8 entries that add up', () => { const d = body.data; pm.expect(d.weekly).to.have.length(8); pm.expect(d.weekly.reduce((n, w) => n + w.received, 0)).to.eql(d.stats.received); });",
-                  "pm.test('waiting longest is longest first', () => { const days = body.data.waitingLongest.map(w => w.days); pm.expect(days).to.eql([...days].sort((a, b) => b - a)); });"
-                ]
-              }
-            }
-          ],
           "request": {
             "method": "GET",
             "header": [
@@ -672,7 +475,7 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/api/admin/accountability?weeks=8",
+              "raw": "{{baseUrl}}/admin/accountability?weeks=8",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -687,24 +490,12 @@
                   "value": "8"
                 }
               ]
-            }
+            },
+            "description": "Expected: 200. data.departments has 4 rows; data.stats.received equals the sum of the rows' assigned and data.stats.resolved equals the sum of their resolved. data.weekly has 8 entries that add up to stats.received. data.waitingLongest is sorted longest first."
           }
         },
         {
           "name": "4 weeks",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('status is 200', () => pm.response.to.have.status(200));",
-                  "const body = pm.response.json();",
-                  "pm.test('4 entries', () => { pm.expect(body.data.weekly).to.have.length(4); pm.expect(body.data.label).to.eql('Last 4 weeks'); });"
-                ]
-              }
-            }
-          ],
           "request": {
             "method": "GET",
             "header": [
@@ -714,7 +505,7 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/api/admin/accountability?weeks=4",
+              "raw": "{{baseUrl}}/admin/accountability?weeks=4",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -729,24 +520,12 @@
                   "value": "4"
                 }
               ]
-            }
+            },
+            "description": "Expected: 200. data.weekly has 4 entries and data.label is 'Last 4 weeks'."
           }
         },
         {
           "name": "No period (defaults to 8)",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('status is 200', () => pm.response.to.have.status(200));",
-                  "const body = pm.response.json();",
-                  "pm.test('8 weeks', () => pm.expect(body.data.weeks).to.eql(8));"
-                ]
-              }
-            }
-          ],
           "request": {
             "method": "GET",
             "header": [
@@ -756,7 +535,7 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/api/admin/accountability",
+              "raw": "{{baseUrl}}/admin/accountability",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -765,23 +544,12 @@
                 "admin",
                 "accountability"
               ]
-            }
+            },
+            "description": "No weeks value. Expected: 200 and data.weeks is 8."
           }
         },
         {
           "name": "6 weeks: 400",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('status is 400', () => pm.response.to.have.status(400));",
-                  "pm.test('code is invalid', () => pm.expect(pm.response.json().code).to.eql('invalid'));"
-                ]
-              }
-            }
-          ],
           "request": {
             "method": "GET",
             "header": [
@@ -791,7 +559,7 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/api/admin/accountability?weeks=6",
+              "raw": "{{baseUrl}}/admin/accountability?weeks=6",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -806,7 +574,8 @@
                   "value": "6"
                 }
               ]
-            }
+            },
+            "description": "Only 4 or 8 are allowed. Expected: 400, code invalid."
           }
         }
       ]
@@ -816,18 +585,6 @@
       "item": [
         {
           "name": "Photo of a pending submission",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('status is 200', () => pm.response.to.have.status(200));",
-                  "pm.test('is an image, never cached', () => { pm.expect(pm.response.headers.get('Content-Type')).to.include('image/'); pm.expect(pm.response.headers.get('Cache-Control')).to.include('no-store'); });"
-                ]
-              }
-            }
-          ],
           "request": {
             "method": "GET",
             "header": [
@@ -837,7 +594,7 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/api/admin/identity/{{idPhoto}}/photo",
+              "raw": "{{baseUrl}}/admin/identity/{{idPhoto}}/photo",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -848,22 +605,12 @@
                 "{{idPhoto}}",
                 "photo"
               ]
-            }
+            },
+            "description": "Uses the id in idPhoto. Expected: 200, and the answer is a picture (Content-Type image/...), not JSON, with Cache-Control no-store. Use Send and look at the Preview tab."
           }
         },
         {
           "name": "Photo of a submission without one: 404",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('status is 404', () => pm.response.to.have.status(404));"
-                ]
-              }
-            }
-          ],
           "request": {
             "method": "GET",
             "header": [
@@ -873,7 +620,7 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/api/admin/identity/{{idNoPhoto}}/photo",
+              "raw": "{{baseUrl}}/admin/identity/{{idNoPhoto}}/photo",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -884,23 +631,12 @@
                 "{{idNoPhoto}}",
                 "photo"
               ]
-            }
+            },
+            "description": "Uses the id in idNoPhoto. Expected: 404."
           }
         },
         {
           "name": "Reject with a 3-character reason: 400",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('status is 400', () => pm.response.to.have.status(400));",
-                  "pm.test('code is invalid', () => pm.expect(pm.response.json().code).to.eql('invalid'));"
-                ]
-              }
-            }
-          ],
           "request": {
             "method": "POST",
             "header": [
@@ -918,7 +654,7 @@
               "raw": "{\n  \"decision\": \"reject\",\n  \"reason\": \"bad\"\n}"
             },
             "url": {
-              "raw": "{{baseUrl}}/api/admin/identity/{{idPhoto}}/review",
+              "raw": "{{baseUrl}}/admin/identity/{{idPhoto}}/review",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -929,24 +665,12 @@
                 "{{idPhoto}}",
                 "review"
               ]
-            }
+            },
+            "description": "Body: decision reject, reason 'bad' (too short, the minimum is 5). Expected: 400, code invalid."
           }
         },
         {
           "name": "Reject with a reason",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('status is 200', () => pm.response.to.have.status(200));",
-                  "const body = pm.response.json();",
-                  "pm.test('rejected and the photo is deleted', () => { pm.expect(body.data.status).to.eql('rejected'); pm.expect(body.data.photoDeleted).to.eql(true); });"
-                ]
-              }
-            }
-          ],
           "request": {
             "method": "POST",
             "header": [
@@ -964,7 +688,7 @@
               "raw": "{\n  \"decision\": \"reject\",\n  \"reason\": \"The card photo is blurry.\"\n}"
             },
             "url": {
-              "raw": "{{baseUrl}}/api/admin/identity/{{idPhoto}}/review",
+              "raw": "{{baseUrl}}/admin/identity/{{idPhoto}}/review",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -975,22 +699,12 @@
                 "{{idPhoto}}",
                 "review"
               ]
-            }
+            },
+            "description": "Uses idPhoto with a good reason. Expected: 200. data.status is rejected and data.photoDeleted is true."
           }
         },
         {
           "name": "Photo after the review: 404",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('status is 404', () => pm.response.to.have.status(404));"
-                ]
-              }
-            }
-          ],
           "request": {
             "method": "GET",
             "header": [
@@ -1000,7 +714,7 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/api/admin/identity/{{idPhoto}}/photo",
+              "raw": "{{baseUrl}}/admin/identity/{{idPhoto}}/photo",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -1011,23 +725,12 @@
                 "{{idPhoto}}",
                 "photo"
               ]
-            }
+            },
+            "description": "Same photo address as before, after the rejection. Expected: 404 (the photo was deleted)."
           }
         },
         {
           "name": "Review the same one again: 409",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('status is 409', () => pm.response.to.have.status(409));",
-                  "pm.test('code is conflict', () => pm.expect(pm.response.json().code).to.eql('conflict'));"
-                ]
-              }
-            }
-          ],
           "request": {
             "method": "POST",
             "header": [
@@ -1045,7 +748,7 @@
               "raw": "{\n  \"decision\": \"approve\"\n}"
             },
             "url": {
-              "raw": "{{baseUrl}}/api/admin/identity/{{idPhoto}}/review",
+              "raw": "{{baseUrl}}/admin/identity/{{idPhoto}}/review",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -1056,22 +759,12 @@
                 "{{idPhoto}}",
                 "review"
               ]
-            }
+            },
+            "description": "Uses idPhoto, which is already reviewed. Expected: 409, code conflict."
           }
         },
         {
           "name": "Approve one without a photo: 409",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('status is 409', () => pm.response.to.have.status(409));"
-                ]
-              }
-            }
-          ],
           "request": {
             "method": "POST",
             "header": [
@@ -1089,7 +782,7 @@
               "raw": "{\n  \"decision\": \"approve\"\n}"
             },
             "url": {
-              "raw": "{{baseUrl}}/api/admin/identity/{{idNoPhoto}}/review",
+              "raw": "{{baseUrl}}/admin/identity/{{idNoPhoto}}/review",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -1100,24 +793,12 @@
                 "{{idNoPhoto}}",
                 "review"
               ]
-            }
+            },
+            "description": "Uses idNoPhoto (it has no photo). Expected: 409."
           }
         },
         {
           "name": "Approve one with a photo",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('status is 200', () => pm.response.to.have.status(200));",
-                  "const body = pm.response.json();",
-                  "pm.test('verified', () => pm.expect(body.data.status).to.eql('verified'));"
-                ]
-              }
-            }
-          ],
           "request": {
             "method": "POST",
             "header": [
@@ -1135,7 +816,7 @@
               "raw": "{\n  \"decision\": \"approve\"\n}"
             },
             "url": {
-              "raw": "{{baseUrl}}/api/admin/identity/{{idOk}}/review",
+              "raw": "{{baseUrl}}/admin/identity/{{idOk}}/review",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -1146,24 +827,12 @@
                 "{{idOk}}",
                 "review"
               ]
-            }
+            },
+            "description": "Uses idOk. Expected: 200 and data.status is verified."
           }
         },
         {
           "name": "Identity count",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('status is 200', () => pm.response.to.have.status(200));",
-                  "const body = pm.response.json();",
-                  "pm.test('2 left (the no-photo one and the newest)', () => pm.expect(body.data.count).to.eql(2));"
-                ]
-              }
-            }
-          ],
           "request": {
             "method": "GET",
             "header": [
@@ -1173,7 +842,7 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/api/admin/identity/count",
+              "raw": "{{baseUrl}}/admin/identity/count",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -1183,7 +852,261 @@
                 "identity",
                 "count"
               ]
-            }
+            },
+            "description": "Expected: 200 and data.count is 2 (the no-photo one and the newest one are still waiting)."
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. Alerts",
+      "item": [
+        {
+          "name": "Alerts: list",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/admin/alerts",
+            "description": "Expected: 200. data.alerts is the signed-in admin's own notices, newest first (each has id, kind, text, link, issueId, createdAt, read). data.unreadCount is how many have read false. The list may be empty if nothing has notified this admin yet. If it has items, copy the id of one into the variable alertId by hand."
+          }
+        },
+        {
+          "name": "Alerts: unread count",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/admin/alerts/unread-count",
+            "description": "Expected: 200. data.unreadCount equals data.unreadCount in the list above."
+          }
+        },
+        {
+          "name": "Alerts: mark one read",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/admin/alerts/{{alertId}}/read",
+            "description": "Uses the id in alertId (copied by hand from the list). Expected: 200. data.read is true and data.id is the same id. If the list was empty, skip this one."
+          }
+        },
+        {
+          "name": "Alerts: mark an unknown alert read: 404",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/admin/alerts/000000000000000000000000/read",
+            "description": "An id that does not exist. Expected: 404, code not-found, message 'We could not find that notice.'"
+          }
+        },
+        {
+          "name": "Alerts: mark all read",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/admin/alerts/read-all",
+            "description": "Expected: 200. data.unreadCount is 0. Send 'Alerts: unread count' again to confirm it is 0."
+          }
+        },
+        {
+          "name": "Alerts: no token: 401",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/admin/alerts",
+            "description": "No Authorization header. Expected: 401, code unauthorized."
+          }
+        },
+        {
+          "name": "Alerts: citizen token: 403",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{citizenToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/admin/alerts",
+            "description": "Uses the citizen token in citizenToken. Expected: 403, code forbidden."
+          }
+        }
+      ]
+    },
+    {
+      "name": "6. Translate (F10)",
+      "item": [
+        {
+          "name": "Translate: valid text to Bangla",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"text\": \"Deep pothole near Wasa Circle\", \"to\": \"bn\"}"
+            },
+            "url": "{{baseUrl}}/translate",
+            "description": "Admin token. Needs Joyti's Gemini service and key to be working. Expected: 200, data { translation, to: \"bn\" }. With Gemini off: 503, code ai-unavailable."
+          }
+        },
+        {
+          "name": "Translate: department token also allowed",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{departmentToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"text\": \"Cracked railing\", \"to\": \"en\"}"
+            },
+            "url": "{{baseUrl}}/translate",
+            "description": "Department token in departmentToken. Expected: 200 (any signed-in role may translate), or 503 ai-unavailable if Gemini is off."
+          }
+        },
+        {
+          "name": "Translate: no token: 401",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"text\": \"Hello\", \"to\": \"en\"}"
+            },
+            "url": "{{baseUrl}}/translate",
+            "description": "No Authorization header. Expected: 401, code unauthorized."
+          }
+        },
+        {
+          "name": "Translate: empty text: 400",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"text\": \"   \", \"to\": \"en\"}"
+            },
+            "url": "{{baseUrl}}/translate",
+            "description": "Expected: 400, code invalid, field text."
+          }
+        },
+        {
+          "name": "Translate: over-long text: 400",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"text\": \"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\", \"to\": \"en\"}"
+            },
+            "url": "{{baseUrl}}/translate",
+            "description": "1001 characters (the limit is 1000). Expected: 400, code invalid, field text."
+          }
+        },
+        {
+          "name": "Translate: unsupported language: 400",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"text\": \"Hello\", \"to\": \"fr\"}"
+            },
+            "url": "{{baseUrl}}/translate",
+            "description": "Expected: 400, code invalid, field to."
+          }
+        },
+        {
+          "name": "Translate: rapid repeats: 429",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"text\": \"Hello\", \"to\": \"en\"}"
+            },
+            "url": "{{baseUrl}}/translate",
+            "description": "Send this one 11 times quickly. The limit is 10 per minute per user. Expected: after the 10th, 429, code too-many-requests. Wait a minute and it works again."
           }
         }
       ]

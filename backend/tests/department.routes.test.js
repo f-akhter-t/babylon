@@ -48,7 +48,6 @@ const makeIssues = () => [
   { title: 'Road fixed', category: 'Roads', status: 'resolved', priority: 'fix-verified', verification: 'verified', votes: 3 },
   { title: 'Road reopened', category: 'Roads', status: 'in-progress', priority: 'reopened', verification: 'reopened', votes: 4 },
   { title: 'Bin overflow', category: 'Waste', status: 'open', priority: 'medium', verification: 'none', votes: 7 },
-  { title: 'Stray dogs', category: 'Other', status: 'open', priority: 'medium', verification: 'none', votes: 8 },
   { title: 'Streetlight out', category: 'Lighting', status: 'open', priority: 'medium', verification: 'none', votes: 1 },
 ]
 

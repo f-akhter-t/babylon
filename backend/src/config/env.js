@@ -18,6 +18,12 @@ export const env = {
   jwtExpiresIn: process.env.JWT_EXPIRES_IN || '7d',
   clientOrigin: process.env.CLIENT_ORIGIN || 'http://localhost:5173',
   isProduction: process.env.NODE_ENV === 'production',
+
   // Only the exact word 'dev' turns phone codes on. Missing or anything else: off.
   phoneCodeMode: process.env.PHONE_CODE_MODE === 'dev' ? 'dev' : 'off',
+
+  // CLIP photo severity (F1). Off by default: a host that cannot hold the model
+  // leaves it off, and reports are created without an AI priority.
+  clipEnabled: process.env.CLIP_ENABLED === 'true',
+
 }
