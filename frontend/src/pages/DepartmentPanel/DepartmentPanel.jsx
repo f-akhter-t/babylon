@@ -123,6 +123,7 @@ function DepartmentPanelPage() {
     setBusy(true)
     try {
       const issue = await startWorkOn(id)
+      window.dispatchEvent(new Event(ISSUES_EVENT))
       select(id)
       setNotice({ tone: 'success', text: `Work has started on “${issue.title}”.` })
     } catch (err) {
@@ -141,6 +142,7 @@ function DepartmentPanelPage() {
     try {
       const photoUrl = await resizeImage(file)
       const issue = await sendForVerification(id, { note, photoUrl })
+      window.dispatchEvent(new Event(ISSUES_EVENT))
       setSelectedId(null)
       closePanel()
       setNotice({

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import clsx from 'clsx'
 import { sentBackMessage } from './departmentFilters'
+import { getIssueById } from '../../services/api'
 
 const NEEDS_PHOTO_ID = 'resolve-needs-photo'
 const SUBMIT_ERROR_ID = 'resolve-submit-error'
@@ -22,7 +23,24 @@ export default function ResolvePanel({ issue, onSubmit, busy = false, error = nu
     },
     [],
   )
-
+  // The list leaves the citizen's photo out (it is large), so fetch it for
+  // the selected issue only. The panel is keyed by issue id, so no stale photo.
+  const issueId = issue?.id
+  const [beforeImg, setBeforeImg] = useState(null)
+  useEffect(() => {
+    if (!issueId) return undefined
+    let ignore = false
+    getIssueById(issueId)
+      .then((full) => {
+        if (!ignore) setBeforeImg(full?.beforeImg ?? null)
+      })
+      .catch(() => {
+        // No photo is not an error for the staff member: the text box stays.
+      })
+    return () => {
+      ignore = true
+    }
+  }, [issueId])
   if (!issue) {
     return (
       <p className="pb-4 font-body text-base text-muted sm:pb-6">
@@ -83,8 +101,16 @@ export default function ResolvePanel({ issue, onSubmit, busy = false, error = nu
       )}
 
       <p className="mt-5 font-body text-sm font-bold text-navy">Before photo from the citizen</p>
-      <div className="mt-2 flex h-32 items-center justify-center rounded-card bg-slate font-body text-sm font-semibold text-mint">
-        Citizen photo
+      <div className="mt-2 flex h-32 items-center justify-center overflow-hidden rounded-card bg-slate font-body text-sm font-semibold text-mint">
+        {beforeImg ? (
+          <img
+            src={beforeImg}
+            alt="Before photo from the citizen"
+            className="h-full w-full object-cover"
+          />
+        ) : (
+          'Citizen photo'
+        )}
       </div>
 
       <p className="mt-5 font-body text-sm font-bold text-navy">

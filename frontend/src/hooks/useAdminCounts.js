@@ -1,21 +1,13 @@
 import { useEffect, useState } from 'react'
-import {
-  getAdminCounts,
-  getCompletedDepartmentIssues,
-  getDepartmentIssues,
-  ISSUES_EVENT,
-} from '../services/api'
+import { getAdminCounts, loadDepartmentPanel, ISSUES_EVENT } from '../services/api'
 import { issuesFor } from '../pages/DepartmentPanel/departmentFilters'
 import { usePendingIdentityCount } from './usePendingIdentityCount'
 
 async function countsFor(variant, department) {
   if (variant === 'admin') return getAdminCounts() // { queue, reopened }
   if (!department) return {}
-  // Only the signed-in department's issues, counted the same way as its filters.
-  const [assigned, completed] = await Promise.all([
-    getDepartmentIssues(department),
-    getCompletedDepartmentIssues(department),
-  ])
+  // The server knows the department from the token.
+  const { assigned, completed } = await loadDepartmentPanel()
   return {
     inProgress: issuesFor('in-progress', assigned, completed).length,
     awaiting: issuesFor('awaiting', assigned, completed).length,
