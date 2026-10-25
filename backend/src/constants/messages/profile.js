@@ -14,4 +14,12 @@ export const PROFILE_MESSAGES = {
   phoneCodeOff: 'Phone codes are not available right now.',
   phoneVerified: 'Your mobile number is verified.',
   phoneAlreadyVerified: 'This number is already verified.',
+  phoneInvalid: 'Enter a Bangladesh mobile number, like 01712345678.',
+  codeFormat: 'Enter the 6-digit code.',
+  nidLast4Invalid: 'Enter the last 4 digits of your NID.',
+  identityPhotoInvalid: 'Send a JPG, PNG or WebP photo of your ID card.',
+  identityPhotoTooLarge: 'That photo is too large. Please send a smaller one.',
+  identityPending: 'Your ID is already waiting for review.',
+  identityAlreadyVerified: 'Your ID is already verified.',
+  identitySubmitted: 'Your ID was sent for review.',
 }

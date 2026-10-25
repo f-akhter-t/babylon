@@ -7,6 +7,7 @@ import mongoose from 'mongoose'
 import express from 'express'
 import request from 'supertest'
 import { fakeModel } from './helpers/fakeModel.js'
+import AppError from '../src/utils/AppError.js'
 
 // Set before any app code loads. The URI is never used: nothing connects.
 process.env.MONGODB_URI = 'mongodb://localhost/unused-never-connected'
@@ -21,6 +22,36 @@ const notices = []
 mock.module(url('../src/models/issue.model.js'), { defaultExport: proxy('issue') })
 mock.module(url('../src/models/user.model.js'), { defaultExport: proxy('user') })
 mock.module(url('../src/models/identity.model.js'), { defaultExport: proxy('identity') })
+// Phone-code service replaced by a fake, so no real model or code is used.
+const phone = { calls: [], verifyError: null }
+mock.module(url('../src/shared/service/phoneCode.service.js'), {
+  namedExports: {
+    sendCode: async (args) => { phone.calls.push(['send', args]); return { sent: true, resendAfter: 30 } },
+    verifyCode: async (args) => {
+      phone.calls.push(['verify', args])
+      if (phone.verifyError) throw phone.verifyError
+      return { verified: true }
+    },
+  },
+})
+
+// fakeModel has no create or updateOne. This adds them here, in the test only.
+function withWrites(model) {
+  return {
+    ...model,
+    create: async (doc) => {
+      const row = { _id: new mongoose.Types.ObjectId(), ...doc }
+      model.rows.push(row)
+      return row
+    },
+    updateOne: async (filter, update) => {
+      const row = model.rows.find((r) => String(r._id) === String(filter._id))
+      if (!row) return { matchedCount: 0 }
+      Object.assign(row, update.$set ?? {})
+      return { matchedCount: 1 }
+    },
+  }
+}
 mock.module(url('../src/shared/service/alerts.service.js'), {
   namedExports: {
     notify: async (email, payload) => { notices.push({ email, ...payload }) },
@@ -91,9 +122,11 @@ before(async () => {
 
 beforeEach(() => {
   fakes.issue = fakeModel(makeIssues())
-  fakes.user = fakeModel(makeUsers())
-  fakes.identity = fakeModel(makeIdentities())
+  fakes.user = withWrites(fakeModel(makeUsers()))
+  fakes.identity = withWrites(fakeModel(makeIdentities()))
   notices.length = 0
+  phone.calls.length = 0
+  phone.verifyError = null
 })
 
 const as = (who) => ({ Authorization: `Bearer ${tokens[who]}` })
@@ -279,25 +312,38 @@ test('profile: returns the signed-in citizen with division, and no NID photo', a
   assert.deepEqual(res.body.data, {
     name: 'Nadia Rahman',
     email: 'nadia@babylon.test',
+    role: 'citizen',
+    department: null,
     phone: '01712345678',
+    phoneVerified: false,
     address: '12 Lake Road',
     division: 'Chattogram',
-    identity: { status: 'pending', nidLast4: '4821', reason: '' },
+    identity: { status: 'pending', nidLast4: '4821', submittedAt: null, reason: '' },
+    isVerified: false,
+    jobTitle: '',
+    employeeId: '',
+    onboarded: true,
   })
   const text = JSON.stringify(res.body)
   assert.equal(text.includes('secret-photo-bytes'), false)
   assert.equal(text.includes('photo'), false)
 })
 
-test('profile: a citizen with no identity record gets status none', async () => {
-  const res = await request(app)
-    .get('/api/citizen/profile')
-    .set({ Authorization: `Bearer ${tokens.citizen}` })
-    .query({})
+test('profile: a citizen with a pending identity record gets status pending', async () => {
+  const res = await profile()
   assert.equal(res.body.data.identity.status, 'pending')
-  fakes.identity = fakeModel([])
-  const again = await profile()
-  assert.deepEqual(again.body.data.identity, { status: 'none', nidLast4: null, reason: null })
+  assert.equal(res.body.data.isVerified, false)
+})
+
+test('profile: a citizen with no identity record gets status not-submitted', async () => {
+  fakes.identity = withWrites(fakeModel([]))
+  const res = await profile()
+  assert.deepEqual(res.body.data.identity, {
+    status: 'not-submitted',
+    nidLast4: '',
+    submittedAt: null,
+    reason: '',
+  })
 })
 
 test('profile: the owner comes from the token, not from the query', async () => {
@@ -394,4 +440,123 @@ test('profile update: the owner comes from the token, not the body', async () =>
 
 test('profile update: a token for an account that does not exist gives 404', async () => {
   assert.equal((await patchProfile({ address: 'x' }, 'stranger')).status, 404)
+})
+// ---------- citizen profile: phone code, phone verify, identity ----------
+
+const PNG =
+  'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=='
+const post = (path, body, who = 'citizen') =>
+  request(app).post(`/api/citizen/profile/${path}`).set(as(who)).send(body)
+const nadia = () => fakes.user.rows.find((row) => row.email === 'nadia@babylon.test')
+
+test('phone-code: no token gives 401, a department token gives 403', async () => {
+  const none = await request(app).post('/api/citizen/profile/phone-code').send({ phone: '01812345678' })
+  assert.equal(none.status, 401)
+  assert.equal((await post('phone-code', { phone: '01812345678' }, 'roads')).status, 403)
+})
+
+test('phone-code: a valid number sends a code and returns resendIn', async () => {
+  const res = await post('phone-code', { phone: '+8801812-345678' })
+  assert.equal(res.status, 200)
+  assert.deepEqual(res.body.data, { phone: '01812345678', resendIn: 30 })
+  assert.equal(phone.calls.length, 1)
+  assert.equal(phone.calls[0][1].phone, '01812345678') // normalised before the service
+  assert.equal(nadia().phone, '01712345678') // not saved until verified
+})
+
+test('phone-code: a bad number gives 400 with the field name', async () => {
+  const res = await post('phone-code', { phone: '123' })
+  assert.equal(res.status, 400)
+  assert.equal(res.body.field, 'phone')
+  assert.equal(phone.calls.length, 0)
+})
+
+test('phone-code: a number that is already verified gives 400 and sends nothing', async () => {
+  nadia().phoneVerified = true
+  const res = await post('phone-code', { phone: '01712345678' })
+  assert.equal(res.status, 400)
+  assert.equal(res.body.field, 'phone')
+  assert.equal(phone.calls.length, 0)
+})
+
+test('phone-code: a token for an account that does not exist gives 404', async () => {
+  assert.equal((await post('phone-code', { phone: '01812345678' }, 'stranger')).status, 404)
+})
+
+test('phone-verify: a right code saves the phone and marks it verified', async () => {
+  const res = await post('phone-verify', { phone: '01812345678', code: '123456' })
+  assert.equal(res.status, 200)
+  assert.equal(res.body.data.phone, '01812345678')
+  assert.equal(res.body.data.phoneVerified, true)
+  assert.equal(nadia().phone, '01812345678')
+  assert.equal(nadia().phoneVerified, true)
+})
+
+test('phone-verify: a wrong code gives 400 and the phone is not saved', async () => {
+  phone.verifyError = new AppError('invalid', 400, 'That code is not right.', 'code')
+  const res = await post('phone-verify', { phone: '01812345678', code: '000000' })
+  assert.equal(res.status, 400)
+  assert.equal(res.body.field, 'code')
+  assert.equal(nadia().phone, '01712345678')
+  assert.equal(Boolean(nadia().phoneVerified), false)
+})
+
+test('phone-verify: a code that is not 6 digits gives 400 before the service runs', async () => {
+  const res = await post('phone-verify', { phone: '01812345678', code: 'abc' })
+  assert.equal(res.status, 400)
+  assert.equal(res.body.field, 'code')
+  assert.equal(phone.calls.length, 0)
+})
+
+test('identity: no token gives 401, a department token gives 403', async () => {
+  const body = { nidLast4: '4821', photo: PNG }
+  assert.equal((await request(app).post('/api/citizen/profile/identity').send(body)).status, 401)
+  assert.equal((await post('identity', body, 'roads')).status, 403)
+})
+
+test('identity: a valid submit is saved as pending, and the photo never comes back', async () => {
+  fakes.identity = withWrites(fakeModel([]))
+  const res = await post('identity', { nidLast4: '4821', photo: PNG })
+  assert.equal(res.status, 200)
+  assert.equal(res.body.data.identity.status, 'pending')
+  assert.equal(res.body.data.identity.nidLast4, '4821')
+  const saved = fakes.identity.rows[0]
+  assert.equal(saved.userEmail, 'nadia@babylon.test')
+  assert.equal(saved.photo.contentType, 'image/png')
+  assert.equal(Buffer.isBuffer(saved.photo.data), true)
+  assert.equal(JSON.stringify(res.body).includes('iVBOR'), false)
+})
+
+test('identity: a second submit while pending gives 409', async () => {
+  const res = await post('identity', { nidLast4: '4821', photo: PNG })
+  assert.equal(res.status, 409)
+  assert.equal(fakes.identity.rows.length, 1)
+})
+
+test('identity: a submit after a verified ID gives 409', async () => {
+  fakes.identity.rows[0].status = 'verified'
+  assert.equal((await post('identity', { nidLast4: '4821', photo: PNG })).status, 409)
+})
+
+test('identity: a rejected citizen can submit again, and a new record is made', async () => {
+  fakes.identity.rows[0].status = 'rejected'
+  const res = await post('identity', { nidLast4: '9999', photo: PNG })
+  assert.equal(res.status, 200)
+  assert.equal(fakes.identity.rows.length, 2)
+  const created = fakes.identity.rows[1]
+  assert.equal(created.status, 'pending')
+  assert.equal(created.nidLast4, '9999')
+  assert.equal(fakes.identity.rows[0].status, 'rejected') // the old one stays as history
+})
+
+test('identity: bad digits, a non-image and a missing photo give 400 with the field', async () => {
+  const digits = await post('identity', { nidLast4: '12', photo: PNG })
+  assert.equal(digits.status, 400)
+  assert.equal(digits.body.field, 'nidLast4')
+  const text = await post('identity', { nidLast4: '4821', photo: 'data:text/plain;base64,aGVsbG8=' })
+  assert.equal(text.status, 400)
+  assert.equal(text.body.field, 'photo')
+  const missing = await post('identity', { nidLast4: '4821' })
+  assert.equal(missing.status, 400)
+  assert.equal(missing.body.field, 'photo')
 })
