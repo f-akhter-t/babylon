@@ -1,0 +1,1051 @@
+{
+  "info": {
+    "name": "Citizen",
+    "description": "Citizen panel: reports, votes, me and alerts.\nNo scripts. Send each request by hand and read the answer yourself.\nPaste tokens and ids by hand: replace every PASTE_... word before you send.\nEvery Description says what answer to expect.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:5000/api"
+    }
+  ],
+  "item": [
+    {
+      "name": "reports",
+      "item": [
+        {
+          "name": "POST /api/citizen/reports - valid",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer PASTE_CITIZEN_TOKEN_HERE"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/citizen/reports",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "citizen",
+                "reports"
+              ]
+            },
+            "description": "Expected: 201. data.division = Chattogram, data.votes = 1, data.priority = medium, data.status = open.\nToken: citizen. Make it with: npm run token -- citizen citizen@babylon.test\nBefore sending: Copy data.id from the answer. You paste it into the next requests by hand.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"category\": \"Roads\",\n  \"description\": \"Big pothole near the main gate that is dangerous for bikes.\",\n  \"photoUrl\": \"data:image/png;base64,iVBORw0KGgo=\",\n  \"location\": {\n    \"lat\": 22.3569,\n    \"lng\": 91.7832,\n    \"label\": \"Main Gate, Ward 5\",\n    \"ward\": \"Ward 5\",\n    \"division\": \"Chattogram\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "POST /api/citizen/reports - no photoUrl",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer PASTE_CITIZEN_TOKEN_HERE"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/citizen/reports",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "citizen",
+                "reports"
+              ]
+            },
+            "description": "Expected: 400. code = invalid, field = photoUrl.\nToken: citizen. Make it with: npm run token -- citizen citizen@babylon.test",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"category\": \"Roads\",\n  \"description\": \"Big pothole near the main gate that is dangerous for bikes.\",\n  \"location\": {\n    \"lat\": 22.3569,\n    \"lng\": 91.7832,\n    \"label\": \"Main Gate, Ward 5\",\n    \"division\": \"Chattogram\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "POST /api/citizen/reports - description too short",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer PASTE_CITIZEN_TOKEN_HERE"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/citizen/reports",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "citizen",
+                "reports"
+              ]
+            },
+            "description": "Expected: 400. code = invalid, field = description.\nToken: citizen. Make it with: npm run token -- citizen citizen@babylon.test",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"category\": \"Roads\",\n  \"description\": \"Hi\",\n  \"photoUrl\": \"data:image/png;base64,iVBORw0KGgo=\",\n  \"location\": {\n    \"lat\": 22.3569,\n    \"lng\": 91.7832,\n    \"label\": \"Main Gate, Ward 5\",\n    \"ward\": \"Ward 5\",\n    \"division\": \"Chattogram\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "POST /api/citizen/reports - no location",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer PASTE_CITIZEN_TOKEN_HERE"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/citizen/reports",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "citizen",
+                "reports"
+              ]
+            },
+            "description": "Expected: 400. code = invalid, field = location.\nToken: citizen. Make it with: npm run token -- citizen citizen@babylon.test",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"category\": \"Roads\",\n  \"description\": \"Big pothole near the main gate that is dangerous for bikes.\",\n  \"photoUrl\": \"data:image/png;base64,iVBORw0KGgo=\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "POST /api/citizen/reports - wrong division",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer PASTE_CITIZEN_TOKEN_HERE"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/citizen/reports",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "citizen",
+                "reports"
+              ]
+            },
+            "description": "Expected: 400. code = invalid, field = location. The citizen lives in Chattogram, so a Dhaka report is refused.\nToken: citizen. Make it with: npm run token -- citizen citizen@babylon.test",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"category\": \"Roads\",\n  \"description\": \"Big pothole near the main gate that is dangerous for bikes.\",\n  \"photoUrl\": \"data:image/png;base64,iVBORw0KGgo=\",\n  \"location\": {\n    \"lat\": 22.3569,\n    \"lng\": 91.7832,\n    \"label\": \"Main Gate, Ward 5\",\n    \"ward\": \"Ward 5\",\n    \"division\": \"Dhaka\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "POST /api/citizen/reports - no token",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/citizen/reports",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "citizen",
+                "reports"
+              ]
+            },
+            "description": "Expected: 401. code = unauthorized.\nToken: none. Remove the Authorization header or leave it out.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"category\": \"Roads\",\n  \"description\": \"Big pothole near the main gate that is dangerous for bikes.\",\n  \"photoUrl\": \"data:image/png;base64,iVBORw0KGgo=\",\n  \"location\": {\n    \"lat\": 22.3569,\n    \"lng\": 91.7832,\n    \"label\": \"Main Gate, Ward 5\",\n    \"ward\": \"Ward 5\",\n    \"division\": \"Chattogram\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "POST /api/citizen/reports - department token",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer PASTE_DEPARTMENT_TOKEN_HERE"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/citizen/reports",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "citizen",
+                "reports"
+              ]
+            },
+            "description": "Expected: 403. code = forbidden.\nToken: department staff. Make it with: npm run token -- department roads@babylon.test Roads",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"category\": \"Roads\",\n  \"description\": \"Big pothole near the main gate that is dangerous for bikes.\",\n  \"photoUrl\": \"data:image/png;base64,iVBORw0KGgo=\",\n  \"location\": {\n    \"lat\": 22.3569,\n    \"lng\": 91.7832,\n    \"label\": \"Main Gate, Ward 5\",\n    \"ward\": \"Ward 5\",\n    \"division\": \"Chattogram\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "GET /api/citizen/reports - mine",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer PASTE_CITIZEN_TOKEN_HERE"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/citizen/reports",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "citizen",
+                "reports"
+              ]
+            },
+            "description": "Expected: 200. data is a list of your own reports, newest first. The report from the valid create is first.\nToken: citizen. Make it with: npm run token -- citizen citizen@babylon.test"
+          }
+        },
+        {
+          "name": "GET /api/citizen/reports - no token",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/citizen/reports",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "citizen",
+                "reports"
+              ]
+            },
+            "description": "Expected: 401. code = unauthorized.\nToken: none. Remove the Authorization header or leave it out."
+          }
+        },
+        {
+          "name": "GET /api/citizen/reports - department token",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer PASTE_DEPARTMENT_TOKEN_HERE"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/citizen/reports",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "citizen",
+                "reports"
+              ]
+            },
+            "description": "Expected: 403. code = forbidden.\nToken: department staff. Make it with: npm run token -- department roads@babylon.test Roads"
+          }
+        },
+        {
+          "name": "GET /api/citizen/reports/:id - mine",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer PASTE_CITIZEN_TOKEN_HERE"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/citizen/reports/PASTE_REPORT_ID",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "citizen",
+                "reports",
+                "PASTE_REPORT_ID"
+              ]
+            },
+            "description": "Expected: 200. data.id equals the id in the URL.\nToken: citizen. Make it with: npm run token -- citizen citizen@babylon.test\nBefore sending: Replace PASTE_REPORT_ID with the id you copied from the valid create."
+          }
+        },
+        {
+          "name": "GET /api/citizen/reports/:id - unknown id",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer PASTE_CITIZEN_TOKEN_HERE"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/citizen/reports/123",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "citizen",
+                "reports",
+                "123"
+              ]
+            },
+            "description": "Expected: 404. code = not-found.\nToken: citizen. Make it with: npm run token -- citizen citizen@babylon.test"
+          }
+        },
+        {
+          "name": "GET /api/citizen/reports/:id - someone else's report",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer PASTE_OTHER_CITIZEN_TOKEN_HERE"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/citizen/reports/PASTE_REPORT_ID",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "citizen",
+                "reports",
+                "PASTE_REPORT_ID"
+              ]
+            },
+            "description": "Expected: 403. code = forbidden. (The plan accepts 403 or 404 here; this backend answers 403.)\nToken: a second citizen. Make it with: npm run token -- citizen other@babylon.test\nBefore sending: Use the id of the first citizen's report."
+          }
+        },
+        {
+          "name": "PATCH /api/citizen/reports/:id - change title",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer PASTE_CITIZEN_TOKEN_HERE"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/citizen/reports/PASTE_REPORT_ID",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "citizen",
+                "reports",
+                "PASTE_REPORT_ID"
+              ]
+            },
+            "description": "Expected: 200. data.title = Pothole near gate.\nToken: citizen. Make it with: npm run token -- citizen citizen@babylon.test\nBefore sending: Replace PASTE_REPORT_ID with your own open report's id.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Pothole near gate\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "PATCH /api/citizen/reports/:id - title too short",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer PASTE_CITIZEN_TOKEN_HERE"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/citizen/reports/PASTE_REPORT_ID",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "citizen",
+                "reports",
+                "PASTE_REPORT_ID"
+              ]
+            },
+            "description": "Expected: 400. code = invalid, field = title.\nToken: citizen. Make it with: npm run token -- citizen citizen@babylon.test\nBefore sending: Replace PASTE_REPORT_ID with your own open report's id.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Hi\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "PATCH /api/citizen/reports/:id - change description",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer PASTE_CITIZEN_TOKEN_HERE"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/citizen/reports/PASTE_REPORT_ID",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "citizen",
+                "reports",
+                "PASTE_REPORT_ID"
+              ]
+            },
+            "description": "Expected: 200. data.description is the new text.\nToken: citizen. Make it with: npm run token -- citizen citizen@babylon.test\nBefore sending: Replace PASTE_REPORT_ID with your own open report's id.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"description\": \"Pothole is now much bigger and blocks the whole lane.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "PATCH /api/citizen/reports/:id - someone else's report",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer PASTE_OTHER_CITIZEN_TOKEN_HERE"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/citizen/reports/PASTE_REPORT_ID",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "citizen",
+                "reports",
+                "PASTE_REPORT_ID"
+              ]
+            },
+            "description": "Expected: 403. code = forbidden.\nToken: a second citizen. Make it with: npm run token -- citizen other@babylon.test\nBefore sending: Use the id of the first citizen's report.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Pothole near gate\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "PATCH /api/citizen/reports/:id - work already started",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer PASTE_CITIZEN_TOKEN_HERE"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/citizen/reports/PASTE_IN_PROGRESS_REPORT_ID",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "citizen",
+                "reports",
+                "PASTE_IN_PROGRESS_REPORT_ID"
+              ]
+            },
+            "description": "Expected: 423. code = locked. The report is already in progress, so the citizen can no longer edit it.\nToken: citizen. Make it with: npm run token -- citizen citizen@babylon.test\nBefore sending: Needs your own report whose status is in-progress. Start work on it first with the department token (PATCH /api/department/issues/:id/status).",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Pothole near gate\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "DELETE /api/citizen/reports/:id - mine",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer PASTE_CITIZEN_TOKEN_HERE"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/citizen/reports/PASTE_REPORT_ID",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "citizen",
+                "reports",
+                "PASTE_REPORT_ID"
+              ]
+            },
+            "description": "Expected: 200. The report is gone: the same GET afterwards gives 404, and GET /citizen/me shows 60 fewer points.\nToken: citizen. Make it with: npm run token -- citizen citizen@babylon.test\nBefore sending: Create a fresh report first and delete that one. Replace PASTE_REPORT_ID with its id."
+          }
+        },
+        {
+          "name": "DELETE /api/citizen/reports/:id - someone else's report",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer PASTE_OTHER_CITIZEN_TOKEN_HERE"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/citizen/reports/PASTE_REPORT_ID",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "citizen",
+                "reports",
+                "PASTE_REPORT_ID"
+              ]
+            },
+            "description": "Expected: 403. code = forbidden. The report is still there afterwards.\nToken: a second citizen. Make it with: npm run token -- citizen other@babylon.test\nBefore sending: Use the id of the first citizen's report."
+          }
+        }
+      ]
+    },
+    {
+      "name": "votes",
+      "item": [
+        {
+          "name": "POST /api/citizen/reports/:id/vote - someone else's open issue",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer PASTE_CITIZEN_TOKEN_HERE"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/citizen/reports/PASTE_OPEN_ISSUE_ID/vote",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "citizen",
+                "reports",
+                "PASTE_OPEN_ISSUE_ID",
+                "vote"
+              ]
+            },
+            "description": "Expected: 200. The vote count goes up by 1.\nToken: citizen. Make it with: npm run token -- citizen citizen@babylon.test\nBefore sending: Use the id of an open issue made by another person (a seeded one works)."
+          }
+        },
+        {
+          "name": "POST /api/citizen/reports/:id/vote - same issue again",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer PASTE_CITIZEN_TOKEN_HERE"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/citizen/reports/PASTE_OPEN_ISSUE_ID/vote",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "citizen",
+                "reports",
+                "PASTE_OPEN_ISSUE_ID",
+                "vote"
+              ]
+            },
+            "description": "Expected: 200. The count stays the same. One citizen counts once.\nToken: citizen. Make it with: npm run token -- citizen citizen@babylon.test\nBefore sending: Send it right after the request above, with the same id."
+          }
+        },
+        {
+          "name": "POST /api/citizen/reports/:id/vote - my own report",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer PASTE_CITIZEN_TOKEN_HERE"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/citizen/reports/PASTE_REPORT_ID/vote",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "citizen",
+                "reports",
+                "PASTE_REPORT_ID",
+                "vote"
+              ]
+            },
+            "description": "Expected: 200. votes stays 1, because the reporter's own vote already counts.\nToken: citizen. Make it with: npm run token -- citizen citizen@babylon.test\nBefore sending: Replace PASTE_REPORT_ID with your own new report's id."
+          }
+        },
+        {
+          "name": "POST /api/citizen/reports/:id/vote - resolved issue",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer PASTE_CITIZEN_TOKEN_HERE"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/citizen/reports/PASTE_RESOLVED_ISSUE_ID/vote",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "citizen",
+                "reports",
+                "PASTE_RESOLVED_ISSUE_ID",
+                "vote"
+              ]
+            },
+            "description": "Expected: 409. code = conflict. A resolved issue cannot be voted on.\nToken: citizen. Make it with: npm run token -- citizen citizen@babylon.test\nBefore sending: Use the id of a resolved issue (a seeded one works)."
+          }
+        },
+        {
+          "name": "POST /api/citizen/reports/:id/vote - department token",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer PASTE_DEPARTMENT_TOKEN_HERE"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/citizen/reports/PASTE_OPEN_ISSUE_ID/vote",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "citizen",
+                "reports",
+                "PASTE_OPEN_ISSUE_ID",
+                "vote"
+              ]
+            },
+            "description": "Expected: 403. code = forbidden.\nToken: department staff. Make it with: npm run token -- department roads@babylon.test Roads"
+          }
+        },
+        {
+          "name": "POST /api/citizen/reports/:id/vote - no token",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/citizen/reports/PASTE_OPEN_ISSUE_ID/vote",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "citizen",
+                "reports",
+                "PASTE_OPEN_ISSUE_ID",
+                "vote"
+              ]
+            },
+            "description": "Expected: 401. code = unauthorized.\nToken: none. Remove the Authorization header or leave it out."
+          }
+        },
+        {
+          "name": "DELETE /api/citizen/reports/:id/vote - remove my vote",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer PASTE_CITIZEN_TOKEN_HERE"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/citizen/reports/PASTE_OPEN_ISSUE_ID/vote",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "citizen",
+                "reports",
+                "PASTE_OPEN_ISSUE_ID",
+                "vote"
+              ]
+            },
+            "description": "Expected: 200. The vote count goes down by 1.\nToken: citizen. Make it with: npm run token -- citizen citizen@babylon.test\nBefore sending: Use the same id you voted on above."
+          }
+        }
+      ]
+    },
+    {
+      "name": "me",
+      "item": [
+        {
+          "name": "GET /api/citizen/me",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer PASTE_CITIZEN_TOKEN_HERE"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/citizen/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "citizen",
+                "me"
+              ]
+            },
+            "description": "Expected: 200. data has name, reports, points, level, role and next tier. points = 60 x the number of reports.\nToken: citizen. Make it with: npm run token -- citizen citizen@babylon.test"
+          }
+        },
+        {
+          "name": "GET /api/citizen/me - no token",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/citizen/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "citizen",
+                "me"
+              ]
+            },
+            "description": "Expected: 401. code = unauthorized.\nToken: none. Remove the Authorization header or leave it out."
+          }
+        },
+        {
+          "name": "GET /api/citizen/points/earn",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer PASTE_CITIZEN_TOKEN_HERE"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/citizen/points/earn",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "citizen",
+                "points",
+                "earn"
+              ]
+            },
+            "description": "Expected: 200. data is the \"How you earn points\" list.\nToken: citizen. Make it with: npm run token -- citizen citizen@babylon.test"
+          }
+        }
+      ]
+    },
+    {
+      "name": "alerts",
+      "item": [
+        {
+          "name": "GET /api/citizen/alerts",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer PASTE_CITIZEN_TOKEN_HERE"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/citizen/alerts",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "citizen",
+                "alerts"
+              ]
+            },
+            "description": "Expected: 200. data lists your own alerts, newest first, with unreadCount.\nToken: citizen. Make it with: npm run token -- citizen citizen@babylon.test\nBefore sending: Copy one alert id from the answer for the read request."
+          }
+        },
+        {
+          "name": "GET /api/citizen/alerts - no token",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/citizen/alerts",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "citizen",
+                "alerts"
+              ]
+            },
+            "description": "Expected: 401. code = unauthorized.\nToken: none. Remove the Authorization header or leave it out."
+          }
+        },
+        {
+          "name": "GET /api/citizen/alerts/unread-count",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer PASTE_CITIZEN_TOKEN_HERE"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/citizen/alerts/unread-count",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "citizen",
+                "alerts",
+                "unread-count"
+              ]
+            },
+            "description": "Expected: 200. The number equals unreadCount in the alert list.\nToken: citizen. Make it with: npm run token -- citizen citizen@babylon.test"
+          }
+        },
+        {
+          "name": "PATCH /api/citizen/alerts/:id/read - mine",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer PASTE_CITIZEN_TOKEN_HERE"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/citizen/alerts/PASTE_ALERT_ID/read",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "citizen",
+                "alerts",
+                "PASTE_ALERT_ID",
+                "read"
+              ]
+            },
+            "description": "Expected: 200. The alert is read, and the unread count goes down by 1.\nToken: citizen. Make it with: npm run token -- citizen citizen@babylon.test\nBefore sending: Use an unread alert id from the alert list."
+          }
+        },
+        {
+          "name": "PATCH /api/citizen/alerts/:id/read - unknown id",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer PASTE_CITIZEN_TOKEN_HERE"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/citizen/alerts/123/read",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "citizen",
+                "alerts",
+                "123",
+                "read"
+              ]
+            },
+            "description": "Expected: 404. code = not-found.\nToken: citizen. Make it with: npm run token -- citizen citizen@babylon.test"
+          }
+        },
+        {
+          "name": "PATCH /api/citizen/alerts/:id/read - someone else's alert",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer PASTE_OTHER_CITIZEN_TOKEN_HERE"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/citizen/alerts/PASTE_ALERT_ID/read",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "citizen",
+                "alerts",
+                "PASTE_ALERT_ID",
+                "read"
+              ]
+            },
+            "description": "Expected: 404. code = not-found. You cannot see or change another person's alert.\nToken: a second citizen. Make it with: npm run token -- citizen other@babylon.test\nBefore sending: Use the first citizen's alert id with the second citizen's token."
+          }
+        },
+        {
+          "name": "POST /api/citizen/alerts/read-all",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer PASTE_CITIZEN_TOKEN_HERE"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/citizen/alerts/read-all",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "citizen",
+                "alerts",
+                "read-all"
+              ]
+            },
+            "description": "Expected: 200. Afterwards GET /citizen/alerts/unread-count returns 0.\nToken: citizen. Make it with: npm run token -- citizen citizen@babylon.test"
+          }
+        }
+      ]
+    }
+  ]
+}
