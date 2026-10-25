@@ -6,6 +6,8 @@ export const AUTH_MESSAGES = Object.freeze({
   loggedOut: 'You are logged out.',
   me: 'Here is your account.',
   passwordChanged: 'Your password is changed.',
+  forgotSent: 'If an account with that email exists, we have sent it a code.',
+  passwordReset: 'Your password is changed. Please log in with it.',
 
   // Same sentence for an unknown email and a wrong password, on purpose.
   badLogin: 'That email and password do not match an account.',

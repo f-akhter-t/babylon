@@ -52,6 +52,19 @@ export const PHONE_CODE_LIMITS = Object.freeze({
   lifeMinutes: 10,
 })
 
+// --- email code (forgot password; the staff email check uses it too) ---
+export const EMAIL_CODE_LIMITS = Object.freeze({
+  devCode: '123456', // used only when EMAIL_MODE=dev
+  codeLength: 6,
+  resendSeconds: 30,
+  maxAttempts: 3,
+  lifeMinutes: 10,
+  purposes: Object.freeze(['reset', 'verify']),
+  // Per address, because nobody is signed in yet: asking for a code, trying one.
+  forgotRate: Object.freeze({ windowMs: 60 * 1000, max: 5 }),
+  resetRate: Object.freeze({ windowMs: 60 * 1000, max: 10 }),
+})
+
 // Citizen identity photo. Same cap as the frontend (ID_PHOTO_MAX_BYTES).
 // The frontend always sends a JPEG; PNG and WebP are accepted too.
 export const IDENTITY_LIMITS = Object.freeze({

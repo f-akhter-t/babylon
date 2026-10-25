@@ -1,4 +1,5 @@
 import 'dotenv/config'
+import { pickEmailMode } from './emailMode.js'
 
 const required = ['MONGODB_URI', 'JWT_SECRET']
 const missing = required.filter((name) => !process.env[name])
@@ -27,6 +28,17 @@ function readJson(name) {
   return {}
 }
 
+// A Gmail app password is shown in groups of four with spaces; the spaces are not part of it.
+const emailUser = (process.env.EMAIL_USER ?? '').trim()
+const emailAppPassword = (process.env.EMAIL_APP_PASSWORD ?? '').replace(/\s+/g, '')
+const email = pickEmailMode({
+  mode: process.env.EMAIL_MODE,
+  user: emailUser,
+  password: emailAppPassword,
+  isProduction: process.env.NODE_ENV === 'production',
+})
+if (email.problem) console.error(email.problem)
+
 export const env = {
   port: Number(process.env.PORT) || 5000,
   mongoUri: process.env.MONGODB_URI,
@@ -37,6 +49,12 @@ export const env = {
 
   // Only the exact word 'dev' turns phone codes on. Missing or anything else: off.
   phoneCodeMode: process.env.PHONE_CODE_MODE === 'dev' ? 'dev' : 'off',
+
+  // Email codes (forgot password). 'dev' | 'smtp' | 'off', see config/emailMode.js.
+  // The credentials are read only by shared/service/mailer.service.js.
+  emailMode: email.mode,
+  emailUser,
+  emailAppPassword,
 
   // CLIP photo severity (F1). Off by default: a host that cannot hold the model
   // leaves it off, and reports are created without an AI priority.
