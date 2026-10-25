@@ -1,31 +1,30 @@
 {
   "info": {
+    "_postman_id": "3ef478c6-4aed-4d0d-a83d-55358fc5af35",
     "name": "Babylon: Department and Citizen Profile",
-    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "59184783",
+    "_collection_link": "https://go.postman.co/collection/59184783-3ef478c6-4aed-4d0d-a83d-55358fc5af35?source=collection_link"
   },
-  "variable": [
-    {
-      "key": "baseUrl",
-      "value": "http://localhost:5000/api"
-    },
-    {
-      "key": "deptToken",
-      "value": ""
-    },
-    {
-      "key": "citizenToken",
-      "value": ""
-    }
-  ],
   "item": [
     {
       "name": "1 No token gives 401",
       "request": {
         "method": "GET",
         "header": [],
-        "url": "{{baseUrl}}/department/issues",
+        "url": {
+          "raw": "{{baseUrl}}/department/issues",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "department",
+            "issues"
+          ]
+        },
         "description": "Expected: 401, code unauthorized. No Authorization header is sent on purpose."
-      }
+      },
+      "response": []
     },
     {
       "name": "2 Citizen token on department route gives 403",
@@ -37,9 +36,19 @@
             "value": "Bearer {{citizenToken}}"
           }
         ],
-        "url": "{{baseUrl}}/department/issues",
+        "url": {
+          "raw": "{{baseUrl}}/department/issues",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "department",
+            "issues"
+          ]
+        },
         "description": "Expected: 403, code forbidden. Put a citizen token in the Authorization header."
-      }
+      },
+      "response": []
     },
     {
       "name": "3 Assigned list: 3 issues, ranked, no Waste",
@@ -51,9 +60,25 @@
             "value": "Bearer {{deptToken}}"
           }
         ],
-        "url": "{{baseUrl}}/department/issues?scope=assigned",
+        "url": {
+          "raw": "{{baseUrl}}/department/issues?scope=assigned",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "department",
+            "issues"
+          ],
+          "query": [
+            {
+              "key": "scope",
+              "value": "assigned"
+            }
+          ]
+        },
         "description": "Expected: 200. data holds 3 issues, ranked 1, 2, 3, and the first title is \"Cracked footbridge rail\". No Waste issue and no reopened issue. Send on a freshly seeded database."
-      }
+      },
+      "response": []
     },
     {
       "name": "4 Completed list: 1 resolved issue",
@@ -65,9 +90,25 @@
             "value": "Bearer {{deptToken}}"
           }
         ],
-        "url": "{{baseUrl}}/department/issues?scope=completed",
+        "url": {
+          "raw": "{{baseUrl}}/department/issues?scope=completed",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "department",
+            "issues"
+          ],
+          "query": [
+            {
+              "key": "scope",
+              "value": "completed"
+            }
+          ]
+        },
         "description": "Expected: 200. data holds 1 issue and its status is resolved."
-      }
+      },
+      "response": []
     },
     {
       "name": "5 Bad scope gives 400",
@@ -79,9 +120,25 @@
             "value": "Bearer {{deptToken}}"
           }
         ],
-        "url": "{{baseUrl}}/department/issues?scope=nonsense",
+        "url": {
+          "raw": "{{baseUrl}}/department/issues?scope=nonsense",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "department",
+            "issues"
+          ],
+          "query": [
+            {
+              "key": "scope",
+              "value": "nonsense"
+            }
+          ]
+        },
         "description": "Expected: 400, code invalid, field scope."
-      }
+      },
+      "response": []
     },
     {
       "name": "6 Summary equals the list",
@@ -93,9 +150,19 @@
             "value": "Bearer {{deptToken}}"
           }
         ],
-        "url": "{{baseUrl}}/department/summary",
+        "url": {
+          "raw": "{{baseUrl}}/department/summary",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "department",
+            "summary"
+          ]
+        },
         "description": "Expected: 200. data is assigned 3, open 2, inProgress 1, awaiting 0, completed 1 on a fresh seed. open + inProgress + awaiting equals assigned. Send before requests 7 and 11, because they change the counts."
-      }
+      },
+      "response": []
     },
     {
       "name": "7 Start work: first call 200",
@@ -111,13 +178,25 @@
             "value": "application/json"
           }
         ],
-        "url": "{{baseUrl}}/department/issues/a1b2c3000000000000000001/status",
         "body": {
           "mode": "raw",
           "raw": "{\"status\":\"in-progress\"}"
         },
+        "url": {
+          "raw": "{{baseUrl}}/department/issues/a1b2c3000000000000000001/status",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "department",
+            "issues",
+            "a1b2c3000000000000000001",
+            "status"
+          ]
+        },
         "description": "Expected: 200. data.status is in-progress and data.startedAt is a date string. The reporter gets an in-progress alert. This changes the database, so re-seed before sending it again."
-      }
+      },
+      "response": []
     },
     {
       "name": "8 Start work: second call 409",
@@ -133,13 +212,25 @@
             "value": "application/json"
           }
         ],
-        "url": "{{baseUrl}}/department/issues/a1b2c3000000000000000001/status",
         "body": {
           "mode": "raw",
           "raw": "{\"status\":\"in-progress\"}"
         },
+        "url": {
+          "raw": "{{baseUrl}}/department/issues/a1b2c3000000000000000001/status",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "department",
+            "issues",
+            "a1b2c3000000000000000001",
+            "status"
+          ]
+        },
         "description": "Expected: 409, code conflict. Send right after request 7."
-      }
+      },
+      "response": []
     },
     {
       "name": "9 Start work on a Waste issue gives 403",
@@ -155,13 +246,25 @@
             "value": "application/json"
           }
         ],
-        "url": "{{baseUrl}}/department/issues/a1b2c3000000000000000004/status",
         "body": {
           "mode": "raw",
           "raw": "{\"status\":\"in-progress\"}"
         },
+        "url": {
+          "raw": "{{baseUrl}}/department/issues/a1b2c3000000000000000004/status",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "department",
+            "issues",
+            "a1b2c3000000000000000004",
+            "status"
+          ]
+        },
         "description": "Expected: 403, code forbidden. This issue belongs to the Waste department and stays open."
-      }
+      },
+      "response": []
     },
     {
       "name": "10 Submit without a photo gives 400",
@@ -177,13 +280,25 @@
             "value": "application/json"
           }
         ],
-        "url": "{{baseUrl}}/department/issues/a1b2c3000000000000000002/submit",
         "body": {
           "mode": "raw",
           "raw": "{\"note\":\"Patched\"}"
         },
+        "url": {
+          "raw": "{{baseUrl}}/department/issues/a1b2c3000000000000000002/submit",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "department",
+            "issues",
+            "a1b2c3000000000000000002",
+            "submit"
+          ]
+        },
         "description": "Expected: 400, code invalid, field photoUrl. The body has a note but no photo."
-      }
+      },
+      "response": []
     },
     {
       "name": "11 Submit with a photo gives 200",
@@ -199,13 +314,25 @@
             "value": "application/json"
           }
         ],
-        "url": "{{baseUrl}}/department/issues/a1b2c3000000000000000002/submit",
         "body": {
           "mode": "raw",
           "raw": "{\"note\":\"Patched\",\"photoUrl\":\"data:image/png;base64,iVBORw0KGgo=\"}"
         },
+        "url": {
+          "raw": "{{baseUrl}}/department/issues/a1b2c3000000000000000002/submit",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "department",
+            "issues",
+            "a1b2c3000000000000000002",
+            "submit"
+          ]
+        },
         "description": "Expected: 200. data.verification is awaiting and data.departmentNote is Patched. The reporter and the admins get an alert. This changes the database, so re-seed before sending it again."
-      }
+      },
+      "response": []
     },
     {
       "name": "12 Submit again gives 409",
@@ -221,13 +348,25 @@
             "value": "application/json"
           }
         ],
-        "url": "{{baseUrl}}/department/issues/a1b2c3000000000000000002/submit",
         "body": {
           "mode": "raw",
           "raw": "{\"note\":\"Patched\",\"photoUrl\":\"data:image/png;base64,iVBORw0KGgo=\"}"
         },
+        "url": {
+          "raw": "{{baseUrl}}/department/issues/a1b2c3000000000000000002/submit",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "department",
+            "issues",
+            "a1b2c3000000000000000002",
+            "submit"
+          ]
+        },
         "description": "Expected: 409, code conflict. Send right after request 11."
-      }
+      },
+      "response": []
     },
     {
       "name": "13 Citizen profile gives 200, no NID photo",
@@ -239,9 +378,19 @@
             "value": "Bearer {{citizenToken}}"
           }
         ],
-        "url": "{{baseUrl}}/citizen/profile",
-        "description": "Expected: 200. data.division is Dhaka, the text has no photo and no passwordHash, and identity.status is \"not-submitted\" when the citizen has no identity record. The body also has role, department, phoneVerified, isVerified and the staff fields."
-      }
+        "url": {
+          "raw": "{{baseUrl}}/citizen/profile",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "citizen",
+            "profile"
+          ]
+        },
+        "description": "Expected: 200. data.division is Dhaka, the text has no photo and no passwordHash, and identity.status is \"none\" for now. D7 changes it to \"not-submitted\", so update this line in that PR."
+      },
+      "response": []
     },
     {
       "name": "14 Profile with a department token gives 403",
@@ -253,9 +402,322 @@
             "value": "Bearer {{deptToken}}"
           }
         ],
-        "url": "{{baseUrl}}/citizen/profile",
+        "url": {
+          "raw": "{{baseUrl}}/citizen/profile",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "citizen",
+            "profile"
+          ]
+        },
         "description": "Expected: 403, code forbidden. A department token is not allowed on a citizen route."
-      }
+      },
+      "response": []
+    },
+    {
+      "name": "15 List alerts",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{deptToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/department/alerts",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "department",
+            "alerts"
+          ],
+          "query": [
+            {
+              "key": "",
+              "value": "",
+              "disabled": true
+            }
+          ]
+        },
+        "description": "Expect 200. data.alerts has 3 items, newest first. data.unreadCount is 2. Reseed first: node scripts/seed-dept-alerts.js"
+      },
+      "response": []
+    },
+    {
+      "name": "16 Unread count",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{deptToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/department/alerts/unread-count",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "department",
+            "alerts",
+            "unread-count"
+          ],
+          "query": [
+            {
+              "key": "",
+              "value": "",
+              "disabled": true
+            }
+          ]
+        },
+        "description": "Expect 200. data.unreadCount is 2 after a fresh seed. It is 1 after request 17 has run."
+      },
+      "response": []
+    },
+    {
+      "name": "17 Mark one read",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{deptToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "PATCH",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/department/alerts/6addbc14ba4d8a6e36bc0762/read",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "department",
+            "alerts",
+            "6addbc14ba4d8a6e36bc0762",
+            "read"
+          ],
+          "query": [
+            {
+              "key": "",
+              "value": "",
+              "disabled": true
+            }
+          ]
+        },
+        "description": "Expect 200. data.read is true. The id comes from request 15, so it changes after every reseed."
+      },
+      "response": []
+    },
+    {
+      "name": "18 Someone else’s alert gives 404",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{deptToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "PATCH",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/department/alerts/6addbb31ce059f28d7f261d7/read",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "department",
+            "alerts",
+            "6addbb31ce059f28d7f261d7",
+            "read"
+          ],
+          "query": [
+            {
+              "key": "",
+              "value": "",
+              "disabled": true
+            }
+          ]
+        },
+        "description": "Expect 404 not-found. This id belongs to another staff member (power@babylon.test). The id changes after every reseed."
+      },
+      "response": []
+    },
+    {
+      "name": "19 Bad id gives 404",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{deptToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "PATCH",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/department/alerts/abc/read",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "department",
+            "alerts",
+            "abc",
+            "read"
+          ],
+          "query": [
+            {
+              "key": "",
+              "value": "",
+              "disabled": true
+            }
+          ]
+        },
+        "description": "Expect 404 not-found."
+      },
+      "response": []
+    },
+    {
+      "name": "20 Read all",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{deptToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/department/alerts/read-all",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "department",
+            "alerts",
+            "read-all"
+          ],
+          "query": [
+            {
+              "key": "",
+              "value": "",
+              "disabled": true
+            }
+          ]
+        },
+        "description": "Expect 200. data.unreadCount is 0."
+      },
+      "response": []
+    },
+    {
+      "name": "21 No token gives 401",
+      "request": {
+        "auth": {
+          "type": "noauth"
+        },
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/department/alerts",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "department",
+            "alerts"
+          ],
+          "query": [
+            {
+              "key": "",
+              "value": "",
+              "disabled": true
+            }
+          ]
+        },
+        "description": "Expect 401 unauthorized."
+      },
+      "response": []
+    },
+    {
+      "name": "22 Citizen token gives 403",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{citizenToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/department/alerts",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "department",
+            "alerts"
+          ],
+          "query": [
+            {
+              "key": "",
+              "value": "",
+              "disabled": true
+            }
+          ]
+        },
+        "description": "Expect 403 forbidden."
+      },
+      "response": []
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:5000/api"
+    },
+    {
+      "key": "deptToken",
+      "secret": true
+    },
+    {
+      "key": "citizenToken",
+      "secret": true
     }
   ]
 }
