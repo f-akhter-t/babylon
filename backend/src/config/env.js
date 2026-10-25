@@ -11,6 +11,22 @@ if (process.env.JWT_SECRET.length < 16) {
   process.exit(1)
 }
 
+// STAFF secrets (D21). They live only in the server environment. A value that
+// is missing or not valid JSON leaves staff checks closed (nobody passes); the
+// message names the variable, never its value.
+function readJson(name) {
+  const raw = process.env[name]
+  if (!raw) return {}
+  try {
+    const value = JSON.parse(raw)
+    if (value && typeof value === 'object' && !Array.isArray(value)) return value
+  } catch {
+    // falls through to the message below
+  }
+  console.error(`${name} in backend/.env is not a JSON object. Staff checks that use it will refuse everyone.`)
+  return {}
+}
+
 export const env = {
   port: Number(process.env.PORT) || 5000,
   mongoUri: process.env.MONGODB_URI,
@@ -25,5 +41,13 @@ export const env = {
   // CLIP photo severity (F1). Off by default: a host that cannot hold the model
   // leaves it off, and reports are created without an AI priority.
   clipEnabled: process.env.CLIP_ENABLED === 'true',
+
+  // Staff accounts (D21). Read only by auth/service/staffRoster.service.js.
+  //   STAFF_ACCESS_CODE  the one code a new staff member needs to sign up.
+  //   DEPARTMENT_CODES   { "Roads & Highways": "<code>", ... }
+  //   EMPLOYEE_ROSTER    { "Roads & Highways": ["<id>", ...], "admin": ["<id>", ...] }
+  staffAccessCode: (process.env.STAFF_ACCESS_CODE ?? '').trim(),
+  departmentCodes: readJson('DEPARTMENT_CODES'),
+  employeeRoster: readJson('EMPLOYEE_ROSTER'),
 
 }

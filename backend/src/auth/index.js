@@ -1,8 +1,9 @@
 import { Router } from 'express'
 import authRoutes from './routes/auth.routes.js'
+import staffRoutes from './routes/staff.routes.js'
 
 const router = Router()
 router.use(authRoutes) // Farhana: signup, login, logout, me, change password
-// Staff accounts (open question 2) will be added here as their own routes.
+router.use('/staff', staffRoutes) // Farhana: staff sign-up, setup checks, finish
 
 export default router
