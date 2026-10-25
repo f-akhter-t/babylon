@@ -4,6 +4,7 @@ import { ADMIN_MESSAGES } from './admin.js'
 import { ASSIST_MESSAGES } from './assist.js'
 import { MESSAGES as CITIZEN_MESSAGES } from './citizen.js'
 import { DEPARTMENT_MESSAGES } from './department.js'
+import { EMAIL_CODE_MESSAGES } from './emailCode.js'
 import { PROFILE_MESSAGES } from './profile.js'
 import { TRANSLATE_MESSAGES } from './translate.js'
 import { CHAT_MESSAGES } from './chat.js'
@@ -15,6 +16,7 @@ export const MSG = Object.freeze({
   ...ASSIST_MESSAGES,
   ...CITIZEN_MESSAGES,
   ...DEPARTMENT_MESSAGES,
+  ...EMAIL_CODE_MESSAGES,
   ...PROFILE_MESSAGES,
   ...TRANSLATE_MESSAGES,
   ...CHAT_MESSAGES,

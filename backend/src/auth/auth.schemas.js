@@ -64,6 +64,32 @@ export const passwordBody = z
   .transform(({ currentPassword, newPassword: next }) => ({ currentPassword, newPassword: next }))
 
 
+// POST /auth/forgot-password. Only the shape of the email is checked; the answer
+// is the same whether or not an account exists.
+export const forgotPasswordBody = z.object({ email })
+
+// POST /auth/reset-password. The new password follows the same rules as sign-up
+// and change password, and its message goes under the "new" box like the
+// change-password form.
+export const resetPasswordBody = z
+  .object({
+    email,
+    code: z.string({ error: M.codeRequired }).trim().min(1, { error: M.codeRequired }).max(12, { error: M.codeRequired }),
+    newPassword: z.unknown().optional(),
+  })
+  .superRefine((body, ctx) => {
+    const next = body.newPassword
+    if (typeof next !== 'string' || next === '') {
+      ctx.addIssue({ code: 'custom', path: ['new'], message: M.newRequired })
+    } else if (next.length < AUTH_LIMITS.passwordMin) {
+      ctx.addIssue({ code: 'custom', path: ['new'], message: M.passwordShort })
+    } else if (next.length > AUTH_LIMITS.passwordMax) {
+      ctx.addIssue({ code: 'custom', path: ['new'], message: M.passwordLong })
+    }
+  })
+  .transform(({ email: address, code, newPassword: next }) => ({ email: address, code, newPassword: next }))
+
+
 // ---------- Staff accounts (/api/auth/staff/*) ----------
 // A secret the person types (access code, department code, Employee ID). Only
 // "something was typed" is checked here; the service compares it with the

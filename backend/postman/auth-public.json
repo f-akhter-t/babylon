@@ -1,7 +1,7 @@
 {
   "info": {
     "name": "Babylon: Auth and Public",
-    "description": "Auth, staff accounts, the report assistant and the public pages.\nNo scripts. Send each request by hand and read the answer yourself.\nRun the folders top to bottom: Auth, then Staff accounts, then AI assistant, then Public.\nNeeds the demo accounts and issues from `npm run seed:public`, and the staff settings (STAFF_ACCESS_CODE, DEPARTMENT_CODES, EMPLOYEE_ROSTER) in backend/.env.\nTokens and ids are passed on by hand: when a Description says 'copy data.token into the collection variable X', open the collection's Variables tab and paste it there. Never save your own codes back into this file.\nEvery Description says what answer to expect.",
+    "description": "Auth, staff accounts, the report assistant, the public pages and forgot password.\nNo scripts. Send each request by hand and read the answer yourself.\nRun the folders top to bottom: Auth, then Staff accounts, then AI assistant, then Public, then Forgot password (it makes its own account, from the variable resetEmail).\nNeeds the demo accounts and issues from `npm run seed:public`, and the staff settings (STAFF_ACCESS_CODE, DEPARTMENT_CODES, EMPLOYEE_ROSTER) in backend/.env.\nTokens and ids are passed on by hand: when a Description says 'copy data.token into the collection variable X', open the collection's Variables tab and paste it there. Never save your own codes back into this file.\nEvery Description says what answer to expect.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -56,6 +56,10 @@
     {
       "key": "employeeId",
       "value": ""
+    },
+    {
+      "key": "resetEmail",
+      "value": "reset-1@example.com"
     }
   ],
   "item": [
@@ -1627,6 +1631,356 @@
             "header": [],
             "url": "{{baseUrl}}/home/activity?limit=0",
             "description": "Expected: 400. field = limit."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Forgot password (email code)",
+      "item": [
+        {
+          "name": "1 Sign up a citizen for the reset test: 201",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/signup",
+            "description": "Expected: 201. A new citizen whose password is old-pass-1.\nThis folder makes its own account. An email can be used once, so change the collection variable resetEmail (for example reset-2@example.com) before you run this folder again.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Reset Tester\",\n  \"email\": \"{{resetEmail}}\",\n  \"password\": \"old-pass-1\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "2 Forgot password: 200",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/forgot-password",
+            "description": "Expected: 200. message = \"If an account with that email exists, we have sent it a code.\", data = { resendAfter: 30 }. The code is never in the answer.\nNeeds EMAIL_MODE=dev in backend/.env (restart the backend after changing it). Then the code is always 123456 and nothing is emailed. With EMAIL_MODE=smtp the code arrives by email instead.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{resetEmail}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "3 Forgot password, unknown email: the very same 200",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/forgot-password",
+            "description": "Expected: 200, the very same message and data as request 2. The answer never says whether an account exists, and no code is made.\nExtra: send it 6 times within a minute. The 6th answers 429, code = too-many-requests.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"nobody-here@example.com\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "4 Forgot password, bad email: 400 email",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/forgot-password",
+            "description": "Expected: 400. field = email.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"not-an-email\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "5 Forgot password again at once: the same 200",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/forgot-password",
+            "description": "Expected: 200, the same answer as request 2. Sent within 30 seconds of request 2, so no second code is made and the first one still works.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{resetEmail}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "6 Reset password, wrong code: 400 code",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/reset-password",
+            "description": "Expected: 400. code = invalid, field = code. The password is not changed. This counts as try 1 of 3.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{resetEmail}}\",\n  \"code\": \"000000\",\n  \"newPassword\": \"reset-pass-3\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "7 Reset password, unknown email: the very same 400",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/reset-password",
+            "description": "Expected: 400. field = code, and the very same message as request 6. A missing account looks like a wrong code.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"nobody-here@example.com\",\n  \"code\": \"123456\",\n  \"newPassword\": \"reset-pass-3\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "8 Reset password, new password too short: 400 new",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/reset-password",
+            "description": "Expected: 400. field = new (at least 6 characters). The code is not used up and not counted as a try.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{resetEmail}}\",\n  \"code\": \"123456\",\n  \"newPassword\": \"12345\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "9 Reset password: 200",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/reset-password",
+            "description": "Expected: 200. message = \"Your password is changed. Please log in with it.\", data = null. There is no token: the person logs in again.\nThe password is now reset-pass-3.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{resetEmail}}\",\n  \"code\": \"123456\",\n  \"newPassword\": \"reset-pass-3\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "10 Reset password with the same code again: 400 code",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/reset-password",
+            "description": "Expected: 400. field = code. A code works once.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{resetEmail}}\",\n  \"code\": \"123456\",\n  \"newPassword\": \"another-pass-4\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "11 The old password no longer logs in: 401",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/login",
+            "description": "Expected: 401. old-pass-1 no longer works.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{resetEmail}}\",\n  \"password\": \"old-pass-1\",\n  \"door\": \"citizen\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "12 The new password logs in: 200",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/login",
+            "description": "Expected: 200. reset-pass-3 works.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{resetEmail}}\",\n  \"password\": \"reset-pass-3\",\n  \"door\": \"citizen\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "13 Forgot password again: 200",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/forgot-password",
+            "description": "Expected: 200. A new code is made (the old one was used up, so there is nothing to wait for). Needed for requests 14 and 15.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{resetEmail}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "14 Reset password, wrong code three times: 400, 400, 423",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/reset-password",
+            "description": "Send this request three times. Expected: 400 (field = code), 400, then 423 with code = locked. Three wrong tries lock the code.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{resetEmail}}\",\n  \"code\": \"000000\",\n  \"newPassword\": \"another-pass-4\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "15 Reset password with the right code once locked: 423",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/reset-password",
+            "description": "Expected: 423, code = locked, even though 123456 is the right code. The password stays reset-pass-3. A new code (request 13 after 30 seconds) clears the lock.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{resetEmail}}\",\n  \"code\": \"123456\",\n  \"newPassword\": \"another-pass-4\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
           }
         }
       ]
