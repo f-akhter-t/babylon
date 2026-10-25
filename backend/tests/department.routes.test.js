@@ -52,10 +52,28 @@ function withWrites(model) {
     },
   }
 }
+const alertRows = []
 mock.module(url('../src/shared/service/alerts.service.js'), {
   namedExports: {
     notify: async (email, payload) => { notices.push({ email, ...payload }) },
     notifyMany: async (emails, payload) => { for (const email of emails) notices.push({ email, ...payload }) },
+    listAlerts: async (email) => {
+      const mine = alertRows.filter((a) => a.email === email)
+      return { alerts: mine, unreadCount: mine.filter((a) => !a.read).length }
+    },
+    getUnreadCount: async (email) => ({
+      unreadCount: alertRows.filter((a) => a.email === email && !a.read).length,
+    }),
+    markRead: async (email, id) => {
+      const row = alertRows.find((a) => a.id === id && a.email === email)
+      if (!row) throw new AppError('not-found', 404, 'We could not find that alert.')
+      row.read = true
+      return row
+    },
+    markAllRead: async (email) => {
+      for (const a of alertRows) if (a.email === email) a.read = true
+      return { unreadCount: 0 }
+    },
   },
 })
 mock.module(url('../src/shared/service/issues.service.js'), {
