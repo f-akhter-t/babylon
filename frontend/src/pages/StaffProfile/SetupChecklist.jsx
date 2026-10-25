@@ -81,6 +81,7 @@ export default function SetupChecklist({ profile, detailsDirty, onFinish }) {
           Name and job title saved
         </Item>
         <Item done={!missing.includes('a verified phone number')}>Phone number verified</Item>
+        <Item done={!missing.includes('a verified email address')}>Email address verified</Item>
         <Item done={!missing.includes('a verified Employee ID')}>Employee ID verified</Item>
         {isDepartment && (
           <Item done={!missing.includes('a verified department code')}>Department verified</Item>

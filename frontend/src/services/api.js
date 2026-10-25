@@ -580,6 +580,22 @@ export async function verifyEmployeeId(email, value) {
   return profile
 }
 
+// Email check for staff: a code goes to the account's own address (staffApi.js).
+// -> { status: 'sent', email, resendIn } | { status: 'verified' }; throws the
+// server's whole-sentence message otherwise.
+export async function requestEmailCode() {
+  const sent = await staff.sendEmailCode()
+  if (sent.status === 'verified') profileChanged()
+  return sent
+}
+
+// -> { status: 'verified', profile } | { status: 'wrong', message } | { status: 'locked', message }
+export async function verifyEmailCode(code) {
+  const result = await staff.verifyEmailCode(code.trim())
+  if (result.status === 'verified') profileChanged()
+  return result
+}
+
 const AVATAR_EDGE = 192 // px, square: plenty for a 40px circle on a sharp screen
 
 // A square, centred crop of the photo, made small enough to keep in the
