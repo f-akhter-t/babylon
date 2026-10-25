@@ -5,7 +5,7 @@ import clsx from 'clsx'
 import { ArrowUpIcon, BarsIcon, BellIcon, CheckIcon, CloseIcon, ReopenIcon, UserIcon } from '../ui/icons'
 import { useNotifications } from '../../hooks/useNotifications'
 import { enter, usePresence } from '../ui/motion'
-import { markAllRead, markRead, timeAgo } from '../../services/notifications'
+import { timeAgo } from '../../services/notifications'
 
 // One icon and colour per kind of notice (services/notifications.js).
 const KINDS = {
@@ -31,8 +31,8 @@ const EDGE = 12 // px kept free at the screen edges
 // staff layout). The panel is drawn at the end of <body>, placed under the
 // bell, so no sidebar or scrolling box can cut it off.
 //   email: whose notices. homeLink, homeLabel: the link at the bottom of the panel.
-export default function NotificationBell({ email, homeLink = '/my-reports', homeLabel = 'View my reports' }) {
-  const { items, unread } = useNotifications(email)
+export default function NotificationBell({ email, alertsPath = '/citizen/alerts', homeLink = '/my-reports', homeLabel = 'View my reports' }) {
+  const { items, unread, markRead, markAllRead } = useNotifications(email, alertsPath)
   const [open, setOpen] = useState(false)
   const [place, setPlace] = useState(null) // { top, left, width, maxHeight }
   const buttonRef = useRef(null)
@@ -164,7 +164,7 @@ export default function NotificationBell({ email, homeLink = '/my-reports', home
             </span>
             <span className="flex-1" />
             {unread > 0 && (
-              <button type="button" onClick={() => markAllRead(email)} className="-my-2 min-h-11 px-1 text-sm font-bold text-forest underline underline-offset-[3px]">
+              <button type="button" onClick={() => markAllRead()} className="-my-2 min-h-11 px-1 text-sm font-bold text-forest underline underline-offset-[3px]">
                 Mark all as read
               </button>
             )}
@@ -186,8 +186,8 @@ export default function NotificationBell({ email, homeLink = '/my-reports', home
               return (
                 <li key={n.id}>
                   <Link
-                    to={n.link}
-                    onClick={() => { markRead(email, n.id); close(false) }}
+                    to={n.link || homeLink}
+                    onClick={() => { markRead(n.id); close(false) }}
                     className={clsx(
                       'relative flex w-full gap-3 rounded-[14px] p-3 text-left transition-colors',
                       n.read ? 'bg-white hover:bg-mint/60' : 'bg-mint hover:bg-mint-deep/60',
