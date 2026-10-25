@@ -23,6 +23,7 @@ import {
   updateSession,
 } from './auth'
 import * as staff from './staffApi'
+import * as emailCheck from './emailCheckApi'
 import { ISSUES_EVENT } from './issuesEvent'
 import { notify, notifyEach } from './notifications'
 import {
@@ -499,6 +500,7 @@ function buildProfile(email) {
     division: stored.division ?? '',
     phone: stored.phone ?? '', // only set once the number is verified
     phoneVerified: Boolean(stored.phone),
+    emailVerified: Boolean(stored.emailVerified), // set by the server's email check (see requestEmailCode)
     identity,
     isVerified: identity.status === 'verified',
     onboarded: true, // only staff have a setup to finish (see the staff section)
@@ -580,19 +582,32 @@ export async function verifyEmployeeId(email, value) {
   return profile
 }
 
-// Email check for staff: a code goes to the account's own address (staffApi.js).
+// Email check for staff and citizens: a code goes to the account's own address
+// (emailCheckApi.js). A citizen's profile is still kept in this browser (see
+// above), so once the server says the address is verified it is remembered here
+// too; after the citizen profile moves to the server it comes with the profile.
 // -> { status: 'sent', email, resendIn } | { status: 'verified' }; throws the
 // server's whole-sentence message otherwise.
+function rememberEmailVerified() {
+  const email = getSession()?.email
+  if (isStaff() || !email) profileChanged()
+  else writeProfile(email, { emailVerified: true }) // also fires the profile event
+}
+
 export async function requestEmailCode() {
-  const sent = await staff.sendEmailCode()
-  if (sent.status === 'verified') profileChanged()
+  const sent = isStaff()
+    ? await staff.sendEmailCode()
+    : await emailCheck.sendEmailCode(emailCheck.CITIZEN_EMAIL_PATH)
+  if (sent.status === 'verified') rememberEmailVerified()
   return sent
 }
 
 // -> { status: 'verified', profile } | { status: 'wrong', message } | { status: 'locked', message }
 export async function verifyEmailCode(code) {
-  const result = await staff.verifyEmailCode(code.trim())
-  if (result.status === 'verified') profileChanged()
+  const result = isStaff()
+    ? await staff.verifyEmailCode(code.trim())
+    : await emailCheck.verifyEmailCode(emailCheck.CITIZEN_EMAIL_PATH, code.trim())
+  if (result.status === 'verified') rememberEmailVerified()
   return result
 }
 

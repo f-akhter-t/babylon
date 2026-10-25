@@ -2,12 +2,12 @@ import clsx from 'clsx'
 import { profileProgress } from './profileProgress'
 import { enter } from '../../components/ui/motion'
 
-// Three steps of a staircase, one per section. Each turns green when that
+// Four steps of a staircase, one per section. Each turns green when that
 // section is done; identity under review shows amber.
 // tone: 'dark' on the navy summary card, 'light' on mint.
 const HEIGHTS = {
-  md: ['h-6', 'h-10', 'h-14'],
-  lg: ['h-10', 'h-16', 'h-24'],
+  md: ['h-5', 'h-8', 'h-11', 'h-14'],
+  lg: ['h-8', 'h-14', 'h-20', 'h-24'],
 }
 
 const BAR = {
@@ -42,7 +42,7 @@ export default function CompletenessMeter({ profile, tone = 'dark', size = 'md' 
         </p>
       </div>
 
-      <ol className={clsx('mt-3 grid grid-cols-3 items-end', size === 'lg' ? 'gap-3' : 'gap-2')}>
+      <ol className={clsx('mt-3 grid grid-cols-4 items-end', size === 'lg' ? 'gap-3' : 'gap-2')}>
         {steps.map((step, index) => (
           <li key={step.key} className="flex flex-col gap-1.5">
             <span

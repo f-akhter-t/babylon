@@ -19,7 +19,7 @@ import { enter } from '../../components/ui/motion'
 import StaffDetailsCard from './StaffDetailsCard'
 import DepartmentCodeCard from './DepartmentCodeCard'
 import VerifyCodeCard from './VerifyCodeCard'
-import EmailCard from './EmailCard'
+import EmailCard from '../Profile/EmailCard'
 import ProfilePhotoCard from './ProfilePhotoCard'
 import SetupChecklist from './SetupChecklist'
 
@@ -133,7 +133,7 @@ function StaffProfilePage({ role }) {
   const sections = [
     { label: 'Details', id: 'staff-details' },
     { label: 'Phone', id: 'profile-phone' },
-    { label: 'Email', id: 'staff-email-check' },
+    { label: 'Email', id: 'profile-email' },
     { label: 'Employee ID', id: 'staff-employee-id' },
     ...(isDepartment ? [{ label: 'Department', id: 'staff-department' }] : []),
     { label: 'Photo', id: 'staff-photo' },
