@@ -2,6 +2,7 @@ import 'leaflet/dist/leaflet.css'
 import { MapContainer, Marker, TileLayer } from 'react-leaflet'
 import { Browser } from 'leaflet'
 import { formatDistance } from '../../utils/format'
+import { hasPosition } from '../../utils/position'
 import { pinIcon } from '../Map/statusPin'
 import { PinIcon } from '../Map/MapIcons'
 import MiniMapZoom from './MiniMapZoom'
@@ -15,6 +16,9 @@ const ATTRIBUTION =
 // A small map with one pin on this issue. The mouse wheel scrolls the page,
 // not the map. On phones, one finger scrolls the page too (no dragging).
 export default function IssueMiniMap({ issue }) {
+  // No coordinates (a department or admin seed row): there is no pin to show.
+  if (!hasPosition(issue)) return null
+
   const position = [issue.lat, issue.lng]
   const place = `${issue.location}, ${issue.ward} · ${formatDistance(issue.distanceM)} away`
   const fullMap = `https://www.openstreetmap.org/?mlat=${issue.lat}&mlon=${issue.lng}#map=17/${issue.lat}/${issue.lng}`

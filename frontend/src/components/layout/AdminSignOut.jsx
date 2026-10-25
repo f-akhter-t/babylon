@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom'
 import clsx from 'clsx'
-import { getSession, isOnboarded, logout, STAFF_ROLES } from '../../services/auth'
+import { getSession, isSetupPending, logout, STAFF_ROLES } from '../../services/auth'
 import { confirmLeave } from '../../utils/leaveGuard'
 
 // Who is signed in, and a Log out button. Works in any staff layout.
@@ -12,7 +12,7 @@ export default function AdminSignOut({ className }) {
   function handleLogout() {
     // Unsaved changes on this page: ask first. Not during the profile setup,
     // where Log out is the only way out and must never be held up.
-    const settingUp = session && !isOnboarded(session.email)
+    const settingUp = session && isSetupPending()
     if (!settingUp && !confirmLeave()) return
     logout()
     navigate('/staff/login')

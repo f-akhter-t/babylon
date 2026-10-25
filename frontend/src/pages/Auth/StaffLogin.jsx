@@ -4,7 +4,6 @@ import AuthShell, { DemoHint, Field, FormError, SubmitButton, authLinkClass } fr
 import {
   DEMO_ACCOUNTS,
   DEMO_PASSWORD,
-  DEMO_STAFF_CODE,
   homePathFor,
   login,
 } from '../../services/auth'
@@ -103,7 +102,7 @@ function StaffLoginPage() {
         accounts={DEMO_ACCOUNTS.staff}
         lines={[
           `Both demo accounts use the password ${DEMO_PASSWORD}.`,
-          `To create a staff account, use the demo access code ${DEMO_STAFF_CODE}.`,
+          'To create a staff account, ask your administrator for the staff access code.',
         ]}
       />
     </AuthShell>

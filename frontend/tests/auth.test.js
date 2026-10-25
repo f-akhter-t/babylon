@@ -30,7 +30,7 @@ describe('login', () => {
     assert.deepEqual(session, { name: 'Nadia R.', email: 'citizen@babylon.test', role: 'citizen' })
   })
 
-  it('the session has no id, no onboarding flag and no empty department', async () => {
+  it('a citizen session has no id, no onboarding flag and no empty department', async () => {
     net.reply(200, ok(signedIn(nadia)))
     const session = await auth.login({ email: nadia.email, password: 'x', door: 'citizen' })
     for (const key of ['id', 'onboarded', 'department', 'password', 'token']) {
@@ -48,7 +48,16 @@ describe('login', () => {
   it('a department officer keeps the department in the session', async () => {
     net.reply(200, ok(signedIn(rafiq)))
     const session = await auth.login({ email: rafiq.email, password: 'x', door: 'staff' })
-    assert.deepEqual(session, { name: 'Rafiq Hasan', email: rafiq.email, role: 'department', department: 'Roads & Highways' })
+    assert.deepEqual(session, {
+      name: 'Rafiq Hasan', email: rafiq.email, role: 'department', department: 'Roads & Highways', onboarded: true,
+    })
+  })
+
+  it('a staff session carries the setup flag the server sent, and no id', async () => {
+    net.reply(200, ok(signedIn(admin)))
+    const session = await auth.login({ email: admin.email, password: 'x', door: 'staff' })
+    assert.deepEqual(session, { name: 'Tahmina Akter', email: admin.email, role: 'admin', onboarded: true })
+    assert.equal('id' in session, false)
   })
 
   it('a wrong door is an error with the server code, and nothing is saved', async () => {
@@ -102,7 +111,7 @@ describe('signup', () => {
   it('sends only those four fields, never an access code or department', async () => {
     net.reply(403, fail('invalid', 'Staff accounts are not created on this page. Ask your administrator.'))
     await assert.rejects(
-      auth.signup({ name: 'Tom', email: 't@x.com', password: 'secret1', role: 'admin', department: 'Roads', accessCode: 'BABYLON-STAFF-2026' }),
+      auth.signup({ name: 'Tom', email: 't@x.com', password: 'secret1', role: 'admin', department: 'Roads', accessCode: 'SOME-STAFF-CODE' }),
     )
     assert.deepEqual(Object.keys(net.calls[0].body).sort(), ['email', 'name', 'password', 'role'])
   })
@@ -133,7 +142,6 @@ describe('the saved accounts the unswapped api.js still reads', () => {
     await auth.signup({ name: 'Sara Khan', email: 'sara@example.com', password: 'secret1', role: 'citizen' })
     assert.deepEqual(auth.getAccount('sara@example.com'), { name: 'Sara Khan', email: 'sara@example.com', role: 'citizen' })
     assert.equal(auth.getAccountName('SARA@example.com'), 'Sara Khan')
-    assert.equal(auth.isOnboarded('sara@example.com'), true)
   })
 
   it('the three demo accounts are not saved a second time', async () => {
@@ -150,15 +158,12 @@ describe('the saved accounts the unswapped api.js still reads', () => {
     assert.equal(JSON.parse(store.get('babylon-users')).length, 1)
   })
 
-  it('a staff account follows the setup flag the server sent', async () => {
+  it('the setup flag is not kept in the saved accounts, only in the session', async () => {
     const officer = { id: 'u5', name: 'Imran Ali', email: 'imran@city.gov', role: 'department', department: 'Waste Management', onboarded: false }
     net.reply(200, ok(signedIn(officer)))
     await auth.login({ email: officer.email, password: 'x', door: 'staff' })
-    assert.equal(auth.isOnboarded(officer.email), false)
-    net.reset()
-    net.reply(200, ok(signedIn({ ...officer, onboarded: true })))
-    await auth.login({ email: officer.email, password: 'x', door: 'staff' })
-    assert.equal(auth.isOnboarded(officer.email), true)
+    assert.equal(JSON.parse(store.get('babylon-users'))[0].onboarded, undefined)
+    assert.equal(auth.getSession().onboarded, false)
   })
 
   it('a name changed on the Profile page is kept after the next log-in', async () => {
@@ -273,5 +278,88 @@ describe('logout', () => {
     net.reset()
     auth.logout()
     assert.equal(net.calls.length, 0)
+  })
+})
+
+const officer = { id: 'u5', name: 'Imran Ali', email: 'imran@city.gov', role: 'department', department: 'Waste Management', onboarded: false }
+const boss = { id: 'u6', name: 'Mina Das', email: 'mina@city.gov', role: 'admin', department: null, onboarded: false }
+const staffForm = { name: 'Imran Ali', email: 'imran@city.gov', password: 'secret1', role: 'department', department: 'Waste Management', accessCode: 'GIVEN-BY-ADMIN' }
+
+describe('staffSignup', () => {
+  it('posts to /auth/staff/signup with no token, and starts a session that still has the setup to do', async () => {
+    net.reply(201, ok(signedIn(officer, 'staff-token')))
+    const session = await auth.staffSignup(staffForm)
+    assert.equal(net.calls[0].url, '/api/auth/staff/signup')
+    assert.equal(net.calls[0].method, 'POST')
+    assert.equal('Authorization' in net.calls[0].headers, false)
+    assert.deepEqual(net.calls[0].body, staffForm)
+    assert.deepEqual(session, {
+      name: 'Imran Ali', email: 'imran@city.gov', role: 'department', department: 'Waste Management', onboarded: false,
+    })
+    assert.equal(http.getToken(), 'staff-token')
+    assert.deepEqual(auth.getSession(), session)
+  })
+
+  it('an admin sends no department', async () => {
+    net.reply(201, ok(signedIn(boss)))
+    const session = await auth.staffSignup({ ...staffForm, name: 'Mina Das', email: boss.email, role: 'admin', department: 'Roads & Highways' })
+    assert.equal('department' in net.calls[0].body, false)
+    assert.equal(session.role, 'admin')
+    assert.equal('department' in session, false)
+  })
+
+  it('a wrong access code keeps the server sentence and field, and signs nobody in', async () => {
+    net.reply(400, fail('invalid', 'That access code is not correct. Ask your administrator.', 'accessCode'))
+    await assert.rejects(auth.staffSignup(staffForm), (err) => {
+      assert.equal(err.field, 'accessCode')
+      assert.match(err.message, /access code is not correct/)
+      return true
+    })
+    assert.equal(auth.getSession(), null)
+    assert.equal(http.getToken(), null)
+  })
+
+  it('the access code and password are never written to the browser', async () => {
+    net.reply(201, ok(signedIn(officer)))
+    await auth.staffSignup({ ...staffForm, password: 'Sup3r-secret-pw', accessCode: 'THE-SECRET-CODE' })
+    const saved = JSON.stringify([...store.entries()])
+    assert.equal(saved.includes('Sup3r-secret-pw'), false)
+    assert.equal(saved.includes('THE-SECRET-CODE'), false)
+  })
+
+  it('the old demo access code is gone from the app', () => {
+    assert.equal('DEMO_STAFF_CODE' in auth, false)
+    for (const name of ['isOnboarded', 'markOnboarded']) assert.equal(name in auth, false, name)
+  })
+})
+
+describe('isSetupPending and updateSession', () => {
+  it('is true only for a staff session that still has the setup to do', async () => {
+    assert.equal(auth.isSetupPending(), false, 'nobody signed in')
+    net.reply(200, ok(signedIn(nadia)))
+    await auth.login({ email: nadia.email, password: 'x', door: 'citizen' })
+    assert.equal(auth.isSetupPending(), false, 'a citizen is never held back')
+    net.reset()
+    net.reply(200, ok(signedIn(officer)))
+    await auth.login({ email: officer.email, password: 'x', door: 'staff' })
+    assert.equal(auth.isSetupPending(), true)
+  })
+
+  it('finishing the setup swaps the token and clears the flag, at once', async () => {
+    net.reply(200, ok(signedIn(officer, 'old-token')))
+    await auth.login({ email: officer.email, password: 'x', door: 'staff' })
+    const next = auth.updateSession({ token: 'new-token', onboarded: true })
+    assert.equal(http.getToken(), 'new-token')
+    assert.equal(next.onboarded, true)
+    assert.equal(auth.isSetupPending(), false)
+    assert.equal(auth.getSession().email, officer.email)
+  })
+
+  it('a changed name shows in the session; nothing happens when nobody is signed in', async () => {
+    assert.equal(auth.updateSession({ name: 'Nobody' }), null)
+    net.reply(200, ok(signedIn(officer)))
+    await auth.login({ email: officer.email, password: 'x', door: 'staff' })
+    auth.updateSession({ name: 'Imran A. Khan' })
+    assert.equal(auth.getSession().name, 'Imran A. Khan')
   })
 })
