@@ -52,7 +52,7 @@ export const PHONE_CODE_LIMITS = Object.freeze({
   lifeMinutes: 10,
 })
 
-// --- email code (forgot password; the staff email check uses it too) ---
+// --- email code (forgot password, and the staff and citizen email checks) ---
 export const EMAIL_CODE_LIMITS = Object.freeze({
   devCode: '123456', // used only when EMAIL_MODE=dev
   codeLength: 6,
@@ -63,6 +63,8 @@ export const EMAIL_CODE_LIMITS = Object.freeze({
   // Per address, because nobody is signed in yet: asking for a code, trying one.
   forgotRate: Object.freeze({ windowMs: 60 * 1000, max: 5 }),
   resetRate: Object.freeze({ windowMs: 60 * 1000, max: 10 }),
+  // Per signed-in person, for the staff and citizen email checks.
+  checkRate: Object.freeze({ windowMs: 60 * 1000, max: 10 }),
 })
 
 // Citizen identity photo. Same cap as the frontend (ID_PHOTO_MAX_BYTES).

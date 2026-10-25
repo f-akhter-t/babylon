@@ -11,6 +11,7 @@ import votesRoutes from './routes/votes.routes.js'
 import meRoutes from './routes/me.routes.js'
 import alertsRoutes from './routes/alerts.routes.js'
 import profileRoutes from './routes/profile.routes.js'
+import emailCheckRoutes from './routes/emailCheck.routes.js'
 
 const router = Router()
 router.use(authenticate, authorize(ROLES.CITIZEN))
@@ -22,5 +23,6 @@ router.use(votesRoutes) // Joyti: votes
 router.use(meRoutes) // Joyti: me, points
 router.use(alertsRoutes) // Joyti
 router.use(profileRoutes) // Riktika
+router.use(emailCheckRoutes) // Farhana: email check for citizens
 
 export default router

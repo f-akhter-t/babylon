@@ -31,6 +31,7 @@ export async function getProfile(email) {
     department: user.department ?? null,
     phone: user.phone ?? '',
     phoneVerified: Boolean(user.phoneVerified),
+    emailVerified: Boolean(user.emailVerified),
     address: user.address ?? '',
     division: user.division ?? '',
     identity,
