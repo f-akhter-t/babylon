@@ -5,7 +5,8 @@
 //
 // Every profile comes back in the same shape:
 //   { id, name, email, role, department, onboarded, jobTitle, phone, phoneVerified,
-//     employeeId, employeeIdVerified, departmentVerified, photo, setupMissing }
+//     employeeId, employeeIdVerified, departmentVerified, emailVerified, photo,
+//     setupMissing }
 // phone and employeeId are only ever filled by their checks, so a value means
 // "verified". setupMissing is the list of what the setup still needs.
 import { get, patch, post } from './http.js'
@@ -54,6 +55,37 @@ export async function verifyPhoneCode(phone, code) {
       if (/expired/i.test(error.message)) return { status: 'expired' }
       const left = /(\d+)\s+tr(?:y|ies)\s+left/i.exec(error.message)
       if (left) return { status: 'wrong', attemptsLeft: Number(left[1]) }
+    }
+    throw error
+  }
+}
+
+// Asks for a code to be emailed to the account's own address (the server never
+// takes the address from the page). -> { status: 'sent', email, resendIn }, or
+// { status: 'verified' } when the address was already verified (the page was
+// showing an old copy of the profile). Anything else is thrown with the
+// server's sentence: too soon (429), email codes off (500), the mail server
+// down (503), no connection.
+export async function sendEmailCode() {
+  try {
+    const sent = await post('/auth/staff/email-code')
+    return { status: 'sent', email: sent.email, resendIn: sent.resendAfter }
+  } catch (error) {
+    if (error?.status === 409) return { status: 'verified' }
+    throw error
+  }
+}
+
+// -> { status: 'verified', profile } | { status: 'wrong', message }
+//    | { status: 'locked', message }. `message` is the server's whole sentence.
+// Anything else, such as no connection, is thrown.
+export async function verifyEmailCode(code) {
+  try {
+    return { status: 'verified', profile: await post('/auth/staff/email-verify', { code }) }
+  } catch (error) {
+    if (error?.code === 'locked') return { status: 'locked', message: error.message }
+    if (error?.status === 400 && error?.field === 'code') {
+      return { status: 'wrong', message: error.message }
     }
     throw error
   }

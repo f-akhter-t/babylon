@@ -117,6 +117,79 @@ describe('staff phone code', () => {
   })
 })
 
+describe('staff email code', () => {
+  it('sendEmailCode posts with the token and no body, and gives the address and the wait', async () => {
+    net.reply(200, ok({ email: 'imran@city.gov', resendAfter: 30 }))
+    assert.deepEqual(await staff.sendEmailCode(), {
+      status: 'sent',
+      email: 'imran@city.gov',
+      resendIn: 30,
+    })
+    assert.equal(last().url, '/api/auth/staff/email-code')
+    assert.equal(last().method, 'POST')
+    assert.equal(last().body, undefined)
+    assert.equal(last().headers.Authorization, 'Bearer staff-token')
+  })
+
+  it('an address that is already verified (409) is "verified", not an error', async () => {
+    net.reply(409, fail('conflict', 'Your email address is already verified.'))
+    assert.deepEqual(await staff.sendEmailCode(), { status: 'verified' })
+  })
+
+  it('too soon, email codes off, a mail server that says no and no connection keep their sentence', async () => {
+    const cases = [
+      [429, fail('too-many-requests', 'Please wait 12 seconds before asking for a new code.', 'email')],
+      [500, fail('server-error', 'Email codes are not available right now.')],
+      [503, fail('email-unavailable', 'We could not send the email. Please try again in a moment.')],
+    ]
+    for (const [status, body] of cases) {
+      net.reset()
+      net.reply(status, body)
+      await assert.rejects(staff.sendEmailCode(), (err) => err.message === body.message && err.status === status)
+    }
+    net.reset()
+    net.replyNetworkDown()
+    await assert.rejects(staff.sendEmailCode(), (err) => err.code === 'network')
+  })
+
+  it('a citizen token or a signed-out token is thrown, not hidden as a status', async () => {
+    net.reply(403, fail('forbidden', 'Only staff accounts can do that.'))
+    await assert.rejects(staff.sendEmailCode(), (err) => err.status === 403)
+    net.reset()
+    net.reply(401, fail('unauthorized', 'Please log in.'))
+    await assert.rejects(staff.verifyEmailCode('123456'), (err) => err.status === 401)
+  })
+
+  it('verifyEmailCode posts only the code, and the right one is "verified" with the new profile', async () => {
+    net.reply(200, ok({ ...profile, emailVerified: true, setupMissing: [] }))
+    const result = await staff.verifyEmailCode('123456')
+    assert.equal(result.status, 'verified')
+    assert.equal(result.profile.emailVerified, true)
+    assert.equal(last().url, '/api/auth/staff/email-verify')
+    assert.deepEqual(last().body, { code: '123456' })
+  })
+
+  it('a wrong or expired code is "wrong", with the server sentence', async () => {
+    const message = 'That code is not right or has expired. Check it, or ask for a new one.'
+    net.reply(400, fail('invalid', message, 'code'))
+    assert.deepEqual(await staff.verifyEmailCode('000000'), { status: 'wrong', message })
+  })
+
+  it('too many wrong codes is "locked", with the server sentence', async () => {
+    const message = 'Too many wrong codes. Ask for a new code to try again.'
+    net.reply(423, fail('locked', message))
+    assert.deepEqual(await staff.verifyEmailCode('000000'), { status: 'locked', message })
+  })
+
+  it('no connection and a server error are thrown', async () => {
+    net.replyNetworkDown()
+    await assert.rejects(staff.verifyEmailCode('123456'), (err) => err.code === 'network')
+    net.reset()
+    net.reply(500, fail('server-error', 'Something went wrong. Please try again.'))
+    await assert.rejects(staff.verifyEmailCode('123456'), (err) => err.status === 500)
+  })
+})
+
 describe('finishing the setup', () => {
   it('finishSetup posts to /auth/staff/finish and gives back the new token and the profile', async () => {
     net.reply(200, ok({ token: 'new-token', user: { ...profile, onboarded: true, setupMissing: [] } }))
