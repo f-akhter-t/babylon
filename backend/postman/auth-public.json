@@ -1,7 +1,7 @@
 {
   "info": {
     "name": "Babylon: Auth and Public",
-    "description": "Auth, staff accounts, the report assistant, the public pages and forgot password.\nNo scripts. Send each request by hand and read the answer yourself.\nRun the folders top to bottom: Auth, then Staff accounts, then AI assistant, then Public, then Forgot password (it makes its own account, from the variable resetEmail).\nNeeds the demo accounts and issues from `npm run seed:public`, and the staff settings (STAFF_ACCESS_CODE, DEPARTMENT_CODES, EMPLOYEE_ROSTER) in backend/.env.\nTokens and ids are passed on by hand: when a Description says 'copy data.token into the collection variable X', open the collection's Variables tab and paste it there. Never save your own codes back into this file.\nEvery Description says what answer to expect.",
+    "description": "Auth, staff accounts, the report assistant, the public pages, forgot password and the citizen email check.\nNo scripts. Send each request by hand and read the answer yourself.\nRun the folders top to bottom: Auth, then Staff accounts, then AI assistant, then Public, then Forgot password (it makes its own account, from the variable resetEmail), then Citizen email check (also its own account, from the variable checkEmail).\nNeeds the demo accounts and issues from `npm run seed:public`, and the staff settings (STAFF_ACCESS_CODE, DEPARTMENT_CODES, EMPLOYEE_ROSTER) in backend/.env.\nTokens and ids are passed on by hand: when a Description says 'copy data.token into the collection variable X', open the collection's Variables tab and paste it there. Never save your own codes back into this file.\nEvery Description says what answer to expect.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -60,6 +60,14 @@
     {
       "key": "resetEmail",
       "value": "reset-1@example.com"
+    },
+    {
+      "key": "checkEmail",
+      "value": "check-1@example.com"
+    },
+    {
+      "key": "checkToken",
+      "value": ""
     }
   ],
   "item": [
@@ -2166,6 +2174,287 @@
                 }
               }
             }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Citizen email check",
+      "item": [
+        {
+          "name": "1 Sign up a citizen for the email check: 201",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/signup",
+            "description": "Expected: 201. data.token is a string and data.user.role = citizen.\nThis folder makes its own account. An email can be used once, so change the collection variable checkEmail (for example check-2@example.com) before you run this folder again. To receive a real email, use an address you can read and run the backend with EMAIL_MODE=smtp.\nAfter: copy data.token into the collection variable checkToken.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Email Check Tester\",\n  \"email\": \"{{checkEmail}}\",\n  \"password\": \"check-pass-1\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "2 Email code, no token: 401",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/citizen/profile/email-code",
+            "description": "Expected: 401. No Authorization header is sent on purpose.",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "3 Email code with a department token: 403",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{deptToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/citizen/profile/email-code",
+            "description": "Expected: 403, code forbidden. Only citizens have this check here; staff verify their email in the staff setup.\nNeeds the collection variable deptToken (Auth request 12).",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "4 Email code: 200",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{checkToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/citizen/profile/email-code",
+            "description": "Expected: 200. data = { email: the account's own email (checkEmail), resendAfter: 30 }. The code is sent to the address the account signed up with; nothing in the body can change that. The code is never in the answer.\nNeeds EMAIL_MODE=dev in backend/.env (restart the backend after changing it). Then the code is always 123456 and nothing is emailed. With EMAIL_MODE=smtp the code arrives by email instead.\nNeeds checkToken.",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "5 Email code, again at once: 429",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{checkToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/citizen/profile/email-code",
+            "description": "Expected: 429. code = too-many-requests, field = email, 'Please wait N seconds before asking for a new code.' Send it within 30 seconds of request 4.\nNeeds checkToken.",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "6 Email verify, not 6 digits: 400 code",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{checkToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/citizen/profile/email-verify",
+            "description": "Expected: 400. field = code, message 'Enter the 6-digit code.' This is not counted as a try.\nNeeds checkToken.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"abc\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "7 Email verify, wrong code: 400 code",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{checkToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/citizen/profile/email-verify",
+            "description": "Expected: 400. code = invalid, field = code, 'That code is not right or has expired. Check it, or ask for a new one.' Three wrong codes in a row give 423 locked, until a new code is asked for.\nNeeds checkToken.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"000000\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "8 Email verify: 200",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{checkToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/citizen/profile/email-verify",
+            "description": "Expected: 200. data.emailVerified = true and data.email is checkEmail. In dev mode the code is 123456. With EMAIL_MODE=smtp, type the code from the email.\nNeeds checkToken.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"123456\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "9 Email code, already verified: 409",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{checkToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/citizen/profile/email-code",
+            "description": "Expected: 409. code = conflict, 'Your email address is already verified.' Nothing is sent.\nNeeds checkToken after request 8.",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "10 Email verify, already verified: 200",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{checkToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/citizen/profile/email-verify",
+            "description": "Expected: 200. data.emailVerified = true. Nothing changes, and the wrong code sent here does not matter, because the address is already verified.\nNeeds checkToken after request 8.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"000000\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "11 The profile shows it: 200",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{checkToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/citizen/profile",
+            "description": "Expected: 200. data.emailVerified = true, data.phoneVerified = false and data.identity.status = not-submitted. This is the citizen profile endpoint, so the profile page will show the email as verified after a reload.\nNeeds checkToken after request 8."
           }
         }
       ]

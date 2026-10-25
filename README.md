@@ -105,6 +105,8 @@ Variables for the AI helpers (the Gemini key) and the staff access codes are add
 
 **Staff email check:** a staff account that is still setting up must also verify its email address. `POST /api/auth/staff/email-code` sends a code to the address the account signed up with (it cannot be sent anywhere else), `POST /api/auth/staff/email-verify` checks it, and `POST /api/auth/staff/finish` answers 409 until it is done. Staff who finished their setup earlier are not asked again. Because of this, a new staff account cannot finish setup while email codes are off, so the live site needs `EMAIL_MODE=smtp` working.
 
+**Citizen email check:** a citizen can verify the email address on their profile. `POST /api/citizen/profile/email-code` sends a code to the address the account signed up with, `POST /api/citizen/profile/email-verify` checks it, and `GET /api/citizen/profile` then shows `emailVerified: true`. It is optional and never blocks a citizen from reporting, voting or anything else.
+
 To measure CLIP on a laptop: `node scripts/clip-check.mjs C:\path\to\photo.jpg` (from `backend/`). It prints the priority, the score, and the load time and memory used.
 
 ### Testing the backend by hand with Postman

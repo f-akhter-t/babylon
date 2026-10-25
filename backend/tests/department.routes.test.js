@@ -335,6 +335,7 @@ test('profile: returns the signed-in citizen with division, and no NID photo', a
     department: null,
     phone: '01712345678',
     phoneVerified: false,
+    emailVerified: false,
     address: '12 Lake Road',
     division: 'Chattogram',
     identity: { status: 'pending', nidLast4: '4821', submittedAt: null, reason: '' },
