@@ -162,6 +162,12 @@ const phone = z
 // POST /auth/staff/phone-code
 export const phoneCodeBody = z.object({ phone })
 
+// POST /auth/staff/email-verify. The code goes to the account's own email, so
+// there is nothing else to send.
+export const emailVerifyBody = z.object({
+  code: z.string({ error: M.codeRequired }).trim().min(1, { error: M.codeRequired }).max(12, { error: M.codeRequired }),
+})
+
 // POST /auth/staff/phone-verify
 export const phoneVerifyBody = z.object({
   phone,

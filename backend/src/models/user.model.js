@@ -9,13 +9,16 @@ import { DIVISIONS } from '../constants/divisions.js'
 // inside their own division, and the server reads it from here, never from
 // the request body.
 //
-// Staff fields (jobTitle, employeeId, photo, departmentVerified, onboarded) are
-// filled by the staff routes in auth/ (/api/auth/staff/*).
+// Staff fields (jobTitle, employeeId, photo, departmentVerified, emailVerified,
+// onboarded) are filled by the staff routes in auth/ (/api/auth/staff/*).
 //   photo   the staff member's own picture: a small (192 px) WebP data URL.
 //   avatar  the citizen profile picture (kept as it was, D14).
 //   employeeId is only ever set by the roster check, so a non-empty value
 //   means "verified". An ID belongs to one account (partial unique index below).
 //   departmentVerified is set only by the department-code check.
+//   emailVerified is set only by the emailed-code check (staff setup). It is
+//   false for everyone else, and nothing but a not-yet-onboarded staff account
+//   is ever held back by it.
 const userSchema = new mongoose.Schema(
   {
     email: { type: String, required: true, unique: true, lowercase: true, trim: true },
@@ -36,6 +39,7 @@ const userSchema = new mongoose.Schema(
     employeeId: { type: String, default: '' },
     photo: { type: String, default: '' },
     departmentVerified: { type: Boolean, default: false },
+    emailVerified: { type: Boolean, default: false },
     onboarded: { type: Boolean, default: true },
   },
   { timestamps: true, versionKey: false },
