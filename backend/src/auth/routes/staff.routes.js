@@ -10,6 +10,7 @@ import { AUTH_MESSAGES as M } from '../../constants/messages/auth.js'
 import staffOnly from '../staffOnly.js'
 import {
   departmentCodeBody,
+  emailVerifyBody,
   employeeIdBody,
   phoneCodeBody,
   phoneVerifyBody,
@@ -38,6 +39,8 @@ router.patch('/details', ...signedIn, validate({ body: staffDetailsBody }), cont
 router.post('/photo', ...signedIn, validate({ body: staffPhotoBody }), controller.savePhoto)
 router.post('/phone-code', ...signedIn, limited, validate({ body: phoneCodeBody }), controller.phoneCode)
 router.post('/phone-verify', ...signedIn, limited, validate({ body: phoneVerifyBody }), controller.phoneVerify)
+router.post('/email-code', ...signedIn, limited, controller.emailCode)
+router.post('/email-verify', ...signedIn, limited, validate({ body: emailVerifyBody }), controller.emailVerify)
 router.post('/finish', ...signedIn, controller.finish)
 
 export default router

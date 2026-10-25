@@ -24,4 +24,10 @@ export const phoneCode = async (req, res) =>
 export const phoneVerify = async (req, res) =>
   success(res, MSG.phoneVerified, await staff.verifyPhone(req.user.email, req.valid.body))
 
+export const emailCode = async (req, res) =>
+  success(res, MSG.emailCodeSent, await staff.requestEmailCode(req.user.email))
+
+export const emailVerify = async (req, res) =>
+  success(res, MSG.emailVerified, await staff.verifyEmail(req.user.email, req.valid.body.code))
+
 export const finish = async (req, res) => success(res, M.setupDone, await staff.finish(req.user.email))

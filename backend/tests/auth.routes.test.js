@@ -359,7 +359,7 @@ test('me: gives the signed-in account and no hash', async () => {
     id: String(rows[1]._id), name: 'Roads Officer', email: 'roads@babylon.test',
     role: 'department', department: 'Roads & Highways', onboarded: true,
     jobTitle: '', phone: '', phoneVerified: false, employeeId: '', employeeIdVerified: false,
-    departmentVerified: false, photo: '',
+    departmentVerified: false, emailVerified: false, photo: '',
     setupMissing: ['a job title', 'a verified phone number', 'a verified Employee ID', 'a verified department code'],
   })
   noLeak(res)

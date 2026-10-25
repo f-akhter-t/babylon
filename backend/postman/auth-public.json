@@ -770,7 +770,7 @@
               }
             ],
             "url": "{{baseUrl}}/auth/me",
-            "description": "Expected: 200. data.onboarded = false, data.setupMissing lists what is still needed, data.employeeIdVerified = false.\nNeeds the collection variable staffToken (request 1)."
+            "description": "Expected: 200. data.onboarded = false, data.setupMissing lists what is still needed (a job title, a verified phone number, a verified email address, a verified Employee ID, a verified department code), data.employeeIdVerified = false.\nNeeds the collection variable staffToken (request 1)."
           }
         },
         {
@@ -1189,7 +1189,192 @@
           }
         },
         {
-          "name": "24 Finish: 200 and a fresh token",
+          "name": "24 Email code, no token: 401",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/staff/email-code",
+            "description": "Expected: 401. No Authorization header is sent on purpose.",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "25 Email code with a citizen token: 403",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{citizenToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/staff/email-code",
+            "description": "Expected: 403, code forbidden. A citizen is not staff.\nNeeds the collection variable citizenToken (Auth request 6).",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "26 Email code: 200",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{staffToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/staff/email-code",
+            "description": "Expected: 200. data = { email: the account's own email (staffEmail), resendAfter: 30 }. The code is sent to the address the account signed up with; nothing in the body can change that, and the code itself is never in the answer.\nIn dev mode (EMAIL_MODE=dev) the code is 123456 and nothing is sent. With EMAIL_MODE=smtp the code arrives in the inbox of staffEmail.\nNeeds staffToken.",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "27 Email code, again at once: 429",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{staffToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/staff/email-code",
+            "description": "Expected: 429. code = too-many-requests, field = email, 'Please wait N seconds before asking for a new code.' Send it within 30 seconds of request 26.\nNeeds staffToken.",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "28 Email verify, wrong code: 400",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{staffToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/staff/email-verify",
+            "description": "Expected: 400. code = invalid, field = code, 'That code is not right or has expired. Check it, or ask for a new one.' Three wrong codes in a row give 423 locked, until a new code is asked for (request 26, 30 seconds after the last one).\nNeeds staffToken.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"000000\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "29 Email verify: 200",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{staffToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/staff/email-verify",
+            "description": "Expected: 200. data.emailVerified = true, and 'a verified email address' is gone from setupMissing.\nIn dev mode the code is 123456. With EMAIL_MODE=smtp, type the code from the email instead.\nIf a wrong code locked you (423): wait 30 seconds, send request 26 again, then this one.\nNeeds staffToken.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"123456\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "30 Email code, already verified: 409",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{staffToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/staff/email-code",
+            "description": "Expected: 409. code = conflict, 'Your email address is already verified.' Nothing is sent.\nNeeds staffToken after request 29.",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "31 Finish: 200 and a fresh token",
           "request": {
             "method": "POST",
             "header": [
@@ -1203,7 +1388,7 @@
               }
             ],
             "url": "{{baseUrl}}/auth/staff/finish",
-            "description": "Expected: 200. data.user.onboarded = true, data.user.setupMissing = [], and data.token is a NEW token with onboarded true.\nAfter: copy data.token into the collection variable staffToken (replace the old one). Then run request 25.\nNeeds staffToken with every step above done.",
+            "description": "Expected: 200. data.user.onboarded = true, data.user.setupMissing = [], and data.token is a NEW token with onboarded true.\nAfter: copy data.token into the collection variable staffToken (replace the old one). Then run request 32.\nNeeds staffToken with every step above done (including the email check, request 29).",
             "body": {
               "mode": "raw",
               "raw": "{}",
@@ -1216,7 +1401,7 @@
           }
         },
         {
-          "name": "25 The fresh token opens the department area: 200",
+          "name": "32 The fresh token opens the department area: 200",
           "request": {
             "method": "GET",
             "header": [
@@ -1226,11 +1411,11 @@
               }
             ],
             "url": "{{baseUrl}}/department/issues",
-            "description": "Expected: 200. The same request as request 8 now works, because the token says onboarded: true.\nNeeds the NEW staffToken from request 24."
+            "description": "Expected: 200. The same request as request 8 now works, because the token says onboarded: true.\nNeeds the NEW staffToken from request 31."
           }
         },
         {
-          "name": "26 Me after finishing: 200",
+          "name": "33 Me after finishing: 200",
           "request": {
             "method": "GET",
             "header": [

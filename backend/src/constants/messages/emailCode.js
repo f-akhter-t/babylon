@@ -9,10 +9,16 @@ export const EMAIL_CODE_MESSAGES = Object.freeze({
   emailCodeLocked: 'Too many wrong codes. Ask for a new code to try again.',
   emailCodeWait: 'Please wait {seconds} seconds before asking for a new code.',
   emailCodeFailed: 'We could not send the email. Please try again in a moment.',
+  emailCodeSent: 'We have sent a code to your email address.',
+  emailVerified: 'Your email address is verified.',
+  emailAlreadyVerified: 'Your email address is already verified.',
 
   // The email itself.
   mailSender: 'Babylon',
   resetMailSubject: 'Your Babylon password reset code',
   resetMailText: (code, minutes) =>
     `Your Babylon password reset code is ${code}.\n\nIt works for ${minutes} minutes. If you did not ask to reset your password, you can ignore this email and your password stays the same.`,
+  verifyMailSubject: 'Your Babylon email verification code',
+  verifyMailText: (code, minutes) =>
+    `Your Babylon email verification code is ${code}.\n\nIt works for ${minutes} minutes. If you did not ask for it, you can ignore this email.`,
 })

@@ -27,6 +27,9 @@ function mailFor(purpose, code) {
   if (purpose === 'reset') {
     return { subject: MSG.resetMailSubject, text: MSG.resetMailText(code, LIMITS.lifeMinutes) }
   }
+  if (purpose === 'verify') {
+    return { subject: MSG.verifyMailSubject, text: MSG.verifyMailText(code, LIMITS.lifeMinutes) }
+  }
   throw new Error(`No email text for the purpose "${purpose}".`)
 }
 

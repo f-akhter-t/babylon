@@ -1,7 +1,8 @@
-// Staff accounts over HTTP: sign-up, the setup checks, the phone code and finish.
-// The user and phone-code models are small in-memory fakes. Passwords are hashed
-// with the real bcrypt, tokens are the real ones, and the phone-code service is
-// the real shared one. The real database is covered by Postman
+// Staff accounts over HTTP: sign-up, the setup checks, the phone and email codes
+// and finish. The user, phone-code and email-code models are small in-memory
+// fakes and the mailer is a spy. Passwords are hashed with the real bcrypt,
+// tokens are the real ones, and the phone-code and email-code services are the
+// real shared ones. The real database is covered by Postman
 // (backend/postman/auth-public.json).
 // Run: node --experimental-test-module-mocks --test tests/staff.routes.test.js
 import { test, mock, before, beforeEach } from 'node:test'
@@ -11,6 +12,7 @@ import mongoose from 'mongoose'
 process.env.MONGODB_URI = 'mongodb://localhost/unused'
 process.env.JWT_SECRET = 'test-secret-test-secret'
 process.env.PHONE_CODE_MODE = 'dev'
+process.env.EMAIL_MODE = 'dev'
 process.env.STAFF_ACCESS_CODE = 'TEST-STAFF-CODE'
 process.env.DEPARTMENT_CODES = JSON.stringify({ 'Roads & Highways': 'RH-1111', Electricity: 'EL-2222' })
 process.env.EMPLOYEE_ROSTER = JSON.stringify({
@@ -59,7 +61,7 @@ const FakeUser = {
     const row = {
       _id: new mongoose.Types.ObjectId(),
       department: null, jobTitle: '', employeeId: '', photo: '', phone: '',
-      phoneVerified: false, departmentVerified: false, onboarded: true,
+      phoneVerified: false, departmentVerified: false, emailVerified: false, onboarded: true,
       ...doc,
     }
     rows.push(row)
@@ -100,6 +102,43 @@ mock.module(url('../src/models/phoneCode.model.js'), {
       return { ...row }
     },
     deleteOne: async (filter) => { codes = codes.filter((r) => !same(r, filter)) },
+  },
+})
+
+// ---------- fake email-code model and mailer spy (the email-code service is the real one) ----------
+
+let emailRows = []
+let nextEmailId = 1
+mock.module(url('../src/models/emailCode.model.js'), {
+  defaultExport: {
+    findOne: async (filter) => {
+      const row = emailRows.find((r) => same(r, filter))
+      return row ? { ...row } : null
+    },
+    findOneAndUpdate: async (filter, update, options = {}) => {
+      let row = emailRows.find((r) => same(r, filter))
+      if (!row) {
+        if (!options.upsert) return null
+        row = { _id: nextEmailId++, ...filter }
+        emailRows.push(row)
+      }
+      const { $inc, ...set } = update
+      Object.assign(row, set)
+      for (const [key, step] of Object.entries($inc ?? {})) row[key] = (row[key] ?? 0) + step
+      return { ...row }
+    },
+    deleteOne: async (filter) => { emailRows = emailRows.filter((r) => !same(r, filter)) },
+  },
+})
+
+let mails = []
+let mailFails = false
+mock.module(url('../src/shared/service/mailer.service.js'), {
+  namedExports: {
+    sendMail: async (mail) => {
+      if (mailFails) throw Object.assign(new Error('down'), { code: 'ECONNECTION' })
+      mails.push(mail)
+    },
   },
 })
 
@@ -146,12 +185,16 @@ const ROADS = 'Roads & Highways'
 const account = (extra) => ({
   _id: new mongoose.Types.ObjectId(), name: 'Someone', department: null, jobTitle: '',
   employeeId: '', photo: '', phone: '', phoneVerified: false, departmentVerified: false,
-  onboarded: true, passwordHash: '!seed-no-login', ...extra,
+  emailVerified: false, onboarded: true, passwordHash: '!seed-no-login', ...extra,
 })
 
 beforeEach(async () => {
   codes = []
   nextCodeId = 1
+  emailRows = []
+  nextEmailId = 1
+  mails = []
+  mailFails = false
   rows = [
     account({ email: 'citizen@babylon.test', name: 'Demo Citizen', role: 'citizen' }),
     // Finished staff who already own an Employee ID.
@@ -193,8 +236,10 @@ test('signup: 201, a department account that is NOT onboarded, with a token that
   assert.equal(user.department, ROADS)
   assert.equal(user.onboarded, false)
   assert.deepEqual(user.setupMissing, [
-    'a job title', 'a verified phone number', 'a verified Employee ID', 'a verified department code',
+    'a job title', 'a verified phone number', 'a verified email address',
+    'a verified Employee ID', 'a verified department code',
   ])
+  assert.equal(user.emailVerified, false)
   const payload = verifyToken(token)
   assert.equal(payload.role, 'department')
   assert.equal(payload.department, ROADS)
@@ -291,7 +336,8 @@ test('the citizen sign-up page still refuses a staff role', async () => {
 test('every staff route (except sign-up) needs a token: 401', async () => {
   for (const [method, path] of [
     ['post', '/verify-code'], ['post', '/verify-employee'], ['patch', '/details'],
-    ['post', '/photo'], ['post', '/phone-code'], ['post', '/phone-verify'], ['post', '/finish'],
+    ['post', '/photo'], ['post', '/phone-code'], ['post', '/phone-verify'],
+    ['post', '/email-code'], ['post', '/email-verify'], ['post', '/finish'],
   ]) {
     const res = await request(app)[method](`/api/auth/staff${path}`).send({})
     assert.equal(res.status, 401, path)
@@ -302,7 +348,8 @@ test('a citizen token is 403 forbidden on every staff route', async () => {
   const token = tokenFor('citizen@babylon.test', 'citizen')
   for (const [method, path] of [
     ['post', '/verify-code'], ['post', '/verify-employee'], ['patch', '/details'],
-    ['post', '/photo'], ['post', '/phone-code'], ['post', '/phone-verify'], ['post', '/finish'],
+    ['post', '/photo'], ['post', '/phone-code'], ['post', '/phone-verify'],
+    ['post', '/email-code'], ['post', '/email-verify'], ['post', '/finish'],
   ]) {
     const res = await request(app)[method](`/api/auth/staff${path}`).set(bearer(token)).send({})
     assert.equal(res.status, 403, path)
@@ -584,6 +631,168 @@ test('phone-verify: no code asked for, or a different number, is 400 "expired"; 
   assert.equal(rows.at(-1).phoneVerified, false)
 })
 
+// ---------- email code and email verify ----------
+
+test('email-code: 200, the code goes to the account\'s own email and is never in the answer', async () => {
+  const { env } = await import('../src/config/env.js')
+  env.emailMode = 'smtp'
+  try {
+    const token = await signUp()
+    const res = await post('/email-code', {}, token)
+    assert.equal(res.status, 200)
+    assert.deepEqual(res.body.data, { email: 'nusrat@babylon.test', resendAfter: 30 })
+    assert.equal(mails.length, 1)
+    assert.equal(mails[0].to, 'nusrat@babylon.test')
+    assert.match(mails[0].subject, /verification/i)
+    const sent = mails[0].text.match(/\b(\d{6})\b/)?.[1]
+    assert.ok(sent, 'the mail carries a 6-digit code')
+    assert.ok(!JSON.stringify(res.body).includes(sent), 'the code is not in the answer')
+    assert.ok(!JSON.stringify(emailRows).includes(sent), 'only a hash is stored')
+    assert.equal(emailRows.length, 1)
+    assert.equal(emailRows[0].purpose, 'verify')
+    // The emailed code is the one that verifies.
+    const ok = await post('/email-verify', { code: sent }, token)
+    assert.equal(ok.status, 200)
+    assert.equal(ok.body.data.emailVerified, true)
+  } finally {
+    env.emailMode = 'dev'
+  }
+})
+
+test('email-code: it cannot be sent to another address, whatever the body says', async () => {
+  const token = await signUp()
+  const res = await post('/email-code', { email: 'victim@example.com' }, token)
+  assert.equal(res.status, 200)
+  assert.equal(res.body.data.email, 'nusrat@babylon.test')
+  assert.equal(emailRows[0].email, 'nusrat@babylon.test')
+})
+
+test('email-code: in dev mode nothing is mailed and the fixed code works', async () => {
+  const token = await signUp()
+  assert.equal((await post('/email-code', {}, token)).status, 200)
+  assert.equal(mails.length, 0)
+  assert.equal((await post('/email-verify', { code: '123456' }, token)).status, 200)
+})
+
+test('email-code: asking again at once is 429, with the seconds to wait', async () => {
+  const token = await signUp()
+  assert.equal((await post('/email-code', {}, token)).status, 200)
+  const again = await post('/email-code', {}, token)
+  assert.equal(again.status, 429)
+  assert.equal(again.body.code, 'too-many-requests')
+  assert.match(again.body.message, /wait \d+ seconds/)
+})
+
+test('email-code: an address that is already verified is 409 and nothing is sent', async () => {
+  const token = await signUp()
+  await post('/email-code', {}, token)
+  await post('/email-verify', { code: '123456' }, token)
+  const res = await post('/email-code', {}, token)
+  assert.equal(res.status, 409)
+  assert.equal(res.body.code, 'conflict')
+  assert.equal(mails.length, 0)
+})
+
+test('email-code: with email codes switched off it is a 500, never a fake success', async () => {
+  const { env } = await import('../src/config/env.js')
+  env.emailMode = 'off'
+  try {
+    const token = await signUp()
+    const res = await post('/email-code', {}, token)
+    assert.equal(res.status, 500)
+    assert.equal(emailRows.length, 0)
+  } finally {
+    env.emailMode = 'dev'
+  }
+})
+
+test('email-code: a mail server that says no is 503, and no code is left behind', async () => {
+  const { env } = await import('../src/config/env.js')
+  env.emailMode = 'smtp'
+  mailFails = true
+  try {
+    const token = await signUp()
+    const res = await post('/email-code', {}, token)
+    assert.equal(res.status, 503)
+    assert.equal(res.body.code, 'email-unavailable')
+    assert.equal(emailRows.length, 0)
+  } finally {
+    env.emailMode = 'dev'
+  }
+})
+
+test('email-verify: the right code marks the email verified and is used up', async () => {
+  const token = await signUp()
+  await post('/email-code', {}, token)
+  const res = await post('/email-verify', { code: ' 123456 ' }, token)
+  assert.equal(res.status, 200)
+  assert.equal(res.body.data.emailVerified, true)
+  assert.ok(!res.body.data.setupMissing.includes('a verified email address'))
+  assert.equal(rows.at(-1).emailVerified, true)
+  assert.equal(emailRows.length, 0, 'a used code is gone')
+  assert.equal((await me(token)).body.data.emailVerified, true)
+})
+
+test('email-verify: a wrong code is 400 on "code", the third wrong one locks it (423)', async () => {
+  const token = await signUp()
+  await post('/email-code', {}, token)
+  const body = { code: '000000' }
+  for (let i = 0; i < 2; i++) {
+    const wrong = await post('/email-verify', body, token)
+    assert.equal(wrong.status, 400)
+    assert.equal(wrong.body.code, 'invalid')
+    assert.equal(wrong.body.field, 'code')
+  }
+  const locked = await post('/email-verify', body, token)
+  assert.equal(locked.status, 423)
+  assert.equal(locked.body.code, 'locked')
+  assert.equal((await post('/email-verify', { code: '123456' }, token)).status, 423, 'even the right code, until a new one is asked for')
+  assert.equal(rows.at(-1).emailVerified, false)
+})
+
+test('email-verify: no code asked for is 400 on "code"; a missing code is 400 too', async () => {
+  const token = await signUp()
+  const none = await post('/email-verify', { code: '123456' }, token)
+  assert.equal(none.status, 400)
+  assert.equal(none.body.field, 'code')
+  const missing = await post('/email-verify', {}, token)
+  assert.equal(missing.status, 400)
+  assert.equal(missing.body.field, 'code')
+  assert.equal(rows.at(-1).emailVerified, false)
+})
+
+test('email-verify: one person\'s code does not verify another account', async () => {
+  const first = await signUp()
+  await post('/email-code', {}, first)
+  const second = await signUp({ email: 'other@babylon.test', name: 'Other Person' })
+  const res = await post('/email-verify', { code: '123456' }, second)
+  assert.equal(res.status, 400)
+  assert.equal(rows.find((r) => r.email === 'other@babylon.test').emailVerified, false)
+})
+
+test('email-verify: an address that is already verified just returns the profile', async () => {
+  const token = await signUp()
+  await post('/email-code', {}, token)
+  await post('/email-verify', { code: '123456' }, token)
+  const again = await post('/email-verify', { code: '000000' }, token)
+  assert.equal(again.status, 200)
+  assert.equal(again.body.data.emailVerified, true)
+})
+
+test('the email check holds back only accounts still setting up', async () => {
+  // Finished before the email check existed: everything else done, email never verified.
+  rows.push(account({
+    email: 'veteran@babylon.test', name: 'Veteran Officer', role: 'department', department: ROADS,
+    jobTitle: 'Officer', employeeId: 'E-RH-1', phone: '01711000111', phoneVerified: true,
+    departmentVerified: true, onboarded: true,
+  }))
+  const token = tokenFor('veteran@babylon.test', 'department', ROADS)
+  assert.deepEqual((await me(token)).body.data.setupMissing, [])
+  const res = await post('/finish', {}, token)
+  assert.equal(res.status, 200)
+  assert.equal(res.body.data.user.emailVerified, false)
+})
+
 // ---------- finish, and /auth/me ----------
 
 test('finish: before the required steps are done it is 409 and nothing changes', async () => {
@@ -602,6 +811,8 @@ async function completeSetup(token, { admin = false } = {}) {
   assert.equal((await post('/verify-employee', { employeeId: admin ? 'E-AD-1' : 'E-RH-1' }, token)).status, 200)
   assert.equal((await post('/phone-code', { phone: '01711000111' }, token)).status, 200)
   assert.equal((await post('/phone-verify', { phone: '01711000111', code: '123456' }, token)).status, 200)
+  assert.equal((await post('/email-code', {}, token)).status, 200)
+  assert.equal((await post('/email-verify', { code: '123456' }, token)).status, 200)
   if (!admin) assert.equal((await post('/verify-code', { code: 'RH-1111' }, token)).status, 200)
 }
 
@@ -645,7 +856,7 @@ test('finish: asking again is fine and gives a fresh working token', async () =>
 })
 
 test('finish: each missing step blocks it', async () => {
-  for (const skip of ['details', 'employee', 'phone', 'department']) {
+  for (const skip of ['details', 'employee', 'phone', 'email', 'department']) {
     rows = rows.filter((r) => r.email !== 'nusrat@babylon.test')
     const token = await signUp()
     if (skip !== 'details') await patch('/details', { jobTitle: 'Officer' }, token)
@@ -653,6 +864,10 @@ test('finish: each missing step blocks it', async () => {
     if (skip !== 'phone') {
       await post('/phone-code', { phone: '01711000111' }, token)
       await post('/phone-verify', { phone: '01711000111', code: '123456' }, token)
+    }
+    if (skip !== 'email') {
+      await post('/email-code', {}, token)
+      await post('/email-verify', { code: '123456' }, token)
     }
     if (skip !== 'department') await post('/verify-code', { code: 'RH-1111' }, token)
     const res = await post('/finish', {}, token)
@@ -674,7 +889,8 @@ test('me: a citizen gets the plain account, staff also get their saved details a
   assert.equal(res.body.data.photo, PIXEL)
   assert.equal(res.body.data.employeeIdVerified, false)
   assert.deepEqual(res.body.data.setupMissing, [
-    'a verified phone number', 'a verified Employee ID', 'a verified department code',
+    'a verified phone number', 'a verified email address',
+    'a verified Employee ID', 'a verified department code',
   ])
   assert.ok(!JSON.stringify(res.body).includes('passwordHash'))
 })

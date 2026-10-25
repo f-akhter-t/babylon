@@ -9,7 +9,9 @@ import { ROLES } from '../../constants/roles.js'
 import { COMMON } from '../../constants/messages/common.js'
 import { AUTH_MESSAGES as M } from '../../constants/messages/auth.js'
 import { sendCode, verifyCode } from '../../shared/service/phoneCode.service.js'
+import * as emailCodes from '../../shared/service/emailCode.service.js'
 import { PHONE_CODE_LIMITS } from '../../constants/limits.js'
+import { MSG } from '../../constants/messages/index.js'
 import { issueToken, toStaffProfile } from './session.js'
 import * as roster from './staffRoster.service.js'
 
@@ -119,6 +121,27 @@ export async function verifyPhone(email, { phone, code }) {
   const user = await loadStaff(email)
   await verifyCode({ userId: user._id, phone, code })
   await User.updateOne({ _id: user._id }, { $set: { phone, phoneVerified: true } })
+  return profileOf(email)
+}
+
+// POST /auth/staff/email-code. The code goes to the address the account signed
+// up with (it is never taken from the request), so only someone who can read
+// that mailbox can pass the check.
+export async function requestEmailCode(email) {
+  const user = await loadStaff(email)
+  if (user.emailVerified === true) throw new AppError('conflict', 409, MSG.emailAlreadyVerified)
+  const sent = await emailCodes.sendCode({ userId: user._id, email: user.email, purpose: 'verify' })
+  return { email: user.email, resendAfter: sent.resendAfter }
+}
+
+// POST /auth/staff/email-verify. A right code (used up on the way) marks the
+// address verified. Asking again for an address that is already verified just
+// returns the profile.
+export async function verifyEmail(email, code) {
+  const user = await loadStaff(email)
+  if (user.emailVerified === true) return toStaffProfile(user)
+  await emailCodes.verifyCode({ userId: user._id, email: user.email, purpose: 'verify', code })
+  await User.updateOne({ _id: user._id }, { $set: { emailVerified: true } })
   return profileOf(email)
 }
 

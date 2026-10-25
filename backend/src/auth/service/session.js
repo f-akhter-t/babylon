@@ -44,6 +44,9 @@ export function setupMissing(profile) {
     missing.push('a job title')
   }
   if (!profile.phoneVerified) missing.push('a verified phone number')
+  // Only for an account still setting up, so staff who finished before this check
+  // existed are never asked again (and finish() keeps working for them).
+  if (profile.onboarded === false && !profile.emailVerified) missing.push('a verified email address')
   if (!profile.employeeIdVerified) missing.push('a verified Employee ID')
   if (profile.role === ROLES.DEPARTMENT && !profile.departmentVerified) {
     missing.push('a verified department code')
@@ -63,6 +66,7 @@ export function toStaffProfile(user) {
     employeeId: user.employeeId ?? '',
     employeeIdVerified: Boolean(user.employeeId),
     departmentVerified: user.departmentVerified === true,
+    emailVerified: user.emailVerified === true,
     photo: user.photo ?? '',
   }
   return { ...profile, setupMissing: setupMissing(profile) }
