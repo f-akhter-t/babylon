@@ -47,6 +47,13 @@ export const env = {
   clientOrigin: process.env.CLIENT_ORIGIN || 'http://localhost:5173',
   isProduction: process.env.NODE_ENV === 'production',
 
+  // The rate limits count visitors by address. Live, the app sits behind Vercel's
+  // proxy, so the real visitor address is the one the proxy writes in X-Forwarded-For
+  // (Vercel overwrites a value sent by the visitor), and Express only reads it when
+  // told to trust that one proxy. Off elsewhere: with no proxy in front, a visitor could
+  // fake the header to dodge a limit.
+  trustProxy: process.env.NODE_ENV === 'production' ? 1 : false,
+
   // Only the exact word 'dev' turns phone codes on. Missing or anything else: off.
   phoneCodeMode: process.env.PHONE_CODE_MODE === 'dev' ? 'dev' : 'off',
 
