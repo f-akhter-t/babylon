@@ -10,7 +10,8 @@ import { useProfile } from '../../hooks/useProfile'
 import { usePendingIdentityCount } from '../../hooks/usePendingIdentityCount'
 import { confirmLeave } from '../../utils/leaveGuard'
 import { enter, usePresence } from '../ui/motion'
-
+// Each role reads its own notices: /citizen/alerts, /department/alerts or /admin/alerts.
+const alertsPathFor = (role) => (role === 'admin' ? '/admin/alerts' : role === 'department' ? '/department/alerts' : '/citizen/alerts')
 const citizenLinks = [
   { label: 'Map', to: '/map' },
   { label: 'Issue feed', to: '/feed' },
@@ -240,12 +241,15 @@ export default function Navbar({
           )}
 
           {/* Every signed-in account has a bell; staff get a link to their panel in it. */}
-          {session && !locked && (
+          
+        {session && !locked && (
             <NotificationBell
               email={session.email}
+              alertsPath={alertsPathFor(session.role)}
               {...(isCitizen ? {} : { homeLink: homePathFor(session.role), homeLabel: 'Open your panel' })}
             />
           )}
+        
 
           {current !== 'logged-out' && (
             <Avatar

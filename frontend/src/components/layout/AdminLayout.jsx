@@ -151,8 +151,13 @@ export default function AdminLayout({
   const { session } = useViewer()
   const locked = Boolean(session) && !isOnboarded(session.email)
   // The same bell as the citizen's, for this staff account; its last link opens the panel.
-  const bell = session && !locked ? (
-    <NotificationBell email={session.email} homeLink={homePathFor(variant)} homeLabel="Open your panel" />
+    const bell = session && !locked ? (
+    <NotificationBell
+      email={session.email}
+      alertsPath={variant === 'admin' ? '/admin/alerts' : '/department/alerts'}
+      homeLink={homePathFor(variant)}
+      homeLabel="Open your panel"
+    />
   ) : null
   const location = useLocation()
   // The drawer belongs to the page it was opened on: moving to another page
