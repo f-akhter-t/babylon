@@ -3,6 +3,7 @@ import { prefersLessMotion } from '../../components/ui/motion'
 const SECTIONS = [
   { label: 'Details', id: 'profile-details' },
   { label: 'Phone', id: 'profile-phone' },
+  { label: 'Email', id: 'profile-email' },
   { label: 'Identity', id: 'profile-identity' },
   { label: 'Security', id: 'profile-security' },
 ]

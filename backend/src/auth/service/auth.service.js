@@ -1,38 +1,15 @@
 // Every account rule lives here. Controllers only pass the request in.
 import User from '../../models/user.model.js'
 import AppError from '../../utils/AppError.js'
-import { signToken } from '../../utils/token.js'
 import { decoyHash, hashPassword, verifyPassword } from '../../utils/password.js'
 import { ROLES } from '../../constants/roles.js'
 import { COMMON } from '../../constants/messages/common.js'
 import { AUTH_MESSAGES as M } from '../../constants/messages/auth.js'
-
-// What the app needs to know about the person who is signed in. Picked by name,
-// so passwordHash (or any field added to the model later) can never leak.
-function toSessionUser(user) {
-  return {
-    id: String(user._id),
-    name: user.name,
-    email: user.email,
-    role: user.role,
-    department: user.department ?? null,
-    onboarded: user.onboarded !== false,
-  }
-}
-
-function issueToken(user) {
-  const session = toSessionUser(user)
-  return signToken({
-    email: session.email,
-    role: session.role,
-    department: session.department,
-    onboarded: session.onboarded, // a staff member still setting up gets false
-  })
-}
+import { issueToken, toSessionUser, toStaffProfile } from './session.js'
 
 const emailTaken = () => new AppError('conflict', 409, M.emailTaken, 'email')
 
-// Sign-up makes citizens only. Staff accounts come from open question 2.
+// Sign-up makes citizens only. Staff accounts are made by staff.service.js (/api/auth/staff/signup).
 export async function signup({ name, email, password }) {
   if (await User.exists({ email })) throw emailTaken()
 
@@ -64,10 +41,12 @@ export async function login({ email, password, door }) {
 }
 
 // The person comes from the token. An account that no longer exists is a 401.
+// Staff also get their saved details and what setup still needs (setupMissing),
+// so a page reload shows the profile as it was saved.
 export async function getMe(email) {
   const user = await User.findOne({ email }).lean()
   if (!user) throw new AppError('unauthorized', 401, COMMON.unauthorized)
-  return toSessionUser(user)
+  return user.role === ROLES.CITIZEN ? toSessionUser(user) : toStaffProfile(user)
 }
 
 export async function changePassword(email, { currentPassword, newPassword }) {

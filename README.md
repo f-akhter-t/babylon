@@ -92,11 +92,20 @@ The backend reads these from `backend/.env` (copy `backend/.env.example`). On Ve
 | `CLIENT_ORIGIN`  | no     | The frontend address allowed by CORS. Default `http://localhost:5173`.                      |
 | `JWT_EXPIRES_IN` | no     | How long a token lasts. Default `7d`.                                                       |
 | `CLIP_ENABLED`   | no     | `true` to score report photos with CLIP (F1). Default off. The first use downloads about 150 MB, and the model needs memory, so turn it on only on a host that can hold it. |
+| `EMAIL_MODE`     | no     | Email codes for forgot password and the staff email check. `dev`: the code is always `123456` and nothing is sent. `smtp`: a random code is emailed through Gmail. Anything else turns them off. `dev` is refused when `NODE_ENV=production`. |
+| `EMAIL_USER`     | for `smtp` | The Gmail address the codes are sent from.                                              |
+| `EMAIL_APP_PASSWORD` | for `smtp` | That account's Gmail app password (16 letters, spaces allowed). Not the normal password. |
 | `NODE_ENV`       | no     | `production` on the live site. It turns off the seed and token scripts.                     |
 
 Variables for the AI helpers (the Gemini key) and the staff access codes are added to `backend/.env.example` by the person who owns that feature, each on their own lines.
 
 **CLIP decision for the live site:** not decided yet. After the live check, write one line here: `CLIP_ENABLED=true` if it loads within the memory limit and answers in a few seconds, otherwise `false`. With CLIP off, reports are still created, they just keep priority medium. CLIP always works on a laptop for the demo.
+
+**Email codes (forgot password):** `POST /api/auth/forgot-password` sends a 6-digit code to the account's email, and `POST /api/auth/reset-password` takes the email, the code and a new password. The code works for 10 minutes, one use, three wrong tries lock it, and a new one can be asked for after 30 seconds. The answer to forgot-password is the same whether or not the email has an account. Locally use `EMAIL_MODE=dev` (code `123456`). To send real email, use a dedicated Gmail account with 2-Step Verification, create an app password for it, and set `EMAIL_MODE=smtp`, `EMAIL_USER` and `EMAIL_APP_PASSWORD`. A free Gmail account can send about 500 emails a day. The live site must use `smtp`: with `EMAIL_MODE=dev` and `NODE_ENV=production` the codes are switched off.
+
+**Staff email check:** a staff account that is still setting up must also verify its email address. `POST /api/auth/staff/email-code` sends a code to the address the account signed up with (it cannot be sent anywhere else), `POST /api/auth/staff/email-verify` checks it, and `POST /api/auth/staff/finish` answers 409 until it is done. Staff who finished their setup earlier are not asked again. Because of this, a new staff account cannot finish setup while email codes are off, so the live site needs `EMAIL_MODE=smtp` working.
+
+**Citizen email check:** a citizen can verify the email address on their profile. `POST /api/citizen/profile/email-code` sends a code to the address the account signed up with, `POST /api/citizen/profile/email-verify` checks it, and `GET /api/citizen/profile` then shows `emailVerified: true`. It is optional and never blocks a citizen from reporting, voting or anything else.
 
 To measure CLIP on a laptop: `node scripts/clip-check.mjs C:\path\to\photo.jpg` (from `backend/`). It prints the priority, the score, and the load time and memory used.
 

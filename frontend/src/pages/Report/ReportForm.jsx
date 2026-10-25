@@ -3,6 +3,8 @@ import clsx from 'clsx'
 import CategoryChip from '../../components/ui/CategoryChip'
 import { TITLE_MAX, TITLE_MIN } from '../../services/api'
 import { enter } from '../../components/ui/motion'
+import AssistPanel from './AssistPanel'
+import SummarizeButton from './SummarizeButton'
 
 const REPORT_CATEGORIES = ['Roads', 'Waste', 'Water', 'Lighting', 'Bridges']
 const MAX_PHOTO_MB = 5
@@ -116,6 +118,16 @@ export default function ReportForm({
     e.preventDefault()
     setDragging(false)
     handleFile(e.dataTransfer.files?.[0])
+  }
+
+  // F6: the assistant's suggestion fills the description, and the category only
+  // when the citizen has not picked one yet.
+  function applySuggestion({ category: suggested, description: text }) {
+    if (suggested) {
+      setCategory(suggested)
+      onCategoryChange?.(suggested)
+    }
+    if (text) setDescription(text.slice(0, MAX_DESCRIPTION))
   }
 
   const trimmed = description.trim()
@@ -324,6 +336,16 @@ export default function ReportForm({
             {photoError}
           </p>
         )}
+
+        {!editing && (
+          <AssistPanel
+            photo={photo?.file ?? null}
+            category={category}
+            description={description}
+            disabled={locked}
+            onApply={applySuggestion}
+          />
+        )}
       </section>
 
       {/* 2: category */}
@@ -385,6 +407,11 @@ export default function ReportForm({
             <p id="report-title-help" className="font-body text-xs text-muted">
               {`A short name for the problem, ${TITLE_MIN} to ${TITLE_MAX} characters.`}
             </p>
+            <SummarizeButton
+              text={description}
+              disabled={locked}
+              onUse={(summary) => setTitle(summary.slice(0, TITLE_MAX))}
+            />
           </div>
         )}
         <label htmlFor="report-description" className="sr-only">

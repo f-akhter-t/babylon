@@ -31,12 +31,40 @@ export const DEPARTMENT_LIMITS = Object.freeze({
   photoMaxChars: 7_000_000, // about 5 MB of image as text
 })
 
+// --- staff accounts (auth panel) ---
+export const STAFF_LIMITS = Object.freeze({
+  jobTitle: { min: 2, max: 60 }, // same as frontend/src/utils/profileRules.js
+  codeMax: 64, // access code, department code and Employee ID
+  // The staff photo is a 192 px WebP data URL, normally 5 to 20 KB. This leaves
+  // room for a PNG or JPEG, and stops anything big being stored on the account.
+  photoMaxChars: 300_000,
+  // Per signed-in person, for the routes that check a secret or send a code.
+  checkRate: Object.freeze({ windowMs: 60 * 1000, max: 10 }),
+  // Per address, for staff sign-up (there is no signed-in person yet).
+  signupRate: Object.freeze({ windowMs: 60 * 1000, max: 10 }),
+})
+
 // --- phone code (shared by citizen profile and staff onboarding) ---
 export const PHONE_CODE_LIMITS = Object.freeze({
   devCode: '123456', // used only when PHONE_CODE_MODE=dev
   resendSeconds: 30,
   maxAttempts: 3,
   lifeMinutes: 10,
+})
+
+// --- email code (forgot password, and the staff and citizen email checks) ---
+export const EMAIL_CODE_LIMITS = Object.freeze({
+  devCode: '123456', // used only when EMAIL_MODE=dev
+  codeLength: 6,
+  resendSeconds: 30,
+  maxAttempts: 3,
+  lifeMinutes: 10,
+  purposes: Object.freeze(['reset', 'verify']),
+  // Per address, because nobody is signed in yet: asking for a code, trying one.
+  forgotRate: Object.freeze({ windowMs: 60 * 1000, max: 5 }),
+  resetRate: Object.freeze({ windowMs: 60 * 1000, max: 10 }),
+  // Per signed-in person, for the staff and citizen email checks.
+  checkRate: Object.freeze({ windowMs: 60 * 1000, max: 10 }),
 })
 
 // Citizen identity photo. Same cap as the frontend (ID_PHOTO_MAX_BYTES).
@@ -77,6 +105,24 @@ export const CLIP_LIMITS = Object.freeze({
 })
 
 
+// --- AI: report assistant (F6) and summarize (F8), citizen panel ---
+export const ASSIST_LIMITS = Object.freeze({
+  photoMaxChars: 7_000_000, // about 5 MB of image as text, like a report photo
+  descriptionMax: 500, // a suggested description fits the report form
+  // The model thinks before it answers, and thinking counts against this limit
+  // (a photo used about 380 tokens of thinking). A low limit cuts the answer short.
+  maxOutputTokens: 2000,
+  rate: Object.freeze({ windowMs: 60 * 1000, max: 6 }),
+})
+
+export const SUMMARIZE_LIMITS = Object.freeze({
+  textMin: 10,
+  textMax: 2000,
+  summaryMax: 70, // a summary can be used as a report title
+  maxOutputTokens: 1024, // thinking counts against it too, so keep it generous
+  rate: Object.freeze({ windowMs: 60 * 1000, max: 10 }),
+})
+
 // --- AI: translate report text (F10) ---
 export const TRANSLATE_LIMITS = Object.freeze({
   // Report text is at most 500 characters, so this leaves room for a title too.
@@ -90,4 +136,24 @@ export const TRANSLATE_LIMITS = Object.freeze({
   // each running copy counts for itself.
   rate: Object.freeze({ windowMs: 60 * 1000, max: 10 }),
 })
+// --- AI: citizen help chat (F4) ---
+export const CHAT_LIMITS = Object.freeze({
+  messageMax: 500,
+  historyMax: 6, // earlier messages the page sends back with each question
+  historyTextMax: 500,
+  replyMax: 800,
+  // The model thinks before it answers and thinking counts against this limit.
+  // Never set it below about 1000: the answer comes back cut or empty (503).
+  maxOutputTokens: 2000,
+  rate: Object.freeze({ windowMs: 60 * 1000, max: 10 }),
+})
 
+// --- AI: department weekly summary (F5) ---
+export const WEEKLY_LIMITS = Object.freeze({
+  days: 7,
+  summaryMax: 400,
+  maxOutputTokens: 2000, // same warning as above
+  // Same counts inside this time: the saved sentence is sent again, Gemini is not asked.
+  cacheMinutes: 60,
+  rate: Object.freeze({ windowMs: 60 * 1000, max: 6 }),
+})

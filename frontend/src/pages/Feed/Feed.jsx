@@ -6,8 +6,7 @@ import StaircaseIcon from '../../components/ui/StaircaseIcon'
 import LoadError from '../../components/ui/LoadError'
 import FeedFilters from './FeedFilters'
 import FeedGrid from './FeedGrid'
-import { useViewer } from '../Map/useViewer'
-import { useStoredIds } from '../Map/useStoredIds'
+import { useVotes } from '../Map/useVotes'
 import { getIssues } from '../../services/api'
 import { useLiveIssues } from '../../hooks/useLiveIssues'
 import { useHeldList } from '../../hooks/useHeldList'
@@ -26,14 +25,10 @@ export default function Feed() {
   const [search, setSearch] = useState('')
   const toast = useToast()
 
-  const viewer = useViewer()
-  // Same key as Map and Issue detail, so a vote shows the same everywhere.
-  const [votedIds, toggleVote] = useStoredIds(viewer.storageKey('voted'))
-
   // Live: another tab's new, changed or deleted report shows up here without a
   // reload. New filters load afresh; retry keeps the filters.
   const filterKey = JSON.stringify([category, status, search])
-  const load = useCallback(() => getIssues({ category, status, search }), [category, status, search])
+  const load = useCallback(() => getIssues({ category, status, search, includeUnlocated: true }), [category, status, search])
   const { data, error, loading, retry, update } = useLiveIssues(load, { list: (list) => list })
   const failed = Boolean(error) && !loading
   const issues = loading || failed ? EMPTY : data
@@ -42,6 +37,8 @@ export default function Feed() {
   const gridRef = useRef(null)
   const headingRef = useRef(null)
   const held = useHeldList(issues, { containerRef: gridRef, resetKey: filterKey, update, headingRef })
+  // Votes live on the server; a click shows at once, until the next refresh agrees.
+  const { withVotes, toggle: toggleVote } = useVotes(held.items)
   const focusNew = useRef(null) // the first new report, after "Show new reports"
 
   function showNew() {
@@ -66,18 +63,17 @@ export default function Feed() {
     card.querySelector('a[href]')?.focus({ preventScroll: true })
   })
 
-  function handleUpvote(issue) {
+  async function handleUpvote(issue) {
     if (issue.status === 'resolved') return
-    const wasVoted = votedIds.includes(issue.id)
-    toggleVote(issue.id)
-    toast.info(wasVoted ? 'Your vote was removed.' : 'You upvoted this issue.')
+    try {
+      const answer = await toggleVote(issue.id)
+      if (answer) toast.info(answer.voted ? 'You upvoted this issue.' : 'Your vote was removed.')
+    } catch (error) {
+      toast.error(error.message)
+    }
   }
 
-  // Overlay this viewer's own vote on top of the fetched count — same math as Map.
-  const shownIssues = held.items.map((issue) => {
-    const voted = votedIds.includes(issue.id)
-    return { ...issue, votes: issue.votes + (voted ? 1 : 0), voted }
-  })
+  const shownIssues = withVotes(held.items)
 
   return (
     <>

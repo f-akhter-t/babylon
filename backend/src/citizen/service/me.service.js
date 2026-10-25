@@ -2,6 +2,7 @@
 import Issue from '../../models/issue.model.js'
 import User from '../../models/user.model.js'
 import { summaryFor } from '../../utils/points.js'
+import { earnPointsList } from '../../utils/earnPoints.js'
 
 const clean = (email) => String(email).trim().toLowerCase()
 
@@ -15,5 +16,6 @@ export async function getMe(email) {
 
 export async function getPoints(email) {
   const reports = await Issue.countDocuments({ reporterEmail: clean(email) })
-  return summaryFor(reports)
+  // earn: the "How you earn points" sentences, built from the same rule as the points.
+  return { ...summaryFor(reports), earn: earnPointsList() }
 }

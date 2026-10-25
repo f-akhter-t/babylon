@@ -179,3 +179,88 @@ describe('http.js', () => {
     }
   })
 })
+
+describe('download (an authenticated file)', () => {
+  const realFetch = globalThis.fetch
+  let sent
+  const answer = (status, { blob = 'BLOB', json } = {}) => {
+    globalThis.fetch = async (url, init = {}) => {
+      sent = { url, method: init.method, headers: init.headers ?? {}, body: init.body }
+      return {
+        ok: status >= 200 && status < 300,
+        status,
+        blob: async () => blob,
+        json: async () => {
+          if (json === undefined) throw new SyntaxError('Unexpected token <')
+          return json
+        },
+      }
+    }
+  }
+  beforeEach(() => {
+    sent = undefined
+  })
+  const restore = () => {
+    globalThis.fetch = realFetch
+  }
+
+  it('GETs the path with the stored token and gives back the file', async () => {
+    http.setToken('abc.def.ghi')
+    answer(200, { blob: 'THE-PHOTO' })
+    assert.equal(await http.download('/admin/identity/i1/photo'), 'THE-PHOTO')
+    assert.equal(sent.url, '/api/admin/identity/i1/photo')
+    assert.equal(sent.method, 'GET')
+    assert.equal(sent.headers.Authorization, 'Bearer abc.def.ghi')
+    assert.equal(sent.body, undefined)
+    restore()
+  })
+
+  it('sends no Authorization header when nobody is signed in, and adds a query', async () => {
+    answer(200)
+    await http.download('/files', { query: { size: 'small', blank: '' } })
+    assert.equal('Authorization' in sent.headers, false)
+    assert.equal(sent.url, '/api/files?size=small')
+    restore()
+  })
+
+  it('an explicit token wins, and auth: false sends none', async () => {
+    http.setToken('stored')
+    answer(200)
+    await http.download('/x', { token: 'explicit' })
+    assert.equal(sent.headers.Authorization, 'Bearer explicit')
+    await http.download('/x', { auth: false })
+    assert.equal('Authorization' in sent.headers, false)
+    restore()
+  })
+
+  it('a refusal becomes an Error with the server sentence, code and status', async () => {
+    http.setToken('t')
+    answer(404, { json: fail('not-found', 'We could not find that.') })
+    await assert.rejects(http.download('/admin/identity/x/photo'), (e) => {
+      assert.equal(e.message, 'We could not find that.')
+      assert.equal(e.code, 'not-found')
+      assert.equal(e.status, 404)
+      return true
+    })
+    assert.equal(unauthorized, 0)
+    restore()
+  })
+
+  it('a 401 with a stored token ends the session, like any other request', async () => {
+    http.setToken('expired')
+    answer(401, { json: fail('unauthorized', 'Please sign in to continue.') })
+    await assert.rejects(http.download('/x'), (e) => e.code === 'unauthorized' && e.status === 401)
+    assert.equal(unauthorized, 1)
+    restore()
+  })
+
+  it('a reply that is not ours (a proxy page) and a dead network both read as unreachable', async () => {
+    answer(502) // no JSON
+    await assert.rejects(http.download('/x'), (e) => e.message === http.NETWORK_MESSAGE && e.code === 'network' && e.status === 502)
+    globalThis.fetch = async () => {
+      throw new TypeError('Failed to fetch')
+    }
+    await assert.rejects(http.download('/x'), (e) => e.message === http.NETWORK_MESSAGE && e.code === 'network')
+    restore()
+  })
+})

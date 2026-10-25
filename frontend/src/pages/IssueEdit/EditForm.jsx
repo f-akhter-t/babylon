@@ -108,7 +108,7 @@ export default function EditForm({ issue, email }) {
   async function confirmDelete() {
     setDeleting(true)
     try {
-      await deleteIssue(issue.id, email)
+      await deleteIssue(issue.id)
       afterDialog.current = () => {
         toast.info(DELETED_MESSAGE)
         setExit({ to: '/my-reports' })

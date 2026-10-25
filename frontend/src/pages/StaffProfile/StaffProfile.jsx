@@ -8,7 +8,7 @@ import { useViewer } from '../Map/useViewer'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import { useProfile } from '../../hooks/useProfile'
 import { completeOnboarding, verifyEmployeeId } from '../../services/api'
-import { homePathFor, isOnboarded } from '../../services/auth'
+import { homePathFor, isSetupPending } from '../../services/auth'
 import ProfileCard from '../Profile/ProfileCard'
 import PhoneCard from '../Profile/PhoneCard'
 import JumpChips from '../Profile/JumpChips'
@@ -19,6 +19,7 @@ import { enter } from '../../components/ui/motion'
 import StaffDetailsCard from './StaffDetailsCard'
 import DepartmentCodeCard from './DepartmentCodeCard'
 import VerifyCodeCard from './VerifyCodeCard'
+import EmailCard from '../Profile/EmailCard'
 import ProfilePhotoCard from './ProfilePhotoCard'
 import SetupChecklist from './SetupChecklist'
 
@@ -43,7 +44,7 @@ function StaffProfilePage({ role }) {
   const { profile, loading, error, reload } = useProfile()
   const email = session.email
   // Read from the account itself, never from the session copy.
-  const onboarded = profile?.email === email ? profile.onboarded : isOnboarded(email)
+  const onboarded = profile?.email === email ? profile.onboarded : !isSetupPending()
   useDocumentTitle(onboarded ? 'Your profile' : 'Set up your profile')
   const location = useLocation()
   const navigate = useNavigate()
@@ -69,6 +70,7 @@ function StaffProfilePage({ role }) {
   const onDirty = useMemo(
     () => ({
       phone: (value) => markDirty('phone', value),
+      email: (value) => markDirty('email', value),
       employeeId: (value) => markDirty('employeeId', value),
       department: (value) => markDirty('department', value),
     }),
@@ -131,6 +133,7 @@ function StaffProfilePage({ role }) {
   const sections = [
     { label: 'Details', id: 'staff-details' },
     { label: 'Phone', id: 'profile-phone' },
+    { label: 'Email', id: 'profile-email' },
     { label: 'Employee ID', id: 'staff-employee-id' },
     ...(isDepartment ? [{ label: 'Department', id: 'staff-department' }] : []),
     { label: 'Photo', id: 'staff-photo' },
@@ -156,8 +159,8 @@ function StaffProfilePage({ role }) {
               {onboarded
                 ? 'Keep your details up to date so citizens and other staff know who is handling their reports.'
                 : isDepartment
-                  ? 'Before you start, add your job title and verify your phone number, your Employee ID and your department.'
-                  : 'Before you start, add your job title and verify your phone number and your Employee ID.'}
+                  ? 'Before you start, add your job title and verify your phone number, your email address, your Employee ID and your department.'
+                  : 'Before you start, add your job title and verify your phone number, your email address and your Employee ID.'}
             </p>
           </div>
 
@@ -206,6 +209,18 @@ function StaffProfilePage({ role }) {
                     onDirtyChange={onDirty.phone}
                     announce={announce}
                     intro="Your team can reach you on this number. We check it with a one-time code."
+                  />
+                </div>
+                <div style={enter('rise-in', 0.21)}>
+                  <EmailCard
+                    profile={profile}
+                    onDirtyChange={onDirty.email}
+                    announce={announce}
+                    note={
+                      onboarded && !profile.emailVerified
+                        ? 'Your account is already set up. Please verify your email address when you can.'
+                        : undefined
+                    }
                   />
                 </div>
                 <div style={enter('rise-in', 0.22)}>

@@ -110,6 +110,10 @@ export default function SummaryCard({ profile, showMeter = true }) {
 
       <ul className="flex flex-col gap-2 font-body text-sm">
         <li className="flex items-center justify-between gap-3">
+          <span>Email address</span>
+          <VerifyBadge status={profile.emailVerified ? 'verified' : 'not-verified'} onDark />
+        </li>
+        <li className="flex items-center justify-between gap-3">
           <span>Mobile number</span>
           <VerifyBadge status={profile.phoneVerified ? 'verified' : 'not-verified'} onDark />
         </li>

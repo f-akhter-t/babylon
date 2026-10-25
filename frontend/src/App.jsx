@@ -25,6 +25,7 @@ const Login = lazy(() => import('./pages/Auth/Login'))
 const Signup = lazy(() => import('./pages/Auth/Signup'))
 const StaffLogin = lazy(() => import('./pages/Auth/StaffLogin'))
 const StaffSignup = lazy(() => import('./pages/Auth/StaffSignup'))
+const ForgotPassword = lazy(() => import('./pages/Auth/ForgotPassword'))
 const NotFound = lazy(() => import('./pages/NotFound/NotFound'))
 // The styleguide is a dev tool: production builds leave it out entirely,
 // so there /styleguide shows the Page not found page.
@@ -63,6 +64,7 @@ export default function App() {
               <Route path="/signup" element={<Signup />} />
               <Route path="/staff/login" element={<StaffLogin />} />
               <Route path="/staff/signup" element={<StaffSignup />} />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </OnboardingGate>

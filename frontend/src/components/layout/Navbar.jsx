@@ -4,7 +4,7 @@ import clsx from 'clsx'
 import Logo from './Logo'
 import NotificationBell from './NotificationBell'
 import Button from '../ui/Button'
-import { homePathFor, isOnboarded, logout, profilePathFor } from '../../services/auth'
+import { homePathFor, isSetupPending, logout, profilePathFor } from '../../services/auth'
 import { useViewer } from '../../pages/Map/useViewer'
 import { useProfile } from '../../hooks/useProfile'
 import { usePendingIdentityCount } from '../../hooks/usePendingIdentityCount'
@@ -164,7 +164,7 @@ export default function Navbar({
   // A staff account still setting up its profile: only the avatar (to that
   // profile) and Log out are offered. The gate keeps it off these pages
   // anyway; this is a backstop so nothing here ever leads to a redirect.
-  const locked = Boolean(session) && !isOnboarded(session.email)
+  const locked = Boolean(session) && isSetupPending()
   const links = locked ? [] : (linksByVariant[current] ?? citizenLinks)
   const canReport = current !== 'admin' && current !== 'department' && !locked
   // Name, photo and Verified status from the profile, so a change shows at once.

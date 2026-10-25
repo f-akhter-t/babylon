@@ -1,8 +1,10 @@
-// What a guest can read from the backend: the Home page data now, and the issue
-// list and detail in the next step. api.js re-exports these, so pages keep
-// importing them from there. They live in their own file so the tests can load
-// them without the rest of the mock API.
+// What a guest can read from the backend: the Home page data, and the issue list
+// and detail for Map, Feed and the issue page. api.js re-exports these, so pages
+// keep importing them from there. They live in their own file so the tests can
+// load them without the rest of the mock API.
 import { get } from './http.js'
+import { MAP_CENTER } from '../mock/issues.js'
+import { hasPosition } from '../utils/position.js'
 
 // The hero text never changes while the app runs, and the backend answers both
 // lists in one reply, so the first call asks and the second one reuses it. A
@@ -38,4 +40,46 @@ export async function getRecentActivity(limit = 8) {
 // same department rows the admin Accountability page uses.
 export async function getStats() {
   return get('/home/stats')
+}
+
+// ---------- Issues (Map, Feed, issue page) ----------
+
+// A way to see the error states while developing: set sessionStorage
+// 'babylon:failLoads' and the loads below fail on purpose. Never in production.
+function failLoadsForTesting() {
+  if (!import.meta.env?.DEV) return
+  let on = false
+  try {
+    on = Boolean(globalThis.sessionStorage?.getItem('babylon:failLoads'))
+  } catch {
+    // storage blocked: never fail on purpose
+  }
+  if (on) throw new Error('Load failed on purpose (babylon:failLoads).')
+}
+
+// The ranked list from GET /issues. category and status are 'All' or a real
+// value; search matches the title or the street. The viewer is always measured
+// from MAP_CENTER, so every issue has distanceM. A signed-in citizen's token
+// is sent by http.js, which adds voted and mine to each issue.
+// The map pages and pickers need a position to draw a pin, so an issue without
+// coordinates is left out unless includeUnlocated is true (the Feed lists them all).
+export async function getIssues({ category = 'All', status = 'All', search = '', includeUnlocated = false } = {}) {
+  failLoadsForTesting()
+  const list = await get('/issues', {
+    query: { category, status, search: search.trim(), lat: MAP_CENTER[0], lng: MAP_CENTER[1] },
+  })
+  return includeUnlocated ? list : list.filter(hasPosition)
+}
+
+// One issue from GET /issues/:id, or null when there is no such issue (the page
+// then shows "not found"). The owner also gets the sent-back history.
+export async function getIssueById(id) {
+  try {
+    return await get(`/issues/${encodeURIComponent(id)}`, {
+      query: { lat: MAP_CENTER[0], lng: MAP_CENTER[1] },
+    })
+  } catch (error) {
+    if (error?.code === 'not-found') return null
+    throw error
+  }
 }

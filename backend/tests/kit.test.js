@@ -18,6 +18,9 @@ const app = express()
 app.get('/dept', authenticate, authorize('department'), (req, res) => {
   success(res, 'Welcome.', { email: req.user.email })
 })
+app.get('/admin', authenticate, authorize('admin'), (req, res) => {
+  success(res, 'Welcome.', { email: req.user.email })
+})
 app.get('/forbidden', () => {
   throw new AppError('forbidden', 403, 'Not allowed.')
 })
@@ -58,6 +61,22 @@ test('a citizen token on a department route gives 403', async () => {
 test('a department token that is not onboarded gives 403', async () => {
   const res = await request(app).get('/dept').set(bearer({ ...roads, onboarded: false }))
   assert.equal(res.status, 403)
+})
+
+test('an admin token that is not onboarded gives 403, an onboarded one passes (D13)', async () => {
+  const admin = { email: 'admin@babylon.test', role: 'admin' }
+  const blocked = await request(app).get('/admin').set(bearer({ ...admin, onboarded: false }))
+  assert.equal(blocked.status, 403)
+  assert.equal(blocked.body.code, 'forbidden')
+  assert.equal((await request(app).get('/admin').set(bearer(admin))).status, 200)
+})
+
+test('a citizen is never held back by the onboarding flag', async () => {
+  const app2 = express()
+  app2.get('/c', authenticate, authorize('citizen'), (req, res) => success(res, 'ok'))
+  app2.use(errorHandler)
+  const res = await request(app2).get('/c').set(bearer({ email: 'c@babylon.test', role: 'citizen', onboarded: false }))
+  assert.equal(res.status, 200)
 })
 
 test('a department token passes and uses the standard shape', async () => {

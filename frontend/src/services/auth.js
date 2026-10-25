@@ -1,8 +1,8 @@
-// Accounts and sign-in. log-in, sign-up, log-out and change-password talk to the
-// Express backend (through http.js). The helpers below them (getAccount,
-// isOnboarded, renameAccount ...) still read the browser's own copy of the
-// accounts, because the parts of api.js that use them (profile, notifications,
-// staff setup) are swapped in later steps. Pages do not change.
+// Accounts and sign-in. log-in, sign-up (citizens and staff), log-out and
+// change-password talk to the Express backend (through http.js). The helpers
+// below them (getAccount, renameAccount ...) still read the browser's own copy of
+// the accounts, because the parts of api.js that use them (citizen profile,
+// notifications) are swapped in later steps. Pages do not change.
 import { clearToken, getToken, patch, post, setToken, setUnauthorizedHandler } from './http.js'
 
 const USERS_KEY = 'babylon-users' // accounts seen in this browser (no passwords)
@@ -16,15 +16,9 @@ export const STAFF_ROLES = [
   { id: 'admin', label: 'Admin' },
 ]
 
-// Shown as a hint on the staff sign-up page only. The backend refuses staff
-// sign-up for now; the server will check the real code in the staff-accounts
-// step, and then this line goes.
-export const DEMO_STAFF_CODE = 'BABYLON-STAFF-2026'
-
 const isStaffRole = (role) => role !== 'citizen'
 
-// The three accounts made by `npm run seed:public`. They count as onboarded:
-// their profiles come with demo details (api.js).
+// The three accounts made by `npm run seed:public`.
 const DEMO_USERS = [
   { name: 'Nadia R.', email: 'citizen@babylon.test', role: 'citizen' },
   {
@@ -76,13 +70,10 @@ function readNames() {
 
 const isDemoUser = (email) => DEMO_USERS.some((u) => u.email.toLowerCase() === email.toLowerCase())
 
-// The session never holds a password or the onboarding flag. The flag is
-// read from the account each time (isOnboarded), so a stale copy in a
-// session can never let anyone past the setup. (`password` is dropped too,
-// for accounts stored by the mock version of this file.)
-function publicUser({ password, onboarded, ...user }) {
+// The session never holds a password. (`password` is dropped for accounts
+// stored by the mock version of this file.)
+function publicUser({ password, ...user }) {
   void password
-  void onboarded
   const renamed = readNames()[user.email.toLowerCase()]
   return renamed ? { ...user, name: renamed } : user
 }
@@ -98,22 +89,15 @@ export function getAccount(email) {
   return user ? publicUser(user) : null
 }
 
-// Staff must finish their profile before using the app. Citizens and the
-// demo staff count as done; a stored staff account counts as done only once
-// its flag is set, so an older account with no flag goes through the setup.
-// Client-side only: a real backend must refuse a staff member's data until then.
-export function isOnboarded(email) {
-  const user = findUser(email)
-  if (!user || !isStaffRole(user.role)) return true
-  if (DEMO_USERS.includes(user)) return true
-  return user.onboarded === true
-}
-
-// Set once, by completeOnboarding in api.js. Nothing ever clears it.
-export function markOnboarded(email) {
-  const key = email.toLowerCase()
-  const stored = readStored().map((u) => (u.email.toLowerCase() === key ? { ...u, onboarded: true } : u))
-  localStorage.setItem(USERS_KEY, JSON.stringify(stored))
+// A staff account that has not finished its profile setup: the server said
+// onboarded: false when it signed in, and finishing the setup (api.js) sets it
+// to true. Read fresh from the saved session every time it is called, because
+// the gate and the layouts sit above pages that never remount. Citizens are
+// never held back. This only decides what the screens show: the server refuses
+// a staff token that is not onboarded on every panel route (403).
+export function isSetupPending() {
+  const session = getSession()
+  return Boolean(session) && isStaffRole(session.role) && session.onboarded === false
 }
 
 // Each staff account's own profile page.
@@ -152,15 +136,14 @@ function rememberAccount(user) {
     email: user.email,
     role: user.role,
     ...(user.department ? { department: user.department } : {}),
-    // A staff member's setup state comes from the server, as isOnboarded reads it.
-    ...(isStaffRole(user.role) ? { onboarded: user.onboarded === true } : {}),
   }
   const others = readStored().filter((u) => u.email.toLowerCase() !== key)
   localStorage.setItem(USERS_KEY, JSON.stringify([...others, entry]))
 }
 
 // Saves the token and the account the server sent, and returns the session the
-// pages use: { name, email, role, department? } (no id, no onboarding flag).
+// pages use: { name, email, role, department?, onboarded? } (no id). Only staff
+// carry `onboarded`: the setup they still have to finish (see isSetupPending).
 function startSession({ token, user }) {
   setToken(token)
   rememberAccount(user)
@@ -169,6 +152,7 @@ function startSession({ token, user }) {
     email: user.email,
     role: user.role,
     ...(user.department ? { department: user.department } : {}),
+    ...(isStaffRole(user.role) ? { onboarded: user.onboarded === true } : {}),
   })
   localStorage.setItem(SESSION_KEY, JSON.stringify(session))
   return session
@@ -190,10 +174,36 @@ export async function login({ email, password, door }) {
   return startSession(await post('/auth/login', { email, password, door }, { auth: false }))
 }
 
-// Citizens only for now: the server refuses any other role. Staff accounts
-// arrive with the staff-accounts step (open question 2).
+// Citizens only: the server refuses any other role here. Staff sign up with
+// staffSignup below.
 export async function signup({ name, email, password, role }) {
   return startSession(await post('/auth/signup', { name, email, password, role }, { auth: false }))
+}
+
+// A department or admin account. The server checks the staff access code (it is
+// not in the app) and makes the account NOT onboarded: the person lands on their
+// profile page to finish the setup. department is sent for a department account
+// only; a wrong code comes back with field 'accessCode'.
+export async function staffSignup({ name, email, password, role, department, accessCode }) {
+  const body = { name, email, password, role, accessCode }
+  if (role === 'department') body.department = department
+  return startSession(await post('/auth/staff/signup', body, { auth: false }))
+}
+
+// Changes the saved session of whoever is signed in: a new token (the setup was
+// finished) and/or changed details (a new name). It tells nobody; the caller
+// fires its own refresh event (PROFILE_EVENT in api.js).
+export function updateSession({ token, ...changes } = {}) {
+  if (token) setToken(token)
+  const session = getSession()
+  if (!session) return null
+  const next = { ...session, ...changes }
+  try {
+    localStorage.setItem(SESSION_KEY, JSON.stringify(next))
+  } catch {
+    // storage blocked: the old session stays; the next sign-in sets it right
+  }
+  return next
 }
 
 // Changes the password of whoever is signed in, citizen or staff. The server

@@ -4,7 +4,6 @@ import AuthShell, { DemoHint, Field, FormError, SubmitButton, authLinkClass } fr
 import {
   DEMO_ACCOUNTS,
   DEMO_PASSWORD,
-  DEMO_STAFF_CODE,
   homePathFor,
   login,
 } from '../../services/auth'
@@ -29,12 +28,15 @@ function StaffLoginPage() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState(null) // { message, code }
   const [busy, setBusy] = useState(false)
+  // Set when the password was just reset, so the person knows to log in with it.
+  const [notice, setNotice] = useState(location.state?.notice ?? '')
 
   const ready = email.trim() && password
 
   async function handleSubmit(event) {
     event.preventDefault()
     setError(null)
+    setNotice('')
     setBusy(true)
     try {
       const user = await login({ email, password, door: 'staff' })
@@ -66,6 +68,11 @@ function StaffLoginPage() {
       }
     >
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+        {notice && (
+          <p role="status" className="font-body text-sm font-bold text-forest">
+            {notice}
+          </p>
+        )}
         <Field
           id="email"
           label="Work email"
@@ -84,6 +91,13 @@ function StaffLoginPage() {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
         />
+        <Link
+          to="/forgot-password"
+          state={{ email, door: 'staff' }}
+          className={`${authLinkClass} self-start`}
+        >
+          Forgot password?
+        </Link>
 
         <FormError
           message={error?.message}
@@ -103,7 +117,7 @@ function StaffLoginPage() {
         accounts={DEMO_ACCOUNTS.staff}
         lines={[
           `Both demo accounts use the password ${DEMO_PASSWORD}.`,
-          `To create a staff account, use the demo access code ${DEMO_STAFF_CODE}.`,
+          'To create a staff account, ask your administrator for the staff access code.',
         ]}
       />
     </AuthShell>
