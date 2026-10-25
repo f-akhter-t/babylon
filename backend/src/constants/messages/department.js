@@ -19,4 +19,8 @@ export const DEPARTMENT_MESSAGES = {
   deptStartedForReporter: (title) => `Work has started on your report "${title}".`,
   deptSubmittedForReporter: (title) => `A fix for your report "${title}" is waiting for the admin's check.`,
   deptSubmittedForAdmin: (title) => `A fix is waiting for your check: ${title}.`,
+  deptAlertsListed: 'Your alerts are loaded.',
+  deptAlertsUnreadCount: 'Your unread alert count is loaded.',
+  deptAlertsAllRead: 'All your alerts are marked as read.',
+  deptAlertMarkedRead: 'The alert is marked as read.',
 }

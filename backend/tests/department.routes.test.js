@@ -52,10 +52,28 @@ function withWrites(model) {
     },
   }
 }
+const alertRows = []
 mock.module(url('../src/shared/service/alerts.service.js'), {
   namedExports: {
     notify: async (email, payload) => { notices.push({ email, ...payload }) },
     notifyMany: async (emails, payload) => { for (const email of emails) notices.push({ email, ...payload }) },
+    listAlerts: async (email) => {
+      const mine = alertRows.filter((a) => a.email === email)
+      return { alerts: mine, unreadCount: mine.filter((a) => !a.read).length }
+    },
+    getUnreadCount: async (email) => ({
+      unreadCount: alertRows.filter((a) => a.email === email && !a.read).length,
+    }),
+    markRead: async (email, id) => {
+      const row = alertRows.find((a) => a.id === id && a.email === email)
+      if (!row) throw new AppError('not-found', 404, 'We could not find that alert.')
+      row.read = true
+      return row
+    },
+    markAllRead: async (email) => {
+      for (const a of alertRows) if (a.email === email) a.read = true
+      return { unreadCount: 0 }
+    },
   },
 })
 mock.module(url('../src/shared/service/issues.service.js'), {
@@ -125,6 +143,7 @@ beforeEach(() => {
   fakes.user = withWrites(fakeModel(makeUsers()))
   fakes.identity = withWrites(fakeModel(makeIdentities()))
   notices.length = 0
+  alertRows.length = 0
   phone.calls.length = 0
   phone.verifyError = null
 })
@@ -559,4 +578,68 @@ test('identity: bad digits, a non-image and a missing photo give 400 with the fi
   const missing = await post('identity', { nidLast4: '4821' })
   assert.equal(missing.status, 400)
   assert.equal(missing.body.field, 'photo')
+})
+// ---------- department alerts: endpoints 23 to 26 ----------
+
+const alertsUrl = '/api/department/alerts'
+const seedAlerts = () => {
+  alertRows.push(
+    { id: 'a1', email: 'roads@babylon.test', kind: 'new-report', text: 'A new report is waiting.', read: false },
+    { id: 'a2', email: 'roads@babylon.test', kind: 'new-report', text: 'Another report.', read: false },
+    { id: 'a3', email: 'roads@babylon.test', kind: 'new-report', text: 'Old one.', read: true },
+    { id: 'p1', email: 'power@babylon.test', kind: 'new-report', text: 'Power report.', read: false },
+  )
+}
+
+test('alerts: no token gives 401, a citizen token gives 403, not-onboarded staff give 403', async () => {
+  assert.equal((await request(app).get(alertsUrl)).status, 401)
+  assert.equal((await request(app).get(alertsUrl).set(as('citizen'))).status, 403)
+  assert.equal((await request(app).get(alertsUrl).set(as('notOnboarded'))).status, 403)
+})
+
+test('alerts: the list holds only the signed-in staff member\'s alerts', async () => {
+  seedAlerts()
+  const res = await request(app).get(alertsUrl).set(as('roads'))
+  assert.equal(res.status, 200)
+  assert.deepEqual(res.body.data.alerts.map((a) => a.id), ['a1', 'a2', 'a3'])
+  assert.equal(res.body.data.unreadCount, 2)
+})
+
+test('alerts: another staff member sees only their own', async () => {
+  seedAlerts()
+  const res = await request(app).get(alertsUrl).set(as('power'))
+  assert.deepEqual(res.body.data.alerts.map((a) => a.id), ['p1'])
+})
+
+test('alerts: unread-count matches the list', async () => {
+  seedAlerts()
+  const res = await request(app).get(`${alertsUrl}/unread-count`).set(as('roads'))
+  assert.equal(res.status, 200)
+  assert.equal(res.body.data.unreadCount, 2)
+})
+
+test('alerts: mark one read, then the count drops', async () => {
+  seedAlerts()
+  const res = await request(app).patch(`${alertsUrl}/a1/read`).set(as('roads'))
+  assert.equal(res.status, 200)
+  assert.equal(res.body.data.read, true)
+  const count = await request(app).get(`${alertsUrl}/unread-count`).set(as('roads'))
+  assert.equal(count.body.data.unreadCount, 1)
+})
+
+test('alerts: marking someone else\'s alert, or an unknown id, gives 404', async () => {
+  seedAlerts()
+  const theirs = await request(app).patch(`${alertsUrl}/p1/read`).set(as('roads'))
+  assert.equal(theirs.status, 404)
+  const unknown = await request(app).patch(`${alertsUrl}/nope/read`).set(as('roads'))
+  assert.equal(unknown.status, 404)
+  assert.equal(alertRows.find((a) => a.id === 'p1').read, false)
+})
+
+test('alerts: read-all clears only the caller\'s alerts', async () => {
+  seedAlerts()
+  const res = await request(app).post(`${alertsUrl}/read-all`).set(as('roads'))
+  assert.equal(res.status, 200)
+  assert.equal(res.body.data.unreadCount, 0)
+  assert.equal(alertRows.find((a) => a.id === 'p1').read, false)
 })
