@@ -4,6 +4,8 @@ import Navbar from '../../components/layout/Navbar'
 import { canEditIssue } from '../../services/api'
 import { useViewer } from '../Map/useViewer'
 import { useStoredIds } from '../Map/useStoredIds'
+import { useVotes } from '../Map/useVotes'
+import { useToast } from '../../components/ui/toast'
 import { useIssue } from './useIssue'
 import { usePoliteMessage } from '../../hooks/usePoliteMessage'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
@@ -25,17 +27,12 @@ export default function IssueDetail() {
   const [notice] = useState(() => ({ id, message: peekIssueNotice(id) }))
   useEffect(() => clearIssueNotice(notice.id), [notice.id])
   const noticeText = notice.id === id ? notice.message : null
-  // The same per-account lists as the Map page, so votes and follows match.
-  const [votedIds, toggleVote] = useStoredIds(viewer.storageKey('voted'))
+  const toast = useToast()
+  // Follows stay in this browser (one list per account); votes live on the server.
   const [followedIds, toggleFollow] = useStoredIds(viewer.storageKey('followed'))
-  // Add this citizen's own vote and follow on top of the data.
-  const voted = issue ? votedIds.includes(issue.id) : false
-  const shown = issue && {
-    ...issue,
-    votes: issue.votes + (voted ? 1 : 0),
-    voted,
-    followed: followedIds.includes(issue.id),
-  }
+  const { withVotes, toggle } = useVotes(issue ? [issue] : [])
+  const toggleVote = (voteId) => toggle(voteId).catch((error) => toast.error(error.message))
+  const shown = issue && { ...withVotes([issue])[0], followed: followedIds.includes(issue.id) }
 
   let tabTitle = null // keep the old tab title while loading
   if (shown) tabTitle = shown.title

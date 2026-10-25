@@ -5,8 +5,7 @@ import Footer from '../../components/layout/Footer'
 import AnimatedBackground from '../../components/ui/AnimatedBackground'
 import ReportForm from './ReportForm'
 import LocationPicker from './LocationPicker'
-import { useViewer } from '../Map/useViewer' // CHANGE 1
-import { createIssue, POINTS_PER_REPORT } from '../../services/api' // CHANGE 1
+import { createIssue, POINTS_PER_REPORT } from '../../services/api'
 import { resizeImage } from '../../utils/resizeImage'
 import { useToast } from '../../components/ui/toast'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
@@ -24,7 +23,6 @@ export default function Report() {
 
 function ReportPage() {
   useDocumentTitle('Report an issue')
-  const viewer = useViewer() // CHANGE 2
   const toast = useToast()
   const [category, setCategory] = useState('')
   const [location, setLocation] = useState(null) // { lat, lng, label, ward, division } from the map
@@ -38,7 +36,7 @@ function ReportPage() {
       ? { lat: paramLat, lng: paramLng }
       : null
 
-  // Mock backend: the report is saved in the browser and shows up in the feed.
+  // The server saves the report; the owner comes from the login, not from this form.
   // If this throws, the form keeps what the citizen typed and shows the message.
   async function handleSubmit({ photo, category: chosen, description }) {
     if (!location) throw new Error('Pick a location on the map first.')
@@ -48,9 +46,8 @@ function ReportPage() {
       description,
       photoUrl,
       location,
-      reporter: viewer.session?.name, // CHANGE 3
     })
-    toast.info(`Your report is submitted. You earned ${POINTS_PER_REPORT} points.`) // CHANGE 3
+    toast.info(`Your report is submitted. You earned ${POINTS_PER_REPORT} points.`)
   }
 
   return (
