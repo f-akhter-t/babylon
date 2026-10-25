@@ -223,60 +223,7 @@ window.addEventListener('storage', (e) => {
   notifyIssuesChanged()
 })
 
-// The staff-only details, for the department and verify loaders.
-function withStaffDetails(issue) {
-  const entry = workflow[String(issue.id)] ?? {}
-  return { ...issue, pendingAfterImg: entry.pendingAfterImg, sentBack: entry.sentBack }
-}
 
-const shortDate = () => new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
-
-function workflowError(code, message) {
-  return Object.assign(new Error(message), { code })
-}
-
-// The issue, checked against the logged-in staff account. Reads the store
-// again first, because another tab may have acted since this page loaded.
-function staffIssue(id, role) {
-  const session = getSession()
-  if (session?.role !== role) {
-    throw workflowError(
-      'forbidden',
-      role === 'admin'
-        ? 'Only an admin can check a fix.'
-        : 'Only a department account can work on issues.',
-    )
-  }
-  workflow = loadWorkflow()
-  applyWorkflow()
-  const issue = all.find((item) => String(item.id) === String(id))
-  if (!issue) throw workflowError('not-found', 'This issue no longer exists.')
-  if (role === 'department' && issue.department !== session.department) {
-    throw workflowError('forbidden', 'This issue belongs to another department.')
-  }
-  return issue
-}
-
-// Saves first, then changes the issue in memory, so a failed save changes nothing.
-function saveWorkflow(issue, changes) {
-  const key = String(issue.id)
-  const entry = { ...workflow[key], ...changes, updatedAt: new Date().toISOString() }
-  for (const field of Object.keys(entry)) {
-    if (entry[field] === null || entry[field] === undefined) delete entry[field]
-  }
-  const next = { ...workflow, [key]: entry }
-  try {
-    window.localStorage.setItem(WORKFLOW_KEY, JSON.stringify(next))
-  } catch {
-    throw workflowError(
-      'storage',
-      'This could not be saved because the storage on this device is full. Clear old demo data, or try a smaller photo.',
-    )
-  }
-  workflow = next
-  Object.assign(issue, publicPart(changes))
-  notifyIssuesChanged()
-}
 
 // ---------- Notifications ----------
 // Every notice is one whole sentence with a link, sent to one account (copied
@@ -291,55 +238,6 @@ function tellDepartment(issue, kind, text, link = '/department') {
   notifyEach(staffEmails({ role: 'department', department: issue.department }), { kind, text, link, issueId: issue.id })
 }
 
-function tellAdmins(issue, kind, text) {
-  notifyEach(staffEmails({ role: 'admin' }), { kind, text, link: '/admin/verify', issueId: issue.id })
-}
-
-// Department: an Open issue becomes In progress. The citizen can no longer edit it.
-export async function startWork(id) {
-  await wait()
-  const issue = staffIssue(id, 'department')
-  if (issue.priority === 'reopened' || issue.verification === 'reopened') {
-    throw workflowError('conflict', 'This reopened issue goes to the admin first.')
-  }
-  if (issue.status !== 'open') {
-    throw workflowError('conflict', 'Work on this issue has already started.')
-  }
-  saveWorkflow(issue, {
-    status: 'in-progress',
-    startedOn: shortDate(),
-    startedAt: new Date().toISOString(),
-  })
-  tellReporter(issue, 'in-progress', `Work has started on your report "${issue.title}".`)
-  return withStaffDetails(present(issue))
-}
-
-// Department: send the after-photo (a small data URL) and a note to the admin.
-export async function submitForVerification(id, { note = '', photoUrl } = {}) {
-  await wait()
-  const issue = staffIssue(id, 'department')
-  if (issue.status !== 'in-progress') {
-    throw workflowError('conflict', 'Start work on this issue before sending it for verification.')
-  }
-  if (issue.verification === 'awaiting') {
-    throw workflowError('conflict', 'This issue is already waiting for the admin.')
-  }
-  if (typeof photoUrl !== 'string' || !photoUrl.startsWith('data:image/')) {
-    throw workflowError('invalid', 'Add an after-photo before sending this for verification.')
-  }
-  const now = new Date()
-  saveWorkflow(issue, {
-    verification: 'awaiting',
-    submittedOn: shortDate(),
-    submittedAt: now.toISOString(),
-    departmentNote: note.trim() || null,
-    pendingAfterImg: photoUrl,
-    sentBack: null,
-  })
-  tellReporter(issue, 'fix-submitted', `A fix for your report "${issue.title}" is waiting for the admin's check.`)
-  tellAdmins(issue, 'fix-waiting', `A fix is waiting for your check: ${issue.title}.`)
-  return withStaffDetails(present(issue))
-}
 
 export const REJECT_REASON_NEEDED = 'Write a reason before sending this back.'
 
@@ -655,52 +553,12 @@ export {
   getStats,
 } from './publicApi'
 
-// ---------- Department panel ----------
+// ---------- Department panel ---------
 
-export async function getDepartmentIssues(departmentName) {
-  // Reopened issues go to the admin first, so they are not in this list.
-  return rankIssues(
-    all.filter(
-      (issue) =>
-        issue.department === departmentName &&
-        issue.status !== 'resolved' &&
-        issue.priority !== 'reopened',
-    ),
-  ).map(withStaffDetails)
-}
-
-// Issues this department fixed and the admin closed (the "Completed" filter).
-export async function getCompletedDepartmentIssues(departmentName) {
-  return rankIssues(
-    all.filter(
-      (issue) => issue.department === departmentName && issue.status === 'resolved',
-    ),
-  ).map(withStaffDetails)
-}
-
-// Everything the Department panel shows, in one load.
-export async function loadDepartmentPanel(departmentName) {
-  failLoadsForTesting()
-  const [assigned, completed] = await Promise.all([
-    getDepartmentIssues(departmentName),
-    getCompletedDepartmentIssues(departmentName),
-  ])
-  return { assigned, completed }
-}
-
-export async function getDepartmentSummary(departmentName) {
-  const list = await getDepartmentIssues(departmentName)
-  return {
-    open: list.filter((i) => i.status === 'open').length,
-    inProgress: list.filter((i) => i.status === 'in-progress' && i.verification === 'none').length,
-    awaiting: list.filter((i) => i.verification === 'awaiting').length,
-  }
-}
 
 // ---------- Admin ----------
 
 export { ACCOUNTABILITY_PERIODS, DEFAULT_PERIOD_WEEKS }
-
 // Served by the backend now (adminApi.js). Pages still import them from here.
 export {
   approveResolution,
@@ -716,6 +574,9 @@ export {
   TRANSLATE_LANGUAGES,
   translateText,
 } from './adminApi'
+
+// Served by the backend now (departmentApi.js). Pages still import them from here.
+export { loadDepartmentPanel, startWork, submitForVerification } from './departmentApi'
 
 // ---------- Citizen (My reports, points and alerts) ----------
 // Everything here belongs to the logged-in account only, found by its email
@@ -1269,11 +1130,11 @@ export async function submitIdentity(email, { nid, photo }) {
   } catch (err) {
     // Not Pending, so the photo must not stay. If this delete fails too, the
     // stale-photo cleanup removes it when the admin queue next loads.
-    await deletePhoto(email, submittedAt).catch(() => {})
+    await deletePhoto(email, submittedAt).catch(() => { })
     throw err
   }
   // A new submission replaces the photo of any earlier one.
-  await deleteOtherPhotos(email, submittedAt).catch(() => {})
+  await deleteOtherPhotos(email, submittedAt).catch(() => { })
   return buildProfile(email)
 }
 
@@ -1289,4 +1150,4 @@ export async function submitIdentity(email, { nid, photo }) {
 export const ALREADY_REVIEWED = 'This submission was already reviewed.'
 export const NO_PHOTO_TO_APPROVE =
   'No card photo was saved with this submission, so it cannot be approved. Reject it and ask the citizen to send it again.'
-  'The card photo could not be loaded on this device, so this submission cannot be approved yet. Please try again.'
+'The card photo could not be loaded on this device, so this submission cannot be approved yet. Please try again.'
