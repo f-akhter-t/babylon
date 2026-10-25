@@ -7,7 +7,7 @@ import AdminSignOut from './AdminSignOut'
 import Logo from './Logo'
 import NotificationBell from './NotificationBell'
 import { useViewer } from '../../pages/Map/useViewer'
-import { homePathFor, isOnboarded } from '../../services/auth'
+import { homePathFor, isSetupPending } from '../../services/auth'
 import { fit } from './staffFit'
 
 const LG_QUERY = '(min-width: 64rem)'
@@ -149,7 +149,7 @@ export default function AdminLayout({
   const config = ADMIN_NAV[variant]
   const counts = useAdminCounts(variant, department)
   const { session } = useViewer()
-  const locked = Boolean(session) && !isOnboarded(session.email)
+  const locked = Boolean(session) && isSetupPending()
   // The same bell as the citizen's, for this staff account; its last link opens the panel.
     const bell = session && !locked ? (
     <NotificationBell

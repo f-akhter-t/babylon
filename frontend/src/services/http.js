@@ -124,3 +124,45 @@ export const post = (path, body, options) => request('POST', path, { ...options,
 export const put = (path, body, options) => request('PUT', path, { ...options, body })
 export const patch = (path, body, options) => request('PATCH', path, { ...options, body })
 export const del = (path, options) => request('DELETE', path, options)
+
+// An authenticated GET whose answer is a file, not JSON (plan gate G2): the
+// admin's identity photo is the first user. Gives back the Blob.
+//   const blob = await download('/admin/identity/abc/photo')
+//   <img src={URL.createObjectURL(blob)}>  (and URL.revokeObjectURL when done)
+// A failure is a plain Error with `code`, `status` (and `field`) like request(),
+// so a caller can tell a missing file (status 404) from a refusal or no network.
+// options are the same as request(): query, auth, token.
+export async function download(path, { query, auth = true, token } = {}) {
+  const sentToken = auth ? (token ?? getToken()) : null
+  const headers = {}
+  if (sentToken) headers.Authorization = `Bearer ${sentToken}`
+
+  let response
+  try {
+    response = await fetch(`${API_URL}${withQuery(path, query)}`, { method: 'GET', headers })
+  } catch {
+    throw failure(NETWORK_MESSAGE, { code: 'network' })
+  }
+
+  if (response.ok) {
+    try {
+      return await response.blob()
+    } catch {
+      throw failure(NETWORK_MESSAGE, { code: 'network', status: response.status })
+    }
+  }
+
+  // Our server explains a refusal in JSON. Anything else is not from our server.
+  let payload
+  try {
+    payload = await response.json()
+  } catch {
+    throw failure(NETWORK_MESSAGE, { code: 'network', status: response.status })
+  }
+  if (response.status === 401 && sentToken && token === undefined) onUnauthorized()
+  throw failure(payload?.message || UNKNOWN_MESSAGE, {
+    code: payload?.code ?? 'server-error',
+    status: response.status,
+    ...(payload?.field ? { field: payload.field } : {}),
+  })
+}

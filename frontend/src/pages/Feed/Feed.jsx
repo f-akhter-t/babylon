@@ -33,7 +33,7 @@ export default function Feed() {
   // Live: another tab's new, changed or deleted report shows up here without a
   // reload. New filters load afresh; retry keeps the filters.
   const filterKey = JSON.stringify([category, status, search])
-  const load = useCallback(() => getIssues({ category, status, search }), [category, status, search])
+  const load = useCallback(() => getIssues({ category, status, search, includeUnlocated: true }), [category, status, search])
   const { data, error, loading, retry, update } = useLiveIssues(load, { list: (list) => list })
   const failed = Boolean(error) && !loading
   const issues = loading || failed ? EMPTY : data

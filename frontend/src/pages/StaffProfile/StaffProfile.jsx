@@ -8,7 +8,7 @@ import { useViewer } from '../Map/useViewer'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import { useProfile } from '../../hooks/useProfile'
 import { completeOnboarding, verifyEmployeeId } from '../../services/api'
-import { homePathFor, isOnboarded } from '../../services/auth'
+import { homePathFor, isSetupPending } from '../../services/auth'
 import ProfileCard from '../Profile/ProfileCard'
 import PhoneCard from '../Profile/PhoneCard'
 import JumpChips from '../Profile/JumpChips'
@@ -43,7 +43,7 @@ function StaffProfilePage({ role }) {
   const { profile, loading, error, reload } = useProfile()
   const email = session.email
   // Read from the account itself, never from the session copy.
-  const onboarded = profile?.email === email ? profile.onboarded : isOnboarded(email)
+  const onboarded = profile?.email === email ? profile.onboarded : !isSetupPending()
   useDocumentTitle(onboarded ? 'Your profile' : 'Set up your profile')
   const location = useLocation()
   const navigate = useNavigate()

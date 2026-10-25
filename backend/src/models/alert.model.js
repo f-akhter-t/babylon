@@ -13,6 +13,7 @@ export const ALERT_KINDS = [
   'sent-back',
   'identity-verified',
   'identity-rejected',
+  'reopen',
 ]
 
 const alertSchema = new mongoose.Schema({

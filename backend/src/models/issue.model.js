@@ -42,6 +42,12 @@ const issueSchema = new mongoose.Schema(
     afterImg: { type: String },
     pendingAfterImg: { type: String },
     departmentNote: { type: String },
+
+    // AI (F1, F2). severityScore is 0 to 1. imageEmbedding is the CLIP vector of
+    // the photo for the duplicate check: hidden from every query unless a service
+    // asks for it with .select('+imageEmbedding'), and never sent out.
+    severityScore: { type: Number },
+    imageEmbedding: { type: [Number], select: false },
     // Shown on the issue page: "A pothole here was marked resolved in August."
     seenBefore: { type: String },
 
@@ -59,6 +65,8 @@ const issueSchema = new mongoose.Schema(
     fixedInDays: { type: Number },
     reopenedAt: { type: Date },
     reopenedFrom: { type: String },
+    // A report filed against a resolved issue points back at it.
+    reopenedOf: { type: mongoose.Schema.Types.ObjectId, ref: 'Issue' },
     editedAt: { type: Date },
   },
   { timestamps: true, versionKey: false },

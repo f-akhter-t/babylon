@@ -7,7 +7,9 @@ export default function authorize(...roles) {
     const user = req.user
     if (!user) throw new AppError('unauthorized', 401, COMMON.unauthorized)
     if (!roles.includes(user.role)) throw new AppError('forbidden', 403, COMMON.forbidden)
-    if (user.role === ROLES.DEPARTMENT && user.onboarded !== true) {
+    // Staff (department and admin) must finish their setup first (D13).
+    const isStaff = user.role === ROLES.DEPARTMENT || user.role === ROLES.ADMIN
+    if (isStaff && user.onboarded !== true) {
       throw new AppError('forbidden', 403, COMMON.notOnboarded)
     }
     next()

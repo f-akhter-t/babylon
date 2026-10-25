@@ -7,9 +7,7 @@ import {
   ACCOUNTABILITY_PERIODS,
   CATEGORY_DEPARTMENT,
   DEFAULT_PERIOD_WEEKS,
-  DEPARTMENT_CODES,
-  EMPLOYEE_ROSTER,
-} from '../mock/departments'
+} from '../utils/departments'
 import { earnPoints } from '../mock/user'
 import { distanceInMeters } from '../utils/geo'
 import { checkReportDivision } from '../utils/divisions'
@@ -23,11 +21,12 @@ import {
   getAccount,
   getAccountName,
   getSession,
-  isOnboarded,
-  markOnboarded,
   renameAccount,
   staffEmails,
+  updateSession,
 } from './auth'
+import * as staff from './staffApi'
+import { ISSUES_EVENT } from './issuesEvent'
 import { notify, notifyEach, removeForIssue } from './notifications'
 import {
   checkDetails,
@@ -125,7 +124,7 @@ function dropFromMemory(id) {
 deletedIds.forEach(dropFromMemory)
 
 // Pages listen to this to refresh when a report is created, upvoted or an alert is read.
-export const ISSUES_EVENT = 'babylon:issues'
+export { ISSUES_EVENT }
 const notifyIssuesChanged = () => window.dispatchEvent(new Event(ISSUES_EVENT))
 
 // Another tab (another citizen) upvoted or reported: pick it up here.
@@ -389,26 +388,8 @@ function rankIssues(list) {
 }
 
 // ---------- Issues (Map, Feed, Detail) ----------
-
-// category and status: 'All' or a real value. search matches title or street.
-export async function getIssues({ category = 'All', status = 'All', search = '' } = {}) {
-  failLoadsForTesting()
-  const query = search.trim().toLowerCase()
-  const list = all.filter(
-    (issue) =>
-      (category === 'All' || issue.category === category) &&
-      (status === 'All' || issue.status === status) &&
-      (!query ||
-        issue.title.toLowerCase().includes(query) ||
-        issue.location.toLowerCase().includes(query)),
-  )
-  return rankIssues(list)
-}
-
-export async function getIssueById(id) {
-  const issue = all.find((item) => String(item.id) === String(id))
-  return issue ? ownerDetails(present(issue)) : null
-}
+// getIssues and getIssueById are served by the backend now (publicApi.js,
+// re-exported below).
 
 // A citizen's new report. location is { lat, lng, label, ward, division }.
 // The pin must be inside the division the citizen chose in their profile
@@ -645,12 +626,14 @@ export async function deleteIssue(id, email) {
   notifyIssuesChanged()
 }
 
-// ---------- Home ----------
+// ---------- Home and the public issue pages ----------
 // Served by the backend now (publicApi.js). Pages still import them from here.
 export {
   getFixedThisWeek,
   getHeroCategories,
   getHeroSlides,
+  getIssueById,
+  getIssues,
   getRecentActivity,
   getStats,
 } from './publicApi'
@@ -956,22 +939,6 @@ function writeProfile(email, changes) {
   window.dispatchEvent(new Event(PROFILE_EVENT))
 }
 
-// The demo staff are onboarded, so their profiles start filled in. Changes
-// they make are saved on top of these, like any other profile.
-const STAFF_DEMO_PROFILES = {
-  'roads@babylon.test': {
-    jobTitle: 'Road maintenance officer',
-    phone: '01811000201',
-    employeeId: 'E-RH-1001',
-    departmentVerified: true,
-  },
-  'admin@babylon.test': {
-    jobTitle: 'City operations administrator',
-    phone: '01911000302',
-    employeeId: 'E-AD-9001',
-  },
-}
-
 // The division a citizen chose in their profile, or '' if none yet.
 function citizenDivision(email) {
   if (!email) return ''
@@ -980,7 +947,7 @@ function citizenDivision(email) {
 
 function buildProfile(email) {
   const key = email.toLowerCase()
-  const stored = { ...STAFF_DEMO_PROFILES[key], ...readProfiles()[key] }
+  const stored = readProfiles()[key] ?? {}
   const identity = { ...EMPTY_IDENTITY, ...stored.identity }
   const account = getAccount(email)
   return {
@@ -994,18 +961,23 @@ function buildProfile(email) {
     phoneVerified: Boolean(stored.phone),
     identity,
     isVerified: identity.status === 'verified',
-    // Staff only
-    jobTitle: stored.jobTitle ?? '',
-    photo: stored.photo ?? '', // a small data: URL, or ''
-    departmentVerified: Boolean(stored.departmentVerified),
-    employeeId: stored.employeeId ?? '', // only set once the ID is verified
-    employeeIdVerified: Boolean(stored.employeeId),
-    onboarded: isOnboarded(email),
+    onboarded: true, // only staff have a setup to finish (see the staff section)
   }
 }
 
+// Department and admin accounts live on the server now (staffApi.js); citizens
+// are still the mock above until the citizen profile is swapped.
+const isStaff = () => {
+  const role = getSession()?.role
+  return role === 'department' || role === 'admin'
+}
+
+// Everything that shows the profile (name, photo, badges) reloads on this.
+const profileChanged = () => window.dispatchEvent(new Event(PROFILE_EVENT))
+
 export async function getProfile(email) {
   if (!email) return null
+  if (isStaff()) return staff.getStaffProfile()
   await wait(300)
   return buildProfile(email)
 }
@@ -1025,82 +997,47 @@ export async function saveProfile(email, details) {
 
 // ---------- Staff profiles ----------
 // Department and admin accounts: name, job title, phone (the same code check
-// as citizens), a department code for department accounts, and a photo.
+// as citizens), a department code for department accounts, an Employee ID and a
+// photo. All of it is saved and checked by the server (staffApi.js); the secrets
+// (department codes, the staff list) never reach the browser. The functions keep
+// the names and arguments the pages use; the person comes from the token, so
+// `email` is only there for the pages' sake.
 
-// details: { name, jobTitle }. Checked again here, like a backend would.
+// details: { name, jobTitle }. Checked here for the form, and again by the server.
 export async function saveStaffDetails(email, details) {
-  await wait()
   if (checkName(details.name) || checkJobTitle(details.jobTitle)) {
     throw new Error('Some details are not valid. Please check the form.')
   }
-  const name = details.name.trim()
-  writeProfile(email, { jobTitle: details.jobTitle.trim() })
-  if (name !== getAccountName(email)) renameAccount(email, name)
-  return buildProfile(email)
+  const profile = await staff.saveStaffDetails({
+    name: details.name.trim(),
+    jobTitle: details.jobTitle.trim(),
+  })
+  updateSession({ name: profile.name })
+  profileChanged()
+  return profile
 }
 
 export const DEPARTMENT_CODE_EMPTY = 'Enter your department code.'
 
-// Mock only: the code is compared in the browser. A server must check it.
-// Returns the profile, or throws a whole-sentence message.
+// Returns the profile, or throws the server's whole-sentence message.
 export async function verifyDepartmentCode(email, code) {
-  await wait()
-  const account = getAccount(email)
-  if (account?.role !== 'department') throw new Error('Only department accounts have a department code.')
-  const typed = code.trim().toUpperCase()
+  const typed = code.trim()
   if (!typed) throw new Error(DEPARTMENT_CODE_EMPTY)
-  if (typed !== DEPARTMENT_CODES[account.department]?.toUpperCase()) {
-    throw new Error(
-      `That code does not match the ${account.department} department. Ask your department head for the code.`,
-    )
-  }
-  writeProfile(email, { departmentVerified: true })
-  return buildProfile(email)
+  const profile = await staff.verifyDepartmentCode(typed)
+  profileChanged()
+  return profile
 }
 
 export const EMPLOYEE_ID_EMPTY = 'Enter your Employee ID.'
-const EMPLOYEE_ID_TAKEN =
-  'That Employee ID is already linked to another account. Check the ID, or ask the person who issued it.'
 
-const normalizeEmployeeId = (value) => value.trim().toUpperCase()
-
-// The email that already holds this Employee ID, other than `email`, or null.
-// Looks at every saved profile and at the demo accounts' built-in IDs.
-function employeeIdHolder(employeeId, email) {
-  const own = email.toLowerCase()
-  const holders = { ...STAFF_DEMO_PROFILES, ...readProfiles() }
-  for (const [holder, stored] of Object.entries(holders)) {
-    const id = stored.employeeId ?? STAFF_DEMO_PROFILES[holder]?.employeeId
-    if (id && normalizeEmployeeId(id) === employeeId && holder.toLowerCase() !== own) return holder
-  }
-  return null
-}
-
-// Mock only: the roster is checked in the browser. A server must check it.
-// An ID can belong to one account only. Returns the profile, or throws a
-// whole-sentence message.
+// An ID must be on this account's staff list and belong to one account only; the
+// server decides. Returns the profile, or throws its whole-sentence message.
 export async function verifyEmployeeId(email, value) {
-  await wait()
-  const account = getAccount(email)
-  if (account?.role !== 'department' && account?.role !== 'admin') {
-    throw new Error('Only staff accounts have an Employee ID.')
-  }
-  const employeeId = normalizeEmployeeId(value)
-  if (!employeeId) throw new Error(EMPLOYEE_ID_EMPTY)
-  const isAdmin = account.role === 'admin'
-  const roster = EMPLOYEE_ROSTER[isAdmin ? 'admin' : account.department] ?? []
-  if (!roster.includes(employeeId)) {
-    throw new Error(
-      isAdmin
-        ? 'That Employee ID is not on the admin staff list. Check the ID, or ask the person who issued it.'
-        : `That Employee ID is not on the ${account.department} staff list. Check it with your department head.`,
-    )
-  }
-  // The check and the save run together with no pause in between, so two
-  // tabs cannot both claim the same ID.
-  if (employeeIdHolder(employeeId, email)) throw new Error(EMPLOYEE_ID_TAKEN)
-  writeProfile(email, { employeeId })
-  return buildProfile(email)
+  const typed = value.trim()
+  if (!typed) throw new Error(EMPLOYEE_ID_EMPTY)
+  const profile = await staff.verifyEmployeeId(typed)
+  profileChanged()
+  return profile
 }
 
 const AVATAR_EDGE = 192 // px, square: plenty for a 40px circle on a sharp screen
@@ -1138,54 +1075,49 @@ async function shrinkToAvatar(file) {
 // file: an image File, or null to remove the photo. If the photo cannot be
 // read or kept, this throws a whole-sentence message and the old photo stays.
 export async function saveStaffPhoto(email, file) {
-  await wait(300)
-  if (!file) {
-    writeProfile(email, { photo: '' })
-    return buildProfile(email)
+  let photo = ''
+  if (file) {
+    const problem = checkIdPhoto(file)
+    if (problem) throw new Error(problem)
+    photo = await shrinkToAvatar(file)
   }
-  const problem = checkIdPhoto(file)
-  if (problem) throw new Error(problem)
-  const photo = await shrinkToAvatar(file)
-  try {
-    writeProfile(email, { photo })
-  } catch {
-    throw new Error('This device has no space left for your photo, so your old photo is kept.')
-  }
-  return buildProfile(email)
+  const profile = await staff.saveStaffPhoto(photo)
+  profileChanged()
+  return profile
 }
 
 // What a staff profile still needs before the setup can finish, as short
-// phrases ('a job title'). Empty when it is complete.
+// phrases ('a job title'). Empty when it is complete. The server works it out
+// and sends it with the profile.
 export function setupMissing(profile) {
-  const missing = []
-  if (checkName(profile.name)) missing.push('a valid name')
-  if (checkJobTitle(profile.jobTitle)) missing.push('a job title')
-  if (!profile.phoneVerified) missing.push('a verified phone number')
-  if (!profile.employeeIdVerified) missing.push('a verified Employee ID')
-  if (profile.role === 'department' && !profile.departmentVerified) {
-    missing.push('a verified department code')
-  }
-  return missing
+  return profile.setupMissing ?? []
 }
 
-// Ends the staff setup. Checks everything again from storage first, the way
-// a backend would, and refuses with a whole-sentence message if not ready.
-export async function completeOnboarding(email) {
-  await wait(300)
-  const missing = setupMissing(buildProfile(email))
-  if (missing.length) {
-    throw new Error('Your profile is not complete yet. Please finish every step first.')
-  }
-  markOnboarded(email)
-  window.dispatchEvent(new Event(PROFILE_EVENT))
-  return buildProfile(email)
+// Ends the staff setup. The server checks everything again and answers with a
+// NEW token that says onboarded: true; it is saved here, because the old one is
+// refused by every panel route. Throws the server's sentence if not ready.
+export async function completeOnboarding() {
+  const { token, user } = await staff.finishSetup()
+  updateSession({ token, onboarded: true, name: user.name })
+  profileChanged()
+  return user
 }
 
 // Phone check with a one-time code. Held in memory, like a server would.
 const otps = {}
 
+// The number a staff member last asked a code for, kept until it is verified
+// (the server needs it again with the code).
+const staffPhones = {}
+
 // Returns { phone, resendIn } once a code is "sent".
 export async function requestOtp(email, phoneInput) {
+  if (isStaff()) {
+    if (checkPhone(phoneInput)) throw new Error('Please enter a valid mobile number first.')
+    const sent = await staff.sendPhoneCode(normalizePhone(phoneInput))
+    staffPhones[email.toLowerCase()] = sent.phone
+    return sent
+  }
   await wait()
   if (checkPhone(phoneInput)) throw new Error('Please enter a valid mobile number first.')
   const phone = normalizePhone(phoneInput)
@@ -1205,6 +1137,16 @@ export async function requestOtp(email, phoneInput) {
 // Returns { status: 'verified', profile } | { status: 'wrong', attemptsLeft }
 //       | { status: 'locked' } | { status: 'expired' }
 export async function verifyOtp(email, code) {
+  if (isStaff()) {
+    const phone = staffPhones[email.toLowerCase()]
+    if (!phone) return { status: 'expired' }
+    const result = await staff.verifyPhoneCode(phone, code.trim())
+    if (result.status === 'verified') {
+      delete staffPhones[email.toLowerCase()]
+      profileChanged()
+    }
+    return result
+  }
   await wait()
   const key = email.toLowerCase()
   const otp = otps[key]

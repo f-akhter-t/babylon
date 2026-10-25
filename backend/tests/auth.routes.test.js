@@ -354,11 +354,24 @@ test('me: gives the signed-in account and no hash', async () => {
   const token = (await login('roads@babylon.test', 'password123', 'staff')).body.data.token
   const res = await request(app).get('/api/auth/me').set(bearer(token))
   assert.equal(res.status, 200)
+  // Staff also get their saved details and what the setup still needs.
   assert.deepEqual(res.body.data, {
     id: String(rows[1]._id), name: 'Roads Officer', email: 'roads@babylon.test',
     role: 'department', department: 'Roads & Highways', onboarded: true,
+    jobTitle: '', phone: '', phoneVerified: false, employeeId: '', employeeIdVerified: false,
+    departmentVerified: false, photo: '',
+    setupMissing: ['a job title', 'a verified phone number', 'a verified Employee ID', 'a verified department code'],
   })
   noLeak(res)
+})
+
+test('me: a citizen gets only the plain account', async () => {
+  const token = (await login('citizen@babylon.test', 'password123')).body.data.token
+  const res = await request(app).get('/api/auth/me').set(bearer(token))
+  assert.deepEqual(res.body.data, {
+    id: String(rows[0]._id), name: 'Demo Citizen', email: 'citizen@babylon.test',
+    role: 'citizen', department: null, onboarded: true,
+  })
 })
 
 test('me: no token, a broken token, or a deleted account is 401', async () => {

@@ -31,6 +31,19 @@ export const DEPARTMENT_LIMITS = Object.freeze({
   photoMaxChars: 7_000_000, // about 5 MB of image as text
 })
 
+// --- staff accounts (auth panel) ---
+export const STAFF_LIMITS = Object.freeze({
+  jobTitle: { min: 2, max: 60 }, // same as frontend/src/utils/profileRules.js
+  codeMax: 64, // access code, department code and Employee ID
+  // The staff photo is a 192 px WebP data URL, normally 5 to 20 KB. This leaves
+  // room for a PNG or JPEG, and stops anything big being stored on the account.
+  photoMaxChars: 300_000,
+  // Per signed-in person, for the routes that check a secret or send a code.
+  checkRate: Object.freeze({ windowMs: 60 * 1000, max: 10 }),
+  // Per address, for staff sign-up (there is no signed-in person yet).
+  signupRate: Object.freeze({ windowMs: 60 * 1000, max: 10 }),
+})
+
 // --- phone code (shared by citizen profile and staff onboarding) ---
 export const PHONE_CODE_LIMITS = Object.freeze({
   devCode: '123456', // used only when PHONE_CODE_MODE=dev
@@ -76,6 +89,24 @@ export const CLIP_LIMITS = Object.freeze({
   ]),
 })
 
+
+// --- AI: report assistant (F6) and summarize (F8), citizen panel ---
+export const ASSIST_LIMITS = Object.freeze({
+  photoMaxChars: 7_000_000, // about 5 MB of image as text, like a report photo
+  descriptionMax: 500, // a suggested description fits the report form
+  // The model thinks before it answers, and thinking counts against this limit
+  // (a photo used about 380 tokens of thinking). A low limit cuts the answer short.
+  maxOutputTokens: 2000,
+  rate: Object.freeze({ windowMs: 60 * 1000, max: 6 }),
+})
+
+export const SUMMARIZE_LIMITS = Object.freeze({
+  textMin: 10,
+  textMax: 2000,
+  summaryMax: 70, // a summary can be used as a report title
+  maxOutputTokens: 1024, // thinking counts against it too, so keep it generous
+  rate: Object.freeze({ windowMs: 60 * 1000, max: 10 }),
+})
 
 // --- AI: translate report text (F10) ---
 export const TRANSLATE_LIMITS = Object.freeze({

@@ -1,7 +1,7 @@
 {
   "info": {
     "name": "Babylon: Auth and Public",
-    "description": "Run the folders top to bottom, Auth first. Needs the demo accounts and issues from `npm run seed:public`. Set baseUrl if the server is not on port 5000.",
+    "description": "Auth, staff accounts, the report assistant and the public pages.\nNo scripts. Send each request by hand and read the answer yourself.\nRun the folders top to bottom: Auth, then Staff accounts, then AI assistant, then Public.\nNeeds the demo accounts and issues from `npm run seed:public`, and the staff settings (STAFF_ACCESS_CODE, DEPARTMENT_CODES, EMPLOYEE_ROSTER) in backend/.env.\nTokens and ids are passed on by hand: when a Description says 'copy data.token into the collection variable X', open the collection's Variables tab and paste it there. Never save your own codes back into this file.\nEvery Description says what answer to expect.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -27,19 +27,35 @@
     },
     {
       "key": "newEmail",
-      "value": ""
+      "value": "postman-1@example.com"
     },
     {
       "key": "issueId",
       "value": ""
     },
     {
-      "key": "badLogin",
+      "key": "brokenToken",
+      "value": "not-a-real-token"
+    },
+    {
+      "key": "staffToken",
       "value": ""
     },
     {
-      "key": "brokenToken",
-      "value": "not-a-real-token"
+      "key": "staffEmail",
+      "value": "staff-1@example.com"
+    },
+    {
+      "key": "staffAccessCode",
+      "value": ""
+    },
+    {
+      "key": "departmentCode",
+      "value": ""
+    },
+    {
+      "key": "employeeId",
+      "value": ""
     }
   ],
   "item": [
@@ -48,30 +64,6 @@
       "item": [
         {
           "name": "1 Sign up a new citizen: 201 and a token",
-          "event": [
-            {
-              "listen": "prerequest",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.collectionVariables.set('newEmail', 'postman-' + Date.now() + '@example.com');"
-                ]
-              }
-            },
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('201', () => pm.response.to.have.status(201));",
-                  "const d = pm.response.json().data;",
-                  "pm.test('a citizen with a token', () => { pm.expect(d.token).to.be.a('string'); pm.expect(d.user.role).to.eql('citizen'); pm.expect(d.user.email).to.eql(pm.collectionVariables.get('newEmail')); });",
-                  "pm.test('no hash in the answer', () => pm.expect(pm.response.text()).to.not.include('passwordHash').and.not.include('$2b$'));",
-                  "pm.collectionVariables.set('newToken', d.token);"
-                ]
-              }
-            }
-          ],
           "request": {
             "method": "POST",
             "header": [
@@ -81,6 +73,7 @@
               }
             ],
             "url": "{{baseUrl}}/auth/signup",
+            "description": "Expected: 201. data.token is a string, data.user.role = citizen, data.user.email is the email you sent, and the answer has no passwordHash.\nBefore sending: set the collection variable newEmail to an address nobody used yet (for example postman-1@example.com, then postman-2@example.com on the next full run).\nAfter: copy data.token into the collection variable newToken.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"name\": \"Postman Tester\",\n  \"email\": \"{{newEmail}}\",\n  \"password\": \"first-pass-1\"\n}",
@@ -94,19 +87,6 @@
         },
         {
           "name": "2 Same email again: 409",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('409', () => pm.response.to.have.status(409));",
-                  "pm.test('code is conflict', () => pm.expect(pm.response.json().code).to.eql('conflict'));",
-                  "pm.test('field is email', () => pm.expect(pm.response.json().field).to.eql('email'));"
-                ]
-              }
-            }
-          ],
           "request": {
             "method": "POST",
             "header": [
@@ -116,6 +96,7 @@
               }
             ],
             "url": "{{baseUrl}}/auth/signup",
+            "description": "Expected: 409. code = conflict, field = email. Sends the same newEmail as request 1.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"name\": \"Postman Tester\",\n  \"email\": \"{{newEmail}}\",\n  \"password\": \"first-pass-1\"\n}",
@@ -129,18 +110,6 @@
         },
         {
           "name": "3 Sign up asking to be admin: 400",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('400', () => pm.response.to.have.status(400));",
-                  "pm.test('field is role', () => pm.expect(pm.response.json().field).to.eql('role'));"
-                ]
-              }
-            }
-          ],
           "request": {
             "method": "POST",
             "header": [
@@ -150,6 +119,7 @@
               }
             ],
             "url": "{{baseUrl}}/auth/signup",
+            "description": "Expected: 400. field = role. A sign-up with role admin is refused, never quietly turned into a citizen.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"name\": \"Sneaky Person\",\n  \"email\": \"sneaky-{{$timestamp}}@example.com\",\n  \"password\": \"first-pass-1\",\n  \"role\": \"admin\"\n}",
@@ -163,18 +133,6 @@
         },
         {
           "name": "4 Sign up with a 5-character password: 400",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('400', () => pm.response.to.have.status(400));",
-                  "pm.test('field is password', () => pm.expect(pm.response.json().field).to.eql('password'));"
-                ]
-              }
-            }
-          ],
           "request": {
             "method": "POST",
             "header": [
@@ -184,6 +142,7 @@
               }
             ],
             "url": "{{baseUrl}}/auth/signup",
+            "description": "Expected: 400. field = password (at least 6 characters).",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"name\": \"Short Pass\",\n  \"email\": \"short-{{$timestamp}}@example.com\",\n  \"password\": \"12345\"\n}",
@@ -197,19 +156,6 @@
         },
         {
           "name": "5 Log in with the new account: 200",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('200', () => pm.response.to.have.status(200));",
-                  "pm.test('same account', () => pm.expect(pm.response.json().data.user.email).to.eql(pm.collectionVariables.get('newEmail')));",
-                  "pm.test('no hash in the answer', () => pm.expect(pm.response.text()).to.not.include('passwordHash').and.not.include('$2b$'));"
-                ]
-              }
-            }
-          ],
           "request": {
             "method": "POST",
             "header": [
@@ -219,6 +165,7 @@
               }
             ],
             "url": "{{baseUrl}}/auth/login",
+            "description": "Expected: 200. data.user.email is newEmail. No passwordHash in the answer.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"email\": \"{{newEmail}}\",\n  \"password\": \"first-pass-1\",\n  \"door\": \"citizen\"\n}",
@@ -232,21 +179,6 @@
         },
         {
           "name": "6 Log in as the demo citizen: 200",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('200', () => pm.response.to.have.status(200));",
-                  "const d = pm.response.json().data;",
-                  "pm.test('citizen with a token', () => { pm.expect(d.user.role).to.eql('citizen'); pm.expect(d.token).to.be.a('string'); });",
-                  "pm.test('no hash in the answer', () => pm.expect(pm.response.text()).to.not.include('passwordHash').and.not.include('$2b$'));",
-                  "pm.collectionVariables.set('citizenToken', d.token);"
-                ]
-              }
-            }
-          ],
           "request": {
             "method": "POST",
             "header": [
@@ -256,6 +188,7 @@
               }
             ],
             "url": "{{baseUrl}}/auth/login",
+            "description": "Expected: 200. data.user.role = citizen, data.token is a string, no passwordHash.\nAfter: copy data.token into the collection variable citizenToken.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"email\": \"citizen@babylon.test\",\n  \"password\": \"password123\",\n  \"door\": \"citizen\"\n}",
@@ -269,19 +202,6 @@
         },
         {
           "name": "7 Wrong password: 401",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('401', () => pm.response.to.have.status(401));",
-                  "pm.test('code is unauthorized', () => pm.expect(pm.response.json().code).to.eql('unauthorized'));",
-                  "pm.collectionVariables.set('badLogin', pm.response.text());"
-                ]
-              }
-            }
-          ],
           "request": {
             "method": "POST",
             "header": [
@@ -291,6 +211,7 @@
               }
             ],
             "url": "{{baseUrl}}/auth/login",
+            "description": "Expected: 401. code = unauthorized.\nAfter: keep this answer open. Request 8 must give exactly the same body.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"email\": \"citizen@babylon.test\",\n  \"password\": \"wrong-password\",\n  \"door\": \"citizen\"\n}",
@@ -304,18 +225,6 @@
         },
         {
           "name": "8 Unknown email: the very same 401",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('401', () => pm.response.to.have.status(401));",
-                  "pm.test('identical to the wrong-password answer', () => pm.expect(pm.response.text()).to.eql(pm.collectionVariables.get('badLogin')));"
-                ]
-              }
-            }
-          ],
           "request": {
             "method": "POST",
             "header": [
@@ -325,6 +234,7 @@
               }
             ],
             "url": "{{baseUrl}}/auth/login",
+            "description": "Expected: 401, with exactly the same code and message as request 7 (the app never says which emails exist).",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"email\": \"nobody-here@babylon.test\",\n  \"password\": \"password123\",\n  \"door\": \"citizen\"\n}",
@@ -338,18 +248,6 @@
         },
         {
           "name": "9 Staff account at the citizen door: 403 staff-account",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('403', () => pm.response.to.have.status(403));",
-                  "pm.test('code is staff-account', () => pm.expect(pm.response.json().code).to.eql('staff-account'));"
-                ]
-              }
-            }
-          ],
           "request": {
             "method": "POST",
             "header": [
@@ -359,6 +257,7 @@
               }
             ],
             "url": "{{baseUrl}}/auth/login",
+            "description": "Expected: 403. code = staff-account. A staff email on the citizen door is refused after the password is right.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"email\": \"roads@babylon.test\",\n  \"password\": \"password123\",\n  \"door\": \"citizen\"\n}",
@@ -372,18 +271,6 @@
         },
         {
           "name": "10 Citizen at the staff door: 403 citizen-account",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('403', () => pm.response.to.have.status(403));",
-                  "pm.test('code is citizen-account', () => pm.expect(pm.response.json().code).to.eql('citizen-account'));"
-                ]
-              }
-            }
-          ],
           "request": {
             "method": "POST",
             "header": [
@@ -393,6 +280,7 @@
               }
             ],
             "url": "{{baseUrl}}/auth/login",
+            "description": "Expected: 403. code = citizen-account. A citizen email on the staff door is refused after the password is right.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"email\": \"citizen@babylon.test\",\n  \"password\": \"password123\",\n  \"door\": \"staff\"\n}",
@@ -406,18 +294,6 @@
         },
         {
           "name": "11 Wrong password at the wrong door stays 401",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('401', () => pm.response.to.have.status(401));",
-                  "pm.test('code is unauthorized', () => pm.expect(pm.response.json().code).to.eql('unauthorized'));"
-                ]
-              }
-            }
-          ],
           "request": {
             "method": "POST",
             "header": [
@@ -427,6 +303,7 @@
               }
             ],
             "url": "{{baseUrl}}/auth/login",
+            "description": "Expected: 401. code = unauthorized. A wrong password stays 401 even at the wrong door, so the door never leaks the account type.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"email\": \"roads@babylon.test\",\n  \"password\": \"wrong-password\",\n  \"door\": \"citizen\"\n}",
@@ -440,20 +317,6 @@
         },
         {
           "name": "12 Department officer at the staff door: 200",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('200', () => pm.response.to.have.status(200));",
-                  "const d = pm.response.json().data;",
-                  "pm.test('department with a department', () => { pm.expect(d.user.role).to.eql('department'); pm.expect(d.user.department).to.eql('Roads & Highways'); });",
-                  "pm.collectionVariables.set('deptToken', d.token);"
-                ]
-              }
-            }
-          ],
           "request": {
             "method": "POST",
             "header": [
@@ -463,6 +326,7 @@
               }
             ],
             "url": "{{baseUrl}}/auth/login",
+            "description": "Expected: 200. data.user.role = department, data.user.department = Roads & Highways.\nAfter: copy data.token into the collection variable deptToken.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"email\": \"roads@babylon.test\",\n  \"password\": \"password123\",\n  \"door\": \"staff\"\n}",
@@ -476,19 +340,6 @@
         },
         {
           "name": "13 Admin at the staff door: 200",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('200', () => pm.response.to.have.status(200));",
-                  "pm.test('admin', () => pm.expect(pm.response.json().data.user.role).to.eql('admin'));",
-                  "pm.collectionVariables.set('adminToken', pm.response.json().data.token);"
-                ]
-              }
-            }
-          ],
           "request": {
             "method": "POST",
             "header": [
@@ -498,6 +349,7 @@
               }
             ],
             "url": "{{baseUrl}}/auth/login",
+            "description": "Expected: 200. data.user.role = admin.\nAfter: copy data.token into the collection variable adminToken.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"email\": \"admin@babylon.test\",\n  \"password\": \"password123\",\n  \"door\": \"staff\"\n}",
@@ -511,18 +363,6 @@
         },
         {
           "name": "14 Log in without a door: 400",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('400', () => pm.response.to.have.status(400));",
-                  "pm.test('field is door', () => pm.expect(pm.response.json().field).to.eql('door'));"
-                ]
-              }
-            }
-          ],
           "request": {
             "method": "POST",
             "header": [
@@ -532,6 +372,7 @@
               }
             ],
             "url": "{{baseUrl}}/auth/login",
+            "description": "Expected: 400. field = door.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"email\": \"citizen@babylon.test\",\n  \"password\": \"password123\"\n}",
@@ -545,39 +386,15 @@
         },
         {
           "name": "15 Me with no token: 401",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('401', () => pm.response.to.have.status(401));",
-                  "pm.test('code is unauthorized', () => pm.expect(pm.response.json().code).to.eql('unauthorized'));"
-                ]
-              }
-            }
-          ],
           "request": {
             "method": "GET",
             "header": [],
-            "url": "{{baseUrl}}/auth/me"
+            "url": "{{baseUrl}}/auth/me",
+            "description": "Expected: 401. code = unauthorized. No Authorization header is sent on purpose."
           }
         },
         {
           "name": "16 Me as the demo citizen: 200, no hash",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('200', () => pm.response.to.have.status(200));",
-                  "pm.test('the citizen', () => pm.expect(pm.response.json().data.email).to.eql('citizen@babylon.test'));",
-                  "pm.test('no hash in the answer', () => pm.expect(pm.response.text()).to.not.include('passwordHash').and.not.include('$2b$'));"
-                ]
-              }
-            }
-          ],
           "request": {
             "method": "GET",
             "header": [
@@ -586,23 +403,12 @@
                 "value": "Bearer {{citizenToken}}"
               }
             ],
-            "url": "{{baseUrl}}/auth/me"
+            "url": "{{baseUrl}}/auth/me",
+            "description": "Expected: 200. data.email = citizen@babylon.test. A citizen gets only id, name, email, role, department, onboarded. No passwordHash.\nNeeds the collection variable citizenToken (request 6)."
           }
         },
         {
           "name": "17 Me as the department officer: 200",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('200', () => pm.response.to.have.status(200));",
-                  "pm.test('department', () => pm.expect(pm.response.json().data.department).to.eql('Roads & Highways'));"
-                ]
-              }
-            }
-          ],
           "request": {
             "method": "GET",
             "header": [
@@ -611,23 +417,12 @@
                 "value": "Bearer {{deptToken}}"
               }
             ],
-            "url": "{{baseUrl}}/auth/me"
+            "url": "{{baseUrl}}/auth/me",
+            "description": "Expected: 200. data.department = Roads & Highways. A staff account also gets jobTitle, phone, phoneVerified, employeeId, employeeIdVerified, departmentVerified, photo and setupMissing (a list of what the setup still needs).\nNeeds the collection variable deptToken (request 12)."
           }
         },
         {
           "name": "18 Change password, wrong current: 400 current",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('400', () => pm.response.to.have.status(400));",
-                  "pm.test('field is current', () => pm.expect(pm.response.json().field).to.eql('current'));"
-                ]
-              }
-            }
-          ],
           "request": {
             "method": "PATCH",
             "header": [
@@ -641,6 +436,7 @@
               }
             ],
             "url": "{{baseUrl}}/auth/password",
+            "description": "Expected: 400. field = current (the current password is wrong).\nNeeds the collection variable newToken (request 1).",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"currentPassword\": \"not-it\",\n  \"newPassword\": \"second-pass-2\"\n}",
@@ -654,18 +450,6 @@
         },
         {
           "name": "19 Change password, same as current: 400 new",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('400', () => pm.response.to.have.status(400));",
-                  "pm.test('field is new', () => pm.expect(pm.response.json().field).to.eql('new'));"
-                ]
-              }
-            }
-          ],
           "request": {
             "method": "PATCH",
             "header": [
@@ -679,6 +463,7 @@
               }
             ],
             "url": "{{baseUrl}}/auth/password",
+            "description": "Expected: 400. field = new (the new password must differ from the current one).\nNeeds newToken.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"currentPassword\": \"first-pass-1\",\n  \"newPassword\": \"first-pass-1\"\n}",
@@ -692,18 +477,6 @@
         },
         {
           "name": "20 Change password, too short: 400 new",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('400', () => pm.response.to.have.status(400));",
-                  "pm.test('field is new', () => pm.expect(pm.response.json().field).to.eql('new'));"
-                ]
-              }
-            }
-          ],
           "request": {
             "method": "PATCH",
             "header": [
@@ -717,6 +490,7 @@
               }
             ],
             "url": "{{baseUrl}}/auth/password",
+            "description": "Expected: 400. field = new (at least 6 characters).\nNeeds newToken.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"currentPassword\": \"first-pass-1\",\n  \"newPassword\": \"12345\"\n}",
@@ -730,17 +504,6 @@
         },
         {
           "name": "21 Change password, no token: 401",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('401', () => pm.response.to.have.status(401));"
-                ]
-              }
-            }
-          ],
           "request": {
             "method": "PATCH",
             "header": [
@@ -750,6 +513,7 @@
               }
             ],
             "url": "{{baseUrl}}/auth/password",
+            "description": "Expected: 401. No Authorization header is sent on purpose.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"currentPassword\": \"first-pass-1\",\n  \"newPassword\": \"second-pass-2\"\n}",
@@ -763,17 +527,6 @@
         },
         {
           "name": "22 Change password: 200",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('200', () => pm.response.to.have.status(200));"
-                ]
-              }
-            }
-          ],
           "request": {
             "method": "PATCH",
             "header": [
@@ -787,6 +540,7 @@
               }
             ],
             "url": "{{baseUrl}}/auth/password",
+            "description": "Expected: 200. data = null. The password is changed to second-pass-2.\nNeeds newToken.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"currentPassword\": \"first-pass-1\",\n  \"newPassword\": \"second-pass-2\"\n}",
@@ -800,17 +554,6 @@
         },
         {
           "name": "23 The old password no longer logs in: 401",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('401', () => pm.response.to.have.status(401));"
-                ]
-              }
-            }
-          ],
           "request": {
             "method": "POST",
             "header": [
@@ -820,6 +563,7 @@
               }
             ],
             "url": "{{baseUrl}}/auth/login",
+            "description": "Expected: 401. The old password first-pass-1 no longer works.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"email\": \"{{newEmail}}\",\n  \"password\": \"first-pass-1\",\n  \"door\": \"citizen\"\n}",
@@ -833,17 +577,6 @@
         },
         {
           "name": "24 The new password logs in: 200",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('200', () => pm.response.to.have.status(200));"
-                ]
-              }
-            }
-          ],
           "request": {
             "method": "POST",
             "header": [
@@ -853,6 +586,7 @@
               }
             ],
             "url": "{{baseUrl}}/auth/login",
+            "description": "Expected: 200. The new password second-pass-2 works.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"email\": \"{{newEmail}}\",\n  \"password\": \"second-pass-2\",\n  \"door\": \"citizen\"\n}",
@@ -866,17 +600,6 @@
         },
         {
           "name": "25 Log out: 200",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('200', () => pm.response.to.have.status(200));"
-                ]
-              }
-            }
-          ],
           "request": {
             "method": "POST",
             "header": [
@@ -885,7 +608,848 @@
                 "value": "Bearer {{newToken}}"
               }
             ],
-            "url": "{{baseUrl}}/auth/logout"
+            "url": "{{baseUrl}}/auth/logout",
+            "description": "Expected: 200. The server keeps no list of tokens; logging out only means the app forgets the token.\nNeeds newToken."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Staff accounts",
+      "item": [
+        {
+          "name": "1 Staff sign-up: 201, not onboarded",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/staff/signup",
+            "description": "Expected: 201. data.user.role = department, data.user.onboarded = false, data.user.setupMissing lists 4 things (a job title, a verified phone number, a verified Employee ID, a verified department code). No passwordHash, and the access code is not in the answer.\nBefore sending: set the collection variables staffEmail (an address nobody used, for example staff-1@example.com) and staffAccessCode (the STAFF_ACCESS_CODE from your backend/.env).\nAfter: copy data.token into the collection variable staffToken. This token says onboarded: false.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Nusrat Jahan\",\n  \"email\": \"{{staffEmail}}\",\n  \"password\": \"staff-pass-1\",\n  \"role\": \"department\",\n  \"department\": \"Roads & Highways\",\n  \"accessCode\": \"{{staffAccessCode}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "2 Staff sign-up, wrong access code: 400",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/staff/signup",
+            "description": "Expected: 400. code = invalid, field = accessCode. Nothing is created.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Nusrat Jahan\",\n  \"email\": \"wrongcode-{{$timestamp}}@example.com\",\n  \"password\": \"staff-pass-1\",\n  \"role\": \"department\",\n  \"department\": \"Roads & Highways\",\n  \"accessCode\": \"not-the-code\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "3 Staff sign-up, same email: 409",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/staff/signup",
+            "description": "Expected: 409. code = conflict, field = email. Sends the same staffEmail as request 1 with the right access code.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Nusrat Jahan\",\n  \"email\": \"{{staffEmail}}\",\n  \"password\": \"staff-pass-1\",\n  \"role\": \"department\",\n  \"department\": \"Roads & Highways\",\n  \"accessCode\": \"{{staffAccessCode}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "4 Staff sign-up as a citizen: 400",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/staff/signup",
+            "description": "Expected: 400. field = role. Only department and admin are allowed here.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Nusrat Jahan\",\n  \"email\": \"asc-{{$timestamp}}@example.com\",\n  \"password\": \"staff-pass-1\",\n  \"role\": \"citizen\",\n  \"department\": \"Roads & Highways\",\n  \"accessCode\": \"{{staffAccessCode}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "5 Staff sign-up, no department: 400",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/staff/signup",
+            "description": "Expected: 400. field = department (a department account must name its department).",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Nusrat Jahan\",\n  \"email\": \"nodept-{{$timestamp}}@example.com\",\n  \"password\": \"staff-pass-1\",\n  \"role\": \"department\",\n  \"accessCode\": \"{{staffAccessCode}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "6 Admin sign-up: 201, no department",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/staff/signup",
+            "description": "Expected: 201. data.user.role = admin and data.user.department = null (a department sent with an admin is dropped). setupMissing has 3 things: no department code is needed for an admin.\nBefore sending: staffAccessCode must be set (request 1).",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Nusrat Jahan\",\n  \"email\": \"admin-{{$timestamp}}@example.com\",\n  \"password\": \"staff-pass-1\",\n  \"role\": \"admin\",\n  \"department\": \"Roads & Highways\",\n  \"accessCode\": \"{{staffAccessCode}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "7 Me as the new staff account: setup not done",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{staffToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/me",
+            "description": "Expected: 200. data.onboarded = false, data.setupMissing lists what is still needed, data.employeeIdVerified = false.\nNeeds the collection variable staffToken (request 1)."
+          }
+        },
+        {
+          "name": "8 The new token cannot open the department area yet: 403",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{staffToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/department/issues",
+            "description": "Expected: 403, code forbidden: 'Please finish setting up your staff account first.' A staff token that is not onboarded is refused by every panel route.\nNeeds staffToken."
+          }
+        },
+        {
+          "name": "9 Finish too early: 409",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{staffToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/staff/finish",
+            "description": "Expected: 409. code = conflict. The setup is not complete, so nothing changes and no new token is given.\nNeeds staffToken.",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "10 Department code, no token: 401",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/staff/verify-code",
+            "description": "Expected: 401. No Authorization header is sent on purpose.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"whatever\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "11 Department code with a citizen token: 403",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{citizenToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/staff/verify-code",
+            "description": "Expected: 403, code forbidden. A citizen is not staff.\nNeeds the collection variable citizenToken (Auth request 6).",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"whatever\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "12 Department code, wrong: 400",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{staffToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/staff/verify-code",
+            "description": "Expected: 400. field = code. The message names the department but never shows the right code.\nNeeds staffToken.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"WRONG-0000\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "13 Department code, right: 200",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{staffToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/staff/verify-code",
+            "description": "Expected: 200. data.departmentVerified = true, and 'a verified department code' is gone from data.setupMissing.\nBefore sending: set the collection variable departmentCode to this department's code (DEPARTMENT_CODES in your backend/.env, the Roads & Highways one).\nNeeds staffToken.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"{{departmentCode}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "14 Employee ID, not on the list: 400",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{staffToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/staff/verify-employee",
+            "description": "Expected: 400. field = employeeId. The message says the ID is not on the Roads & Highways staff list.\nNeeds staffToken.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"employeeId\": \"E-XX-0000\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "15 Employee ID, right: 200",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{staffToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/staff/verify-employee",
+            "description": "Expected: 200. data.employeeId is the ID in capitals, data.employeeIdVerified = true.\nBefore sending: set the collection variable employeeId to an ID from the Roads & Highways list in EMPLOYEE_ROSTER (backend/.env) that no other account holds.\nA second account asking for the same ID gets 409 conflict. A verified ID cannot be changed (409).\nNeeds staffToken.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"employeeId\": \"{{employeeId}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "16 Details, job title too short: 400",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{staffToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/staff/details",
+            "description": "Expected: 400. field = jobTitle (2 to 60 characters).\nNeeds staffToken.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"jobTitle\": \"x\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "17 Details: 200",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{staffToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/staff/details",
+            "description": "Expected: 200. data.name and data.jobTitle are saved, and 'a job title' is gone from setupMissing. An employeeId sent here is ignored on purpose: it can only come from request 15.\nNeeds staffToken.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Nusrat Jahan\",\n  \"jobTitle\": \"Road inspector\",\n  \"employeeId\": \"E-HACK-1\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "18 Photo, not an image: 400",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{staffToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/staff/photo",
+            "description": "Expected: 400. field = photo. Only a WebP, PNG or JPEG data URL under 300,000 characters is accepted.\nNeeds staffToken.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"photo\": \"hello\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "19 Photo: 200",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{staffToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/staff/photo",
+            "description": "Expected: 200. data.photo is the data URL you sent. Send {\"photo\": \"\"} to remove it.\nNeeds staffToken.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"photo\": \"data:image/webp;base64,UklGRhoAAABXRUJQVlA4TA0AAAAvAAAAEAcQERGIiP4HAA==\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "20 Phone code, bad number: 400",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{staffToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/staff/phone-code",
+            "description": "Expected: 400. field = phone (11 digits, 013 to 019; +880 is accepted).\nNeeds staffToken.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phone\": \"12345\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "21 Phone code: 200",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{staffToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/staff/phone-code",
+            "description": "Expected: 200. data = { phone: 01711000111, resendAfter: 30 }. The code itself is never in the answer. In dev mode (PHONE_CODE_MODE=dev) the code is 123456.\nSend it again at once: 429 too-many-requests ('Please wait N seconds').\nNeeds staffToken.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phone\": \"+880 1711-000111\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "22 Phone verify, wrong code: 400",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{staffToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/staff/phone-verify",
+            "description": "Expected: 400. field = code, message 'That code is not right. You have 2 tries left.' After 3 wrong codes: 423 locked.\nNeeds staffToken.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phone\": \"01711000111\",\n  \"code\": \"000000\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "23 Phone verify: 200",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{staffToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/staff/phone-verify",
+            "description": "Expected: 200. data.phone = 01711000111, data.phoneVerified = true, and 'a verified phone number' is gone from setupMissing.\nIf request 22 locked you: wait for the code to be sent again (request 21 after 30 seconds).\nNeeds staffToken.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phone\": \"01711000111\",\n  \"code\": \"123456\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "24 Finish: 200 and a fresh token",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{staffToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/staff/finish",
+            "description": "Expected: 200. data.user.onboarded = true, data.user.setupMissing = [], and data.token is a NEW token with onboarded true.\nAfter: copy data.token into the collection variable staffToken (replace the old one). Then run request 25.\nNeeds staffToken with every step above done.",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "25 The fresh token opens the department area: 200",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{staffToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/department/issues",
+            "description": "Expected: 200. The same request as request 8 now works, because the token says onboarded: true.\nNeeds the NEW staffToken from request 24."
+          }
+        },
+        {
+          "name": "26 Me after finishing: 200",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{staffToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/me",
+            "description": "Expected: 200. data.onboarded = true, data.setupMissing = [], and jobTitle, phone, employeeId, photo are the saved values (this is what the profile page shows after a reload).\nNeeds the NEW staffToken."
+          }
+        }
+      ]
+    },
+    {
+      "name": "AI assistant (F6, F8)",
+      "item": [
+        {
+          "name": "1 F6 assistant, no token: 401",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/citizen/reports/assist",
+            "description": "Expected: 401. No Authorization header is sent on purpose.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"photoUrl\": \"PASTE_PHOTO_DATA_URL\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "2 F6 assistant with a department token: 403",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{deptToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/citizen/reports/assist",
+            "description": "Expected: 403, code forbidden. Only citizens use the report assistant.\nNeeds the collection variable deptToken (Auth request 12).",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"photoUrl\": \"PASTE_PHOTO_DATA_URL\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "3 F6 assistant, not an image: 400",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{citizenToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/citizen/reports/assist",
+            "description": "Expected: 400. field = photoUrl. Nothing is sent to Gemini.\nNeeds citizenToken.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"photoUrl\": \"hello\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "4 F6 assistant, unknown category: 400",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{citizenToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/citizen/reports/assist",
+            "description": "Expected: 400. field = category (one of Roads, Waste, Water, Lighting, Bridges).\nNeeds citizenToken.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"photoUrl\": \"data:image/png;base64,iVBORw0KGgo=\",\n  \"category\": \"Other\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "5 F6 assistant: 200 with a suggestion",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{citizenToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/citizen/reports/assist",
+            "description": "Expected: 200. data = { category, description }. category is one of the 5 categories or null; description is 10 to 500 characters.\nReplace PASTE_PHOTO_DATA_URL with a real photo as a data URL. In PowerShell: \"data:image/jpeg;base64,\" + [Convert]::ToBase64String([IO.File]::ReadAllBytes(\"C:\\\\path\\\\pothole.jpg\")) | Set-Clipboard\nNeeds GEMINI_API_KEY in backend/.env and citizenToken.\nWith the key removed and the server restarted: 503, code ai-unavailable. More than 6 requests in a minute: 429 too-many-requests.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"photoUrl\": \"PASTE_PHOTO_DATA_URL\",\n  \"category\": \"Roads\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "6 F8 summarize, no token: 401",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/citizen/reports/summarize",
+            "description": "Expected: 401. No Authorization header is sent on purpose.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"text\": \"A very large pothole on Station Road near the school gate.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "7 F8 summarize, text too short: 400",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{citizenToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/citizen/reports/summarize",
+            "description": "Expected: 400. field = text (at least 10 characters, at most 2000).\nNeeds citizenToken.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"text\": \"short\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "8 F8 summarize: 200 with a summary",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{citizenToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/citizen/reports/summarize",
+            "description": "Expected: 200. data = { summary }: one line of at most 70 characters.\nNeeds GEMINI_API_KEY in backend/.env and citizenToken.\nWith the key removed and the server restarted: 503, code ai-unavailable. More than 10 requests in a minute: 429 too-many-requests.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"text\": \"There is a very large pothole on Station Road, right in front of the primary school gate. Motorbikes swerve around it and a child nearly fell last week.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
           }
         }
       ]
@@ -895,186 +1459,78 @@
       "item": [
         {
           "name": "1 Health: 200",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('200', () => pm.response.to.have.status(200));"
-                ]
-              }
-            }
-          ],
           "request": {
             "method": "GET",
             "header": [],
-            "url": "{{baseUrl}}/health"
+            "url": "{{baseUrl}}/health",
+            "description": "Expected: 200. data.status = up."
           }
         },
         {
           "name": "2 Guest list: all 12 issues, ranked 1 to 12",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('200', () => pm.response.to.have.status(200));",
-                  "const list = pm.response.json().data;",
-                  "pm.test('12 issues', () => pm.expect(list).to.have.lengthOf(12));",
-                  "pm.test('ranks run 1 to n', () => list.forEach((issue, i) => pm.expect(issue.rank).to.eql(i + 1)));",
-                  "pm.test('the most urgent, most voted one is first', () => pm.expect(list[0].title).to.eql('Deep pothole near Wasa Circle'));",
-                  "pm.test('each issue has votes and a department', () => list.forEach((issue) => { pm.expect(issue.votes).to.be.a('number'); pm.expect(issue.id).to.be.a('string'); }));",
-                  "pm.test('no private fields, no voted flag for a guest', () => { const text = pm.response.text(); pm.expect(text).to.not.include('pendingAfterImg'); pm.expect(text).to.not.include('departmentNote'); pm.expect(text).to.not.include('reporterEmail'); pm.expect(list[0]).to.not.have.property('voted'); });",
-                  "pm.collectionVariables.set('issueId', list[0].id);"
-                ]
-              }
-            }
-          ],
           "request": {
             "method": "GET",
             "header": [],
-            "url": "{{baseUrl}}/issues"
+            "url": "{{baseUrl}}/issues",
+            "description": "Expected: 200. 12 issues, rank 1 to 12 in order. The first is 'Deep pothole near Wasa Circle'. Each has id and votes. No pendingAfterImg, departmentNote, reporterEmail or imageEmbedding anywhere, and no voted flag for a guest.\nAfter: copy data[0].id into the collection variable issueId."
           }
         },
         {
           "name": "3 Category and status combine",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('200', () => pm.response.to.have.status(200));",
-                  "const list = pm.response.json().data;",
-                  "pm.test('some, and only Roads and open', () => { pm.expect(list.length).to.be.above(0); list.forEach((issue) => { pm.expect(issue.category).to.eql('Roads'); pm.expect(issue.status).to.eql('open'); }); });"
-                ]
-              }
-            }
-          ],
           "request": {
             "method": "GET",
             "header": [],
-            "url": "{{baseUrl}}/issues?category=Roads&status=open"
+            "url": "{{baseUrl}}/issues?category=Roads&status=open",
+            "description": "Expected: 200. At least one issue, and every one is category Roads and status open."
           }
         },
         {
           "name": "4 'All' means no filter",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('200', () => pm.response.to.have.status(200));",
-                  "pm.test('12 issues', () => pm.expect(pm.response.json().data).to.have.lengthOf(12));"
-                ]
-              }
-            }
-          ],
           "request": {
             "method": "GET",
             "header": [],
-            "url": "{{baseUrl}}/issues?category=All&status=All"
+            "url": "{{baseUrl}}/issues?category=All&status=All",
+            "description": "Expected: 200. 'All' means no filter, so there are 12 issues."
           }
         },
         {
           "name": "5 Search ignores case, matches title or street",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('200', () => pm.response.to.have.status(200));",
-                  "const list = pm.response.json().data;",
-                  "pm.test('some, each mentioning pothole', () => { pm.expect(list.length).to.be.above(0); list.forEach((issue) => pm.expect((issue.title + ' ' + issue.location).toLowerCase()).to.include('pothole')); });"
-                ]
-              }
-            }
-          ],
           "request": {
             "method": "GET",
             "header": [],
-            "url": "{{baseUrl}}/issues?search=POTHOLE"
+            "url": "{{baseUrl}}/issues?search=POTHOLE",
+            "description": "Expected: 200. At least one issue. The search ignores case and matches the title or the street; every title or location contains 'pothole'."
           }
         },
         {
           "name": "6 With a position, every issue has distanceM",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('200', () => pm.response.to.have.status(200));",
-                  "pm.test('distanceM on all', () => pm.response.json().data.forEach((issue) => pm.expect(issue.distanceM).to.be.a('number')));"
-                ]
-              }
-            }
-          ],
           "request": {
             "method": "GET",
             "header": [],
-            "url": "{{baseUrl}}/issues?lat=22.354&lng=91.824"
+            "url": "{{baseUrl}}/issues?lat=22.354&lng=91.824",
+            "description": "Expected: 200. Every issue has a numeric distanceM."
           }
         },
         {
           "name": "7 A category that does not exist: 400",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('400', () => pm.response.to.have.status(400));",
-                  "pm.test('field is category', () => pm.expect(pm.response.json().field).to.eql('category'));"
-                ]
-              }
-            }
-          ],
           "request": {
             "method": "GET",
             "header": [],
-            "url": "{{baseUrl}}/issues?category=Potholes"
+            "url": "{{baseUrl}}/issues?category=Potholes",
+            "description": "Expected: 400. field = category."
           }
         },
         {
           "name": "8 Only a latitude: 400",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('400', () => pm.response.to.have.status(400));"
-                ]
-              }
-            }
-          ],
           "request": {
             "method": "GET",
             "header": [],
-            "url": "{{baseUrl}}/issues?lat=22.354"
+            "url": "{{baseUrl}}/issues?lat=22.354",
+            "description": "Expected: 400. A latitude without a longitude is refused."
           }
         },
         {
           "name": "9 Signed in: my two reports are mine and voted",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('200', () => pm.response.to.have.status(200));",
-                  "const list = pm.response.json().data;",
-                  "pm.test('every item has voted and mine', () => list.forEach((issue) => { pm.expect(issue.voted).to.be.a('boolean'); pm.expect(issue.mine).to.be.a('boolean'); }));",
-                  "pm.test('two are mine, and I voted on them', () => { const mine = list.filter((issue) => issue.mine); pm.expect(mine).to.have.lengthOf(2); mine.forEach((issue) => pm.expect(issue.voted).to.eql(true)); });"
-                ]
-              }
-            }
-          ],
           "request": {
             "method": "GET",
             "header": [
@@ -1083,23 +1539,12 @@
                 "value": "Bearer {{citizenToken}}"
               }
             ],
-            "url": "{{baseUrl}}/issues"
+            "url": "{{baseUrl}}/issues",
+            "description": "Expected: 200. Every issue has voted and mine (true or false). Exactly two are mine, and both have voted = true.\nNeeds the collection variable citizenToken (request 6 in Auth)."
           }
         },
         {
           "name": "10 A broken token is just a guest: 200",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('200', () => pm.response.to.have.status(200));",
-                  "pm.test('12 issues, no flags', () => { const list = pm.response.json().data; pm.expect(list).to.have.lengthOf(12); pm.expect(list[0]).to.not.have.property('mine'); });"
-                ]
-              }
-            }
-          ],
           "request": {
             "method": "GET",
             "header": [
@@ -1108,173 +1553,80 @@
                 "value": "Bearer {{brokenToken}}"
               }
             ],
-            "url": "{{baseUrl}}/issues"
+            "url": "{{baseUrl}}/issues",
+            "description": "Expected: 200. A broken token is treated as a guest: 12 issues and no mine flag."
           }
         },
         {
           "name": "11 One issue: 200",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('200', () => pm.response.to.have.status(200));",
-                  "pm.test('the one asked for', () => pm.expect(pm.response.json().data.id).to.eql(pm.collectionVariables.get('issueId')));",
-                  "pm.test('no private fields', () => pm.expect(pm.response.text()).to.not.include('pendingAfterImg'));"
-                ]
-              }
-            }
-          ],
           "request": {
             "method": "GET",
             "header": [],
-            "url": "{{baseUrl}}/issues/{{issueId}}"
+            "url": "{{baseUrl}}/issues/{{issueId}}",
+            "description": "Expected: 200. data.id equals the issueId you saved. No pendingAfterImg in the answer.\nNeeds the collection variable issueId (request 2 of this folder)."
           }
         },
         {
           "name": "12 An unknown id: 404",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('404', () => pm.response.to.have.status(404));",
-                  "pm.test('code is not-found', () => pm.expect(pm.response.json().code).to.eql('not-found'));"
-                ]
-              }
-            }
-          ],
           "request": {
             "method": "GET",
             "header": [],
-            "url": "{{baseUrl}}/issues/123"
+            "url": "{{baseUrl}}/issues/123",
+            "description": "Expected: 404. code = not-found."
           }
         },
         {
           "name": "13 Home hero: 3 slides",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('200', () => pm.response.to.have.status(200));",
-                  "const d = pm.response.json().data;",
-                  "pm.test('3 slides and some categories', () => { pm.expect(d.slides).to.have.lengthOf(3); pm.expect(d.categories.length).to.be.above(0); });"
-                ]
-              }
-            }
-          ],
           "request": {
             "method": "GET",
             "header": [],
-            "url": "{{baseUrl}}/home/hero"
+            "url": "{{baseUrl}}/home/hero",
+            "description": "Expected: 200. data.slides has 3 items and data.categories has at least one."
           }
         },
         {
           "name": "14 Home stats: the four figures",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('200', () => pm.response.to.have.status(200));",
-                  "const d = pm.response.json().data;",
-                  "pm.test('four numbers', () => ['received', 'resolved', 'avgDays', 'reopenedPercent'].forEach((key) => pm.expect(d[key]).to.be.a('number')));"
-                ]
-              }
-            }
-          ],
           "request": {
             "method": "GET",
             "header": [],
-            "url": "{{baseUrl}}/home/stats"
+            "url": "{{baseUrl}}/home/stats",
+            "description": "Expected: 200. data has four numbers: received, resolved, avgDays, reopenedPercent."
           }
         },
         {
           "name": "15 Fixed this week: up to 3 resolved, with an after-photo",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('200', () => pm.response.to.have.status(200));",
-                  "const list = pm.response.json().data;",
-                  "pm.test('1 to 3 resolved issues with an after-photo', () => { pm.expect(list.length).to.be.within(1, 3); list.forEach((issue) => { pm.expect(issue.status).to.eql('resolved'); pm.expect(issue.afterImg).to.be.a('string').and.not.empty; }); });"
-                ]
-              }
-            }
-          ],
           "request": {
             "method": "GET",
             "header": [],
-            "url": "{{baseUrl}}/home/fixed-this-week"
+            "url": "{{baseUrl}}/home/fixed-this-week",
+            "description": "Expected: 200. 1 to 3 issues, each status resolved with an afterImg."
           }
         },
         {
           "name": "16 Recent activity: 8 by default, newest first",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('200', () => pm.response.to.have.status(200));",
-                  "const list = pm.response.json().data;",
-                  "pm.test('8 items', () => pm.expect(list).to.have.lengthOf(8));",
-                  "pm.test('newest first', () => { for (let i = 1; i < list.length; i++) pm.expect(Date.parse(list[i - 1].createdAt)).to.be.at.least(Date.parse(list[i].createdAt)); });"
-                ]
-              }
-            }
-          ],
           "request": {
             "method": "GET",
             "header": [],
-            "url": "{{baseUrl}}/home/activity"
+            "url": "{{baseUrl}}/home/activity",
+            "description": "Expected: 200. 8 items by default, newest first (createdAt falls down the list)."
           }
         },
         {
           "name": "17 Recent activity with limit=3",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('200', () => pm.response.to.have.status(200));",
-                  "pm.test('3 items', () => pm.expect(pm.response.json().data).to.have.lengthOf(3));"
-                ]
-              }
-            }
-          ],
           "request": {
             "method": "GET",
             "header": [],
-            "url": "{{baseUrl}}/home/activity?limit=3"
+            "url": "{{baseUrl}}/home/activity?limit=3",
+            "description": "Expected: 200. Exactly 3 items."
           }
         },
         {
           "name": "18 Recent activity with limit=0: 400",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('400', () => pm.response.to.have.status(400));",
-                  "pm.test('field is limit', () => pm.expect(pm.response.json().field).to.eql('limit'));"
-                ]
-              }
-            }
-          ],
           "request": {
             "method": "GET",
             "header": [],
-            "url": "{{baseUrl}}/home/activity?limit=0"
+            "url": "{{baseUrl}}/home/activity?limit=0",
+            "description": "Expected: 400. field = limit."
           }
         }
       ]
