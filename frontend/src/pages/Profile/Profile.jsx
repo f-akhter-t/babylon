@@ -11,6 +11,7 @@ import { useUnsavedChanges } from './useUnsavedChanges'
 import { enter } from '../../components/ui/motion'
 import PersonalDetailsCard from './PersonalDetailsCard'
 import PhoneCard from './PhoneCard'
+import EmailCard from './EmailCard'
 import IdentityCard from './IdentityCard'
 import SummaryCard from './SummaryCard'
 import JumpChips from './JumpChips'
@@ -69,6 +70,7 @@ function ProfilePage({ viewer }) {
   const onDirty = useMemo(
     () => ({
       phone: (value) => markDirty('phone', value),
+      email: (value) => markDirty('email', value),
       identity: (value) => markDirty('identity', value),
     }),
     [markDirty],
@@ -173,6 +175,9 @@ function ProfilePage({ viewer }) {
                 </div>
                 <div style={enter('rise-in', 0.25)}>
                   <PhoneCard profile={profile} onDirtyChange={onDirty.phone} announce={announce} />
+                </div>
+                <div style={enter('rise-in', 0.3)}>
+                  <EmailCard profile={profile} onDirtyChange={onDirty.email} announce={announce} />
                 </div>
                 <div style={enter('rise-in', 0.35)}>
                   <IdentityCard

@@ -22,8 +22,8 @@ export default function WelcomeHeader({ name, profile, onSkip }) {
           Let&apos;s set up your profile. Start with your name and division.
         </p>
         <p className="mt-1 font-body text-sm text-slate">
-          Verifying your phone and identity is optional. You can do it any time from your
-          profile.
+          Verifying your email, phone and identity is optional. You can do it any time from
+          your profile.
         </p>
         <Button to="/map" variant="outline" className="mt-5" onClick={onSkip}>
           Skip for now

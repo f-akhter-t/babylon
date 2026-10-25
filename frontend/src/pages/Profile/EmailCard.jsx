@@ -1,18 +1,19 @@
 import { useEffect, useRef, useState } from 'react'
 import Button from '../../components/ui/Button'
-import ProfileCard from '../Profile/ProfileCard'
-import FormNotice from '../Profile/FormNotice'
-import VerifyBadge from '../Profile/VerifyBadge'
-import OtpInput from '../Profile/OtpInput'
-import CountdownRing from '../Profile/CountdownRing'
+import ProfileCard from './ProfileCard'
+import FormNotice from './FormNotice'
+import VerifyBadge from './VerifyBadge'
+import OtpInput from './OtpInput'
+import CountdownRing from './CountdownRing'
 import { requestEmailCode, verifyEmailCode } from '../../services/api'
 
 const CODE_LENGTH = 6
 const emptyCode = () => Array.from({ length: CODE_LENGTH }, () => '')
 
-// Staff only: proves the account's email address is a real mailbox the person
-// can read. The code is always sent to the address the account signed up with,
-// so there is nothing to type except the code itself.
+// Staff and citizens: proves the account's email address is a real mailbox the
+// person can read. The code is always sent to the address the account signed
+// up with, so there is nothing to type except the code itself. For a citizen it
+// is optional and never blocks anything; for staff the setup waits for it.
 //   ask   -> a button that sends the code
 //   code  -> six boxes, Verify and a resend button with a countdown
 //   done  -> the verified address (also shown at once for an already verified account)
@@ -120,7 +121,7 @@ export default function EmailCard({ profile, onDirtyChange, announce, note }) {
 
   return (
     <ProfileCard
-      id="staff-email-check"
+      id="profile-email"
       title="Email verification"
       intro="We check that this address is yours with a one-time code."
       badge={<VerifyBadge status={verified ? 'verified' : 'not-verified'} />}
@@ -158,7 +159,7 @@ export default function EmailCard({ profile, onDirtyChange, announce, note }) {
               {`We sent a ${CODE_LENGTH}-digit code to ${profile.email}. It can take a minute to arrive, so check your spam folder too.`}
             </FormNotice>
             <div className="flex flex-col gap-2">
-              <p id="staff-email-otp-label" className="font-body text-sm font-semibold text-navy">
+              <p id="email-otp-label" className="font-body text-sm font-semibold text-navy">
                 Verification code
               </p>
               <OtpInput
@@ -171,7 +172,7 @@ export default function EmailCard({ profile, onDirtyChange, announce, note }) {
                 invalid={notice?.tone === 'error'}
                 shake={shake}
                 firstRef={firstBoxRef}
-                labelId="staff-email-otp-label"
+                labelId="email-otp-label"
               />
             </div>
             <div className="flex flex-wrap items-center gap-3">
