@@ -11,6 +11,7 @@ import { crossesLevel, levelFor, pointsFor } from '../../utils/points.js'
 import { departmentForCategory } from '../../constants/departments.js'
 import { ROLES } from '../../constants/roles.js'
 import { MESSAGES } from '../../constants/messages/citizen.js'
+import { photoFields } from './severity.hook.js'
 
 const clean = (email) => String(email).trim().toLowerCase()
 
@@ -98,6 +99,9 @@ export async function createReport(email, input) {
 
   const before = await Issue.countDocuments({ reporterEmail: clean(email) })
 
+  // F1: the photo's priority from AI. Never throws: { priority: 'medium' } when AI is off.
+  const ai = await photoFields(photoUrl)
+
   const issue = await Issue.create({
     title,
     category,
@@ -110,7 +114,8 @@ export async function createReport(email, input) {
     division,
     status: 'open',
     verification: 'none',
-    priority: 'medium', // AI severity scoring plugs in here later (one clear hook)
+    priority: 'medium',
+    ...ai, // must come after priority: overrides it when AI scored the photo
     reporterEmail: clean(email),
   })
 

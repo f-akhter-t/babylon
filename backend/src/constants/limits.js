@@ -121,4 +121,24 @@ export const TRANSLATE_LIMITS = Object.freeze({
   // each running copy counts for itself.
   rate: Object.freeze({ windowMs: 60 * 1000, max: 10 }),
 })
+// --- AI: citizen help chat (F4) ---
+export const CHAT_LIMITS = Object.freeze({
+  messageMax: 500,
+  historyMax: 6, // earlier messages the page sends back with each question
+  historyTextMax: 500,
+  replyMax: 800,
+  // The model thinks before it answers and thinking counts against this limit.
+  // Never set it below about 1000: the answer comes back cut or empty (503).
+  maxOutputTokens: 2000,
+  rate: Object.freeze({ windowMs: 60 * 1000, max: 10 }),
+})
 
+// --- AI: department weekly summary (F5) ---
+export const WEEKLY_LIMITS = Object.freeze({
+  days: 7,
+  summaryMax: 400,
+  maxOutputTokens: 2000, // same warning as above
+  // Same counts inside this time: the saved sentence is sent again, Gemini is not asked.
+  cacheMinutes: 60,
+  rate: Object.freeze({ windowMs: 60 * 1000, max: 6 }),
+})
