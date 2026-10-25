@@ -12,6 +12,7 @@
     "seed": "node scripts/seed.js",
     "seed:admin": "node scripts/seed.admin.js",
     "seed:public": "node scripts/seed.public.js",
+    "seed:citizen": "node scripts/seed.citizen.js",
     "token": "node scripts/make-token.js",
     "test": "node --experimental-test-module-mocks --test \"tests/*.test.js\"",
     "test:db": "node scripts/test-db.mjs"
