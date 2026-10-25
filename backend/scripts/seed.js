@@ -5,7 +5,7 @@
 //                  (citizen@, roads@, admin@babylon.test, password "password123")
 //   2. department  6 issues with fixed ids for the department panel
 //   3. admin       fixes waiting, a reopened issue, 40 history issues, identities
-//   (citizen: add its seed here when seed.citizen.js exists.)
+//   4. citizen     2 citizens' reports, votes and notices with fixed ids (c1..., c2...)
 // Rules: it refuses to run in production, and it is safe to run twice (public and
 // department update the same rows, admin removes its own @seed-admin.test rows
 // and adds them again). Rows have fixed ids, so the same record has the same id
@@ -26,6 +26,8 @@ import Identity from '../src/models/identity.model.js'
 import { seedPublic } from './seedPublicData.js'
 import { seedAdmin } from './seedAdminRun.js'
 import { buildDepartmentIssues } from './seedDepartmentData.js'
+import Alert from '../src/models/alert.model.js'
+import { seedCitizen } from './seedCitizenData.js'
 
 if (process.env.NODE_ENV === 'production') {
   console.error('Refusing to seed in production.')
@@ -54,7 +56,8 @@ try {
   const admin = await seedAdmin({ Issue, User, Identity })
   console.log(`  admin:      ${admin.issues} issues, ${admin.identities} identities, ${admin.users} citizens`)
   console.log(`              waiting for the admin: ${admin.waiting} fixes, ${admin.reopened} reopened, ${admin.pending} identities`)
-
+    const citizen = await seedCitizen({ User, Issue, Vote, Alert, hashPassword: (text) => bcrypt.hash(text, 10) })
+  console.log(`  citizen:    ${citizen.issues} reports, ${citizen.votes} votes, ${citizen.alerts} notices`)
   console.log('Sign in with citizen@babylon.test, roads@babylon.test or admin@babylon.test (password123).')
 } finally {
   await mongoose.disconnect()
