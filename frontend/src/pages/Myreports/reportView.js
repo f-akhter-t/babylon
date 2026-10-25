@@ -12,7 +12,9 @@ export function reportStatus(issue) {
   return 'open'
 }
 
-const reportedAt = (issue) => issue.createdAt ?? Date.now() - (issue.daysAgo ?? 0) * DAY
+// createdAt is a number (old mock) or a date text (the server).
+const reportedAt = (issue) =>
+  issue.createdAt ? new Date(issue.createdAt).getTime() : Date.now() - (issue.daysAgo ?? 0) * DAY
 
 export function timeAgo(ts) {
   const mins = Math.floor((Date.now() - ts) / 60000)

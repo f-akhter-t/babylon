@@ -2,15 +2,12 @@
 // Later, each function becomes a fetch() call. Pages will not change,
 // because every function is already async.
 
-import { CATEGORIES, issues as rawIssues, MAP_CENTER } from '../mock/issues'
+import {  issues as rawIssues } from '../mock/issues'
 import {
   ACCOUNTABILITY_PERIODS,
   CATEGORY_DEPARTMENT,
   DEFAULT_PERIOD_WEEKS,
 } from '../utils/departments'
-import { earnPoints } from '../mock/user'
-import { distanceInMeters } from '../utils/geo'
-import { checkReportDivision } from '../utils/divisions'
 import { prepareIdPhoto, UNREADABLE_PHOTO } from '../utils/idPhoto'
 import {
   deleteOtherPhotos,
@@ -27,7 +24,7 @@ import {
 } from './auth'
 import * as staff from './staffApi'
 import { ISSUES_EVENT } from './issuesEvent'
-import { notify, notifyEach, removeForIssue } from './notifications'
+import { notify, notifyEach } from './notifications'
 import {
   checkDetails,
   checkIdPhoto,
@@ -53,16 +50,6 @@ export const LEVELS = [
   { level: 5, name: 'Champion', min: 1000 },
 ]
 
-function getLevel(points) {
-  const current = [...LEVELS].reverse().find((l) => points >= l.min)
-  const next = LEVELS.find((l) => l.min > points)
-  return {
-    level: current.level,
-    role: current.name,
-    nextTierAt: next ? next.min : null, // null = top tier
-  }
-}
-
 // Department comes from the category, decided in one place.
 const withDepartment = (issue) => ({
   ...issue,
@@ -84,14 +71,6 @@ function loadSubmitted() {
     return raw ? JSON.parse(raw) : []
   } catch {
     return []
-  }
-}
-
-function saveSubmitted(list) {
-  try {
-    window.localStorage.setItem(SUBMITTED_KEY, JSON.stringify(list))
-  } catch {
-    // storage full or blocked: the report still shows until the page reloads
   }
 }
 
@@ -286,10 +265,6 @@ function tellReporter(issue, kind, text) {
   if (issue.reporterEmail) notify(issue.reporterEmail, { kind, text, link: reportLink(issue), issueId: issue.id })
 }
 
-function tellDepartment(issue, kind, text, link = '/department') {
-  notifyEach(staffEmails({ role: 'department', department: issue.department }), { kind, text, link, issueId: issue.id })
-}
-
 function tellAdmins(issue, kind, text) {
   notifyEach(staffEmails({ role: 'admin' }), { kind, text, link: '/admin/verify', issueId: issue.id })
 }
@@ -362,14 +337,6 @@ function failLoadsForTesting() {
   if (on) throw new Error('Load failed on purpose (babylon:failLoads).')
 }
 
-function makeTitle(description) {
-  const firstSentence = description.split(/[.!?\n]/)[0].trim()
-  if (!firstSentence) return 'New report'
-  const title =
-    firstSentence.length > 70 ? `${firstSentence.slice(0, 67).trimEnd()}…` : firstSentence
-  return title.charAt(0).toUpperCase() + title.slice(1)
-}
-
 // The reporter's current name, so a name changed on the Profile page
 // shows on their older reports too.
 function present(issue) {
@@ -391,240 +358,10 @@ function rankIssues(list) {
 // getIssues and getIssueById are served by the backend now (publicApi.js,
 // re-exported below).
 
-// A citizen's new report. location is { lat, lng, label, ward, division }.
-// The pin must be inside the division the citizen chose in their profile
-// (checked here again, the way the backend will).
-// reporter is the logged-in account's name (pass session.name). The owner is
-// the logged-in account's email, read here the way a backend reads its login.
-// photoUrl is a (small) data URL of the photo. Severity is a placeholder
-// ('medium') until the AI severity engine exists.
-export async function createIssue({ category, description, photoUrl, location, reporter }) {
-  const divisionProblem = checkReportDivision(citizenDivision(getSession()?.email), location.division)
-  if (divisionProblem) throw new Error(divisionProblem)
-
-  const today = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
-
-  const issue = {
-    id: `new-${Date.now()}`,
-    createdAt: Date.now(), // used for "2 min ago" in the alerts
-    title: makeTitle(description),
-    category,
-    status: 'open',
-    priority: 'medium',
-    verification: 'none',
-    votes: 1,
-    location: location.label,
-    ward: location.ward ?? '',
-    division: location.division,
-    distanceM: Math.round(
-      distanceInMeters(MAP_CENTER, [location.lat, location.lng]),
-    ),
-    lat: location.lat,
-    lng: location.lng,
-    daysAgo: 0,
-    reportedOn: today,
-    sentOn: today,
-    beforeImg: photoUrl,
-    reporter: reporter || 'You',
-    reporterEmail: getSession()?.email ?? null,
-    description,
-  }
-
-  const email = issue.reporterEmail
-  const levelBefore = email ? getLevel(ownReports(email).length * POINTS_PER_REPORT) : null
-
-  submitted.push(issue)
-  saveSubmitted(submitted)
-  all.push(withDepartment(issue))
-
-  // The same POINTS_PER_REPORT as the Report page's toast.
-  tellReporter(issue, 'filed', `Your report "${issue.title}" is filed. You earned ${POINTS_PER_REPORT} points.`)
-  tellDepartment(withDepartment(issue), 'new-report', `A new report is waiting in your department: ${issue.title}.`)
-  if (email) {
-    const levelAfter = getLevel(ownReports(email).length * POINTS_PER_REPORT)
-    if (levelAfter.level > levelBefore.level) {
-      notify(email, { kind: 'level-up', text: `You reached Level ${levelAfter.level}, ${levelAfter.role}.`, link: '/my-reports' })
-    }
-  }
-  notifyIssuesChanged()
-  return issue
-}
-
-// Adds one vote. Returns the new count, or null if the issue cannot be voted on.
-// Votes on the mock issues last until the page reloads.
-export async function upvoteIssue(id) {
-  const issue = all.find((item) => String(item.id) === String(id))
-  if (!issue || issue.status === 'resolved') return null
-  issue.votes += 1
-
-  const saved = submitted.find((item) => String(item.id) === String(id))
-  if (saved) {
-    saved.votes = issue.votes
-    saveSubmitted(submitted)
-  }
-  notifyIssuesChanged()
-  return issue.votes
-}
-
 // ---------- Editing a report ----------
 // The citizen who filed a report may change its title, description, category,
 // photo and pin while it is still Open. Votes, follows and status are never
 // part of an edit. Every rule is checked again here, like a backend would.
-
-export const TITLE_MIN = 5
-export const TITLE_MAX = 70
-const DESCRIPTION_MIN = 10
-const DESCRIPTION_MAX = 500
-const EDIT_CATEGORIES = [...CATEGORIES]
-export const LOCKED_MESSAGE = 'Work has started, so this report is locked.'
-
-function findIssue(id) {
-  return all.find((item) => String(item.id) === String(id))
-}
-
-function editError(code, message) {
-  return Object.assign(new Error(message), { code })
-}
-
-// Another tab may have moved a report on since this page loaded, so the
-// edit checks read its status again from storage.
-function refreshStatus(issue) {
-  const stored = loadSubmitted().find((item) => String(item.id) === String(issue.id))
-  if (!stored) return
-  const saved = submitted.find((item) => String(item.id) === String(issue.id))
-  for (const target of [issue, saved]) {
-    if (!target) continue
-    target.status = stored.status
-    target.priority = stored.priority
-    target.verification = stored.verification
-  }
-}
-
-// The department may have started work in another tab since this page loaded.
-function refreshWorkflow(issue) {
-  const entry = loadWorkflow()[String(issue.id)]
-  if (entry) Object.assign(issue, publicPart(entry))
-}
-
-// 'ok' | 'not-owner' | 'locked'. email is the logged-in citizen's (session.email).
-export function canEditIssue(issue, email) {
-  if (!issue || !email || !isOwnReport(issue, email)) return 'not-owner'
-  return issue.status === 'open' ? 'ok' : 'locked'
-}
-
-// The issue with its latest status, for the Edit page. null if the id is unknown.
-export async function getIssueForEdit(id) {
-  const issue = findIssue(id)
-  if (!issue) return null
-  refreshStatus(issue)
-  refreshWorkflow(issue)
-  return present(issue)
-}
-
-// changes: { title, description, category, photoUrl, location }.
-// photoUrl: a new (small) data URL, or undefined to keep the photo.
-// location: { lat, lng, label, ward, division }, or undefined to keep the pin.
-// A new pin must be inside the citizen's own division.
-// Throws an Error with code 'not-found' | 'forbidden' | 'locked' | 'invalid' | 'storage'.
-export async function updateIssue(id, changes) {
-  await wait()
-  const issue = findIssue(id)
-  if (!issue) throw editError('not-found', 'This issue no longer exists.')
-
-  const session = getSession()
-  if (session?.role !== 'citizen' || !isOwnReport(issue, session.email)) {
-    throw editError('forbidden', 'Only the citizen who reported this issue can edit it.')
-  }
-  refreshStatus(issue)
-  refreshWorkflow(issue)
-  if (issue.status !== 'open') throw editError('locked', LOCKED_MESSAGE)
-
-  const title = (changes.title ?? '').trim()
-  const description = (changes.description ?? '').trim()
-  const { category, photoUrl, location } = changes
-  const valid =
-    title.length >= TITLE_MIN &&
-    title.length <= TITLE_MAX &&
-    description.length >= DESCRIPTION_MIN &&
-    description.length <= DESCRIPTION_MAX &&
-    EDIT_CATEGORIES.includes(category) &&
-    photoUrl !== null &&
-    (!location || (Number.isFinite(location.lat) && Number.isFinite(location.lng)))
-  if (!valid) throw editError('invalid', 'Some details are not valid. Please check the form.')
-  if (location) {
-    const divisionProblem = checkReportDivision(citizenDivision(session.email), location.division)
-    if (divisionProblem) throw editError('invalid', divisionProblem)
-  }
-
-  const key = String(issue.id)
-  const edit = { ...edits[key], title, description, category, editedAt: new Date().toISOString() }
-  if (photoUrl) edit.beforeImg = photoUrl
-  if (location) {
-    Object.assign(edit, {
-      lat: location.lat,
-      lng: location.lng,
-      location: location.label,
-      ward: location.ward ?? '',
-      division: location.division,
-      distanceM: Math.round(distanceInMeters(MAP_CENTER, [location.lat, location.lng])),
-    })
-  }
-
-  try {
-    window.localStorage.setItem(EDITS_KEY, JSON.stringify({ ...edits, [key]: edit }))
-  } catch {
-    throw editError(
-      'storage',
-      'We could not save your changes on this device because its storage is full. Try a smaller photo.',
-    )
-  }
-  edits[key] = edit
-  const index = all.indexOf(issue)
-  all[index] = withDepartment({ ...issue, ...edit })
-  return present(all[index])
-}
-
-// Deletes the logged-in citizen's own report while it is still Open: the
-// same rule as editing. It disappears from the map, the feed, My reports and
-// the points. Saves first, so a failed save changes nothing.
-// Throws an Error with code 'not-found' | 'forbidden' | 'locked' | 'storage'.
-export async function deleteIssue(id, email) {
-  await wait()
-  const key = String(id)
-  deletedIds = loadDeleted()
-  const issue = findIssue(id)
-  if (!issue || deletedIds.includes(key)) throw editError('not-found', 'This issue no longer exists.')
-
-  const session = getSession()
-  const sameAccount = email && session?.email?.toLowerCase() === email.toLowerCase()
-  if (session?.role !== 'citizen' || !sameAccount || !isOwnReport(issue, session.email)) {
-    throw editError('forbidden', 'Only the citizen who reported this issue can delete it.')
-  }
-  refreshStatus(issue)
-  refreshWorkflow(issue)
-  if (canEditIssue(issue, session.email) !== 'ok') throw editError('locked', LOCKED_MESSAGE)
-
-  const nextDeleted = [...deletedIds, key]
-  const nextSubmitted = submitted.filter((item) => String(item.id) !== key)
-  const { [key]: droppedEdit, ...nextEdits } = edits
-  const { [key]: droppedEntry, ...nextWorkflow } = loadWorkflow()
-  void [droppedEdit, droppedEntry]
-  try {
-    window.localStorage.setItem(DELETED_KEY, JSON.stringify(nextDeleted))
-    window.localStorage.setItem(SUBMITTED_KEY, JSON.stringify(nextSubmitted))
-    window.localStorage.setItem(EDITS_KEY, JSON.stringify(nextEdits))
-    window.localStorage.setItem(WORKFLOW_KEY, JSON.stringify(nextWorkflow))
-  } catch {
-    throw editError('storage', 'We could not delete your report because the storage on this device is blocked.')
-  }
-
-  deletedIds = nextDeleted
-  delete edits[key]
-  workflow = nextWorkflow
-  dropFromMemory(key)
-  removeForIssue(key) // every notice about it, for every account
-  notifyIssuesChanged()
-}
 
 // ---------- Home and the public issue pages ----------
 // Served by the backend now (publicApi.js). Pages still import them from here.
@@ -704,197 +441,6 @@ export {
 // Everything here belongs to the logged-in account only, found by its email
 // (pass session.email). No email = no data. Points = 60 per report this account filed.
 
-function ageMs(issue) {
-  return issue.createdAt ? Date.now() - issue.createdAt : (issue.daysAgo ?? 0) * 86400000
-}
-
-function timeAgo(issue) {
-  const mins = Math.floor(ageMs(issue) / 60000)
-  if (mins < 1) return 'Just now'
-  if (mins < 60) return `${mins} min ago`
-  const hours = Math.floor(mins / 60)
-  if (hours < 24) return `${hours} hour${hours === 1 ? '' : 's'} ago`
-  const days = Math.floor(hours / 24)
-  return days === 1 ? 'Yesterday' : `${days} days ago`
-}
-
-// Reports saved before reporterEmail existed only have the reporter's name.
-function isOwnReport(issue, email) {
-  if (issue.reporterEmail) return issue.reporterEmail.toLowerCase() === email.toLowerCase()
-  return String(issue.id).startsWith('new-') && issue.reporter === getAccountName(email)
-}
-
-function ownReports(email) {
-  return all.filter((issue) => isOwnReport(issue, email)).map(present)
-}
-
-// The citizen's own reports, newest first (My reports page). Only for the
-// logged-in account itself, with the details only the reporter may see.
-export async function getMyReports(email) {
-  if (!email || getSession()?.email?.toLowerCase() !== email.toLowerCase()) return []
-  return ownReports(email)
-    .sort((a, b) => ageMs(a) - ageMs(b))
-    .map(ownerDetails)
-}
-
-// For the citizen who filed the report only: every time the admin sent the
-// department's fix back, with the reason (sentBackHistory), and whether it is
-// sent back right now. Other citizens, guests and staff get the issue as it is.
-function ownerDetails(issue) {
-  const session = getSession()
-  if (session?.role !== 'citizen' || !isOwnReport(issue, session.email)) return issue
-  const entry = workflow[String(issue.id)] ?? {}
-  // Reports sent back before the history existed only have the current reason.
-  const history = entry.sentBackHistory ?? (entry.sentBack ? [entry.sentBack] : [])
-  return { ...issue, sentBackHistory: history, sentBackNow: Boolean(entry.sentBack) }
-}
-
-export async function getCurrentUser(email) {
-  if (!email) return null
-  const reports = ownReports(email).length
-  const points = reports * POINTS_PER_REPORT
-  return { name: getAccountName(email), reports, points, ...getLevel(points) }
-}
-
-export async function getEarnPoints() {
-  return earnPoints
-}
-
-// One alert describing the latest state of one of the user's own reports.
-function alertForIssue(issue) {
-  const base = { id: `own-${issue.id}`, issueId: issue.id, time: timeAgo(issue), unread: false }
-
-  if (issue.priority === 'reopened' || issue.verification === 'reopened') {
-    return {
-      ...base,
-      group: 'reopened',
-      type: 'reopened',
-      title: 'A fixed problem came back',
-      message: `${issue.title} was reopened and sent to the admin.`,
-    }
-  }
-  if (issue.status === 'resolved') {
-    return {
-      ...base,
-      group: 'status',
-      type: 'resolved',
-      title: 'Resolved and verified',
-      message: `${issue.title}. The admin checked the after-photo.`,
-    }
-  }
-  if (issue.status === 'in-progress') {
-    return {
-      ...base,
-      group: 'status',
-      type: 'status',
-      title: 'Your report is now In progress',
-      message: `${issue.title}. A repair crew is scheduled.`,
-    }
-  }
-  return {
-    ...base,
-    group: 'status',
-    type: 'status',
-    title: `Your report was sent to ${issue.department ?? 'the department'}`,
-    message: `${issue.title}. Waiting for work to start.`,
-  }
-}
-
-// "N neighbours upvoted your report". Votes start at 1 (the reporter's own vote).
-function alertForVotes(issue) {
-  const others = (issue.votes ?? 1) - 1
-  if (others < 1) return null
-  return {
-    id: `votes-${issue.id}`,
-    issueId: issue.id,
-    group: 'status',
-    type: 'upvote',
-    title: `${others} neighbour${others === 1 ? '' : 's'} upvoted your report`,
-    message: `${issue.title} is getting attention.`,
-    time: timeAgo(issue),
-    unread: false,
-  }
-}
-
-// Open issues by other people, same category as one of the user's reports, within 500 m.
-async function getNearbyAlerts(email) {
-  const mine = ownReports(email)
-  const seen = new Set()
-  const result = []
-
-  for (const own of mine) {
-    for (const other of all) {
-      if (
-        isOwnReport(other, email) ||
-        other.status !== 'open' ||
-        other.category !== own.category ||
-        seen.has(other.id)
-      ) {
-        continue
-      }
-      const meters = Math.round(distanceInMeters([own.lat, own.lng], [other.lat, other.lng]))
-      if (meters > 500) continue
-      seen.add(other.id)
-      result.push({
-        id: `nearby-${other.id}`,
-        group: 'nearby',
-        type: 'nearby',
-        title: 'Similar report nearby',
-        message: `${other.title}, ${meters} m from you. Upvote instead of reporting again.`,
-        issueId: other.id,
-        time: timeAgo(other),
-        unread: false,
-      })
-    }
-  }
-  return result.slice(0, 3)
-}
-
-// An alert counts as read once the citizen opened it. Kept per account in this browser.
-const SEEN_KEY = 'babylon.seenAlerts'
-// A new title (new status or new votes) makes the alert unread again.
-const alertKey = (alert) => `${alert.id}|${alert.title}`
-
-function readSeen(email) {
-  try {
-    const store = JSON.parse(window.localStorage.getItem(SEEN_KEY))
-    return new Set(store?.[email.toLowerCase()] ?? [])
-  } catch {
-    return new Set()
-  }
-}
-
-export function markAlertsSeen(email, alerts) {
-  if (!email) return
-  try {
-    const store = JSON.parse(window.localStorage.getItem(SEEN_KEY)) ?? {}
-    const key = email.toLowerCase()
-    store[key] = [...new Set([...(store[key] ?? []), ...alerts.map(alertKey)])]
-    window.localStorage.setItem(SEEN_KEY, JSON.stringify(store))
-  } catch {
-    // storage blocked: alerts just stay unread
-  }
-  notifyIssuesChanged()
-}
-
-// group: 'All' | 'status' | 'nearby' | 'reopened'
-export async function getAlerts(group = 'All', email) {
-  if (!email) return []
-  const own = ownReports(email)
-    .sort((a, b) => ageMs(a) - ageMs(b))
-    .flatMap((issue) => [alertForIssue(issue), alertForVotes(issue)].filter(Boolean))
-  const nearby = await getNearbyAlerts(email)
-  const seen = readSeen(email)
-  return [...own, ...nearby]
-    .filter((alert) => group === 'All' || alert.group === group)
-    .map((alert) => ({ ...alert, unread: !seen.has(alertKey(alert)) }))
-}
-
-export async function getUnreadAlertCount(email) {
-  if (!email) return 0
-  return (await getAlerts('All', email)).filter((alert) => alert.unread).length
-}
-
 // ---------- Citizen profile ----------
 // Kept in this browser per account (by email) until the backend exists.
 // Privacy rule, even in the mock: the full NID number is never stored. Only
@@ -937,12 +483,6 @@ function writeProfile(email, changes) {
     throw new Error('We could not save on this device. Please try again.')
   }
   window.dispatchEvent(new Event(PROFILE_EVENT))
-}
-
-// The division a citizen chose in their profile, or '' if none yet.
-function citizenDivision(email) {
-  if (!email) return ''
-  return readProfiles()[email.toLowerCase()]?.division ?? ''
 }
 
 function buildProfile(email) {
@@ -1232,3 +772,6 @@ export const ALREADY_REVIEWED = 'This submission was already reviewed.'
 export const NO_PHOTO_TO_APPROVE =
   'No card photo was saved with this submission, so it cannot be approved. Reject it and ask the citizen to send it again.'
   'The card photo could not be loaded on this device, so this submission cannot be approved yet. Please try again.'
+
+// The citizen's calls to the backend (reports, votes, me, points).
+export * from './citizenApi.js'
