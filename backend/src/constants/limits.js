@@ -39,6 +39,13 @@ export const PHONE_CODE_LIMITS = Object.freeze({
   lifeMinutes: 10,
 })
 
+// Citizen identity photo. Same cap as the frontend (ID_PHOTO_MAX_BYTES).
+// The frontend always sends a JPEG; PNG and WebP are accepted too.
+export const IDENTITY_LIMITS = Object.freeze({
+  photoMaxBytes: 1.5 * 1024 * 1024,
+  photoTypes: ['image/jpeg', 'image/png', 'image/webp'],
+})
+
 // --- alerts (shared by citizen, department and admin) ---
 export const ALERT_LIMITS = Object.freeze({
   // Newest alerts kept per account; older ones are deleted when a new one arrives.

@@ -1,0 +1,706 @@
+{
+  "info": {
+    "name": "Babylon citizen profile",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Hand-sent, no scripts. The expected result is in each request Description."
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:5000/api"
+    },
+    {
+      "key": "citizenToken",
+      "value": ""
+    },
+    {
+      "key": "deptToken",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "01 Get profile",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{citizenToken}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/citizen/profile",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "citizen",
+            "profile"
+          ]
+        },
+        "description": "Seed first: node scripts/seed.department.js. Token: npm run token --silent -- citizen citizen@babylon.test.\nExpect 200. data has name, email, role \"citizen\", department null, phone, phoneVerified, address, division, identity {status \"not-submitted\", nidLast4 \"\", submittedAt null, reason \"\"}, isVerified false, jobTitle, employeeId, onboarded."
+      }
+    },
+    {
+      "name": "02 Get profile, no token",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/citizen/profile",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "citizen",
+            "profile"
+          ]
+        },
+        "description": "Expect 401, code \"unauthorized\"."
+      }
+    },
+    {
+      "name": "03 Get profile, department token",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{deptToken}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/citizen/profile",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "citizen",
+            "profile"
+          ]
+        },
+        "description": "Expect 403, code \"forbidden\". Use a department token."
+      }
+    },
+    {
+      "name": "04 Update profile",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{citizenToken}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/citizen/profile",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "citizen",
+            "profile"
+          ]
+        },
+        "description": "Expect 200 and the saved profile. Phone and email in the body are ignored.",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Demo Citizen\",\n  \"address\": \"12 Lake Road\",\n  \"division\": \"Dhaka\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "05 Update profile, empty body",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{citizenToken}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/citizen/profile",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "citizen",
+            "profile"
+          ]
+        },
+        "description": "Expect 400, code \"invalid\". Nothing changes.",
+        "body": {
+          "mode": "raw",
+          "raw": "{}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "06 Phone code, new number",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{citizenToken}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/citizen/profile/phone-code",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "citizen",
+            "profile",
+            "phone-code"
+          ]
+        },
+        "description": "Expect 200. data {phone \"01812345678\", resendIn 30}. The phone is not saved yet.",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"phone\": \"+8801812345678\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "07 Phone code, resend at once",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{citizenToken}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/citizen/profile/phone-code",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "citizen",
+            "profile",
+            "phone-code"
+          ]
+        },
+        "description": "Send right after request 06. Expect 429, code \"too-many-requests\", field \"phone\".",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"phone\": \"+8801812345678\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "08 Phone code, already verified number",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{citizenToken}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/citizen/profile/phone-code",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "citizen",
+            "profile",
+            "phone-code"
+          ]
+        },
+        "description": "Expect 400, code \"invalid\", field \"phone\", message \"This number is already verified.\" Works on a fresh seed.",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"phone\": \"01712345678\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "09 Phone code, bad number",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{citizenToken}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/citizen/profile/phone-code",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "citizen",
+            "profile",
+            "phone-code"
+          ]
+        },
+        "description": "Expect 400, code \"invalid\", field \"phone\".",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"phone\": \"123\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "10 Phone code, no token",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/citizen/profile/phone-code",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "citizen",
+            "profile",
+            "phone-code"
+          ]
+        },
+        "description": "Expect 401.",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"phone\": \"01812345678\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "11 Phone verify, right code",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{citizenToken}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/citizen/profile/phone-verify",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "citizen",
+            "profile",
+            "phone-verify"
+          ]
+        },
+        "description": "Send after request 06 (dev code mode). Expect 200. data.phone \"01812345678\", phoneVerified true.",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"phone\": \"01812345678\",\n  \"code\": \"123456\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "12 Phone verify, wrong code",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{citizenToken}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/citizen/profile/phone-verify",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "citizen",
+            "profile",
+            "phone-verify"
+          ]
+        },
+        "description": "Send after a fresh request 06. Expect 400, code \"invalid\", field \"code\", message shows tries left. Send it 3 times in a row: the 3rd gives 423, code \"locked\".",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"phone\": \"01812345678\",\n  \"code\": \"000000\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "13 Phone verify, bad code format",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{citizenToken}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/citizen/profile/phone-verify",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "citizen",
+            "profile",
+            "phone-verify"
+          ]
+        },
+        "description": "Expect 400, code \"invalid\", field \"code\".",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"phone\": \"01812345678\",\n  \"code\": \"abc\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "14 Identity, valid",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{citizenToken}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/citizen/profile/identity",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "citizen",
+            "profile",
+            "identity"
+          ]
+        },
+        "description": "Fresh seed. Expect 200. data.identity {status \"pending\", nidLast4 \"4821\", submittedAt a date}. No photo in the answer.",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nidLast4\": \"4821\",\n  \"photo\": \"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "15 Identity, second submit",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{citizenToken}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/citizen/profile/identity",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "citizen",
+            "profile",
+            "identity"
+          ]
+        },
+        "description": "Send after request 14. Expect 409, code \"conflict\".",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nidLast4\": \"4821\",\n  \"photo\": \"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "16 Identity, bad digits",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{citizenToken}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/citizen/profile/identity",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "citizen",
+            "profile",
+            "identity"
+          ]
+        },
+        "description": "Expect 400, code \"invalid\", field \"nidLast4\".",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nidLast4\": \"12\",\n  \"photo\": \"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "17 Identity, not an image",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{citizenToken}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/citizen/profile/identity",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "citizen",
+            "profile",
+            "identity"
+          ]
+        },
+        "description": "Expect 400, code \"invalid\", field \"photo\".",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nidLast4\": \"4821\",\n  \"photo\": \"data:text/plain;base64,aGVsbG8=\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "18 Identity, no photo",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{citizenToken}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/citizen/profile/identity",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "citizen",
+            "profile",
+            "identity"
+          ]
+        },
+        "description": "Expect 400, code \"invalid\", field \"photo\".",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nidLast4\": \"4821\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "19 Identity, no token",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/citizen/profile/identity",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "citizen",
+            "profile",
+            "identity"
+          ]
+        },
+        "description": "Expect 401.",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nidLast4\": \"4821\",\n  \"photo\": \"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "20 Identity, department token",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{deptToken}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/citizen/profile/identity",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "citizen",
+            "profile",
+            "identity"
+          ]
+        },
+        "description": "Expect 403, code \"forbidden\".",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nidLast4\": \"4821\",\n  \"photo\": \"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    }
+  ]
+}
