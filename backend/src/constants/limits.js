@@ -157,3 +157,15 @@ export const WEEKLY_LIMITS = Object.freeze({
   cacheMinutes: 60,
   rate: Object.freeze({ windowMs: 60 * 1000, max: 6 }),
 })
+
+// --- AI: duplicate photo check (F2) ---
+export const DUPLICATE_LIMITS = Object.freeze({
+  // Photos at or above this similarity (0 to 1) count as a match.
+  // A first guess. Tune it on real photos after the backfill.
+  minSimilarity: 0.85,
+  maxMatches: 3,
+  // Newest unresolved issues in the division whose embeddings are compared.
+  // The cap keeps the query and the memory small.
+  candidateMax: 200,
+  rate: Object.freeze({ windowMs: 60 * 1000, max: 10 }),
+})

@@ -10,6 +10,7 @@ import { TRANSLATE_MESSAGES } from './translate.js'
 import { CHAT_MESSAGES } from './chat.js'
 import { REOPEN_MESSAGES } from './reopen.js'
 import { WEEKLY_MESSAGES } from './weekly.js'
+import { DUPLICATE_MESSAGES } from './duplicates.js'
 
 export const MSG = Object.freeze({
   ...ADMIN_MESSAGES,
@@ -22,6 +23,7 @@ export const MSG = Object.freeze({
   ...CHAT_MESSAGES,
   ...REOPEN_MESSAGES,
   ...WEEKLY_MESSAGES,
+  ...DUPLICATE_MESSAGES,
 })
 
 export { COMMON } from './common.js'
