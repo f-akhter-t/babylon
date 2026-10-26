@@ -161,7 +161,7 @@ export const WEEKLY_LIMITS = Object.freeze({
 // --- AI: duplicate photo check (F2) ---
 export const DUPLICATE_LIMITS = Object.freeze({
   // Photos at or above this similarity (0 to 1) count as a match.
-    // Measured with the q8 model: same photo 1.0, a different pothole 0.745, an
+  // Measured with the q8 model: same photo 1.0, a different pothole 0.745, an
   // unrelated photo (bins) 0.641. Not tested on a re-take of the same spot.
   minSimilarity: 0.85,
   maxMatches: 3,
