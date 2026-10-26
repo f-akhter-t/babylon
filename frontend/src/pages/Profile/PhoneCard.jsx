@@ -7,10 +7,11 @@ import VerifyBadge from './VerifyBadge'
 import OtpInput from './OtpInput'
 import CountdownRing from './CountdownRing'
 import { enter } from '../../components/ui/motion'
-import { DEMO_OTP, OTP_RESEND_SECONDS, requestOtp, verifyOtp } from '../../services/api'
+import { requestOtp, verifyOtp } from '../../services/api'
 import { checkPhone, normalizePhone } from '../../utils/profileRules'
 
-const emptyCode = () => Array.from({ length: DEMO_OTP.length }, () => '')
+const OTP_LENGTH = 6
+const emptyCode = () => Array.from({ length: OTP_LENGTH }, () => '')
 
 // A check mark that draws itself, shown right after a number is verified.
 function DrawnCheck() {
@@ -49,6 +50,7 @@ export default function PhoneCard({
   const [digits, setDigits] = useState(emptyCode)
   const [shake, setShake] = useState(0)
   const [locked, setLocked] = useState(false)
+  const [resendTotal, setResendTotal] = useState(30)
   const [busy, setBusy] = useState('') // '' | 'sending' | 'verifying'
   const [notice, setNotice] = useState(null) // { tone, text }
   // The number just verified, shown until the profile reloads with it.
@@ -94,6 +96,7 @@ export default function PhoneCard({
       setSentTo(result.phone)
       setNow(sentAt)
       setResendAt(sentAt + result.resendIn * 1000)
+      setResendTotal(result.resendIn)
       setDigits(emptyCode())
       setLocked(false)
       setStep('code')
@@ -137,14 +140,14 @@ export default function PhoneCard({
         announce(text, { toast: true })
         setFocusRequest({ target: 'verified', n: Date.now() })
       } else if (result.status === 'wrong') {
-        wrongCode(
-          result.attemptsLeft === 1
-            ? 'That code is not right. You have 1 try left.'
-            : `That code is not right. You have ${result.attemptsLeft} tries left.`,
-          false,
-        )
+        const text =
+          result.message ??
+          (typeof result.attemptsLeft === 'number'
+            ? `That code is not right. You have ${result.attemptsLeft} ${result.attemptsLeft === 1 ? 'try' : 'tries'} left.`
+            : 'That code is not right. Please try again.')
+        wrongCode(text, false)
       } else if (result.status === 'locked') {
-        wrongCode('Too many wrong codes. Ask for a new code to try again.', true)
+        wrongCode(result.message ?? 'Too many wrong codes. Ask for a new code to try again.', true)
       } else {
         wrongCode('This code has expired. Ask for a new code.', true)
       }
@@ -244,7 +247,7 @@ export default function PhoneCard({
         {step === 'code' && (
           <form onSubmit={handleVerify} noValidate className="flex flex-col gap-4">
             <FormNotice tone="info">
-              {`We sent a 6-digit code to ${sentTo}. This is a demo, so nothing is sent: use ${DEMO_OTP}.`}
+              {`We sent a 6-digit code to ${sentTo}. Type it in the boxes.`}
             </FormNotice>
             <div className="flex flex-col gap-2">
               <p id="profile-otp-label" className="font-body text-sm font-semibold text-navy">
@@ -273,7 +276,7 @@ export default function PhoneCard({
                 disabled={secondsLeft > 0 || Boolean(busy)}
               >
                 {secondsLeft > 0 && (
-                  <CountdownRing secondsLeft={secondsLeft} total={OTP_RESEND_SECONDS} />
+                  <CountdownRing secondsLeft={secondsLeft} total={resendTotal} />
                 )}
                 {busy === 'sending' ? 'Sending…' : resendLabel}
               </Button>

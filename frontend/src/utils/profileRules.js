@@ -8,7 +8,7 @@ export const ADDRESS_MAX = 120
 export const NID_LENGTHS = [10, 13, 17]
 export const MAX_ID_PHOTO_MB = 5
 
-import { checkDivision } from './divisions'
+import { checkDivision } from './divisions.js'
 
 export function checkName(value) {
   const name = value.trim()

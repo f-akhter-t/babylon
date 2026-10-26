@@ -1,37 +1,27 @@
 // Every page gets its data from here. Now it reads src/mock/.
 // Later, each function becomes a fetch() call. Pages will not change,
 // because every function is already async.
-
-import {  issues as rawIssues } from '../mock/issues'
+import * as citizen from './profileApi'
+import { PROFILE_EVENT } from './profileApi'
+import { issues as rawIssues } from '../mock/issues'
 import {
   ACCOUNTABILITY_PERIODS,
   CATEGORY_DEPARTMENT,
   DEFAULT_PERIOD_WEEKS,
 } from '../utils/departments'
-import { prepareIdPhoto, UNREADABLE_PHOTO } from '../utils/idPhoto'
+import { UNREADABLE_PHOTO } from '../utils/idPhoto'
 import {
-  deleteOtherPhotos,
-  deletePhoto,
-  savePhoto,
-} from './identityPhotos'
-import {
-  getAccount,
-  getAccountName,
   getSession,
-  renameAccount,
   updateSession,
 } from './auth'
 import * as staff from './staffApi'
 import * as emailCheck from './emailCheckApi'
 import { ISSUES_EVENT } from './issuesEvent'
 import {
-  checkDetails,
   checkIdPhoto,
   checkJobTitle,
   checkName,
-  checkNid,
   checkPhone,
-  normalizeNid,
   normalizePhone,
 } from '../utils/profileRules'
 
@@ -266,69 +256,11 @@ export { loadDepartmentPanel, startWork, submitForVerification } from './departm
 // (pass session.email). No email = no data. Points = 60 per report this account filed.
 
 // ---------- Citizen profile ----------
-// Kept in this browser per account (by email) until the backend exists.
-// Privacy rule, even in the mock: the full NID number is never stored. Only
-// its last 4 digits and the review status are kept here. The NID card photo
-// is kept only while the submission is Pending, in its own store
-// (services/identityPhotos.js, never in this profile), and is deleted when
-// the admin approves or rejects, or replaced when the citizen sends again.
-//
-// identity.status: 'not-submitted' | 'pending' | 'verified' | 'rejected'
-// A citizen counts as Verified once identity.status is 'verified'.
 
-const PROFILES_KEY = 'babylon.profiles'
-export const PROFILE_EVENT = 'babylon:profile' // fired on window after every change
+export { PROFILE_EVENT }
 
-export const DEMO_OTP = '123456' // nothing is really sent, so the code is fixed
-export const OTP_RESEND_SECONDS = 30
-export const OTP_ATTEMPTS = 3
-const OTP_VALID_MS = 10 * 60 * 1000
 
-const EMPTY_IDENTITY = { status: 'not-submitted', nidLast4: '', submittedAt: null, reason: '' }
 
-// A short pause, so loading and saving states show like they would online.
-const wait = (ms = 500) => new Promise((resolve) => setTimeout(resolve, ms))
-
-function readProfiles() {
-  try {
-    return JSON.parse(window.localStorage.getItem(PROFILES_KEY)) ?? {}
-  } catch {
-    return {}
-  }
-}
-
-function writeProfile(email, changes) {
-  const key = email.toLowerCase()
-  const profiles = readProfiles()
-  profiles[key] = { ...profiles[key], ...changes }
-  try {
-    window.localStorage.setItem(PROFILES_KEY, JSON.stringify(profiles))
-  } catch {
-    throw new Error('We could not save on this device. Please try again.')
-  }
-  window.dispatchEvent(new Event(PROFILE_EVENT))
-}
-
-function buildProfile(email) {
-  const key = email.toLowerCase()
-  const stored = readProfiles()[key] ?? {}
-  const identity = { ...EMPTY_IDENTITY, ...stored.identity }
-  const account = getAccount(email)
-  return {
-    email,
-    name: getAccountName(email) ?? '',
-    role: account?.role ?? 'citizen',
-    department: account?.department ?? null,
-    address: stored.address ?? '',
-    division: stored.division ?? '',
-    phone: stored.phone ?? '', // only set once the number is verified
-    phoneVerified: Boolean(stored.phone),
-    emailVerified: Boolean(stored.emailVerified), // set by the server's email check (see requestEmailCode)
-    identity,
-    isVerified: identity.status === 'verified',
-    onboarded: true, // only staff have a setup to finish (see the staff section)
-  }
-}
 
 // Department and admin accounts live on the server now (staffApi.js); citizens
 // are still the mock above until the citizen profile is swapped.
@@ -343,21 +275,14 @@ const profileChanged = () => window.dispatchEvent(new Event(PROFILE_EVENT))
 export async function getProfile(email) {
   if (!email) return null
   if (isStaff()) return staff.getStaffProfile()
-  await wait(300)
-  return buildProfile(email)
+  return citizen.getProfile()
 }
 
 // details: { name, address, division }. Checked again here, like a backend would.
 export async function saveProfile(email, details) {
-  await wait()
-  const errors = checkDetails(details)
-  if (Object.values(errors).some(Boolean)) {
-    throw new Error('Some details are not valid. Please check the form.')
-  }
-  const name = details.name.trim()
-  if (name !== getAccountName(email)) renameAccount(email, name)
-  writeProfile(email, { address: details.address.trim(), division: details.division })
-  return buildProfile(email)
+  const profile = await citizen.saveProfile(details)
+  if (profile?.name) updateSession({ name: profile.name })
+  return profile
 }
 
 // ---------- Staff profiles ----------
@@ -412,9 +337,7 @@ export async function verifyEmployeeId(email, value) {
 // -> { status: 'sent', email, resendIn } | { status: 'verified' }; throws the
 // server's whole-sentence message otherwise.
 function rememberEmailVerified() {
-  const email = getSession()?.email
-  if (isStaff() || !email) profileChanged()
-  else writeProfile(email, { emailVerified: true }) // also fires the profile event
+  profileChanged()
 }
 
 export async function requestEmailCode() {
@@ -497,8 +420,6 @@ export async function completeOnboarding() {
   return user
 }
 
-// Phone check with a one-time code. Held in memory, like a server would.
-const otps = {}
 
 // The number a staff member last asked a code for, kept until it is verified
 // (the server needs it again with the code).
@@ -512,20 +433,7 @@ export async function requestOtp(email, phoneInput) {
     staffPhones[email.toLowerCase()] = sent.phone
     return sent
   }
-  await wait()
-  if (checkPhone(phoneInput)) throw new Error('Please enter a valid mobile number first.')
-  const phone = normalizePhone(phoneInput)
-  const key = email.toLowerCase()
-
-  const previous = otps[key]
-  const secondsSince = previous ? (Date.now() - previous.sentAt) / 1000 : Infinity
-  if (previous?.phone === phone && secondsSince < OTP_RESEND_SECONDS) {
-    const left = Math.ceil(OTP_RESEND_SECONDS - secondsSince)
-    throw new Error(`Please wait ${left} seconds before asking for a new code.`)
-  }
-
-  otps[key] = { phone, sentAt: Date.now(), attemptsLeft: OTP_ATTEMPTS }
-  return { phone, resendIn: OTP_RESEND_SECONDS }
+  return citizen.requestOtp(phoneInput)
 }
 
 // Returns { status: 'verified', profile } | { status: 'wrong', attemptsLeft }
@@ -541,33 +449,7 @@ export async function verifyOtp(email, code) {
     }
     return result
   }
-  await wait()
-  const key = email.toLowerCase()
-  const otp = otps[key]
-  if (!otp || Date.now() - otp.sentAt > OTP_VALID_MS) return { status: 'expired' }
-  if (otp.attemptsLeft <= 0) return { status: 'locked' }
-
-  if (code.trim() !== DEMO_OTP) {
-    otp.attemptsLeft -= 1
-    return otp.attemptsLeft > 0
-      ? { status: 'wrong', attemptsLeft: otp.attemptsLeft }
-      : { status: 'locked' }
-  }
-
-  delete otps[key]
-  writeProfile(email, { phone: otp.phone })
-  return { status: 'verified', profile: buildProfile(email) }
-}
-
-const ALREADY_SUBMITTED = 'Your identity is already submitted.'
-const PHOTO_STORAGE_BLOCKED =
-  'We could not keep your card photo on this device, so your identity was not sent. Private windows and some browser settings block site storage. Please allow it and try again.'
-const PHOTO_STORAGE_FULL =
-  'This device has no space left for your card photo, so your identity was not sent. Free some space and try again.'
-
-function identitySent(email) {
-  const { status } = buildProfile(email).identity
-  return status === 'pending' || status === 'verified'
+  return citizen.verifyOtp(code)
 }
 
 // nid is the full number and photo is a File. The full number is never kept:
@@ -575,42 +457,8 @@ function identitySent(email) {
 // in its own store FIRST; only then does the profile say Pending (and the
 // profile event fire), so a Pending submission always has its photo.
 // Throws a whole-sentence message; nothing changes on the profile then.
-export async function submitIdentity(email, { nid, photo }) {
-  await wait(700)
-  if (checkNid(nid) || checkIdPhoto(photo)) {
-    throw new Error('Please check your NID number and photo.')
-  }
-  if (identitySent(email)) throw new Error(ALREADY_SUBMITTED)
-
-  const blob = await prepareIdPhoto(photo)
-  const submittedAt = new Date().toISOString()
-  try {
-    await savePhoto(email, submittedAt, blob)
-  } catch (err) {
-    throw new Error(err.code === 'storage-full' ? PHOTO_STORAGE_FULL : PHOTO_STORAGE_BLOCKED, {
-      cause: err,
-    })
-  }
-
-  try {
-    if (identitySent(email)) throw new Error(ALREADY_SUBMITTED) // sent from another tab meanwhile
-    writeProfile(email, {
-      identity: {
-        status: 'pending',
-        nidLast4: normalizeNid(nid).slice(-4),
-        submittedAt,
-        reason: '',
-      },
-    })
-  } catch (err) {
-    // Not Pending, so the photo must not stay. If this delete fails too, the
-    // stale-photo cleanup removes it when the admin queue next loads.
-    await deletePhoto(email, submittedAt).catch(() => { })
-    throw err
-  }
-  // A new submission replaces the photo of any earlier one.
-  await deleteOtherPhotos(email, submittedAt).catch(() => { })
-  return buildProfile(email)
+export async function submitIdentity(email, details) {
+  return citizen.submitIdentity(details)
 }
 
 // ---------- Admin: identity checks ----------
@@ -625,7 +473,7 @@ export async function submitIdentity(email, { nid, photo }) {
 export const ALREADY_REVIEWED = 'This submission was already reviewed.'
 export const NO_PHOTO_TO_APPROVE =
   'No card photo was saved with this submission, so it cannot be approved. Reject it and ask the citizen to send it again.'
-  'The card photo could not be loaded on this device, so this submission cannot be approved yet. Please try again.'
+'The card photo could not be loaded on this device, so this submission cannot be approved yet. Please try again.'
 
 // The citizen's calls to the backend (reports, votes, me, points).
 export * from './citizenApi.js'
