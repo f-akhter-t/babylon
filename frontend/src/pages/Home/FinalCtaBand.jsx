@@ -2,10 +2,12 @@ import Button from '../../components/ui/Button'
 import Reveal from '../../components/ui/Reveal'
 import StaircaseIcon from '../../components/ui/StaircaseIcon'
 import { PlusIcon, ArrowRightIcon, CheckIcon } from './HomeIcons'
+import { useT } from '../../i18n/useLanguage'
 
 const perks = ['Takes about 30 seconds', 'No account needed to browse', 'Photo proof when it is fixed']
 
 export default function FinalCtaBand() {
+  const t = useT()
   return (
     <section className="relative isolate overflow-hidden bg-navy">
       <img
@@ -24,19 +26,19 @@ export default function FinalCtaBand() {
           <div className="max-w-[780px]">
             <StaircaseIcon level={3} className="h-9 w-10 text-brand" />
             <h2 className="mt-5 font-heading text-4xl font-extrabold leading-[1.02] tracking-[-0.03em] text-mint md:text-6xl">
-              See a problem?
-              <span className="block text-brand">Report it in 30 seconds.</span>
+              {t('See a problem?')}
+              <span className="block text-brand">{t('Report it in 30 seconds.')}</span>
             </h2>
             <p className="mt-4 max-w-[480px] text-lg leading-normal text-page">
-              Snap a photo, drop a pin, pick a category. We send it to the right department.
+              {t('Snap a photo, drop a pin, pick a category. We send it to the right department.')}
             </p>
 
             <div className="mt-7 flex flex-wrap gap-3.5">
               <Button variant="brand" size="lg" to="/report">
-                <PlusIcon className="size-5" /> Report an issue
+                <PlusIcon className="size-5" /> {t('Report an issue')}
               </Button>
               <Button variant="outline-light" size="lg" to="/map">
-                Explore the map <ArrowRightIcon className="size-[18px]" />
+                {t('Explore the map')} <ArrowRightIcon className="size-[18px]" />
               </Button>
             </div>
 
@@ -44,7 +46,7 @@ export default function FinalCtaBand() {
               {perks.map((perk) => (
                 <li key={perk} className="flex items-center gap-2">
                   <CheckIcon className="size-4 text-brand" />
-                  {perk}
+                  {t(perk)}
                 </li>
               ))}
             </ul>

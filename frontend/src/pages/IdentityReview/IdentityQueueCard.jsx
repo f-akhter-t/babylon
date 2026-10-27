@@ -1,20 +1,24 @@
 import clsx from 'clsx'
-import { formatDate } from '../../utils/format'
+import { useFormat } from '../../i18n/useFormat'
+import { useT, useNumber } from '../../i18n/useLanguage'
 
 // "•••• 4821". Only the last 4 digits are ever known, so the length is not shown.
 export function MaskedNid({ last4, className }) {
+  const t = useT()
+  const num = useNumber()
   return (
     <span className={className}>
-      <span aria-hidden="true">{`•••• ${last4}`}</span>
-      <span className="sr-only">{`NID ending in ${last4}`}</span>
+      <span aria-hidden="true">{`•••• ${num(last4)}`}</span>
+      <span className="sr-only">{t('NID ending in {last4}', { last4 })}</span>
     </span>
   )
 }
 
 export function SampleTag() {
+  const t = useT()
   return (
     <span className="rounded-full bg-navy/10 px-2.5 py-0.5 font-body text-xs font-bold text-slate">
-      Sample
+      {t('Sample')}
     </span>
   )
 }
@@ -34,6 +38,8 @@ export function QueueSkeleton() {
 }
 
 export default function IdentityQueueCard({ submission, selected, onSelect }) {
+  const t = useT()
+  const { date } = useFormat()
   return (
     <button
       type="button"
@@ -56,7 +62,7 @@ export default function IdentityQueueCard({ submission, selected, onSelect }) {
       </span>
       <span className="mt-3 flex flex-wrap items-center justify-between gap-x-3 gap-y-1 font-body text-sm text-navy">
         <MaskedNid last4={submission.nidLast4} className="font-semibold tracking-wider" />
-        <span className="text-slate">{`Sent on ${formatDate(submission.submittedAt)}`}</span>
+        <span className="text-slate">{t('Sent on {date}', { date: date(submission.submittedAt) })}</span>
       </span>
       {/* Says what a click does, so the cards read as buttons and not as plain info. */}
       <span
@@ -65,7 +71,7 @@ export default function IdentityQueueCard({ submission, selected, onSelect }) {
           selected ? 'text-forest' : 'text-navy group-hover:text-forest',
         )}
       >
-        {selected ? 'Reviewing now' : 'Review'}
+        {selected ? t('Reviewing now') : t('Review')}
         {!selected && (
           <svg
             viewBox="0 0 24 24"

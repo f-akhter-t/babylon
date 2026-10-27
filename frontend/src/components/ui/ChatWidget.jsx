@@ -3,17 +3,19 @@ import { useLocation } from 'react-router-dom'
 import clsx from 'clsx'
 import { useViewer } from '../../pages/Map/useViewer'
 import { sendChat } from '../../services/extraApi'
+import { useT } from '../../i18n/useLanguage'
 
 const GREETING = 'Hi! Ask me how to report a problem, how votes work, or what a status means.'
 const SUGGESTIONS = ['How do I report a problem?', 'How do points work?', 'What do the statuses mean?']
 const MAX_HISTORY = 6 // the server keeps the last 6 turns
 
 function TypingDots() {
+  const t = useT()
   return (
     <div
       className="flex w-fit items-center gap-1 self-start rounded-[18px] rounded-bl-md bg-mint px-4 py-3"
       role="status"
-      aria-label="The helper is typing"
+      aria-label={t('The helper is typing')}
     >
       {[0, 150, 300].map((delay) => (
         <span
@@ -29,6 +31,7 @@ function TypingDots() {
 // Floating helper for citizens (F4). Mounted once in App.jsx, outside the routes.
 // Guests, departments and admins never see it.
 export default function ChatWidget() {
+  const t = useT()
   const viewer = useViewer()
   const { pathname } = useLocation()
   const [open, setOpen] = useState(false)
@@ -105,7 +108,7 @@ export default function ChatWidget() {
           so it can not be clicked or tabbed into. */}
       <section
         role="dialog"
-        aria-label="Babylon helper"
+        aria-label={t('Babylon helper')}
         aria-hidden={!open}
         className={clsx(
           'fixed right-4 z-40 flex h-[480px] max-h-[calc(100vh-7rem)] w-[372px] max-w-[calc(100vw-2rem)] origin-bottom-right flex-col overflow-hidden rounded-card bg-white shadow-2xl ring-1 ring-navy/10',
@@ -122,21 +125,21 @@ export default function ChatWidget() {
             B
           </span>
           <div className="min-w-0 flex-1">
-            <h2 className="font-heading text-lg font-extrabold leading-tight">Babylon helper</h2>
-            <p className="font-body text-xs text-mint/70">Ask how the app works</p>
+            <h2 className="font-heading text-lg font-extrabold leading-tight">{t('Babylon helper')}</h2>
+            <p className="font-body text-xs text-mint/70">{t('Ask how the app works')}</p>
           </div>
           <button
             type="button"
             onClick={newChat}
             disabled={messages.length === 0 && !error}
-            aria-label="Start a new chat"
+            aria-label={t('Start a new chat')}
             className="rounded-full px-3 py-1.5 font-body text-xs font-semibold transition-colors hover:bg-white/10 disabled:opacity-40 disabled:hover:bg-transparent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
           >
-            New chat
+            {t('New chat')}
           </button>
           <button
             type="button"
-            aria-label="Close helper"
+            aria-label={t('Close helper')}
             onClick={close}
             className="grid h-8 w-8 place-items-center rounded-full text-lg transition-colors hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
           >
@@ -146,7 +149,7 @@ export default function ChatWidget() {
 
         <div className="flex flex-1 flex-col gap-2.5 overflow-y-auto bg-white px-3 py-4" role="log" aria-live="polite">
           <p className="max-w-[85%] self-start rounded-[18px] rounded-bl-md bg-mint px-3.5 py-2.5 font-body text-sm text-navy">
-            {GREETING}
+            {t(GREETING)}
           </p>
 
           {messages.length === 0 && (
@@ -156,10 +159,10 @@ export default function ChatWidget() {
                   key={text}
                   type="button"
                   disabled={busy}
-                  onClick={() => ask(text)}
+                  onClick={() => ask(t(text))}
                   className="rounded-full border border-navy/30 px-3 py-1.5 text-left font-body text-xs font-semibold text-navy transition-colors hover:border-navy hover:bg-mint disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                 >
-                  {text}
+                  {t(text)}
                 </button>
               ))}
             </div>
@@ -190,21 +193,21 @@ export default function ChatWidget() {
         </div>
 
         <form onSubmit={submit} className="flex items-center gap-2 border-t border-mint-deep bg-white px-3 py-3">
-          <label className="sr-only" htmlFor="babylon-chat-input">Your question</label>
+          <label className="sr-only" htmlFor="babylon-chat-input">{t('Your question')}</label>
           <input
             id="babylon-chat-input"
             ref={inputRef}
             value={draft}
             onChange={(e) => setDraft(e.target.value)}
             maxLength={500}
-            placeholder="Ask about Babylon"
+            placeholder={t('Ask about Babylon')}
             autoComplete="off"
             className="min-w-0 flex-1 rounded-full border-[1.5px] border-slate/40 px-4 py-2 font-body text-sm text-navy outline-none transition-colors placeholder:text-muted focus:border-navy"
           />
           <button
             type="submit"
             disabled={busy || !draft.trim()}
-            aria-label="Send"
+            aria-label={t('Send')}
             className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-navy text-mint transition-colors enabled:hover:bg-forest disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
           >
             <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -228,7 +231,7 @@ export default function ChatWidget() {
         ref={launcherRef}
         type="button"
         aria-expanded={open}
-        aria-label={open ? 'Close the Babylon helper' : 'Open the Babylon helper'}
+        aria-label={open ? t('Close the Babylon helper') : t('Open the Babylon helper')}
         onClick={() => setOpen((o) => !o)}
         className={clsx(
           'group fixed right-4 z-40 h-14 w-14 rounded-full focus-visible:outline-none',
@@ -282,7 +285,7 @@ export default function ChatWidget() {
 
           {/* A small label slides out to the left. It ignores the pointer. */}
           <span className="pointer-events-none absolute right-full top-1/2 mr-3 -translate-y-1/2 translate-x-2 whitespace-nowrap rounded-full bg-navy px-3.5 py-1.5 font-body text-sm font-semibold text-mint opacity-0 shadow-lg transition-all duration-200 group-hover:translate-x-0 group-hover:opacity-100 group-focus-visible:translate-x-0 group-focus-visible:opacity-100 motion-reduce:transition-none">
-            {open ? 'Close' : 'Ask Babylon'}
+            {open ? t('Close') : t('Ask Babylon')}
           </span>
         </span>
       </button>

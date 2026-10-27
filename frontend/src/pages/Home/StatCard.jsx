@@ -1,5 +1,6 @@
 import clsx from 'clsx'
 import CountUp from '../../components/ui/CountUp'
+import { useLanguage } from '../../i18n/useLanguage'
 
 // value is a number (or undefined while loading).
 // decimals: digits after the point. suffix: text right after the number, like "%".
@@ -11,8 +12,9 @@ export default function StatCard({
   label,
   tone = 'navy',
 }) {
+  const { lang } = useLanguage()
   const format = (n) =>
-    `${n.toLocaleString('en-US', {
+    `${n.toLocaleString(lang === 'bn' ? 'bn-BD' : 'en-US', {
       minimumFractionDigits: decimals,
       maximumFractionDigits: decimals,
     })}${suffix}`

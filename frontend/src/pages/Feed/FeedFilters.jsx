@@ -1,5 +1,6 @@
 import CategoryChip from '../../components/ui/CategoryChip'
 import { CATEGORIES } from '../../utils/departments'
+import { useT } from '../../i18n/useLanguage'
 
 const STATUSES = [
   { value: 'All', label: 'All' },
@@ -11,19 +12,20 @@ const STATUSES = [
 export default function FeedFilters({
   category, onCategory, status, onStatus, search, onSearch, loading, resultCount,
 }) {
+  const t = useT()
   return (
     <>
       <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
         <span className="ml-auto font-body text-sm text-muted">
           {loading
-            ? 'Searching…'
+            ? t('Searching…')
             : resultCount !== null &&
-              `${resultCount} ${resultCount === 1 ? 'issue' : 'issues'} found`}
+              (resultCount === 1 ? t('1 issue found') : t('{count} issues found', { count: resultCount }))}
         </span>
       </div>
 
       <label htmlFor="feed-search" className="sr-only">
-        Search issues by title or location
+        {t('Search issues by title or location')}
       </label>
       <div className="relative mb-5 max-w-md">
         <svg
@@ -42,7 +44,7 @@ export default function FeedFilters({
           type="text"
           value={search}
           onChange={(e) => onSearch(e.target.value)}
-          placeholder="Search by title or street…"
+          placeholder={t('Search by title or street…')}
           className="w-full rounded-full border border-navy/15 bg-white py-2.5 pl-10 pr-4 max-md:min-h-11 font-body text-sm text-navy placeholder:text-muted transition focus:border-forest focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest/40"
         />
       </div>
@@ -51,7 +53,7 @@ export default function FeedFilters({
       <div className="flex w-full flex-wrap items-center justify-between gap-3">
         <div className="flex max-w-full flex-wrap items-center gap-2 rounded-full bg-white/85 px-4 py-2.5 shadow-sm ring-1 ring-navy/5 backdrop-blur-sm">
           <span className="shrink-0 font-body text-xs font-semibold uppercase tracking-wide text-muted">
-            Category
+            {t('Category')}
           </span>
           <CategoryChip
             label="All"
@@ -74,7 +76,7 @@ export default function FeedFilters({
 
         <div className="flex max-w-full flex-wrap items-center gap-2 rounded-full bg-white/85 px-4 py-2.5 shadow-sm ring-1 ring-navy/5 backdrop-blur-sm">
           <span className="shrink-0 font-body text-xs font-semibold uppercase tracking-wide text-muted">
-            Status
+            {t('Status')}
           </span>
           {STATUSES.map((s) => (
             <CategoryChip

@@ -10,9 +10,12 @@
   --color-brand: #A9C8E8;
   --color-amber: #E8BF6A;
   --color-amber-dark: #A9801F;
-  --color-success: #2F8A76;
-  --color-success-soft: #CFE8E0;
-  --color-danger: #A82E2E; /* Downvote and other "take back" actions */
+  --color-success: #0B6B50;
+  --color-success-soft: #CDE6DC;
+  --color-flag-green: #0B6B50; /* the logo's pin on light surfaces */
+  --color-flag-green-light: #4FC09A; /* the logo's pin on dark surfaces */
+  --color-flag-red: #E4463D; /* the logo's sun */
+  --color-danger: #C8352C; /* Downvote and other "take back" actions */
   --color-muted: #556A85;
   --color-page: #EEF2F6;
   --color-map-land: #F2EFE9;
@@ -20,8 +23,8 @@
   --color-map-water: #AAD3DF;
 
   /* Fonts */
-  --font-heading: "Bricolage Grotesque", sans-serif;
-  --font-body: "Figtree", sans-serif;
+  --font-heading: "Bricolage Grotesque", "Noto Sans Bengali", sans-serif;
+  --font-body: "Figtree", "Noto Sans Bengali", sans-serif;
 
   /* Ticker scroll */
   --animate-marquee: marquee 45s linear infinite;
@@ -374,6 +377,28 @@ textarea:not(:disabled),
 .leaflet-container .leaflet-tooltip-bottom::before { border-bottom-color: var(--color-navy); }
 .leaflet-container .leaflet-tooltip-left::before { border-left-color: var(--color-navy); }
 .leaflet-container .leaflet-tooltip-right::before { border-right-color: var(--color-navy); }
+
+/* Small global touches: gentle colour changes on links and buttons, smooth
+   in-page scrolling and a branded text selection. The reduced-motion rule
+   below switches the movement off. */
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+  a,
+  button {
+    transition-property: color, background-color, border-color, opacity, box-shadow;
+    transition-duration: var(--duration-base, 200ms);
+    transition-timing-function: var(--ease-calm);
+  }
+  ::selection {
+    background: color-mix(in srgb, var(--color-brand) 55%, transparent);
+    color: var(--color-navy);
+  }
+  :focus-visible {
+    transition: outline-offset 150ms var(--ease-calm);
+  }
+}
 
 /* The one reduced-motion rule for the whole app: every CSS animation and
    transition ends at once. Motion started from JavaScript (element.animate,

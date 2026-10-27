@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import clsx from 'clsx'
 import { sentBackMessage } from './departmentFilters'
 import { getIssueById } from '../../services/api'
+import { useT } from '../../i18n/useLanguage'
 
 const NEEDS_PHOTO_ID = 'resolve-needs-photo'
 const SUBMIT_ERROR_ID = 'resolve-submit-error'
@@ -10,6 +11,7 @@ const SUBMIT_ERROR_ID = 'resolve-submit-error'
 // Show or Hide button live in DepartmentPanel.
 // error: why the last submit failed (one sentence), or null.
 export default function ResolvePanel({ issue, onSubmit, busy = false, error = null }) {
+  const t = useT()
   const [previewUrl, setPreviewUrl] = useState(null)
   const [file, setFile] = useState(null) // sent to onSubmit, which shrinks it
   const [note, setNote] = useState('')
@@ -44,7 +46,7 @@ export default function ResolvePanel({ issue, onSubmit, busy = false, error = nu
   if (!issue) {
     return (
       <p className="pb-4 font-body text-base text-muted sm:pb-6">
-        Pick an issue from the table to resolve it with proof.
+        {t('Pick an issue from the table to resolve it with proof.')}
       </p>
     )
   }
@@ -58,7 +60,7 @@ export default function ResolvePanel({ issue, onSubmit, busy = false, error = nu
       <div className="pb-4 sm:pb-6">
         {title}
         <p className="mt-4 font-body text-base text-muted">
-          Click &quot;Start work&quot; on this issue first. Then you can add the after-photo.
+          {t('Click "Start work" on this issue first. Then you can add the after-photo.')}
         </p>
       </div>
     )
@@ -69,7 +71,7 @@ export default function ResolvePanel({ issue, onSubmit, busy = false, error = nu
       <div className="pb-4 sm:pb-6">
         {title}
         <p className="mt-4 font-body text-base text-muted">
-          Sent to the admin. The issue stays In progress until the admin confirms the fix.
+          {t('Sent to the admin. The issue stays In progress until the admin confirms the fix.')}
         </p>
       </div>
     )
@@ -96,25 +98,25 @@ export default function ResolvePanel({ issue, onSubmit, busy = false, error = nu
       {title}
       {issue.sentBack && (
         <p className="mt-4 min-w-0 break-words font-body text-sm font-bold text-danger">
-          {sentBackMessage(issue.sentBack)}
+          {sentBackMessage(issue.sentBack, t)}
         </p>
       )}
 
-      <p className="mt-5 font-body text-sm font-bold text-navy">Before photo from the citizen</p>
+      <p className="mt-5 font-body text-sm font-bold text-navy">{t('Before photo from the citizen')}</p>
       <div className="mt-2 flex h-32 items-center justify-center overflow-hidden rounded-card bg-slate font-body text-sm font-semibold text-mint">
         {beforeImg ? (
           <img
             src={beforeImg}
-            alt="Before photo from the citizen"
+            alt={t('Before photo from the citizen')}
             className="h-full w-full object-cover"
           />
         ) : (
-          'Citizen photo'
+          t('Citizen photo')
         )}
       </div>
 
       <p className="mt-5 font-body text-sm font-bold text-navy">
-        After-photo <span className="text-danger">(required)</span>
+        After-photo <span className="text-danger">{t('(required)')}</span>
       </p>
       {/* The file input covers the whole box (transparent), so the box is what
           scrolls into view and shows the focus ring. */}
@@ -122,16 +124,16 @@ export default function ResolvePanel({ issue, onSubmit, busy = false, error = nu
         {previewUrl ? (
           <img
             src={previewUrl}
-            alt="After-photo preview"
+            alt={t('After-photo preview')}
             className="h-full w-full object-cover"
           />
         ) : (
           <>
             <span className="font-body text-base font-bold text-navy">
-              Upload after-photo
+              {t('Upload after-photo')}
             </span>
             <span className="font-body text-sm text-muted">
-              Shoot from the same spot as the original
+              {t('Shoot from the same spot as the original')}
             </span>
           </>
         )}
@@ -144,18 +146,18 @@ export default function ResolvePanel({ issue, onSubmit, busy = false, error = nu
       </label>
 
       <label className="mt-5 block font-body text-sm font-bold text-navy" htmlFor="work-note">
-        Work note
+        {t('Work note')}
       </label>
       <textarea
         id="work-note"
         rows={3}
         value={note}
         onChange={(e) => setNote(e.target.value)}
-        placeholder="Filled and compacted. Surface sealed."
+        placeholder={t('Filled and compacted. Surface sealed.')}
         className="mt-2 w-full rounded-tile border border-navy/60 bg-white p-3 font-body text-sm text-navy placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-forest"
       />
       <p className="mt-3 font-body text-sm text-muted">
-        The issue stays In progress until the admin confirms the fix in the photo.
+        {t('The issue stays In progress until the admin confirms the fix in the photo.')}
       </p>
 
       {/* Stays on screen while the panel is in view: pinned to the bottom of
@@ -177,11 +179,11 @@ export default function ResolvePanel({ issue, onSubmit, busy = false, error = nu
             needsPhoto || busy ? 'cursor-not-allowed! opacity-50' : 'hover:opacity-90',
           )}
         >
-          Submit for verification
+          {t('Submit for verification')}
         </button>
         {needsPhoto && (
           <p id={NEEDS_PHOTO_ID} className="mt-2 font-body text-sm text-navy">
-            Add an after-photo to submit this fix.
+            {t('Add an after-photo to submit this fix.')}
           </p>
         )}
         {error && (

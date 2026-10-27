@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { prefersLessMotion } from './motion'
+import { CityPhoto } from './CityPhoto'
 
 // Fixed, full-window decorative background: an ash-grey gradient that drifts
 // slowly, two soft glows in the theme's slate and navy, and a faint glow that
@@ -13,7 +14,8 @@ const GRADIENT =
 const glow = (color, strength) =>
   `radial-gradient(circle closest-side, color-mix(in srgb, ${color} ${strength}%, transparent), transparent)`
 
-export default function AnimatedBackground() {
+// `photo={false}` leaves out the faint street photo, for a page that has its own.
+export default function AnimatedBackground({ photo = true }) {
   const [still, setStill] = useState(prefersLessMotion)
   const [hidden, setHidden] = useState(() => document.visibilityState === 'hidden')
   const pointerRef = useRef(null)
@@ -84,6 +86,9 @@ export default function AnimatedBackground() {
         className="absolute -right-32 bottom-[-10%] size-[32rem] will-change-transform"
         style={{ backgroundImage: glow('var(--color-forest)', 14), ...play('float-b 32s ease-in-out infinite') }}
       />
+
+      {/* a faint street photo, a new one each visit */}
+      {photo && <CityPhoto opacity="opacity-[0.07]" />}
 
       {/* the faint glow that follows the pointer */}
       {!still && (

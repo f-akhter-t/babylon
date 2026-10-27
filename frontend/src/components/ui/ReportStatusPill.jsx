@@ -1,6 +1,7 @@
 import clsx from 'clsx'
 import { BarsIcon, ReopenIcon } from './icons'
 import { statusLabel } from './statusLabel'
+import { useT } from '../../i18n/useLanguage'
  
 // Only uses theme colors (with opacity), so no extra Tailwind tokens are needed
 const STATUS = {
@@ -11,11 +12,12 @@ const STATUS = {
 }
  
 export default function ReportStatusPill({ status }) {
+  const t = useT()
   const s = STATUS[status]
   return (
     <span className={clsx('inline-flex items-center gap-1.5 rounded-full px-[11px] py-[5px] text-[13px] font-bold text-navy', s.bg)}>
       {status === 'reopened' ? <ReopenIcon /> : <BarsIcon size={14} filled={s.bars} className={s.tint} />}
-      {statusLabel(status)}
+      {t(statusLabel(status))}
     </span>
   )
 }

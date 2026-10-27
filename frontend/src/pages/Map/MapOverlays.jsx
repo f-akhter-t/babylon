@@ -1,6 +1,7 @@
 import Button from '../../components/ui/Button'
 import MapLegend from './MapLegend'
 import LoginPrompt from './LoginPrompt'
+import { useT } from '../../i18n/useLanguage'
 
 // Everything drawn over the map that is not part of Leaflet:
 // the drop-a-pin hint, the legend, the phone-only Report button and the
@@ -14,17 +15,18 @@ export default function MapOverlays({
   onOpenLoginPrompt,
   onCloseLoginPrompt,
 }) {
+  const t = useT()
   return (
     <>
       {dropping && (
         <div className="absolute left-1/2 top-20 z-1000 flex -translate-x-1/2 items-center gap-2 whitespace-nowrap rounded-full bg-navy py-1.5 pl-4 pr-1.5 text-sm font-semibold text-white shadow-xl lg:top-4">
-          Click the map to drop a pin
+          {t('Click the map to drop a pin')}
           <button
             type="button"
             onClick={onStopDropping}
             className="rounded-full px-3 py-1 text-brand transition-colors hover:bg-white/10"
           >
-            Cancel
+            {t('Cancel')}
           </button>
         </div>
       )}
@@ -41,7 +43,7 @@ export default function MapOverlays({
           className="absolute right-4 top-4 z-1000 shadow-xl transition hover:shadow-2xl motion-safe:hover:-translate-y-0.5 lg:hidden"
         >
           <span aria-hidden="true" className="text-xl leading-none text-brand">+</span>
-          Report an issue
+          {t('Report an issue')}
         </Button>
       )}
 

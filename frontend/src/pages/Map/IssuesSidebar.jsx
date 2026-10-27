@@ -7,7 +7,9 @@ import NewReportsBar from '../../components/ui/NewReportsBar'
 import { useHeldList } from '../../hooks/useHeldList'
 import { prefersLessMotion } from '../../components/ui/motion'
 import FilterRow from './FilterRow'
-import { SkeletonCards, StateMessage } from './ListStates'
+import { StateMessage } from './ListStates'
+import LogoLoader from '../../components/ui/LogoLoader'
+import { useT } from '../../i18n/useLanguage'
 
 const CATEGORY_OPTIONS = ['All', ...CATEGORIES].map((name) => ({ value: name, label: name }))
 
@@ -37,6 +39,7 @@ export default function IssuesSidebar({
   isOwnVote,
   className,
 }) {
+  const t = useT()
   const ready = !loading && !error
 
   // The list holds still while someone uses it (see useHeldList). On wide
@@ -70,20 +73,20 @@ export default function IssuesSidebar({
     list = (
       <StateMessage
         role="alert"
-        title="Could not load issues"
-        text="Something went wrong on our side. Please try again."
-        actionLabel="Try again"
+        title={t('Could not load issues')}
+        text={t('Something went wrong on our side. Please try again.')}
+        actionLabel={t('Try again')}
         onAction={onRetry}
       />
     )
   } else if (loading) {
-    list = <SkeletonCards />
+    list = <LogoLoader label={t('Loading issues…')} compact />
   } else if (issues.length === 0) {
     list = (
       <StateMessage
-        title="Nothing matches"
-        text="Try another street, category or status, or see every issue near you."
-        actionLabel="Clear filters"
+        title={t('Nothing matches')}
+        text={t('Try another street, category or status, or see every issue near you.')}
+        actionLabel={t('Clear filters')}
         onAction={onClearFilters}
       />
     )
@@ -113,16 +116,16 @@ export default function IssuesSidebar({
           tabIndex={-1}
           className="font-heading text-3xl font-extrabold tracking-tight text-navy focus:outline-none"
         >
-          Issues near you
+          {t('Issues near you')}
         </h1>
-        <span className="pt-2 text-sm font-medium text-slate">By priority</span>
+        <span className="pt-2 text-sm font-medium text-slate">{t('By priority')}</span>
       </div>
 
       <SearchBox value={search} onChange={onSearch} />
 
-      <FilterRow label="Category" options={CATEGORY_OPTIONS} value={category} onChange={onCategory} />
+      <FilterRow label={t('Category')} options={CATEGORY_OPTIONS} value={category} onChange={onCategory} />
       <FilterRow
-        label="Status"
+        label={t('Status')}
         tone="forest"
         options={STATUS_OPTIONS}
         value={status}
@@ -131,7 +134,7 @@ export default function IssuesSidebar({
 
       {/* aria-live: screen readers hear the new count when filters change */}
       <span aria-live="polite" className="-mb-1 text-sm font-medium text-slate">
-        {ready && `${issues.length} ${issues.length === 1 ? 'issue' : 'issues'}`}
+        {ready && (issues.length === 1 ? t('1 issue') : t('{count} issues', { count: issues.length }))}
       </span>
 
       <p role="status" className="sr-only">

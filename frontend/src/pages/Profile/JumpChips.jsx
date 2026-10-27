@@ -1,4 +1,5 @@
 import { prefersLessMotion } from '../../components/ui/motion'
+import { useT } from '../../i18n/useLanguage'
 
 const SECTIONS = [
   { label: 'Details', id: 'profile-details' },
@@ -13,6 +14,7 @@ const SECTIONS = [
 // The Security chip shows only when that section is on the page. Another
 // page can pass its own list: sections={[{ label, id }]}.
 export default function JumpChips({ withSecurity = false, sections: own }) {
+  const t = useT()
   const sections =
     own ?? (withSecurity ? SECTIONS : SECTIONS.filter((s) => s.id !== 'profile-security'))
 
@@ -27,7 +29,7 @@ export default function JumpChips({ withSecurity = false, sections: own }) {
   }
 
   return (
-    <nav aria-label="Profile sections" className="mt-4 flex flex-wrap gap-2 lg:hidden">
+    <nav aria-label={t('Profile sections')} className="mt-4 flex flex-wrap gap-2 lg:hidden">
       {sections.map((section) => (
         <button
           key={section.id}
@@ -35,7 +37,7 @@ export default function JumpChips({ withSecurity = false, sections: own }) {
           onClick={() => jump(section.id)}
           className="rounded-full border border-navy/20 bg-white/70 px-4 py-2 max-md:min-h-11 font-body text-sm font-semibold text-navy transition hover:-translate-y-0.5 hover:border-navy hover:bg-navy hover:text-mint hover:shadow-md active:translate-y-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest/50"
         >
-          {section.label}
+          {t(section.label)}
         </button>
       ))}
     </nav>

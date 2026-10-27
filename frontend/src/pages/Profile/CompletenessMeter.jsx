@@ -1,6 +1,7 @@
 import clsx from 'clsx'
 import { profileProgress } from './profileProgress'
 import { enter } from '../../components/ui/motion'
+import { useT } from '../../i18n/useLanguage'
 
 // Four steps of a staircase, one per section. Each turns green when that
 // section is done; identity under review shows amber.
@@ -22,6 +23,7 @@ const SPOKEN = {
 }
 
 export default function CompletenessMeter({ profile, tone = 'dark', size = 'md' }) {
+  const t = useT()
   const { steps, done } = profileProgress(profile)
   const dark = tone === 'dark'
 
@@ -35,10 +37,10 @@ export default function CompletenessMeter({ profile, tone = 'dark', size = 'md' 
             dark ? 'text-mint' : 'text-navy',
           )}
         >
-          Profile completeness
+          {t('Profile completeness')}
         </p>
         <p className={clsx('font-body text-xs', dark ? 'text-mint/70' : 'text-slate')}>
-          {`${done} of ${steps.length} done`}
+          {t('{done} of {total} done', { done, total: steps.length })}
         </p>
       </div>
 
@@ -60,8 +62,8 @@ export default function CompletenessMeter({ profile, tone = 'dark', size = 'md' 
                 dark ? 'text-mint/80' : 'text-navy',
               )}
             >
-              {step.label}
-              <span className="sr-only">{`: ${SPOKEN[step.state]}`}</span>
+              {t(step.label)}
+              <span className="sr-only">{`: ${t(SPOKEN[step.state])}`}</span>
             </span>
           </li>
         ))}

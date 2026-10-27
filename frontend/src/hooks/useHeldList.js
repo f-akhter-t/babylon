@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { usePoliteMessage } from './usePoliteMessage'
+import { useT } from '../i18n/useLanguage'
 
 // Keeps a live list steady while someone is using it, so nothing jumps under
 // the pointer. The list is "held" while it is scrolled past its top, or while
@@ -29,6 +30,7 @@ export function useHeldList(items, { containerRef, scrollerRef, resetKey, update
   const live = Boolean(update)
   const remote = Boolean(update?.remote)
   const [state, setState] = useState(() => ({ resetKey, items, ghosts: new Set(), waiting: [], source: items }))
+  const t = useT()
   const [message, say] = usePoliteMessage()
   const pointerInside = useRef(false)
   const latest = useRef(items)
@@ -83,13 +85,17 @@ export function useHeldList(items, { containerRef, scrollerRef, resetKey, update
       const at = kept.findIndex((item) => String(item.id) === focusedId)
       const next = [...kept.slice(at + 1), ...kept.slice(0, at).reverse()].find((item) => !ghosts.has(String(item.id)))
       focusAfter.current = next ? String(next.id) : 'heading'
-      say('A report was removed.')
+      say(t('A report was removed.'))
     }
     if (remote && waiting.length > state.waiting.length) {
-      say(`${waiting.length} new ${waiting.length === 1 ? 'report is' : 'reports are'} ready to show.`)
+      say(
+        waiting.length === 1
+          ? t('1 new report is ready to show.')
+          : t('{count} new reports are ready to show.', { count: waiting.length }),
+      )
     }
     setState({ resetKey, items: kept, ghosts, waiting, source: items })
-  }, [items, resetKey, live, remote, state, isHeld, containerRef, say])
+  }, [items, resetKey, live, remote, state, isHeld, containerRef, say, t])
   /* eslint-enable react-hooks/set-state-in-effect */
 
   // Move focus once the ghost is drawn (it is inert, so focus cannot stay).

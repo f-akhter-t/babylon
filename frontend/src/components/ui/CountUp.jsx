@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { prefersLessMotion } from './motion'
+import { useNumber } from '../../i18n/useLanguage'
 
 // A number that counts up from 0 the first time it scrolls into view. After
 // that, a new value (a live update, another period) shows at once.
@@ -9,9 +10,9 @@ import { prefersLessMotion } from './motion'
 // start and never grows while it counts.
 //   <CountUp value={176} />
 //   <CountUp value={4.8} format={(n) => `${n.toFixed(1)} days`} />
-const whole = (n) => Math.round(n).toLocaleString('en-US')
-
-export default function CountUp({ value, format = whole, duration = 1500, className }) {
+export default function CountUp({ value, format: customFormat, duration = 1500, className }) {
+  const num = useNumber()
+  const format = customFormat ?? ((n) => num(Math.round(n).toLocaleString('en-US')))
   const ref = useRef(null)
   const started = useRef(false)
   // 1 once counting is done (or skipped); the shown value is value * progress.

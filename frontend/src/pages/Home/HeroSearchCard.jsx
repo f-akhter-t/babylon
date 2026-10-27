@@ -2,10 +2,12 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import clsx from 'clsx'
 import { ArrowRightIcon } from './HomeIcons'
+import { useT } from '../../i18n/useLanguage'
 
 // Search box on the right of the hero. It stays still while slides change.
 // It opens the map page with the search in the link.
 export default function HeroSearchCard({ categories = [] }) {
+  const t = useT()
   const navigate = useNavigate()
   const [query, setQuery] = useState('')
   const [category, setCategory] = useState(null)
@@ -24,24 +26,24 @@ export default function HeroSearchCard({ categories = [] }) {
       onSubmit={handleSubmit}
       className="w-full rounded-tile border border-slate bg-navy/80 p-6 backdrop-blur-md lg:w-[380px] xl:w-[400px]"
     >
-      <h2 className="font-heading text-2xl font-extrabold text-mint">Find issues near you</h2>
+      <h2 className="font-heading text-2xl font-extrabold text-mint">{t('Find issues near you')}</h2>
 
       <label
         htmlFor="hero-search"
         className="mt-6 block text-xs font-bold uppercase tracking-widest text-mint/70"
       >
-        Street or landmark
+        {t('Street or landmark')}
       </label>
       <input
         id="hero-search"
         type="search"
         value={query}
         onChange={(e) => setQuery(e.target.value)}
-        placeholder="e.g. Station Road"
+        placeholder={t('e.g. Station Road')}
         className="mt-2 w-full border-b border-slate bg-transparent py-2 text-mint placeholder:text-mint/60 focus:border-brand focus:outline-none max-md:min-h-11"
       />
 
-      <p className="mt-6 text-xs font-bold uppercase tracking-widest text-mint/70">Category</p>
+      <p className="mt-6 text-xs font-bold uppercase tracking-widest text-mint/70">{t('Category')}</p>
       <div className="mt-2 flex flex-wrap gap-2">
         {categories.map((name) => (
           <button
@@ -56,7 +58,7 @@ export default function HeroSearchCard({ categories = [] }) {
                 : 'border-slate text-mint hover:border-mint',
             )}
           >
-            {name}
+            {t(name)}
           </button>
         ))}
       </div>
@@ -65,7 +67,7 @@ export default function HeroSearchCard({ categories = [] }) {
         type="submit"
         className="mt-7 flex w-full items-center justify-center gap-2 rounded-full bg-brand px-6 py-3.5 font-bold text-navy transition-opacity hover:opacity-90"
       >
-        Search the map <ArrowRightIcon className="size-[18px]" />
+        {t('Search the map')} <ArrowRightIcon className="size-[18px]" />
       </button>
     </form>
   )

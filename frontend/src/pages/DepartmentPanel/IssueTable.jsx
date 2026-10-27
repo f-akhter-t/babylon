@@ -2,6 +2,7 @@ import clsx from 'clsx'
 import StatusPill from '../../components/ui/StatusPill'
 import StaircaseIcon from '../../components/ui/StaircaseIcon'
 import { sentBackMessage } from './departmentFilters'
+import { useT } from '../../i18n/useLanguage'
 
 // A table where the list is at least 48rem wide; stacked cards when it is narrower
 // (a phone, or the Resolve panel open beside it). Container queries, so it
@@ -41,11 +42,12 @@ function IssueTitle({ issue, selected, onSelect, panelId }) {
 }
 
 function StatusCell({ issue }) {
+  const t = useT()
   if (issue.verification === 'awaiting') {
     return (
       <span className="inline-flex max-w-full items-center gap-2 rounded-full bg-slate/15 px-3 py-1 font-body text-sm font-semibold text-navy">
         <StaircaseIcon level={3} className="text-slate" />
-        Awaiting check
+        {t('Awaiting check')}
       </span>
     )
   }
@@ -53,7 +55,7 @@ function StatusCell({ issue }) {
     return (
       <span className="inline-flex max-w-full items-center gap-2 rounded-full bg-slate/15 px-3 py-1 font-body text-sm font-semibold text-navy">
         <StaircaseIcon level={2} className="text-slate" />
-        Sent back
+        {t('Sent back')}
       </span>
     )
   }
@@ -61,6 +63,7 @@ function StatusCell({ issue }) {
 }
 
 function ActionButton({ issue, onStart, onSelect, busy }) {
+  const t = useT()
   const base =
     'min-h-11 w-full rounded-full px-4 py-2.5 font-body text-sm font-bold transition-colors motion-reduce:transition-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forest'
 
@@ -71,7 +74,7 @@ function ActionButton({ issue, onStart, onSelect, busy }) {
         disabled
         className={clsx(base, 'cursor-not-allowed bg-slate/15 text-slate')}
       >
-        Waiting for admin
+        {t('Waiting for admin')}
       </button>
     )
   }
@@ -83,7 +86,7 @@ function ActionButton({ issue, onStart, onSelect, busy }) {
         disabled
         className={clsx(base, 'cursor-not-allowed bg-slate/15 text-slate')}
       >
-        Closed
+        {t('Closed')}
       </button>
     )
   }
@@ -103,7 +106,7 @@ function ActionButton({ issue, onStart, onSelect, busy }) {
           busy ? 'cursor-not-allowed opacity-50' : 'hover:bg-forest/90',
         )}
       >
-        Start work
+        {t('Start work')}
       </button>
     )
   }
@@ -120,7 +123,7 @@ function ActionButton({ issue, onStart, onSelect, busy }) {
         'border border-forest bg-white text-forest hover:bg-mint-deep',
       )}
     >
-      Add after-photo
+      {t('Add after-photo')}
     </button>
   )
 }
@@ -134,6 +137,7 @@ export default function IssueTable({
   busy = false,
   panelId,
 }) {
+  const t = useT()
   return (
     <div className="@container rounded-card bg-mint">
       <div
@@ -143,11 +147,11 @@ export default function IssueTable({
           COLUMNS,
         )}
       >
-        <span>Rank</span>
-        <span>Issue</span>
-        <span>Votes</span>
-        <span>Status</span>
-        <span>Action</span>
+        <span>{t('Rank')}</span>
+        <span>{t('Issue')}</span>
+        <span>{t('Votes')}</span>
+        <span>{t('Status')}</span>
+        <span>{t('Action')}</span>
       </div>
 
       {issues.map((issue) => (
@@ -180,13 +184,13 @@ export default function IssueTable({
                   issue.priority === 'urgent' ? 'text-danger' : 'text-forest',
                 )}
               >
-                {PRIORITY_LABEL[issue.priority] ?? issue.priority}
+                {t(PRIORITY_LABEL[issue.priority] ?? issue.priority)}
               </span>
               <span>{issue.ward ? `${issue.location}, ${issue.ward}` : issue.location}</span>
             </p>
             {issue.sentBack && (
               <p className="mt-1 min-w-0 break-words font-body text-sm font-bold text-danger">
-                {sentBackMessage(issue.sentBack)}
+                {sentBackMessage(issue.sentBack, t)}
               </p>
             )}
           </div>

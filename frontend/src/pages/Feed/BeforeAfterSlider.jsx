@@ -1,6 +1,8 @@
 import { useRef, useState } from 'react'
+import { useT } from '../../i18n/useLanguage'
 
 export default function BeforeAfterSlider({ before, after, alt }) {
+  const t = useT()
   const [position, setPosition] = useState(50)
   const [failed, setFailed] = useState(false)
   const containerRef = useRef(null)
@@ -26,7 +28,7 @@ export default function BeforeAfterSlider({ before, after, alt }) {
   if (failed) {
     return (
       <div className="flex h-40 w-full items-center justify-center bg-slate/20 font-body text-xs text-slate">
-        Photo not available
+        {t('Photo not available')}
       </div>
     )
   }
@@ -42,14 +44,14 @@ export default function BeforeAfterSlider({ before, after, alt }) {
     >
       <img
         src={after}
-        alt={`${alt} — after`}
+        alt={`${alt} — ${t('after')}`}
         className="absolute inset-0 h-full w-full object-cover"
         draggable={false}
         onError={() => setFailed(true)}
       />
       <img
         src={before}
-        alt={`${alt} — before`}
+        alt={`${alt} — ${t('before')}`}
         className="absolute inset-0 h-full w-full object-cover"
         draggable={false}
         style={{ clipPath: `inset(0 ${100 - position}% 0 0)` }}
@@ -57,10 +59,10 @@ export default function BeforeAfterSlider({ before, after, alt }) {
       />
 
       <span className="absolute bottom-2 left-2 rounded-full bg-navy px-2.5 py-1 font-body text-[10px] font-bold text-white">
-        BEFORE
+        {t('Before').toUpperCase()}
       </span>
       <span className="absolute bottom-2 right-2 rounded-full bg-brand px-2.5 py-1 font-body text-[10px] font-bold text-navy">
-        AFTER
+        {t('After').toUpperCase()}
       </span>
 
       <div className="absolute top-0 h-full w-0.5 bg-white" style={{ left: `${position}%` }}>

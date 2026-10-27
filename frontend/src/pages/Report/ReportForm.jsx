@@ -5,6 +5,7 @@ import { TITLE_MAX, TITLE_MIN } from '../../services/api'
 import { enter } from '../../components/ui/motion'
 import AssistPanel from './AssistPanel'
 import SummarizeButton from './SummarizeButton'
+import { useNumber, useT } from '../../i18n/useLanguage'
 import DuplicatePanel from './DuplicatePanel'
 
 const REPORT_CATEGORIES = ['Roads', 'Waste', 'Water', 'Lighting', 'Bridges']
@@ -16,6 +17,7 @@ const NEAR_LIMIT = 450
 const rise = (delay) => enter('rise-in', delay)
 
 function StepHeading({ number, done, children }) {
+  const t = useT()
   return (
     <div className="flex items-center gap-3">
       <span
@@ -42,7 +44,7 @@ function StepHeading({ number, done, children }) {
         )}
       </span>
       <h2 className="font-heading text-lg font-extrabold text-navy">{children}</h2>
-      {done && <span className="sr-only">Done</span>}
+      {done && <span className="sr-only">{t('Done')}</span>}
     </div>
   )
 }
@@ -71,6 +73,8 @@ export default function ReportForm({
   lockedReason,
   deleted = false,
 }) {
+  const t = useT()
+  const n = useNumber()
   const editing = Boolean(initialValues)
   const locked = Boolean(lockedReason) || deleted
   const textLock = deleted ? { readOnly: true } : { disabled: locked }
@@ -97,11 +101,11 @@ export default function ReportForm({
   function handleFile(file) {
     if (!file) return
     if (!file.type.startsWith('image/')) {
-      setPhotoError('Please choose an image file (JPG, PNG or WebP).')
+      setPhotoError(t('Please choose an image file (JPG, PNG or WebP).'))
       return
     }
     if (file.size > MAX_PHOTO_MB * 1024 * 1024) {
-      setPhotoError(`That photo is larger than ${MAX_PHOTO_MB} MB. Please pick a smaller one.`)
+      setPhotoError(t('That photo is larger than {mb} MB. Please pick a smaller one.', { mb: MAX_PHOTO_MB }))
       return
     }
     setPhotoError('')
@@ -173,21 +177,21 @@ export default function ReportForm({
       setDescription('')
     } catch (err) {
       // keep what the citizen typed so they can try again
-      setSubmitError(err?.message || 'Something went wrong. Please try again.')
+      setSubmitError(t(err?.message || 'Something went wrong. Please try again.'))
     } finally {
       setSubmitting(false)
     }
   }
 
   const missing = []
-  if (!photo) missing.push('a photo')
-  if (!category) missing.push('a category')
-  if (!titleOk) missing.push('a title')
-  if (trimmed.length < MIN_DESCRIPTION) missing.push('a short description')
+  if (!photo) missing.push(t('a photo'))
+  if (!category) missing.push(t('a category'))
+  if (!titleOk) missing.push(t('a title'))
+  if (trimmed.length < MIN_DESCRIPTION) missing.push(t('a short description'))
 
-  let hintText = `Still needed: ${missing.join(', ')}.`
-  if (isComplete && !editing) hintText = 'Clear photos and exact pins earn you points.'
-  else if (isComplete) hintText = hasChanges ? 'Your changes are ready to save.' : 'Change something to save.'
+  let hintText = t('Still needed: {items}.', { items: missing.join(', ') })
+  if (isComplete && !editing) hintText = t('Clear photos and exact pins earn you points.')
+  else if (isComplete) hintText = hasChanges ? t('Your changes are ready to save.') : t('Change something to save.')
 
   const submitButton = (
     <button
@@ -201,10 +205,10 @@ export default function ReportForm({
       )}
     >
       {submitting ? (
-        editing ? 'Saving…' : 'Submitting…'
+        editing ? t('Saving…') : t('Submitting…')
       ) : (
         <>
-          {submitLabel}{' '}
+          {t(submitLabel)}{' '}
           <span
             aria-hidden="true"
             className={clsx(
@@ -230,7 +234,7 @@ export default function ReportForm({
       <div className="flex items-center gap-3" style={rise(0.05)}>
         <div
           role="progressbar"
-          aria-label="Report progress"
+          aria-label={t('Report progress')}
           aria-valuemin={0}
           aria-valuemax={3}
           aria-valuenow={doneCount}
@@ -241,7 +245,7 @@ export default function ReportForm({
             style={{ transform: `scaleX(${doneCount / 3})` }}
           />
         </div>
-        <span className="font-body text-xs font-semibold text-navy">{doneCount} of 3</span>
+        <span className="font-body text-xs font-semibold text-navy">{t('{n} of {count}', { n: doneCount, count: 3 })}</span>
       </div>
 
       {/* 1: photo */}
@@ -251,8 +255,8 @@ export default function ReportForm({
         style={rise(0.1)}
       >
         <div id="step-photo">
-          <StepHeading number="1" done={stepsDone[0]}>
-            Add a photo
+          <StepHeading number={n(1)} done={stepsDone[0]}>
+            {t('Add a photo')}
           </StepHeading>
         </div>
 
@@ -272,12 +276,12 @@ export default function ReportForm({
           <div className="group relative overflow-hidden rounded-2xl border border-navy/10 bg-slate/10 shadow-sm transition-shadow duration-300 hover:shadow-lg">
             <img
               src={photo.url}
-              alt="Preview of the photo you chose"
+              alt={t('Preview of the photo you chose')}
               className="h-48 w-full object-cover transition-transform duration-500 group-hover:scale-105"
             />
             <div className="relative flex items-center justify-between gap-3 bg-white/90 px-4 py-2">
               <span className="truncate font-body text-xs text-navy">
-                {photo.file ? photo.file.name : 'Current photo'}
+                {photo.file ? photo.file.name : t('Current photo')}
               </span>
               <button
                 type="button"
@@ -285,7 +289,7 @@ export default function ReportForm({
                 disabled={locked}
                 className="min-h-11 shrink-0 rounded-full px-3 py-1 font-body text-xs font-semibold text-forest transition hover:bg-forest/10 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest/50 disabled:cursor-not-allowed disabled:opacity-50"
               >
-                Remove
+                {t('Remove')}
               </button>
             </div>
           </div>
@@ -324,10 +328,10 @@ export default function ReportForm({
               <circle cx="12" cy="12.5" r="3.5" />
             </svg>
             <span className="font-body text-sm font-semibold text-navy">
-              {dragging ? 'Drop it here' : 'Drop a photo here or browse'}
+              {dragging ? t('Drop it here') : t('Drop a photo here or browse')}
             </span>
             <span className="font-body text-xs text-muted">
-              Show the whole problem and what is around it
+              {t('Show the whole problem and what is around it')}
             </span>
           </button>
         )}
@@ -357,8 +361,8 @@ export default function ReportForm({
         style={rise(0.2)}
       >
         <div id="step-category">
-          <StepHeading number="2" done={stepsDone[1]}>
-            What kind of problem?
+          <StepHeading number={n(2)} done={stepsDone[1]}>
+            {t('What kind of problem?')}
           </StepHeading>
         </div>
         <div className="flex flex-wrap gap-2" role="group" aria-labelledby="step-category">
@@ -388,14 +392,14 @@ export default function ReportForm({
         style={rise(0.3)}
       >
         <div id="step-description">
-          <StepHeading number="3" done={stepsDone[2]}>
-            What is wrong?
+          <StepHeading number={n(3)} done={stepsDone[2]}>
+            {t('What is wrong?')}
           </StepHeading>
         </div>
         {editing && (
           <div className="flex flex-col gap-1.5">
             <label htmlFor="report-title" className="font-body text-sm font-semibold text-navy">
-              Title
+              {t('Title')}
             </label>
             <input
               id="report-title"
@@ -407,7 +411,7 @@ export default function ReportForm({
               className="w-full rounded-full border border-navy/15 bg-white px-4 py-3 font-body text-sm text-navy transition hover:border-forest/50 focus:border-forest focus:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest/40 disabled:opacity-50"
             />
             <p id="report-title-help" className="font-body text-xs text-muted">
-              {`A short name for the problem, ${TITLE_MIN} to ${TITLE_MAX} characters.`}
+              {t('A short name for the problem, {min} to {max} characters.', { min: TITLE_MIN, max: TITLE_MAX })}
             </p>
             <SummarizeButton
               text={description}
@@ -417,7 +421,7 @@ export default function ReportForm({
           </div>
         )}
         <label htmlFor="report-description" className="sr-only">
-          Describe the problem
+          {t('Describe the problem')}
         </label>
         <textarea
           id="report-description"
@@ -425,7 +429,7 @@ export default function ReportForm({
           value={description}
           onChange={(e) => setDescription(e.target.value.slice(0, MAX_DESCRIPTION))}
           rows={4}
-          placeholder="Large pothole in the left lane, about half a metre wide…"
+          placeholder={t('Large pothole in the left lane, about half a metre wide…')}
           className="w-full resize-none rounded-2xl border border-navy/15 bg-white px-4 py-3 font-body text-sm text-navy placeholder:text-muted transition hover:border-forest/50 focus:border-forest focus:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest/40 disabled:opacity-50"
         />
         <p
@@ -434,7 +438,7 @@ export default function ReportForm({
             description.length >= NEAR_LIMIT ? 'font-semibold text-danger' : 'text-muted',
           )}
         >
-          {description.length}/{MAX_DESCRIPTION}
+          {n(description.length)}/{n(MAX_DESCRIPTION)}
         </p>
       </section>
 
@@ -447,7 +451,7 @@ export default function ReportForm({
               onClick={onCancel}
               className="flex shrink-0 items-center justify-center rounded-full border-2 border-navy/20 bg-white px-6 py-3.5 font-body text-sm font-bold text-navy transition hover:border-navy focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest/60 focus-visible:ring-offset-2"
             >
-              Cancel
+              {t('Cancel')}
             </button>
             {!deleted && submitButton}
           </div>
@@ -461,7 +465,7 @@ export default function ReportForm({
         )}
         {locked ? (
           <p className="text-center font-body text-xs font-semibold text-danger">
-            {lockedReason}
+            {t(lockedReason)}
           </p>
         ) : (
           <p aria-live="polite" className="text-center font-body text-xs text-muted">

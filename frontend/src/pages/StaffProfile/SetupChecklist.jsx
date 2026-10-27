@@ -2,11 +2,12 @@ import { useState } from 'react'
 import clsx from 'clsx'
 import Button from '../../components/ui/Button'
 import { setupMissing } from '../../services/api'
+import { useT } from '../../i18n/useLanguage'
 
 // "a, b and c"
-function joinList(items) {
+function joinList(items, and) {
   if (items.length < 2) return items.join('')
-  return `${items.slice(0, -1).join(', ')} and ${items.at(-1)}`
+  return `${items.slice(0, -1).join(', ')} ${and} ${items.at(-1)}`
 }
 
 function Item({ done, children }) {
@@ -37,6 +38,7 @@ function Item({ done, children }) {
 // ends the setup. The button works only once every required item is saved
 // and verified; unsaved details count as not done yet.
 export default function SetupChecklist({ profile, detailsDirty, onFinish }) {
+  const t = useT()
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
   const missing = setupMissing(profile)
@@ -45,12 +47,12 @@ export default function SetupChecklist({ profile, detailsDirty, onFinish }) {
 
   let status
   if (missing.length) {
-    status = `You still need ${joinList(missing)}.`
-    if (detailsDirty) status += ' Save your details too.'
+    status = t('You still need {list}.', { list: joinList(missing.map((item) => t(item)), t('and')) })
+    if (detailsDirty) status += ` ${t('Save your details too.')}`
   } else if (detailsDirty) {
-    status = 'Save your details to finish.'
+    status = t('Save your details to finish.')
   } else {
-    status = 'Everything is ready. You can finish now.'
+    status = t('Everything is ready. You can finish now.')
   }
 
   async function handleFinish() {
@@ -71,20 +73,20 @@ export default function SetupChecklist({ profile, detailsDirty, onFinish }) {
       className="rounded-card bg-navy p-5 text-mint shadow-sm sm:p-6"
     >
       <h2 id="setup-checklist-heading" className="font-heading text-xl font-extrabold text-mint">
-        Setup checklist
+        {t('Setup checklist')}
       </h2>
       <p className="mt-1 font-body text-sm text-mint/80">
-        A photo and a new password are optional.
+        {t('A photo and a new password are optional.')}
       </p>
       <ul className="mt-4 flex flex-col gap-3 rounded-tile bg-mint p-4">
         <Item done={!missing.includes('a valid name') && !missing.includes('a job title') && !detailsDirty}>
-          Name and job title saved
+          {t('Name and job title saved')}
         </Item>
-        <Item done={!missing.includes('a verified phone number')}>Phone number verified</Item>
-        <Item done={!missing.includes('a verified email address')}>Email address verified</Item>
-        <Item done={!missing.includes('a verified Employee ID')}>Employee ID verified</Item>
+        <Item done={!missing.includes('a verified phone number')}>{t('Phone number verified')}</Item>
+        <Item done={!missing.includes('a verified email address')}>{t('Email address verified')}</Item>
+        <Item done={!missing.includes('a verified Employee ID')}>{t('Employee ID verified')}</Item>
         {isDepartment && (
-          <Item done={!missing.includes('a verified department code')}>Department verified</Item>
+          <Item done={!missing.includes('a verified department code')}>{t('Department verified')}</Item>
         )}
       </ul>
       <p id="setup-status" className="mt-4 font-body text-sm font-semibold text-mint">
@@ -102,7 +104,7 @@ export default function SetupChecklist({ profile, detailsDirty, onFinish }) {
         onClick={handleFinish}
         className="mt-4 min-h-11 w-full"
       >
-        {busy ? 'Finishing…' : 'Finish setup'}
+        {busy ? t('Finishing…') : t('Finish setup')}
       </Button>
     </section>
   )

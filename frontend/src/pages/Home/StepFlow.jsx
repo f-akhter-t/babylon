@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import clsx from 'clsx'
 import { ArrowRightIcon } from './HomeIcons'
+import { useT } from '../../i18n/useLanguage'
 
 const steps = [
   { label: 'Open', on: 'border-amber bg-amber text-navy', off: 'border-amber text-amber' },
@@ -9,6 +10,7 @@ const steps = [
 ]
 
 export default function StepFlow() {
+  const t = useT()
   const [lit, setLit] = useState(-1)
 
   useEffect(() => {
@@ -28,7 +30,7 @@ export default function StepFlow() {
               lit === i ? step.on : step.off,
             )}
           >
-            {step.label}
+            {t(step.label)}
           </span>
         </span>
       ))}

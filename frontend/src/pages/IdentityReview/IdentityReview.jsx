@@ -2,7 +2,8 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import clsx from 'clsx'
 import AdminLayout from '../../components/layout/AdminLayout'
 import FormNotice from '../Profile/FormNotice'
-import IdentityQueueCard, { QueueSkeleton } from './IdentityQueueCard'
+import IdentityQueueCard from './IdentityQueueCard'
+import LogoLoader from '../../components/ui/LogoLoader'
 import IdentityReviewPanel from './IdentityReviewPanel'
 import RequireRole from '../Auth/RequireRole'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
@@ -13,6 +14,7 @@ import {
   PROFILE_EVENT,
   reviewIdentity,
 } from '../../services/api'
+import { useT } from '../../i18n/useLanguage'
 
 // A submission is the same one only while its date matches, so a citizen who
 // sends again after a rejection shows up as a fresh card.
@@ -24,6 +26,7 @@ const PHOTO_NOT_DELETED =
 // The submissions list, in its own section beside (or above) the review panel.
 // Its list scrolls inside the section: sideways on small screens, down on large ones.
 function QueueSection({ label, children }) {
+  const t = useT()
   return (
     <section
       aria-labelledby="identity-queue-heading"
@@ -33,7 +36,7 @@ function QueueSection({ label, children }) {
       )}
     >
       <h2 id="identity-queue-heading" className="px-1 font-heading text-xl font-extrabold text-mint">
-        Submissions
+        {t('Submissions')}
       </h2>
       <p className="mt-1 px-1 font-body text-sm text-mint/70">{label}</p>
       <div className={clsx('mt-4', fit.column, fit.grow)}>{children}</div>
@@ -52,6 +55,7 @@ export default function IdentityReview() {
 }
 
 function IdentityReviewPage() {
+  const t = useT()
   useDocumentTitle('Identity checks')
   const [queue, setQueue] = useState(null) // null while loading
   const [selectedKey, setSelectedKey] = useState(null)
@@ -132,7 +136,7 @@ function IdentityReviewPage() {
         setSelectedKey(keyOf(submission))
         load() // the card leaves the list and the panel explains why
       } else {
-        setNotice({ tone: 'error', text: err.message || 'Something went wrong. Please try again.' })
+        setNotice({ tone: 'error', text: t(err.message || 'Something went wrong. Please try again.') })
       }
       return
     }
@@ -146,11 +150,11 @@ function IdentityReviewPage() {
     setFocusPanel(Boolean(next))
     const done =
       decision === 'approve'
-        ? `Approved. ${submission.name} is now verified.`
-        : `Rejected. ${submission.name} will see your reason on their profile.`
+        ? t('Approved. {name} is now verified.', { name: submission.name })
+        : t('Rejected. {name} will see your reason on their profile.', { name: submission.name })
     setNotice({
       tone: 'success',
-      text: result.photoDeleted ? done : `${done} ${PHOTO_NOT_DELETED}`,
+      text: result.photoDeleted ? done : `${done} ${t(PHOTO_NOT_DELETED)}`,
     })
   }
 
@@ -158,11 +162,10 @@ function IdentityReviewPage() {
     <AdminLayout variant="admin" active="Identity checks">
       <div className={clsx('p-4 break-words sm:p-6 lg:p-8', fit.page)}>
         <h1 className="font-heading text-3xl font-extrabold text-navy sm:text-4xl">
-          Identity checks
+          {t('Identity checks')}
         </h1>
         <p className="mt-1 max-w-2xl font-body text-base text-muted">
-          Citizens who sent their National ID from the Profile page. Approve to give them the
-          Verified badge, or reject with a reason they can act on.
+          {t('Citizens who sent their National ID from the Profile page. Approve to give them the Verified badge, or reject with a reason they can act on.')}
         </p>
 
         {/* Read out after each action. Errors use FormNotice's own alert. */}
@@ -174,24 +177,16 @@ function IdentityReviewPage() {
         </div>
 
         {queue === null ? (
-          <div className="mt-6 flex flex-col gap-6 lg:flex-row lg:items-start">
-            <QueueSection label="Loading the queue…">
-              <QueueSkeleton />
-            </QueueSection>
-            <div
-              className="hidden h-96 min-w-0 flex-1 rounded-panel bg-mint skeleton lg:block"
-              aria-hidden="true"
-            />
-          </div>
+          <LogoLoader label={t('Loading the queue…')} className="mt-6" />
         ) : queue.length === 0 ? (
           <div className="mt-6 flex flex-col gap-4">
             {reviewedElsewhere && <FormNotice tone="error">{ALREADY_REVIEWED}</FormNotice>}
             <div className="rounded-panel bg-mint p-6 text-center sm:p-10">
               <p className="font-heading text-2xl font-extrabold text-navy">
-                No identity checks are waiting.
+                {t('No identity checks are waiting.')}
               </p>
               <p className="mt-2 font-body text-base text-muted">
-                New submissions from the Profile page will appear here.
+                {t('New submissions from the Profile page will appear here.')}
               </p>
             </div>
           </div>
@@ -209,8 +204,8 @@ function IdentityReviewPage() {
             <QueueSection
               label={
                 queue.length === 1
-                  ? 'One submission is waiting, oldest first.'
-                  : `${queue.length} submissions are waiting, oldest first.`
+                  ? t('One submission is waiting, oldest first.')
+                  : t('{n} submissions are waiting, oldest first.', { n: queue.length })
               }
             >
               <ul
@@ -249,7 +244,7 @@ function IdentityReviewPage() {
                   {reviewedElsewhere && (
                     <FormNotice tone="error">{ALREADY_REVIEWED}</FormNotice>
                   )}
-                  <p>Choose a submission from the list to review it.</p>
+                  <p>{t('Choose a submission from the list to review it.')}</p>
                 </div>
               )}
             </div>

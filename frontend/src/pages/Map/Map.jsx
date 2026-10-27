@@ -11,10 +11,12 @@ import { useToast } from '../../components/ui/toast'
 import { useListKeys } from './useListKeys'
 import { useViewer } from './useViewer'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
+import { useT } from '../../i18n/useLanguage'
 
 const NO_FILTERS = { category: 'All', status: 'All', q: '' }
 
 export default function Map() {
+  const t = useT()
   const { category, status, search, selectedId, update } = useMapFilters()
   const { issues, allIssues, loading, error, retry, update: liveUpdate, allUpdate } = useIssues({
     category,
@@ -66,8 +68,8 @@ export default function Map() {
   useEffect(() => {
     if (!deletedOpen) return
     update({ issue: null })
-    say('This report was deleted.')
-  }, [deletedOpen]) // eslint-disable-line react-hooks/exhaustive-deps -- update is a new function each render
+    say(t('This report was deleted.'))
+  }, [deletedOpen, t]) // eslint-disable-line react-hooks/exhaustive-deps -- update is a new function each render
 
   return (
     <div className="flex min-h-dvh flex-col font-body lg:h-dvh">

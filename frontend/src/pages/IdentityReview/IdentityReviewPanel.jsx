@@ -5,9 +5,10 @@ import VerifyBadge from '../Profile/VerifyBadge'
 import { MaskedNid, SampleTag } from './IdentityQueueCard'
 import IdCardPhoto from './IdCardPhoto'
 import { useIdentityPhoto } from './useIdentityPhoto'
-import { formatDate } from '../../utils/format'
+import { useFormat } from '../../i18n/useFormat'
 import { checkRejectReason, REJECT_REASON_MAX } from '../../utils/profileRules'
 import { fit, REGION_FOCUS, useFitMode } from '../../components/layout/staffFit'
+import { useT } from '../../i18n/useLanguage'
 
 const PHOTO_NOTE_ID = 'identity-photo-note'
 const SUGGESTED_REASON = 'Please send your NID again with a clear photo of the front of the card.'
@@ -16,6 +17,8 @@ const SUGGESTED_REASON = 'Please send your NID again with a clear photo of the f
 // A real submission can only be approved once its card photo has loaded.
 // onDecide(decision, reason) returns a promise.
 export default function IdentityReviewPanel({ submission, onDecide, focusOnOpen }) {
+  const t = useT()
+  const { date } = useFormat()
   const [reason, setReason] = useState('')
   const [busy, setBusy] = useState(null) // 'approve' | 'reject' | null
   const headingRef = useRef(null)
@@ -28,7 +31,7 @@ export default function IdentityReviewPanel({ submission, onDecide, focusOnOpen 
   const photoBlocksApprove = !submission.sample && photo.kind !== 'photo'
 
   function applySuggestedReason() {
-    setReason(SUGGESTED_REASON)
+    setReason(t(SUGGESTED_REASON))
     reasonRef.current?.focus()
   }
 
@@ -54,7 +57,7 @@ export default function IdentityReviewPanel({ submission, onDecide, focusOnOpen 
     >
       <div
         role={fitMode ? 'region' : undefined}
-        aria-label={fitMode ? 'Submission details' : undefined}
+        aria-label={fitMode ? t('Submission details') : undefined}
         tabIndex={fitMode ? 0 : undefined}
         className={clsx(
           'rounded-t-panel px-3 pt-3 pb-4 sm:px-6 sm:pt-6',
@@ -84,21 +87,21 @@ export default function IdentityReviewPanel({ submission, onDecide, focusOnOpen 
 
         <dl className="mt-5 grid gap-3 font-body text-sm sm:grid-cols-2">
           <div className="min-w-0 rounded-tile bg-white/70 px-3 py-3 sm:px-4">
-            <dt className="font-bold text-slate">NID number</dt>
+            <dt className="font-bold text-slate">{t('NID number')}</dt>
             <dd className="mt-1 text-base font-semibold tracking-wider text-navy">
               <MaskedNid last4={submission.nidLast4} />
             </dd>
           </div>
           <div className="min-w-0 rounded-tile bg-white/70 px-3 py-3 sm:px-4">
-            <dt className="font-bold text-slate">Submitted</dt>
+            <dt className="font-bold text-slate">{t('Submitted')}</dt>
             <dd className="mt-1 text-base font-semibold text-navy">
-              {formatDate(submission.submittedAt)}
+              {date(submission.submittedAt)}
             </dd>
           </div>
         </dl>
 
         <div className="mt-5">
-          <p className="font-body text-sm font-bold text-navy">Photo of the front of the NID card</p>
+          <p className="font-body text-sm font-bold text-navy">{t('Photo of the front of the NID card')}</p>
           <div className="mt-2">
             <IdCardPhoto
               photo={photo}
@@ -111,7 +114,7 @@ export default function IdentityReviewPanel({ submission, onDecide, focusOnOpen 
 
         <div className="mt-5">
           <label htmlFor="identity-reject-reason" className="block font-body text-sm font-bold text-navy">
-            Reason, if rejecting
+            {t('Reason, if rejecting')}
           </label>
           <textarea
             ref={reasonRef}
@@ -122,17 +125,17 @@ export default function IdentityReviewPanel({ submission, onDecide, focusOnOpen 
             onChange={(e) => setReason(e.target.value)}
             disabled={Boolean(busy)}
             aria-describedby="identity-reject-hint"
-            placeholder="For example: the photo is blurry, please take it again in good light."
+            placeholder={t('For example: the photo is blurry, please take it again in good light.')}
             className="mt-2 w-full rounded-tile border border-navy/60 bg-white p-3 font-body text-sm text-navy placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-forest disabled:opacity-50"
           />
           <p id="identity-reject-hint" className="mt-1 font-body text-xs text-slate">
-            {`The citizen will see this reason. Do not include their NID number. ${reasonLength} of ${REJECT_REASON_MAX} characters.`}
+            {t('The citizen will see this reason. Do not include their NID number. {n} of {max} characters.', { n: reasonLength, max: REJECT_REASON_MAX })}
           </p>
         </div>
 
         {submission.sample && (
           <p className="mt-5 rounded-tile bg-amber/20 px-4 py-2.5 font-body text-sm text-navy">
-            This sample has no photo to compare, so approve or reject to try the flow.
+            {t('This sample has no photo to compare, so approve or reject to try the flow.')}
           </p>
         )}
       </div>
@@ -146,7 +149,7 @@ export default function IdentityReviewPanel({ submission, onDecide, focusOnOpen 
           aria-describedby={photoBlocksApprove && photo.kind !== 'loading' ? PHOTO_NOTE_ID : undefined}
           onClick={() => decide('approve')}
         >
-          {busy === 'approve' ? 'Approving…' : 'Approve'}
+          {busy === 'approve' ? t('Approving…') : t('Approve')}
         </Button>
         <Button
           variant="outline"
@@ -155,7 +158,7 @@ export default function IdentityReviewPanel({ submission, onDecide, focusOnOpen 
           disabled={Boolean(busy) || Boolean(reasonError)}
           onClick={() => decide('reject')}
         >
-          {busy === 'reject' ? 'Rejecting…' : 'Reject'}
+          {busy === 'reject' ? t('Rejecting…') : t('Reject')}
         </Button>
       </div>
     </section>

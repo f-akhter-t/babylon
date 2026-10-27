@@ -1,5 +1,6 @@
 import { useEffect, useId, useRef } from 'react'
 import clsx from 'clsx'
+import { useT } from '../../i18n/useLanguage'
 
 // A yes/no question on a native modal <dialog>. showModal() puts it in the
 // top layer and makes the rest of the page inert; Tab and Shift+Tab also wrap
@@ -24,6 +25,7 @@ export default function ConfirmDialog({
   onConfirm,
   onClosed,
 }) {
+  const t = useT()
   const dialogRef = useRef(null)
   const cancelRef = useRef(null)
   const confirmRef = useRef(null)
@@ -78,10 +80,10 @@ export default function ConfirmDialog({
       className="motion-dialog m-auto w-[min(28rem,calc(100vw-2rem))] rounded-panel bg-mint p-6 font-body text-navy shadow-xl backdrop:bg-navy/60 sm:p-8"
     >
       <h2 id={titleId} className="font-heading text-2xl font-extrabold">
-        {title}
+        {t(title)}
       </h2>
       <p id={textId} className="mt-2 text-base text-slate">
-        {text}
+        {t(text)}
       </p>
       <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-end">
         <button
@@ -91,7 +93,7 @@ export default function ConfirmDialog({
           disabled={busy}
           className="min-h-11 rounded-full border-2 border-navy px-5 font-bold text-navy transition-colors hover:bg-navy/10 disabled:opacity-50 motion-reduce:transition-none"
         >
-          {cancelLabel}
+          {t(cancelLabel)}
         </button>
         <button
           ref={confirmRef}
@@ -104,7 +106,7 @@ export default function ConfirmDialog({
             tone === 'danger' ? 'bg-danger text-white' : 'bg-navy text-mint',
           )}
         >
-          {confirmLabel}
+          {t(confirmLabel)}
         </button>
       </div>
     </dialog>

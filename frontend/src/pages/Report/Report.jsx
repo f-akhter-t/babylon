@@ -11,6 +11,7 @@ import { useToast } from '../../components/ui/toast'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import RequireCitizen from '../Auth/RequireCitizen'
 import { enter } from '../../components/ui/motion'
+import { useT } from '../../i18n/useLanguage'
 
 // Citizens only: guests log in first and come back here, staff go to their panel.
 export default function Report() {
@@ -22,6 +23,7 @@ export default function Report() {
 }
 
 function ReportPage() {
+  const t = useT()
   useDocumentTitle('Report an issue')
   const toast = useToast()
   const [category, setCategory] = useState('')
@@ -39,7 +41,7 @@ function ReportPage() {
   // The server saves the report; the owner comes from the login, not from this form.
   // If this throws, the form keeps what the citizen typed and shows the message.
   async function handleSubmit({ photo, category: chosen, description }) {
-    if (!location) throw new Error('Pick a location on the map first.')
+    if (!location) throw new Error(t('Pick a location on the map first.'))
     const photoUrl = await resizeImage(photo)
     await createIssue({
       category: chosen,
@@ -47,7 +49,7 @@ function ReportPage() {
       photoUrl,
       location,
     })
-    toast.info(`Your report is submitted. You earned ${POINTS_PER_REPORT} points.`)
+    toast.info(t('Your report is submitted. You earned {points} points.', { points: POINTS_PER_REPORT }))
   }
 
   return (
@@ -68,7 +70,7 @@ function ReportPage() {
             >
               ‹
             </span>{' '}
-            Back to maps
+            {t('Back to maps')}
           </Link>
 
           <div
@@ -76,10 +78,10 @@ function ReportPage() {
             style={enter('rise-in', 0.05)}
           >
             <h1 className="font-heading text-4xl font-extrabold text-navy md:text-5xl">
-              Report an issue
+              {t('Report an issue')}
             </h1>
             <p className="font-body text-sm text-muted">
-              Photo, place, and a short description. It takes about a minute.
+              {t('Photo, place, and a short description. It takes about a minute.')}
             </p>
           </div>
 

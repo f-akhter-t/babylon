@@ -5,6 +5,7 @@ export const ADMIN_NAV = {
     label: 'Department panel',
     note: 'Only the admin can close an issue, after checking your after-photo.',
     items: [
+      { label: 'Dashboard', to: '/department/dashboard' },
       { label: 'Assigned issues', to: '/department' },
       { label: 'In progress', to: '/department?status=in-progress', badge: 'inProgress' },
       {
@@ -20,6 +21,7 @@ export const ADMIN_NAV = {
     label: 'Admin oversight',
     note: 'Nothing closes without a photo you have checked.',
     items: [
+      { label: 'Dashboard', to: '/admin/dashboard' },
       { label: 'Verification queue', to: '/admin/verify', badge: 'queue' },
       {
         label: 'Reopened issues',
