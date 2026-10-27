@@ -7,6 +7,8 @@ import LoadError from '../../components/ui/LoadError'
 import LogoLoader from '../../components/ui/LogoLoader'
 import IssueTable from './IssueTable'
 import ResolvePanel from './ResolvePanel'
+import WeeklySummaryCard from './WeeklySummaryCard'
+
 import {
   ISSUES_EVENT,
   loadDepartmentPanel,
@@ -243,10 +245,13 @@ function DepartmentPanelPage() {
         </div>
 
         {!loading && (
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4 lg:col-start-1 lg:row-start-2">
-            <StatCard label={t('Open')} value={open} level={1} iconClass="text-amber-dark" />
-            <StatCard label={t('In progress')} value={inProgress} level={2} iconClass="text-slate" />
-            <StatCard label={t('Awaiting admin check')} value={awaiting} dark />
+          <div className="flex min-w-0 flex-col gap-5 sm:gap-6 lg:col-start-1 lg:row-start-2">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4">
+              <StatCard label={t('Open')} value={open} level={1} iconClass="text-amber-dark" />
+              <StatCard label={t('In progress')} value={inProgress} level={2} iconClass="text-slate" />
+              <StatCard label={t('Awaiting admin check')} value={awaiting} dark />
+            </div>
+            {department && <WeeklySummaryCard />}
           </div>
         )}
 

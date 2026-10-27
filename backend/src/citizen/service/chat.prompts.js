@@ -18,6 +18,19 @@ function appFacts() {
     'A fixed problem that comes back can be reopened from its page. The admin then reviews it.',
     `Each report earns ${POINTS_PER_REPORT} points. Levels: ${levels}.`,
     'Notices appear in the bell: filed, work started, fix waiting, fix verified, sent back, and so on.',
+    'Anyone can browse the Map, the Feed and the Home page without signing in. The Map shows reported problems as pins. The Feed lists them ranked by priority and votes.',
+    'Reporting, voting, reopening, the Profile page and the notice bell need a citizen account. Sign up on the Sign up page with a name, an email and a password of at least 6 characters.',
+    'Citizens sign in on the Login page. Department and admin staff have a separate staff sign-in page and cannot use the citizen one.',
+    'Forgot password: open the Forgot password page, enter the account email, then type the 6-digit code sent by email (valid for 10 minutes) and a new password. Three wrong codes lock that code. A new code can be asked for after 30 seconds.',
+    'A report needs a photo and a description of 10 to 500 characters. The title is made from the first sentence of the description. The pin must be inside the citizen\'s own division, which is saved on the Profile page.',
+    'Before a report is filed the app may warn that a similar photo was already reported nearby.',
+    'The citizen who files a report is counted as its first vote. A citizen can vote once per report.',
+    'A department starts work, then sends a photo of the fix. An admin checks that photo before the report is marked resolved. If the admin is not satisfied, the report goes back to the department with the reason.',
+    'On the Profile page a citizen can change the name, address and division. The phone, email and ID checks are optional and never block reporting, voting or anything else.',
+    'For the ID check only the last 4 digits and the status are kept. The ID photo is deleted after an admin reviews it.',
+    'Points are never stored. They equal 60 times the number of reports a citizen has filed, so deleting a report removes its 60 points.',
+    'The bell keeps the newest 50 notices for each person.',
+    'This chat cannot see anyone\'s account or reports. To check a report, open the My reports page.',
   ].join(' ')
 }
 

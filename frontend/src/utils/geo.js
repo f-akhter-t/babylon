@@ -1,3 +1,6 @@
+// Wasa Circle, Chattogram: where the maps open before the person's own position is known.
+export const MAP_CENTER = [22.354, 91.824]
+
 const EARTH_RADIUS_M = 6371000
 const toRad = (deg) => (deg * Math.PI) / 180
 

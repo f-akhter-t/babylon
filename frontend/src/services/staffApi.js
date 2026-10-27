@@ -1,7 +1,7 @@
 // What the staff profile page (department and admin) reads and does on the
 // backend: /auth/me and /auth/staff/*. api.js calls these for a staff account,
 // so the pages do not change. They live in their own file so the tests can load
-// them without the rest of the mock API.
+// them without the rest of api.js.
 //
 // Every profile comes back in the same shape:
 //   { id, name, email, role, department, onboarded, jobTitle, phone, phoneVerified,

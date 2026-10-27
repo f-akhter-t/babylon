@@ -1,9 +1,9 @@
 // What a guest can read from the backend: the Home page data, and the issue list
 // and detail for Map, Feed and the issue page. api.js re-exports these, so pages
 // keep importing them from there. They live in their own file so the tests can
-// load them without the rest of the mock API.
+// load them without the rest of api.js.
 import { get } from './http.js'
-import { MAP_CENTER } from '../mock/issues.js'
+import { MAP_CENTER } from '../utils/geo.js'
 import { hasPosition } from '../utils/position.js'
 
 // The hero text never changes while the app runs, and the backend answers both

@@ -12,7 +12,7 @@ export function reportStatus(issue) {
   return 'open'
 }
 
-// createdAt is a number (old mock) or a date text (the server).
+// createdAt is a number or a date text (the server sends text).
 const reportedAt = (issue) =>
   issue.createdAt ? new Date(issue.createdAt).getTime() : Date.now() - (issue.daysAgo ?? 0) * DAY
 

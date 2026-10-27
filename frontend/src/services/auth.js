@@ -1,13 +1,10 @@
-// Accounts and sign-in. log-in, sign-up (citizens and staff), log-out and
-// change-password talk to the Express backend (through http.js). The helpers
-// below them (getAccount, renameAccount ...) still read the browser's own copy of
-// the accounts, because the parts of api.js that use them (citizen profile,
-// notifications) are swapped in later steps. Pages do not change.
+// Accounts and sign-in. Log-in, sign-up (citizens and staff), log-out and
+// change-password talk to the Express backend (through http.js). The browser
+// keeps only the token and the signed-in session (name, email, role), never a
+// password.
 import { clearToken, getToken, patch, post, setToken, setUnauthorizedHandler } from './http.js'
 
-const USERS_KEY = 'babylon-users' // accounts seen in this browser (no passwords)
 const SESSION_KEY = 'babylon-session'
-const NAMES_KEY = 'babylon-names' // names changed on the Profile page, by email
 
 // Roles that sign up through the staff pages (/staff/login, /staff/signup).
 // Citizens use /login and /signup.
@@ -17,18 +14,6 @@ export const STAFF_ROLES = [
 ]
 
 const isStaffRole = (role) => role !== 'citizen'
-
-// The three accounts made by `npm run seed:public`.
-const DEMO_USERS = [
-  { name: 'Nadia R.', email: 'citizen@babylon.test', role: 'citizen' },
-  {
-    name: 'Rafiq Hasan',
-    email: 'roads@babylon.test',
-    role: 'department',
-    department: 'Roads & Highways',
-  },
-  { name: 'Tahmina Akter', email: 'admin@babylon.test', role: 'admin' },
-]
 
 // Demo accounts listed on each sign-in page: citizens on /login, staff on /staff/login.
 export const DEMO_ACCOUNTS = {
@@ -40,54 +25,13 @@ export const DEMO_ACCOUNTS = {
 }
 export const DEMO_PASSWORD = 'password123'
 
-function readStored() {
-  try {
-    return JSON.parse(localStorage.getItem(USERS_KEY)) ?? []
-  } catch {
-    return []
-  }
+// The demo hints are for local work. They show while the app runs with
+// `npm run dev`, and on a build made with VITE_SHOW_DEMO_ACCOUNTS=true. A normal
+// production build hides them; the accounts themselves stay in the seed.
+export function showDemoAccounts(env = import.meta.env) {
+  return Boolean(env?.DEV) || env?.VITE_SHOW_DEMO_ACCOUNTS === 'true'
 }
-
-function allUsers() {
-  return [...DEMO_USERS, ...readStored()]
-}
-
-// Read-only: the emails of the staff accounts with this role (and, for a
-// department, this department). Used to send each of them a notification.
-export function staffEmails({ role, department } = {}) {
-  return allUsers()
-    .filter((u) => u.role === role && (role !== 'department' || u.department === department))
-    .map((u) => u.email)
-}
-
-function readNames() {
-  try {
-    return JSON.parse(localStorage.getItem(NAMES_KEY)) ?? {}
-  } catch {
-    return {}
-  }
-}
-
-const isDemoUser = (email) => DEMO_USERS.some((u) => u.email.toLowerCase() === email.toLowerCase())
-
-// The session never holds a password. (`password` is dropped for accounts
-// stored by the mock version of this file.)
-function publicUser({ password, ...user }) {
-  void password
-  const renamed = readNames()[user.email.toLowerCase()]
-  return renamed ? { ...user, name: renamed } : user
-}
-
-function findUser(email) {
-  if (!email) return null
-  return allUsers().find((u) => u.email.toLowerCase() === email.trim().toLowerCase()) ?? null
-}
-
-// The account's public details (no password), or null.
-export function getAccount(email) {
-  const user = findUser(email)
-  return user ? publicUser(user) : null
-}
+export const SHOW_DEMO_ACCOUNTS = showDemoAccounts()
 
 // A staff account that has not finished its profile setup: the server said
 // onboarded: false when it signed in, and finishing the setup (api.js) sets it
@@ -124,36 +68,18 @@ export function getSession() {
   }
 }
 
-// Remember who signed in, so the parts of api.js that are not on the server yet
-// (profile, notifications, names on reports) can still find the account by
-// email. Holds no password. The three demo accounts are built in already.
-// Goes away when those functions are swapped.
-function rememberAccount(user) {
-  if (isDemoUser(user.email)) return
-  const key = user.email.toLowerCase()
-  const entry = {
-    name: user.name,
-    email: user.email,
-    role: user.role,
-    ...(user.department ? { department: user.department } : {}),
-  }
-  const others = readStored().filter((u) => u.email.toLowerCase() !== key)
-  localStorage.setItem(USERS_KEY, JSON.stringify([...others, entry]))
-}
-
 // Saves the token and the account the server sent, and returns the session the
 // pages use: { name, email, role, department?, onboarded? } (no id). Only staff
 // carry `onboarded`: the setup they still have to finish (see isSetupPending).
 function startSession({ token, user }) {
   setToken(token)
-  rememberAccount(user)
-  const session = publicUser({
+  const session = {
     name: user.name,
     email: user.email,
     role: user.role,
     ...(user.department ? { department: user.department } : {}),
     ...(isStaffRole(user.role) ? { onboarded: user.onboarded === true } : {}),
-  })
+  }
   localStorage.setItem(SESSION_KEY, JSON.stringify(session))
   return session
 }
@@ -220,25 +146,6 @@ export function logout() {
   const token = getToken()
   endSession()
   if (token) post('/auth/logout', undefined, { token }).catch(() => {})
-}
-
-// The name shown for an account, including a change made on the Profile page.
-export function getAccountName(email) {
-  if (!email) return null
-  const user = allUsers().find((u) => u.email.toLowerCase() === email.toLowerCase())
-  return user ? publicUser(user).name : null
-}
-
-// Saves a new display name. The email stays the same, so reports, votes
-// and follows still belong to the account.
-export function renameAccount(email, name) {
-  const key = email.toLowerCase()
-  localStorage.setItem(NAMES_KEY, JSON.stringify({ ...readNames(), [key]: name }))
-
-  const session = getSession()
-  if (session?.email.toLowerCase() === key) {
-    localStorage.setItem(SESSION_KEY, JSON.stringify({ ...session, name }))
-  }
 }
 
 // ---------- First-time profile setup ----------

@@ -1,5 +1,5 @@
 import CategoryChip from '../../components/ui/CategoryChip'
-import { CATEGORIES } from '../../mock/issues'
+import { CATEGORIES } from '../../utils/departments'
 import { useT } from '../../i18n/useLanguage'
 
 const STATUSES = [
