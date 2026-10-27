@@ -114,7 +114,7 @@ export async function submitFix(user, id, { note, photoUrl }) {
   }
   await tell(async () => {
     const admins = await User.find({ role: ROLES.ADMIN }).distinct('email')
-    await notifyMany(admins, { kind: 'fix-waiting', text: MSG.deptSubmittedForAdmin(updated.title), link: '/admin', issueId })
+    await notifyMany(admins, { kind: 'fix-waiting', text: MSG.deptSubmittedForAdmin(updated.title), link: '/admin/verify', issueId })
   })
   return staffView(updated)
 }
