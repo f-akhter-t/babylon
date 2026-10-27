@@ -129,7 +129,7 @@ export default function NotificationBell({ email, alertsPath = '/citizen/alerts'
       >
         <BellIcon />
         {unread > 0 && (
-          <span aria-hidden="true" className="absolute -right-1 -top-1 grid h-[18px] min-w-[18px] place-items-center rounded-full border-2 border-navy bg-amber px-1 text-[11px] font-extrabold text-ink">
+          <span aria-hidden="true" className="absolute -right-1 -top-1 grid h-[18px] min-w-[18px] place-items-center rounded-full border-2 border-ink bg-amber px-1 text-[11px] font-extrabold text-ink">
             {unread}
           </span>
         )}

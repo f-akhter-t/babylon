@@ -93,21 +93,19 @@ function StaffNav({ variant, active, onSelect, department, note, counts, onNavig
 
   return (
     <>
-      <div className="px-2">
+      <div className="flex flex-col items-center gap-3 px-2 text-center">
         <Logo
           size="lg"
           to={locked ? null : homePathFor(variant)}
           label={locked ? undefined : t(LOGO_LABELS[variant])}
           onClick={onNavigate}
         />
-        <div className="mt-2 flex items-center justify-between gap-2">
-          <p className="min-w-0 font-body text-xs font-bold uppercase tracking-widest text-brand">
-            {t(config.label)}
-          </p>
-          <div className="flex items-center gap-2">
-            <ThemeToggle className="size-9" />
-            {!locked && bell}
-          </div>
+        <p className="font-body text-xs font-bold uppercase tracking-widest text-brand">
+          {t(config.label)}
+        </p>
+        <div className="flex items-center justify-center gap-3">
+          <ThemeToggle />
+          {!locked && bell}
         </div>
       </div>
 

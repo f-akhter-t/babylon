@@ -15,7 +15,7 @@ export default function ThemeToggle({ className }) {
       title={dark ? t('Switch to light mode') : t('Switch to dark mode')}
       onClick={() => setTheme(dark ? 'light' : 'dark')}
       className={clsx(
-        'grid size-11 shrink-0 place-items-center rounded-full border border-paper/20 text-paper/85 transition-colors hover:bg-paper/10 hover:text-paper focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand',
+        'grid size-11 shrink-0 place-items-center rounded-full border-[1.5px] border-frost/20 text-frost transition-colors hover:bg-frost/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand',
         className,
       )}
     >
