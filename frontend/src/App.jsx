@@ -1,5 +1,5 @@
 import { lazy, Suspense } from 'react'
-import { Routes, Route, useLocation } from 'react-router-dom'
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import ErrorBoundary from './components/layout/ErrorBoundary'
 import PageLoading from './components/layout/PageLoading'
 import ScrollToTop from './components/layout/ScrollToTop'
@@ -58,6 +58,8 @@ export default function App() {
               <Route path="/department" element={<DepartmentPanel />} />
               <Route path="/department/dashboard" element={<StaffDashboardPage role="department" />} />
               <Route path="/admin/dashboard" element={<StaffDashboardPage role="admin" />} />
+              {/* Old "fix waiting" notices pointed at /admin, which has no page of its own. */}
+              <Route path="/admin" element={<Navigate to="/admin/verify" replace />} />
               <Route path="/admin/verify" element={<VerifyResolutions />} />
               <Route path="/admin/accountability" element={<Accountability />} />
               <Route path="/admin/identity" element={<IdentityReview />} />

@@ -300,6 +300,7 @@ test('submit: 200, issue awaits the admin, notices sent, second submit gives 409
   const admin = notices.find((n) => n.kind === 'fix-waiting')
   assert.equal(reporter.email, 'arif@babylon.test')
   assert.equal(admin.email, 'admin@babylon.test')
+  assert.equal(admin.link, '/admin/verify')
 
   assert.equal((await submit(id, GOOD_FIX)).status, 409)
 })
