@@ -160,6 +160,20 @@ describe('what the browser keeps after signing in', () => {
   })
 })
 
+describe('showDemoAccounts', () => {
+  it('is on while developing, and on when the build asks for it', () => {
+    assert.equal(auth.showDemoAccounts({ DEV: true }), true)
+    assert.equal(auth.showDemoAccounts({ VITE_SHOW_DEMO_ACCOUNTS: 'true' }), true)
+  })
+
+  it('is off for a normal production build, and when there is no environment', () => {
+    assert.equal(auth.showDemoAccounts({ DEV: false }), false)
+    assert.equal(auth.showDemoAccounts({}), false)
+    assert.equal(auth.showDemoAccounts({ VITE_SHOW_DEMO_ACCOUNTS: 'false' }), false)
+    assert.equal(auth.showDemoAccounts(undefined), false)
+  })
+})
+
 describe('getSession', () => {
   it('a saved account without a token counts as signed out', () => {
     store.set('babylon-session', JSON.stringify({ name: 'Nadia R.', email: nadia.email, role: 'citizen' }))

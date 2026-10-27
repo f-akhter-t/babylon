@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import AuthShell, { DemoHint, Field, FormError, SubmitButton, authLinkClass } from './AuthShell'
-import { DEMO_ACCOUNTS, DEMO_PASSWORD, homePathFor, login } from '../../services/auth'
+import { DEMO_ACCOUNTS, DEMO_PASSWORD, homePathFor, login, SHOW_DEMO_ACCOUNTS } from '../../services/auth'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import GuestOnly from './GuestOnly'
 
@@ -117,10 +117,12 @@ function LoginPage() {
         <SubmitButton disabled={!ready || busy}>{busy ? 'Logging in…' : 'Log in'}</SubmitButton>
       </form>
 
-      <DemoHint
-        accounts={DEMO_ACCOUNTS.citizen}
-        lines={[`The demo account uses the password ${DEMO_PASSWORD}.`]}
-      />
+      {SHOW_DEMO_ACCOUNTS && (
+        <DemoHint
+          accounts={DEMO_ACCOUNTS.citizen}
+          lines={[`The demo account uses the password ${DEMO_PASSWORD}.`]}
+        />
+      )}
     </AuthShell>
   )
 }

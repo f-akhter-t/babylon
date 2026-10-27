@@ -25,6 +25,14 @@ export const DEMO_ACCOUNTS = {
 }
 export const DEMO_PASSWORD = 'password123'
 
+// The demo hints are for local work. They show while the app runs with
+// `npm run dev`, and on a build made with VITE_SHOW_DEMO_ACCOUNTS=true. A normal
+// production build hides them; the accounts themselves stay in the seed.
+export function showDemoAccounts(env = import.meta.env) {
+  return Boolean(env?.DEV) || env?.VITE_SHOW_DEMO_ACCOUNTS === 'true'
+}
+export const SHOW_DEMO_ACCOUNTS = showDemoAccounts()
+
 // A staff account that has not finished its profile setup: the server said
 // onboarded: false when it signed in, and finishing the setup (api.js) sets it
 // to true. Read fresh from the saved session every time it is called, because

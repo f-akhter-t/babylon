@@ -6,6 +6,7 @@ import {
   DEMO_PASSWORD,
   homePathFor,
   login,
+  SHOW_DEMO_ACCOUNTS,
 } from '../../services/auth'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import GuestOnly from './GuestOnly'
@@ -114,9 +115,9 @@ function StaffLoginPage() {
       </form>
 
       <DemoHint
-        accounts={DEMO_ACCOUNTS.staff}
+        accounts={SHOW_DEMO_ACCOUNTS ? DEMO_ACCOUNTS.staff : []}
         lines={[
-          `Both demo accounts use the password ${DEMO_PASSWORD}.`,
+          ...(SHOW_DEMO_ACCOUNTS ? [`Both demo accounts use the password ${DEMO_PASSWORD}.`] : []),
           'To create a staff account, ask your administrator for the staff access code.',
         ]}
       />
