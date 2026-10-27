@@ -9,6 +9,7 @@ import DetailActions from './DetailActions'
 import ProgressCard from './ProgressCard'
 import SeenBeforeNote from './SeenBeforeNote'
 import OwnerEdit from './OwnerEdit'
+import OwnerReopen from './OwnerReopen'
 
 // The page once the issue has loaded.
 // Phones: one column (photo, details, map).
@@ -38,6 +39,7 @@ export default function IssueView({ issue, viewer, editAccess, onToggleVote, onT
         >
           <IssueSummary issue={issue} />
           {editAccess !== 'not-owner' && <OwnerEdit issueId={issue.id} access={editAccess} />}
+          <OwnerReopen issue={issue} />
           <DetailActions
             issue={issue}
             viewer={viewer}
