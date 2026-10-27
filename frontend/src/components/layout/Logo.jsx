@@ -8,7 +8,7 @@ const sizes = {
 }
 
 const tones = {
-  onDark: { text: 'text-mint', pin: 'fill-flag-green' },
+  onDark: { text: 'text-frost', pin: 'fill-flag-green' },
   onLight: { text: 'text-navy', pin: 'fill-flag-green' },
 }
 

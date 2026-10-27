@@ -73,7 +73,7 @@ export default function IdentityReviewPanel({ submission, onDecide, focusOnOpen 
               id="identity-review-heading"
               ref={headingRef}
               tabIndex={-1}
-              className="rounded-tile font-heading text-2xl font-extrabold text-navy focus:outline-none focus-visible:ring-2 focus-visible:ring-forest sm:text-3xl"
+              className="rounded-tile font-heading text-2xl font-extrabold text-navy focus:outline-none focus-visible:ring-2 focus-visible:ring-accent sm:text-3xl"
             >
               {submission.name}
             </h2>
@@ -87,13 +87,13 @@ export default function IdentityReviewPanel({ submission, onDecide, focusOnOpen 
 
         <dl className="mt-5 grid gap-3 font-body text-sm sm:grid-cols-2">
           <div className="min-w-0 rounded-tile bg-white/70 px-3 py-3 sm:px-4">
-            <dt className="font-bold text-slate">{t('NID number')}</dt>
+            <dt className="font-bold text-soft">{t('NID number')}</dt>
             <dd className="mt-1 text-base font-semibold tracking-wider text-navy">
               <MaskedNid last4={submission.nidLast4} />
             </dd>
           </div>
           <div className="min-w-0 rounded-tile bg-white/70 px-3 py-3 sm:px-4">
-            <dt className="font-bold text-slate">{t('Submitted')}</dt>
+            <dt className="font-bold text-soft">{t('Submitted')}</dt>
             <dd className="mt-1 text-base font-semibold text-navy">
               {date(submission.submittedAt)}
             </dd>
@@ -126,9 +126,9 @@ export default function IdentityReviewPanel({ submission, onDecide, focusOnOpen 
             disabled={Boolean(busy)}
             aria-describedby="identity-reject-hint"
             placeholder={t('For example: the photo is blurry, please take it again in good light.')}
-            className="mt-2 w-full rounded-tile border border-navy/60 bg-white p-3 font-body text-sm text-navy placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-forest disabled:opacity-50"
+            className="mt-2 w-full rounded-tile border border-navy/60 bg-white p-3 font-body text-sm text-navy placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-accent disabled:opacity-50"
           />
-          <p id="identity-reject-hint" className="mt-1 font-body text-xs text-slate">
+          <p id="identity-reject-hint" className="mt-1 font-body text-xs text-soft">
             {t('The citizen will see this reason. Do not include their NID number. {n} of {max} characters.', { n: reasonLength, max: REJECT_REASON_MAX })}
           </p>
         </div>

@@ -13,12 +13,12 @@ function Items({ items, hidden = false }) {
       {items.map((item) => (
         <li
           key={item.id}
-          className="flex items-center gap-2.5 whitespace-nowrap text-sm font-semibold text-mint"
+          className="flex items-center gap-2.5 whitespace-nowrap text-sm font-semibold text-frost"
         >
           <span className={clsx('size-2 rounded-full', dot[item.status])} />
           <span className="text-brand">{t(label[item.status])}:</span>
           {item.title}
-          <span className="text-mint/60">· {t(item.time)}</span>
+          <span className="text-frost/60">· {t(item.time)}</span>
         </li>
       ))}
     </ul>
@@ -37,7 +37,7 @@ export default function ActivityTicker({ items }) {
   const [played, setPlayed] = useState(false)
 
   // Keeps the strip's height while data loads.
-  if (!items || items.length === 0) return <div className="mt-10 h-12 bg-navy" />
+  if (!items || items.length === 0) return <div className="mt-10 h-12 bg-ink" />
 
   function toggle() {
     if (paused) setPlayed(true)
@@ -45,7 +45,7 @@ export default function ActivityTicker({ items }) {
   }
 
   return (
-    <section aria-label={t('Recent reports')} className="mt-10 flex items-center bg-navy">
+    <section aria-label={t('Recent reports')} className="mt-10 flex items-center bg-ink">
       {/* Hovering or focusing the moving track pauses it. The button sits
           outside the track, so it never holds the ticker paused itself. */}
       <div className="group/track min-w-0 flex-1 overflow-hidden py-3.5">
@@ -65,7 +65,7 @@ export default function ActivityTicker({ items }) {
         aria-pressed={paused}
         aria-label={t('Pause the recent reports ticker')}
         onClick={toggle}
-        className="mx-2 flex size-11 shrink-0 items-center justify-center rounded-full border border-mint/40 text-mint transition-colors hover:bg-mint/10 motion-reduce:transition-none sm:mx-4"
+        className="mx-2 flex size-11 shrink-0 items-center justify-center rounded-full border border-frost/40 text-frost transition-colors hover:bg-frost/10 motion-reduce:transition-none sm:mx-4"
       >
         {paused ? <PlayIcon /> : <PauseIcon />}
       </button>

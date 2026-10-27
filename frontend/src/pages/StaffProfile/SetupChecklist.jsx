@@ -17,7 +17,7 @@ function Item({ done, children }) {
         aria-hidden="true"
         className={clsx(
           'flex size-6 shrink-0 items-center justify-center rounded-full',
-          done ? 'bg-brand text-navy' : 'border-2 border-navy/25',
+          done ? 'bg-brand text-ink' : 'border-2 border-navy/25',
         )}
       >
         {done && (
@@ -70,12 +70,12 @@ export default function SetupChecklist({ profile, detailsDirty, onFinish }) {
   return (
     <section
       aria-labelledby="setup-checklist-heading"
-      className="rounded-card bg-navy p-5 text-mint shadow-sm sm:p-6"
+      className="rounded-card bg-ink p-5 text-frost shadow-sm sm:p-6"
     >
-      <h2 id="setup-checklist-heading" className="font-heading text-xl font-extrabold text-mint">
+      <h2 id="setup-checklist-heading" className="font-heading text-xl font-extrabold text-frost">
         {t('Setup checklist')}
       </h2>
-      <p className="mt-1 font-body text-sm text-mint/80">
+      <p className="mt-1 font-body text-sm text-frost/80">
         {t('A photo and a new password are optional.')}
       </p>
       <ul className="mt-4 flex flex-col gap-3 rounded-tile bg-mint p-4">
@@ -89,11 +89,11 @@ export default function SetupChecklist({ profile, detailsDirty, onFinish }) {
           <Item done={!missing.includes('a verified department code')}>{t('Department verified')}</Item>
         )}
       </ul>
-      <p id="setup-status" className="mt-4 font-body text-sm font-semibold text-mint">
+      <p id="setup-status" className="mt-4 font-body text-sm font-semibold text-frost">
         {status}
       </p>
       {error && (
-        <p role="alert" className="mt-3 rounded-tile bg-mint px-4 py-2.5 font-body text-sm font-semibold text-danger">
+        <p role="alert" className="mt-3 rounded-tile bg-mint px-4 py-2.5 font-body text-sm font-semibold text-alert">
           {error}
         </p>
       )}

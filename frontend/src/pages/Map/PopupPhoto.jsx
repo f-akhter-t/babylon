@@ -19,7 +19,7 @@ export default function PopupPhoto({ issue }) {
     )
   }
   return (
-    <div className="flex size-18 shrink-0 items-center justify-center rounded-tile bg-slate text-white">
+    <div className="flex size-18 shrink-0 items-center justify-center rounded-tile bg-slate text-paper">
       <CameraIcon size={22} />
       <span className="sr-only">{t('No photo yet')}</span>
     </div>

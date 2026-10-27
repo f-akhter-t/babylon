@@ -68,17 +68,17 @@ export default function LoginPrompt({ action, onClose, className }) {
         type="button"
         onClick={close}
         aria-label={t('Close')}
-        className="group absolute -right-0.5 -top-0.5 flex size-11 items-center justify-center rounded-full text-lg leading-none text-slate hover:text-navy"
+        className="group absolute -right-0.5 -top-0.5 flex size-11 items-center justify-center rounded-full text-lg leading-none text-soft hover:text-navy"
       >
         <span className="flex size-7 items-center justify-center rounded-full group-hover:bg-mint-deep">
           ×
         </span>
       </button>
       <span className="font-heading text-base font-extrabold leading-tight">{t(TITLES[action])}</span>
-      <span className="text-xs text-slate">{t(REASONS[action])}</span>
+      <span className="text-xs text-soft">{t(REASONS[action])}</span>
       <div className="mt-1 flex gap-2">
         {/* "!" colours beat Leaflet's blue link colour inside map popups */}
-        <Button ref={loginRef} to="/login" variant="dark" className="flex-1 text-white!">
+        <Button ref={loginRef} to="/login" variant="dark" className="flex-1 text-paper!">
           {t('Log in')}
         </Button>
         <Button to="/signup" variant="outline" className="flex-1 text-navy!">

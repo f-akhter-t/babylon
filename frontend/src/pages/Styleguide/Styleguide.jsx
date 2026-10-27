@@ -10,7 +10,7 @@ import PriorityBadge from '../../components/ui/PriorityBadge'
 import StyleSection from './StyleSection'
 
 const swatches = [
-  'bg-navy', 'bg-forest', 'bg-slate', 'bg-mint', 'bg-mint-deep', 'bg-brand',
+  'bg-ink', 'bg-forest', 'bg-slate', 'bg-mint', 'bg-mint-deep', 'bg-brand',
   'bg-amber', 'bg-amber-dark', 'bg-muted', 'bg-page',
   'bg-map-land', 'bg-map-park', 'bg-map-water',
 ]
@@ -37,7 +37,7 @@ export default function Styleguide() {
       <div className="px-10">
         <StyleSection title="Logo">
           <div className="flex flex-col gap-4">
-            <div className="flex flex-wrap items-center gap-8 rounded-card bg-navy p-6">
+            <div className="flex flex-wrap items-center gap-8 rounded-card bg-ink p-6">
               {logoSizes.map((size) => (
                 <Logo key={size} size={size} to="/styleguide" label={`Babylon, ${size} size on dark`} />
               ))}
@@ -74,7 +74,7 @@ export default function Styleguide() {
         <StyleSection title="Text on mint (check contrast)">
           <div className="rounded-card bg-mint p-6">
             <p className="font-heading text-xl font-extrabold text-navy">Navy heading on mint</p>
-            <p className="text-forest">Forest text on mint</p>
+            <p className="text-accent">Forest text on mint</p>
             <p className="text-muted">Muted text on mint</p>
           </div>
         </StyleSection>
@@ -86,7 +86,7 @@ export default function Styleguide() {
             <Button variant="dark">Dark</Button>
             <Button variant="outline">Outline</Button>
             <Button variant="primary" disabled>Disabled</Button>
-            <span className="rounded-card bg-navy p-3">
+            <span className="rounded-card bg-ink p-3">
               <Button variant="outline-light">Outline on navy</Button>
             </span>
           </div>

@@ -341,7 +341,7 @@ export default function LocationPicker({
           center={markerPosition}
           radius={MATCH_RADIUS_M}
           interactive={false}
-          className="stroke-forest fill-forest/10 stroke-2 [stroke-dasharray:6_6]"
+          className="stroke-accent fill-accent/10 stroke-2 [stroke-dasharray:6_6]"
         />
 
         {match && (
@@ -394,19 +394,19 @@ export default function LocationPicker({
             onChange={(e) => setQuery(e.target.value)}
             placeholder={t('Search street or landmark')}
             aria-label={t('Search street or landmark')}
-            className="w-full rounded-full border border-navy/15 bg-white py-2.5 pl-10 pr-4 font-body text-sm text-navy shadow-sm max-md:min-h-11 transition placeholder:text-muted hover:border-forest/50 focus:border-forest focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest/40"
+            className="w-full rounded-full border border-navy/15 bg-white py-2.5 pl-10 pr-4 font-body text-sm text-navy shadow-sm max-md:min-h-11 transition placeholder:text-muted hover:border-accent/50 focus:border-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
           />
         </div>
         <button
           type="button"
           onClick={handleLocate}
           disabled={locating}
-          className="group shrink-0 rounded-full border border-navy/15 bg-white px-4 py-2.5 font-body text-sm font-semibold text-navy shadow-sm transition hover:-translate-y-0.5 hover:bg-mint hover:shadow-md active:scale-95 disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest/50"
+          className="group shrink-0 rounded-full border border-navy/15 bg-white px-4 py-2.5 font-body text-sm font-semibold text-navy shadow-sm transition hover:-translate-y-0.5 hover:bg-mint hover:shadow-md active:scale-95 disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50"
         >
           <span className="inline-flex items-center gap-1.5">
             <svg
               viewBox="0 0 24 24"
-              className={`h-4 w-4 text-forest transition-transform duration-300 group-hover:scale-110 ${locating ? 'animate-pulse' : ''}`}
+              className={`h-4 w-4 text-accent transition-transform duration-300 group-hover:scale-110 ${locating ? 'animate-pulse' : ''}`}
               fill="none"
               stroke="currentColor"
               strokeWidth="2"
@@ -443,7 +443,7 @@ export default function LocationPicker({
             style={enter('rise-in', 0, 'var(--duration-base)')}
           >
             <div className="flex items-center gap-2">
-              <StaircaseIcon level={1} className="h-5 w-5 text-amber-dark" />
+              <StaircaseIcon level={1} className="h-5 w-5 text-warn" />
               <h3 className="font-heading text-base font-extrabold text-navy">
                 {t('Looks like a match nearby')}
               </h3>
@@ -456,14 +456,14 @@ export default function LocationPicker({
               <button
                 type="button"
                 onClick={handleUpvote}
-                className="rounded-full bg-forest px-4 py-2 font-body text-sm font-bold text-white transition hover:-translate-y-0.5 hover:bg-forest/90 hover:shadow-md active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest/60 focus-visible:ring-offset-2"
+                className="rounded-full bg-forest px-4 py-2 font-body text-sm font-bold text-paper transition hover:-translate-y-0.5 hover:bg-forest/90 hover:shadow-md active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 focus-visible:ring-offset-2"
               >
                 ↑ {t('Upvote it instead')}
               </button>
               <button
                 type="button"
                 onClick={handleDismiss}
-                className="rounded-full border-2 border-amber-dark px-4 py-2 font-body text-sm font-bold text-navy transition hover:-translate-y-0.5 hover:bg-amber/20 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest/50"
+                className="rounded-full border-2 border-amber-dark px-4 py-2 font-body text-sm font-bold text-navy transition hover:-translate-y-0.5 hover:bg-amber/20 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50"
               >
                 {t('Mine is different')}
               </button>

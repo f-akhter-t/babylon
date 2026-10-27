@@ -1,6 +1,7 @@
 import { useRef } from 'react'
 import Logo from '../../components/layout/Logo'
 import FlagStripe from '../../components/layout/FlagStripe'
+import ThemeToggle from '../../components/ui/ThemeToggle'
 import clsx from 'clsx'
 import { useT } from '../../i18n/useLanguage'
 
@@ -53,8 +54,8 @@ export function RoleRadioGroup({ label, options, value, onChange }) {
               onKeyDown={(e) => handleKeyDown(e, index)}
               className={clsx(
                 'min-h-11 rounded-full px-4 py-2.5 font-body text-sm font-bold transition-colors motion-reduce:transition-none',
-                'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forest',
-                checked ? 'bg-navy text-mint' : 'text-navy hover:bg-mint-deep',
+                'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent',
+                checked ? 'bg-ink text-frost' : 'text-navy hover:bg-mint-deep',
               )}
             >
               {t(option.label)}
@@ -70,7 +71,7 @@ export function Field({ id, label, children, ...props }) {
   const t = useT()
   if (props.placeholder) props = { ...props, placeholder: t(props.placeholder) }
   const classes =
-    'mt-2 w-full rounded-tile border border-navy/60 bg-white px-4 py-3 font-body text-base text-navy placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-forest'
+    'mt-2 w-full rounded-tile border border-navy/60 bg-white px-4 py-3 font-body text-base text-navy placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-accent'
 
   return (
     <div>
@@ -94,7 +95,7 @@ export function FormError({ message, action }) {
   const t = useT()
   if (!message) return null
   return (
-    <div role="alert" className="font-body text-sm font-bold text-danger">
+    <div role="alert" className="font-body text-sm font-bold text-alert">
       <p>{t(message)}</p>
       {action}
     </div>
@@ -108,8 +109,8 @@ export function SubmitButton({ disabled, children }) {
       type="submit"
       disabled={disabled}
       className={clsx(
-        'min-h-11 rounded-full bg-navy px-6 py-3.5 font-body text-base font-bold text-mint transition-opacity motion-reduce:transition-none',
-        'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forest',
+        'min-h-11 rounded-full bg-ink px-6 py-3.5 font-body text-base font-bold text-frost transition-opacity motion-reduce:transition-none',
+        'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent',
         disabled ? 'cursor-not-allowed opacity-50' : 'hover:opacity-90',
       )}
     >
@@ -123,7 +124,7 @@ export function SubmitButton({ disabled, children }) {
 export function DemoHint({ accounts = [], lines = [] }) {
   const t = useT()
   return (
-    <div className="mt-5 rounded-tile bg-white px-4 py-3 font-body text-sm text-slate">
+    <div className="mt-5 rounded-tile bg-white px-4 py-3 font-body text-sm text-soft">
       {accounts.length > 0 && (
         <>
           <p className="font-bold text-navy">
@@ -149,7 +150,7 @@ export function DemoHint({ accounts = [], lines = [] }) {
 }
 
 export const authLinkClass =
-  'inline-flex min-h-11 items-center font-bold underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forest'
+  'inline-flex min-h-11 items-center font-bold underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent'
 
 // Shared by the citizen pages (/login, /signup) and the staff pages
 // (/staff/login, /staff/signup). Staff pages get a "Staff" label in the
@@ -161,13 +162,14 @@ export default function AuthShell({ variant = 'citizen', title, subtitle, childr
 
   return (
     <div className="min-h-screen bg-page font-body">
-      <header className="flex min-h-17 flex-wrap items-center gap-3 bg-navy px-4 py-3 sm:px-8">
+      <header className="flex min-h-17 flex-wrap items-center gap-3 bg-ink px-4 py-3 sm:px-8">
         <Logo />
         {staff && (
-          <span className="rounded-full bg-mint px-3 py-1 font-body text-sm font-bold text-navy">
+          <span className="rounded-full bg-frost px-3 py-1 font-body text-sm font-bold text-ink">
             {t('Staff')}
           </span>
         )}
+        <ThemeToggle className="ml-auto" />
       </header>
       <FlagStripe />
 
@@ -176,7 +178,7 @@ export default function AuthShell({ variant = 'citizen', title, subtitle, childr
         {photo && (
           <div
             className={clsx(
-              'relative hidden overflow-hidden rounded-panel bg-navy lg:block',
+              'relative hidden overflow-hidden rounded-panel bg-ink lg:block',
               photo.side === 'left' ? 'lg:order-first' : 'lg:order-last',
             )}
           >
@@ -186,20 +188,20 @@ export default function AuthShell({ variant = 'citizen', title, subtitle, childr
               aria-hidden="true"
               className="absolute inset-0 size-full object-cover"
             />
-            <div className="absolute inset-0 bg-linear-to-t from-navy/60 via-transparent to-transparent" />
+            <div className="absolute inset-0 bg-linear-to-t from-ink/60 via-transparent to-transparent" />
           </div>
         )}
         <div className="overflow-hidden rounded-panel bg-mint">
-          <div className={clsx(staff ? 'bg-navy px-6 py-6 sm:px-8' : 'px-6 pt-8 sm:px-8')}>
+          <div className={clsx(staff ? 'bg-ink px-6 py-6 sm:px-8' : 'px-6 pt-8 sm:px-8')}>
             <h1
               className={clsx(
                 'font-heading text-4xl font-extrabold',
-                staff ? 'text-mint' : 'text-navy',
+                staff ? 'text-frost' : 'text-navy',
               )}
             >
               {t(title)}
             </h1>
-            <p className={clsx('mt-1 font-body text-base', staff ? 'text-mint' : 'text-muted')}>
+            <p className={clsx('mt-1 font-body text-base', staff ? 'text-frost' : 'text-muted')}>
               {t(subtitle)}
             </p>
           </div>

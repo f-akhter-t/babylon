@@ -82,9 +82,9 @@ export default function VerifyCodeCard({
         <div
           ref={doneRef}
           tabIndex={-1}
-          className="rounded-tile bg-white/70 px-4 py-3 focus:outline-none focus-visible:ring-2 focus-visible:ring-forest/50"
+          className="rounded-tile bg-white/70 px-4 py-3 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/50"
         >
-          <p className="font-body text-xs text-slate">{t(done.label)}</p>
+          <p className="font-body text-xs text-soft">{t(done.label)}</p>
           <p className="font-heading text-lg font-bold text-navy">
             {t(done.value || justVerified?.value)}
           </p>

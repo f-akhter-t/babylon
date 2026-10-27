@@ -2,7 +2,7 @@ import clsx from 'clsx'
 import { useT } from '../../i18n/useLanguage'
 
 const inputClasses =
-  'w-full rounded-2xl border bg-white px-4 py-3 font-body text-sm text-navy transition placeholder:text-muted hover:border-forest/50 focus:border-forest focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest/40 disabled:cursor-not-allowed disabled:bg-white/60 disabled:text-slate'
+  'w-full rounded-2xl border bg-white px-4 py-3 font-body text-sm text-navy transition placeholder:text-muted hover:border-accent/50 focus:border-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 disabled:cursor-not-allowed disabled:bg-white/60 disabled:text-soft'
 
 // A labelled input with an optional hint and an error under it.
 // Pass as="select" with <option> children for a dropdown.
@@ -21,7 +21,7 @@ export default function TextField({ id, label, hint, error, as = 'input', classN
         id={id}
         aria-invalid={Boolean(error)}
         aria-describedby={clsx(hintId, errorId) || undefined}
-        className={clsx(inputClasses, error ? 'border-danger' : 'border-navy/15')}
+        className={clsx(inputClasses, error ? 'border-alert' : 'border-navy/15')}
         {...props}
       />
       {hint && (
@@ -30,7 +30,7 @@ export default function TextField({ id, label, hint, error, as = 'input', classN
         </p>
       )}
       {error && (
-        <p id={errorId} className="font-body text-xs font-semibold text-danger">
+        <p id={errorId} className="font-body text-xs font-semibold text-alert">
           {t(error)}
         </p>
       )}

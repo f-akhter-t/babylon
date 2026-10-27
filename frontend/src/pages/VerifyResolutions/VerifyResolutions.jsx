@@ -41,7 +41,7 @@ function QueueCard({ issue, selected, onSelect }) {
       onClick={() => onSelect(issue.id)}
       className={clsx(
         'w-full rounded-card border-2 bg-mint p-4 text-left transition-colors motion-reduce:transition-none',
-        'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forest',
+        'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent',
         selected ? 'border-navy' : 'border-transparent hover:border-navy/30',
       )}
     >
@@ -54,7 +54,7 @@ function QueueCard({ issue, selected, onSelect }) {
       <span
         className={clsx(
           'mt-3 inline-block rounded-full px-3 py-1 font-body text-sm font-bold',
-          strong ? 'bg-navy text-mint' : 'bg-white text-navy',
+          strong ? 'bg-ink text-frost' : 'bg-white text-navy',
         )}
       >
         {t(PRIORITY_LABEL[issue.priority] ?? issue.priority)}
@@ -156,7 +156,7 @@ function VerifyResolutionsPage() {
       role={shownNotice.tone === 'error' ? 'alert' : 'status'}
       className={clsx(
         'mt-3 break-words font-body text-sm font-bold',
-        shownNotice.tone === 'error' ? 'text-danger' : 'text-forest',
+        shownNotice.tone === 'error' ? 'text-alert' : 'text-accent',
       )}
     >
       {shownNotice.text}
@@ -185,7 +185,7 @@ function VerifyResolutionsPage() {
           <h1
             ref={headingRef}
             tabIndex={-1}
-            className="rounded-tile font-heading text-3xl font-extrabold text-navy focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forest sm:text-4xl"
+            className="rounded-tile font-heading text-3xl font-extrabold text-navy focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent sm:text-4xl"
           >
             {t(view.heading)}
           </h1>
@@ -223,7 +223,7 @@ function VerifyResolutionsPage() {
             </div>
             <Link
               to={`/issues/${reopened.id}`}
-              className="inline-flex min-h-11 shrink-0 items-center rounded-full bg-navy px-5 py-2 font-body text-sm font-bold text-mint transition-opacity hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forest motion-reduce:transition-none"
+              className="inline-flex min-h-11 shrink-0 items-center rounded-full bg-ink px-5 py-2 font-body text-sm font-bold text-frost transition-opacity hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent motion-reduce:transition-none"
             >
               {t('Review reopened issue')}
             </Link>

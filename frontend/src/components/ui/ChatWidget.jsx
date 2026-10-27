@@ -20,7 +20,7 @@ function TypingDots() {
       {[0, 150, 300].map((delay) => (
         <span
           key={delay}
-          className="h-2 w-2 rounded-full bg-navy/50 motion-safe:animate-bounce"
+          className="h-2 w-2 rounded-full bg-ink/50 motion-safe:animate-bounce"
           style={{ animationDelay: `${delay}ms` }}
         />
       ))}
@@ -117,23 +117,23 @@ export default function ChatWidget() {
           open ? 'visible translate-y-0 scale-100 opacity-100' : 'invisible translate-y-3 scale-95 opacity-0',
         )}
       >
-        <header className="flex items-center gap-3 bg-navy px-4 py-3 text-mint">
+        <header className="flex items-center gap-3 bg-ink px-4 py-3 text-frost">
           <span
             aria-hidden="true"
-            className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-brand font-heading text-lg font-extrabold text-navy"
+            className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-brand font-heading text-lg font-extrabold text-ink"
           >
             B
           </span>
           <div className="min-w-0 flex-1">
             <h2 className="font-heading text-lg font-extrabold leading-tight">{t('Babylon helper')}</h2>
-            <p className="font-body text-xs text-mint/70">{t('Ask how the app works')}</p>
+            <p className="font-body text-xs text-frost/70">{t('Ask how the app works')}</p>
           </div>
           <button
             type="button"
             onClick={newChat}
             disabled={messages.length === 0 && !error}
             aria-label={t('Start a new chat')}
-            className="rounded-full px-3 py-1.5 font-body text-xs font-semibold transition-colors hover:bg-white/10 disabled:opacity-40 disabled:hover:bg-transparent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+            className="rounded-full px-3 py-1.5 font-body text-xs font-semibold transition-colors hover:bg-paper/10 disabled:opacity-40 disabled:hover:bg-transparent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
           >
             {t('New chat')}
           </button>
@@ -141,7 +141,7 @@ export default function ChatWidget() {
             type="button"
             aria-label={t('Close helper')}
             onClick={close}
-            className="grid h-8 w-8 place-items-center rounded-full text-lg transition-colors hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+            className="grid h-8 w-8 place-items-center rounded-full text-lg transition-colors hover:bg-paper/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
           >
             ✕
           </button>
@@ -174,7 +174,7 @@ export default function ChatWidget() {
               className={clsx(
                 'max-w-[85%] whitespace-pre-line rounded-[18px] px-3.5 py-2.5 font-body text-sm',
                 m.role === 'user'
-                  ? 'self-end rounded-br-md bg-forest text-mint'
+                  ? 'self-end rounded-br-md bg-forest text-frost'
                   : 'self-start rounded-bl-md bg-mint text-navy',
               )}
             >
@@ -202,13 +202,13 @@ export default function ChatWidget() {
             maxLength={500}
             placeholder={t('Ask about Babylon')}
             autoComplete="off"
-            className="min-w-0 flex-1 rounded-full border-[1.5px] border-slate/40 px-4 py-2 font-body text-sm text-navy outline-none transition-colors placeholder:text-muted focus:border-navy"
+            className="min-w-0 flex-1 rounded-full border-[1.5px] border-soft/40 px-4 py-2 font-body text-sm text-navy outline-none transition-colors placeholder:text-muted focus:border-navy"
           />
           <button
             type="submit"
             disabled={busy || !draft.trim()}
             aria-label={t('Send')}
-            className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-navy text-mint transition-colors enabled:hover:bg-forest disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+            className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-ink text-frost transition-colors enabled:hover:bg-forest disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
           >
             <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
               <path d="M5 12h14M13 6l6 6-6 6" />
@@ -241,7 +241,7 @@ export default function ChatWidget() {
         <span
           aria-hidden="true"
           className={clsx(
-            'absolute inset-0 grid place-items-center rounded-full bg-navy text-brand shadow-lg transition-[background-color,box-shadow] duration-300 group-hover:bg-forest group-hover:shadow-2xl group-focus-visible:ring-2 group-focus-visible:ring-brand group-focus-visible:ring-offset-2 motion-reduce:transition-none',
+            'absolute inset-0 grid place-items-center rounded-full bg-ink text-brand shadow-lg transition-[background-color,box-shadow] duration-300 group-hover:bg-forest group-hover:shadow-2xl group-focus-visible:ring-2 group-focus-visible:ring-brand group-focus-visible:ring-offset-2 motion-reduce:transition-none',
             !open && 'babylon-float group-hover:[animation-play-state:paused]',
           )}
         >
@@ -284,7 +284,7 @@ export default function ChatWidget() {
           </span>
 
           {/* A small label slides out to the left. It ignores the pointer. */}
-          <span className="pointer-events-none absolute right-full top-1/2 mr-3 -translate-y-1/2 translate-x-2 whitespace-nowrap rounded-full bg-navy px-3.5 py-1.5 font-body text-sm font-semibold text-mint opacity-0 shadow-lg transition-all duration-200 group-hover:translate-x-0 group-hover:opacity-100 group-focus-visible:translate-x-0 group-focus-visible:opacity-100 motion-reduce:transition-none">
+          <span className="pointer-events-none absolute right-full top-1/2 mr-3 -translate-y-1/2 translate-x-2 whitespace-nowrap rounded-full bg-ink px-3.5 py-1.5 font-body text-sm font-semibold text-frost opacity-0 shadow-lg transition-all duration-200 group-hover:translate-x-0 group-hover:opacity-100 group-focus-visible:translate-x-0 group-focus-visible:opacity-100 motion-reduce:transition-none">
             {open ? t('Close') : t('Ask Babylon')}
           </span>
         </span>

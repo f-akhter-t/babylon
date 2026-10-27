@@ -33,7 +33,7 @@ function IssueTitle({ issue, selected, onSelect, panelId }) {
       className={clsx(
         text,
         'block min-h-11 w-full rounded-tile text-left hover:underline',
-        'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forest',
+        'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent',
       )}
     >
       {issue.title}
@@ -46,7 +46,7 @@ function StatusCell({ issue }) {
   if (issue.verification === 'awaiting') {
     return (
       <span className="inline-flex max-w-full items-center gap-2 rounded-full bg-slate/15 px-3 py-1 font-body text-sm font-semibold text-navy">
-        <StaircaseIcon level={3} className="text-slate" />
+        <StaircaseIcon level={3} className="text-soft" />
         {t('Awaiting check')}
       </span>
     )
@@ -54,7 +54,7 @@ function StatusCell({ issue }) {
   if (issue.sentBack) {
     return (
       <span className="inline-flex max-w-full items-center gap-2 rounded-full bg-slate/15 px-3 py-1 font-body text-sm font-semibold text-navy">
-        <StaircaseIcon level={2} className="text-slate" />
+        <StaircaseIcon level={2} className="text-soft" />
         {t('Sent back')}
       </span>
     )
@@ -65,14 +65,14 @@ function StatusCell({ issue }) {
 function ActionButton({ issue, onStart, onSelect, busy }) {
   const t = useT()
   const base =
-    'min-h-11 w-full rounded-full px-4 py-2.5 font-body text-sm font-bold transition-colors motion-reduce:transition-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forest'
+    'min-h-11 w-full rounded-full px-4 py-2.5 font-body text-sm font-bold transition-colors motion-reduce:transition-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent'
 
   if (issue.verification === 'awaiting') {
     return (
       <button
         type="button"
         disabled
-        className={clsx(base, 'cursor-not-allowed bg-slate/15 text-slate')}
+        className={clsx(base, 'cursor-not-allowed bg-slate/15 text-soft')}
       >
         {t('Waiting for admin')}
       </button>
@@ -84,7 +84,7 @@ function ActionButton({ issue, onStart, onSelect, busy }) {
       <button
         type="button"
         disabled
-        className={clsx(base, 'cursor-not-allowed bg-slate/15 text-slate')}
+        className={clsx(base, 'cursor-not-allowed bg-slate/15 text-soft')}
       >
         {t('Closed')}
       </button>
@@ -102,7 +102,7 @@ function ActionButton({ issue, onStart, onSelect, busy }) {
         }}
         className={clsx(
           base,
-          'bg-forest text-mint',
+          'bg-forest text-frost',
           busy ? 'cursor-not-allowed opacity-50' : 'hover:bg-forest/90',
         )}
       >
@@ -120,7 +120,7 @@ function ActionButton({ issue, onStart, onSelect, busy }) {
       }}
       className={clsx(
         base,
-        'border border-forest bg-white text-forest hover:bg-mint-deep',
+        'border border-accent bg-white text-accent hover:bg-mint-deep',
       )}
     >
       {t('Add after-photo')}
@@ -165,7 +165,7 @@ export default function IssueTable({
             issue.id === selectedId ? 'bg-white' : 'hover:bg-white/50',
           )}
         >
-          <span className="font-heading text-2xl font-extrabold text-forest @3xl:text-3xl">
+          <span className="font-heading text-2xl font-extrabold text-accent @3xl:text-3xl">
             {issue.rank}
           </span>
 
@@ -181,7 +181,7 @@ export default function IssueTable({
               <span
                 className={clsx(
                   'font-bold',
-                  issue.priority === 'urgent' ? 'text-danger' : 'text-forest',
+                  issue.priority === 'urgent' ? 'text-alert' : 'text-accent',
                 )}
               >
                 {t(PRIORITY_LABEL[issue.priority] ?? issue.priority)}
@@ -189,7 +189,7 @@ export default function IssueTable({
               <span>{issue.ward ? `${issue.location}, ${issue.ward}` : issue.location}</span>
             </p>
             {issue.sentBack && (
-              <p className="mt-1 min-w-0 break-words font-body text-sm font-bold text-danger">
+              <p className="mt-1 min-w-0 break-words font-body text-sm font-bold text-alert">
                 {sentBackMessage(issue.sentBack, t)}
               </p>
             )}

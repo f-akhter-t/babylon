@@ -52,19 +52,19 @@ export default function Footer() {
   const viewer = useViewer() // follows a login or logout in another tab
 
   return (
-    <footer className="bg-navy px-5 pt-10 font-body text-white md:px-10 md:pt-12 xl:px-18">
+    <footer className="bg-ink px-5 pt-10 font-body text-paper md:px-10 md:pt-12 xl:px-18">
       <div className="flex flex-col gap-10 md:flex-row md:justify-between">
         <div>
           <Logo />
-          <p className="mt-3 text-white/80">{t('Report. Track. Resolve.')}</p>
-          <p className="mt-3 inline-flex items-center gap-2 text-sm font-semibold text-white/80">
-            <svg viewBox="0 0 30 18" width="24" height="14" aria-hidden="true" className="rounded-[2px] ring-1 ring-white/25">
+          <p className="mt-3 text-paper/80">{t('Report. Track. Resolve.')}</p>
+          <p className="mt-3 inline-flex items-center gap-2 text-sm font-semibold text-paper/80">
+            <svg viewBox="0 0 30 18" width="24" height="14" aria-hidden="true" className="rounded-[2px] ring-1 ring-paper/25">
               <rect width="30" height="18" className="fill-flag-green" />
               <circle cx="13.5" cy="9" r="5" className="fill-flag-red" />
             </svg>
             {t('Made for all of Bangladesh')}
           </p>
-          <p className="mt-2 text-sm text-white/60">
+          <p className="mt-2 text-sm text-paper/60">
             {t('Map data © OpenStreetMap contributors')}
           </p>
         </div>
@@ -82,7 +82,7 @@ export default function Footer() {
                   <li key={link.label}>
                     <Link
                       to={link.to}
-                      className="inline-flex min-h-11 min-w-11 items-center font-medium text-white transition-colors hover:text-brand"
+                      className="inline-flex min-h-11 min-w-11 items-center font-medium text-paper transition-colors hover:text-brand"
                     >
                       {t(link.label)}
                     </Link>
@@ -95,7 +95,7 @@ export default function Footer() {
       </div>
 
       {/* Closing row */}
-      <div className="mt-10 flex flex-col gap-2 border-t border-white/10 py-6 text-sm text-white/60 sm:flex-row sm:items-center sm:justify-between">
+      <div className="mt-10 flex flex-col gap-2 border-t border-paper/10 py-6 text-sm text-paper/60 sm:flex-row sm:items-center sm:justify-between">
         <p>{t('© 2026 Babylon. All rights reserved.')}</p>
         <p>{t('Frontend prototype')}</p>
       </div>

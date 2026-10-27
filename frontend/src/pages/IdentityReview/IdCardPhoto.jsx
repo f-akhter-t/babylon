@@ -11,7 +11,7 @@ function CardIcon() {
   return (
     <svg
       viewBox="0 0 24 24"
-      className="h-8 w-8 text-slate"
+      className="h-8 w-8 text-soft"
       fill="none"
       stroke="currentColor"
       strokeWidth="1.8"
@@ -34,12 +34,12 @@ function PhotoMessage({ id, title, children, warn = false }) {
       className={clsx(
         MESSAGE_BOX,
         'flex flex-col items-center justify-center gap-2 border-2 border-dashed p-3 text-center wrap-anywhere sm:p-5',
-        warn ? 'border-danger bg-white' : 'border-navy/25 bg-white/60',
+        warn ? 'border-alert bg-white' : 'border-navy/25 bg-white/60',
       )}
     >
       <CardIcon />
       <p className="font-body text-sm font-bold text-navy">{title}</p>
-      <div className="font-body text-xs text-slate">{children}</div>
+      <div className="font-body text-xs text-soft">{children}</div>
     </div>
   )
 }
@@ -69,7 +69,7 @@ function PhotoDialog({ url, name, onClose }) {
       aria-labelledby="identity-photo-dialog-title"
       // A click on the dark area around the box (the dialog itself) closes it.
       onClick={(e) => e.target === e.currentTarget && dialogRef.current.close()}
-      className="m-auto max-h-[calc(100dvh-2rem)] w-[min(60rem,calc(100vw-2rem))] overflow-auto rounded-panel bg-white p-0 shadow-2xl backdrop:bg-navy/75"
+      className="m-auto max-h-[calc(100dvh-2rem)] w-[min(60rem,calc(100vw-2rem))] overflow-auto rounded-panel bg-white p-0 shadow-2xl backdrop:bg-ink/75"
     >
       <div className="flex flex-col gap-3 p-4 sm:p-5">
         <div className="flex items-start justify-between gap-3">
@@ -86,9 +86,9 @@ function PhotoDialog({ url, name, onClose }) {
         <img
           src={url}
           alt={t('Front of the NID card sent by {name}, shown larger', { name })}
-          className="max-h-[calc(100dvh-9rem)] w-full rounded-tile bg-navy/5 object-contain"
+          className="max-h-[calc(100dvh-9rem)] w-full rounded-tile bg-ink/5 object-contain"
         />
-        <p className="font-body text-xs text-slate">
+        <p className="font-body text-xs text-soft">
           {t('This photo is deleted from storage as soon as you approve or reject.')}
         </p>
       </div>
@@ -153,10 +153,10 @@ export default function IdCardPhoto({ photo, name, noteId, onUseReason }) {
         src={photo.url}
         alt={t('Front of the NID card sent by {name}', { name })}
         onClick={() => setOpen(true)}
-        className={clsx(FRAME, 'cursor-zoom-in bg-navy/5 object-contain shadow-sm')}
+        className={clsx(FRAME, 'cursor-zoom-in bg-ink/5 object-contain shadow-sm')}
       />
       <figcaption className="flex flex-wrap items-center justify-between gap-2">
-        <span className="font-body text-xs text-slate">{t('Deleted as soon as you approve or reject.')}</span>
+        <span className="font-body text-xs text-soft">{t('Deleted as soon as you approve or reject.')}</span>
         <Button
           ref={triggerRef}
           variant="outline"

@@ -15,9 +15,9 @@ const pillStyles = {
 }
 
 const iconStyles = {
-  open: 'text-amber-dark',
-  'in-progress': 'text-slate',
-  resolved: 'text-success',
+  open: 'text-warn',
+  'in-progress': 'text-soft',
+  resolved: 'text-good',
 }
 
 export default function StatusPill({ status, className }) {

@@ -24,7 +24,7 @@ function DashboardPage({ role }) {
             <h1 className="font-heading text-4xl font-extrabold text-navy sm:text-5xl">
               {t('Dashboard')}
             </h1>
-            <p className="mt-2 font-body text-base text-slate">
+            <p className="mt-2 font-body text-base text-soft">
               {t('Welcome back, {name}. Here is where things stand.', { name: session?.name ?? '' })}
             </p>
           </div>

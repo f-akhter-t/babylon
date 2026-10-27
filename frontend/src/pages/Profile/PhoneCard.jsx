@@ -18,7 +18,7 @@ const emptyCode = () => Array.from({ length: OTP_LENGTH }, () => '')
 function DrawnCheck() {
   return (
     <span
-      className="flex size-9 shrink-0 items-center justify-center rounded-full bg-brand/25 text-forest"
+      className="flex size-9 shrink-0 items-center justify-center rounded-full bg-brand/25 text-accent"
       style={enter('pop', 0.15)}
     >
       <svg viewBox="0 0 24 24" className="size-5" fill="none" aria-hidden="true">
@@ -195,7 +195,7 @@ export default function PhoneCard({
             <div
               ref={verifiedRef}
               tabIndex={-1}
-              className="flex items-center gap-3 rounded-chip focus:outline-none focus-visible:ring-2 focus-visible:ring-forest/50"
+              className="flex items-center gap-3 rounded-chip focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/50"
             >
               {justVerified && <DrawnCheck />}
               <div>
@@ -288,7 +288,7 @@ export default function PhoneCard({
                 type="button"
                 onClick={startEdit}
                 disabled={Boolean(busy)}
-                className="rounded-full px-2 py-1 font-body text-sm font-semibold text-forest underline-offset-2 hover:underline disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest/50"
+                className="rounded-full px-2 py-1 font-body text-sm font-semibold text-accent underline-offset-2 hover:underline disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50"
               >
                 {t('Use a different number')}
               </button>

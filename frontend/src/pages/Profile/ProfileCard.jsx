@@ -14,13 +14,13 @@ export default function ProfileCard({ id, title, intro, badge, children }) {
         <h2
           id={id}
           tabIndex={-1}
-          className="rounded-chip font-heading text-xl font-extrabold text-navy focus:outline-none focus-visible:ring-2 focus-visible:ring-forest/50"
+          className="rounded-chip font-heading text-xl font-extrabold text-navy focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/50"
         >
           {t(title)}
         </h2>
         {badge}
       </div>
-      {intro && <p className="mt-1 font-body text-sm text-slate">{t(intro)}</p>}
+      {intro && <p className="mt-1 font-body text-sm text-soft">{t(intro)}</p>}
       <div className="mt-5">{children}</div>
     </section>
   )

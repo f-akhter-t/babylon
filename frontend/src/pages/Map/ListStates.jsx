@@ -28,7 +28,7 @@ export function StateMessage({ title, text, actionLabel, onAction, role }) {
   return (
     <div role={role} className="flex flex-col items-center gap-2 rounded-tile bg-mint px-5 py-8 text-center">
       <span className="font-heading text-lg font-extrabold text-navy">{t(title)}</span>
-      <span className="text-sm text-slate">{t(text)}</span>
+      <span className="text-sm text-soft">{t(text)}</span>
       {onAction && (
         <Button variant="outline" onClick={onAction} className="mt-2">
           {t(actionLabel)}

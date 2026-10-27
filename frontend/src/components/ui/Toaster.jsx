@@ -9,7 +9,7 @@ const INFO_MS = 4000
 const GAP_PX = 12 // space between a toast and a bar it has to clear
 
 const pill =
-  'pointer-events-auto w-max max-w-[calc(100vw-2rem)] rounded-full bg-navy text-center font-body text-sm font-semibold text-white shadow-lg motion-safe:animate-toast-in'
+  'pointer-events-auto w-max max-w-[calc(100vw-2rem)] rounded-full bg-ink text-center font-body text-sm font-semibold text-paper shadow-lg motion-safe:animate-toast-in'
 
 // Info toasts leave after INFO_MS. The timer pauses while the pointer is over the toast.
 function useAutoDismiss(info) {
@@ -85,7 +85,7 @@ export default function Toaster() {
                 type="button"
                 aria-label={t('Dismiss this message')}
                 onClick={() => dismissError(error.id)}
-                className="min-h-11 shrink-0 rounded-full border border-mint/40 px-4 font-bold text-mint transition-colors hover:bg-mint/10 motion-reduce:transition-none"
+                className="min-h-11 shrink-0 rounded-full border border-frost/40 px-4 font-bold text-frost transition-colors hover:bg-frost/10 motion-reduce:transition-none"
               >
                 {t('Dismiss')}
               </button>

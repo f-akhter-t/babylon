@@ -7,9 +7,9 @@ import { useNumber, useT } from '../../i18n/useLanguage'
 // Desktop: the steps sit in a row. Phones: a vertical timeline.
 
 const MARKERS = {
-  done: 'bg-forest text-white',
-  current: 'bg-navy',
-  todo: 'border-2 border-dashed border-navy/30 bg-white text-slate',
+  done: 'bg-forest text-paper',
+  current: 'bg-ink',
+  todo: 'border-2 border-dashed border-navy/30 bg-white text-soft',
 }
 
 // Read out after the step name by screen readers.
@@ -41,7 +41,7 @@ export default function ProgressStep({ step, last, reachedNext }) {
         <span
           ref={lineRef}
           aria-hidden="true"
-          className={clsx(LINE, reachedNext ? 'bg-forest' : 'bg-navy/15')}
+          className={clsx(LINE, reachedNext ? 'bg-forest' : 'bg-ink/15')}
         />
       )}
 
@@ -78,7 +78,7 @@ export default function ProgressStep({ step, last, reachedNext }) {
             key={line.text}
             className={clsx(
               'mt-1 text-xs leading-snug',
-              line.muted ? 'italic text-slate/85' : 'text-slate',
+              line.muted ? 'italic text-soft/85' : 'text-soft',
             )}
           >
             {t(line.key, line.vars)}

@@ -2,7 +2,15 @@
 
 @theme {
   /* Colors: from the plan. Mint is #E3F1E8, not the Figma's #DFF8EB. */
-  --color-navy: #101C2E;
+  --color-navy: #101C2E; /* text and borders: it turns light in dark mode */
+  --color-ink: #101C2E; /* dark surfaces (bars, hero, buttons): the same in both modes */
+  --color-frost: #E6EEF6; /* light text on a dark surface: the same in both modes */
+  --color-paper: #FFFFFF; /* white text on a dark surface: the same in both modes */
+  --color-accent: #3E6990; /* links, labels, focus: turns light in dark mode */
+  --color-soft: #2C3E57; /* secondary text: turns light in dark mode */
+  --color-alert: #C8352C; /* red text and borders */
+  --color-good: #0B6B50; /* green text */
+  --color-warn: #A9801F; /* amber text */
   --color-forest: #3E6990;
   --color-slate: #2C3E57;
   --color-mint: #E6EEF6;
@@ -55,6 +63,38 @@
   --radius-panel: 24px;
   --radius-hero: 32px;
 }
+
+/* How much brand blue tints the animated background (AnimatedBackground.jsx). */
+:root {
+  --bg-tint-a: 28%;
+  --bg-tint-b: 42%;
+}
+
+/* Dark mode: "Midnight blue". The page picks it by putting data-theme="dark" on
+   <html> (components/ui/ThemeToggle.jsx and the script in index.html). Only
+   the tokens that change meaning are redefined here: navy, soft and accent
+   become text colours, mint and white become the card and field surfaces.
+   Surfaces that stay dark (bg-ink) and light text on them (text-frost) are
+   separate tokens, so they never flip. */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --color-navy: #E6EEF6;
+  --color-soft: #B9C9DC;
+  --color-accent: #A9C8E8;
+  --color-muted: #9BB0C9;
+  --color-page: #0B1320;
+  --color-mint: #15233A;
+  --color-mint-deep: #24344A;
+  --color-white: #1B2B45;
+  --color-alert: #FF8F86;
+  --color-good: #5FD3AE;
+  --color-warn: #F2C45A;
+  --color-success-soft: #123A30;
+  --bg-tint-a: 7%;
+  --bg-tint-b: 11%;
+}
+.bg-glow { opacity: 1; }
+:root[data-theme="dark"] .bg-glow { opacity: 0.3; }
 
 /* Cursors: the high-visibility set (a thick navy edge with a white line
    inside), used on every page. Fixed artwork, like the favicon: an SVG in a
@@ -170,7 +210,7 @@
   @media (hover: hover) {
     &:hover {
       transform: translateY(-6px);
-      box-shadow: 0 20px 40px color-mix(in srgb, var(--color-navy) 25%, transparent);
+      box-shadow: 0 20px 40px color-mix(in srgb, var(--color-ink) 25%, transparent);
     }
   }
 }
@@ -364,19 +404,33 @@ textarea:not(:disabled),
   color: var(--color-navy);
 }
 .leaflet-container .leaflet-tooltip {
-  background: var(--color-navy);
+  background: var(--color-ink);
   border: 0;
   border-radius: 9999px;
   box-shadow: none;
-  color: white;
+  color: var(--color-paper);
   font-size: 12px;
   font-weight: 600;
   padding: 6px 12px;
 }
-.leaflet-container .leaflet-tooltip-top::before { border-top-color: var(--color-navy); }
-.leaflet-container .leaflet-tooltip-bottom::before { border-bottom-color: var(--color-navy); }
-.leaflet-container .leaflet-tooltip-left::before { border-left-color: var(--color-navy); }
-.leaflet-container .leaflet-tooltip-right::before { border-right-color: var(--color-navy); }
+.leaflet-container .leaflet-tooltip-top::before { border-top-color: var(--color-ink); }
+.leaflet-container .leaflet-tooltip-bottom::before { border-bottom-color: var(--color-ink); }
+.leaflet-container .leaflet-tooltip-left::before { border-left-color: var(--color-ink); }
+.leaflet-container .leaflet-tooltip-right::before { border-right-color: var(--color-ink); }
+
+/* Dark mode on the maps: the street tiles are dimmed and inverted, and the
+   popups take the card colours. Pins and photos are left alone. */
+:root[data-theme="dark"] .leaflet-tile-pane {
+  filter: invert(1) hue-rotate(180deg) brightness(0.85) contrast(0.9) saturate(0.8);
+}
+:root[data-theme="dark"] .leaflet-container {
+  background: #0F1A2B;
+}
+:root[data-theme="dark"] .leaflet-container .leaflet-popup-content-wrapper,
+:root[data-theme="dark"] .leaflet-container .leaflet-popup-tip {
+  background: var(--color-mint);
+  color: var(--color-navy);
+}
 
 /* Small global touches: gentle colour changes on links and buttons, smooth
    in-page scrolling and a branded text selection. The reduced-motion rule

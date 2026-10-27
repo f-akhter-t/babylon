@@ -33,21 +33,21 @@ export default class ErrorBoundary extends Component {
           <h1 className="font-heading text-3xl font-extrabold text-navy sm:text-4xl">
             <Tr>Something went wrong on this page.</Tr>
           </h1>
-          <p className="text-base text-slate">
+          <p className="text-base text-soft">
             <Tr>Reloading usually fixes it. If it does not, start again from the home page.</Tr>
           </p>
           <div className="flex flex-wrap justify-center gap-3">
             <button
               type="button"
               onClick={() => window.location.reload()}
-              className="min-h-11 rounded-full bg-navy px-6 py-3 text-base font-bold text-mint transition-opacity hover:opacity-90 motion-reduce:transition-none"
+              className="min-h-11 rounded-full bg-ink px-6 py-3 text-base font-bold text-frost transition-opacity hover:opacity-90 motion-reduce:transition-none"
             >
               <Tr>Reload</Tr>
             </button>
             {/* A full page load, so a broken page's code is fetched again. */}
             <a
               href="/"
-              className="inline-flex min-h-11 items-center rounded-full border-2 border-navy px-6 py-3 text-base font-bold text-navy transition-colors hover:bg-navy/10 motion-reduce:transition-none"
+              className="inline-flex min-h-11 items-center rounded-full border-2 border-navy px-6 py-3 text-base font-bold text-navy transition-colors hover:bg-ink/10 motion-reduce:transition-none"
             >
               <Tr>Go home</Tr>
             </a>

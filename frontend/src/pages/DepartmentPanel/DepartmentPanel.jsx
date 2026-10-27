@@ -38,7 +38,7 @@ function StatCard({ label, value, level, iconClass, dark }) {
     <div
       className={clsx(
         'flex items-center justify-between gap-3 rounded-card px-5 py-3 sm:block sm:py-4',
-        dark ? 'bg-navy text-mint' : 'bg-mint text-navy',
+        dark ? 'bg-ink text-frost' : 'bg-mint text-navy',
       )}
     >
       <div className="flex items-center gap-2 font-body text-sm font-semibold">
@@ -216,7 +216,7 @@ function DepartmentPanelPage() {
               aria-expanded={panelOpen}
               aria-controls={PANEL_ID}
               onClick={() => (panelOpen ? closePanel() : setPanelOpen(true))}
-              className="min-h-11 max-w-full rounded-full border-2 border-navy bg-white px-5 py-2 text-left font-body text-sm font-bold text-navy transition-colors hover:bg-mint-deep focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forest motion-reduce:transition-none"
+              className="min-h-11 max-w-full rounded-full border-2 border-navy bg-white px-5 py-2 text-left font-body text-sm font-bold text-navy transition-colors hover:bg-mint-deep focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent motion-reduce:transition-none"
             >
               {panelOpen
                 ? t('Hide the Resolve with proof panel.')
@@ -224,7 +224,7 @@ function DepartmentPanelPage() {
             </button>
           </div>
           {!department && (
-            <p role="alert" className="mt-3 font-body text-base font-bold text-danger">
+            <p role="alert" className="mt-3 font-body text-base font-bold text-alert">
               {t(NO_DEPARTMENT)}
             </p>
           )}
@@ -233,7 +233,7 @@ function DepartmentPanelPage() {
               role={notice.tone === 'error' ? 'alert' : 'status'}
               className={clsx(
                 'mt-3 break-words font-body text-base font-bold',
-                notice.tone === 'error' ? 'text-danger' : 'text-forest',
+                notice.tone === 'error' ? 'text-alert' : 'text-accent',
               )}
             >
               {notice.text}
@@ -247,8 +247,8 @@ function DepartmentPanelPage() {
         {!loading && (
           <div className="flex min-w-0 flex-col gap-5 sm:gap-6 lg:col-start-1 lg:row-start-2">
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4">
-              <StatCard label={t('Open')} value={open} level={1} iconClass="text-amber-dark" />
-              <StatCard label={t('In progress')} value={inProgress} level={2} iconClass="text-slate" />
+              <StatCard label={t('Open')} value={open} level={1} iconClass="text-warn" />
+              <StatCard label={t('In progress')} value={inProgress} level={2} iconClass="text-soft" />
               <StatCard label={t('Awaiting admin check')} value={awaiting} dark />
             </div>
             {department && <WeeklySummaryCard />}
@@ -270,7 +270,7 @@ function DepartmentPanelPage() {
             id={PANEL_HEADING_ID}
             ref={panelHeadingRef}
             tabIndex={-1}
-            className="mb-2 rounded-tile font-body text-xs font-bold uppercase tracking-widest text-forest focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forest"
+            className="mb-2 rounded-tile font-body text-xs font-bold uppercase tracking-widest text-accent focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
           >
             {t('Resolve with proof')}
           </h2>

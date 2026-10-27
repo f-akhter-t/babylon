@@ -30,7 +30,7 @@ export default function TranslateText({ text, className = '' }) {
       <p className="leading-relaxed text-navy">{text}</p>
       {signedIn && text && (
         <div className="mt-2 flex flex-wrap items-center gap-2 text-sm">
-          <label htmlFor="translate-to" className="font-semibold text-slate">
+          <label htmlFor="translate-to" className="font-semibold text-soft">
             {t('Translate to')}
           </label>
           <select
@@ -52,7 +52,7 @@ export default function TranslateText({ text, className = '' }) {
             type="button"
             onClick={run}
             disabled={state.status === 'loading'}
-            className="rounded-full bg-navy px-4 py-1 font-semibold text-white transition hover:bg-navy/90 disabled:opacity-50"
+            className="rounded-full bg-ink px-4 py-1 font-semibold text-paper transition hover:bg-ink/90 disabled:opacity-50"
           >
             {state.status === 'loading' ? t('Translating…') : t('Translate')}
           </button>
@@ -60,7 +60,7 @@ export default function TranslateText({ text, className = '' }) {
             <button
               type="button"
               onClick={() => setState({ status: 'idle' })}
-              className="font-semibold text-forest underline"
+              className="font-semibold text-accent underline"
             >
               {t('Show original only')}
             </button>

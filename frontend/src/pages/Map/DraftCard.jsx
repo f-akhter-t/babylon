@@ -32,7 +32,7 @@ export default function DraftCard({ spot, issues, onCancel, onUpvoteInstead }) {
       <div className="flex flex-col gap-3 p-4 font-body text-navy">
         <div role="alert" className="flex flex-col gap-1.5 rounded-tile border-2 border-amber-dark bg-amber/20 p-3">
           <span className="flex items-center gap-2 font-heading text-base font-extrabold">
-            <StaircaseIcon level={1} className="text-amber-dark" />
+            <StaircaseIcon level={1} className="text-warn" />
             {t('Looks like a match nearby')}
           </span>
           <span className="text-xs leading-relaxed">
@@ -61,7 +61,7 @@ export default function DraftCard({ spot, issues, onCancel, onUpvoteInstead }) {
         <h2 className="font-heading text-base font-extrabold leading-tight">
           {t('Report an issue here?')}
         </h2>
-        <span className="text-xs text-slate">{t('Drag the pin to adjust the spot.')}</span>
+        <span className="text-xs text-soft">{t('Drag the pin to adjust the spot.')}</span>
       </div>
       <div className="flex gap-2">
         {/* text-navy! beats Leaflet's blue link colour */}

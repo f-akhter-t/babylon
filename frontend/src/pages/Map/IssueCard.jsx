@@ -71,7 +71,7 @@ export default function IssueCard({ issue, ghost = false, selected, onSelect, is
           {issue.title}
         </button>
 
-        <span className="text-sm text-slate">
+        <span className="text-sm text-soft">
           {t(issue.category)} · {t('{distance} away', { distance: format.distance(issue.distanceM) })}
         </span>
 
@@ -83,7 +83,7 @@ export default function IssueCard({ issue, ghost = false, selected, onSelect, is
             ref={votesRef}
             className={clsx(
               'ml-auto flex origin-center items-center gap-1 text-sm font-semibold',
-              issue.voted ? 'text-forest' : 'text-navy',
+              issue.voted ? 'text-accent' : 'text-navy',
             )}
           >
             <ArrowUpIcon size={16} />

@@ -19,12 +19,12 @@ export default function MapOverlays({
   return (
     <>
       {dropping && (
-        <div className="absolute left-1/2 top-20 z-1000 flex -translate-x-1/2 items-center gap-2 whitespace-nowrap rounded-full bg-navy py-1.5 pl-4 pr-1.5 text-sm font-semibold text-white shadow-xl lg:top-4">
+        <div className="absolute left-1/2 top-20 z-1000 flex -translate-x-1/2 items-center gap-2 whitespace-nowrap rounded-full bg-ink py-1.5 pl-4 pr-1.5 text-sm font-semibold text-paper shadow-xl lg:top-4">
           {t('Click the map to drop a pin')}
           <button
             type="button"
             onClick={onStopDropping}
-            className="rounded-full px-3 py-1 text-brand transition-colors hover:bg-white/10"
+            className="rounded-full px-3 py-1 text-brand transition-colors hover:bg-paper/10"
           >
             {t('Cancel')}
           </button>

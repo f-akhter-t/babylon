@@ -5,10 +5,10 @@ import { useT } from '../../i18n/useLanguage'
  
 // Only uses theme colors (with opacity), so no extra Tailwind tokens are needed
 const STATUS = {
-  open:        { bg: 'bg-amber/25', bars: 1, tint: 'text-amber-dark' },
-  in_progress: { bg: 'bg-slate/15', bars: 2, tint: 'text-slate' },
-  resolved:    { bg: 'bg-success-soft', bars: 3, tint: 'text-success' },
-  reopened:    { bg: 'bg-amber',     bars: 0, tint: 'text-navy' },
+  open:        { bg: 'bg-amber/25', bars: 1, tint: 'text-warn' },
+  in_progress: { bg: 'bg-slate/15', bars: 2, tint: 'text-soft' },
+  resolved:    { bg: 'bg-success-soft', bars: 3, tint: 'text-good' },
+  reopened:    { bg: 'bg-amber',     bars: 0, tint: 'text-ink' },
 }
  
 export default function ReportStatusPill({ status }) {

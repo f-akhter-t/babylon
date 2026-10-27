@@ -5,7 +5,7 @@ import { upvoteIssue } from '../../services/api'
 import { useT } from '../../i18n/useLanguage'
 
 const quietButton =
-  'min-h-11 shrink-0 rounded-full border-2 border-navy/20 bg-white px-5 py-2 font-body text-xs font-bold text-navy transition hover:border-navy active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest/60 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 disabled:active:scale-100'
+  'min-h-11 shrink-0 rounded-full border-2 border-navy/20 bg-white px-5 py-2 font-body text-xs font-bold text-navy transition hover:border-navy active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 disabled:active:scale-100'
 
 const placeLabel = (location) =>
   typeof location === 'string' ? location : (location?.label ?? '')
@@ -74,7 +74,7 @@ export default function DuplicatePanel({ photo, disabled = false }) {
   return (
     <div
       aria-live="polite"
-      className="flex flex-col gap-3 rounded-2xl border border-forest/25 bg-white/70 p-4"
+      className="flex flex-col gap-3 rounded-2xl border border-accent/25 bg-white/70 p-4"
     >
       <div>
         <p className="font-body text-sm font-bold text-navy">{t('Is this already reported?')}</p>
@@ -98,17 +98,17 @@ export default function DuplicatePanel({ photo, disabled = false }) {
                     .join(' · ')}
                 </p>
                 {s?.status === 'done' && (
-                  <p className="font-body text-xs font-semibold text-forest">
+                  <p className="font-body text-xs font-semibold text-accent">
                     {t('Thanks, your support was added ({votes} in total).', { votes: s.votes })}
                   </p>
                 )}
                 {s?.status === 'closed' && (
-                  <p className="font-body text-xs font-semibold text-danger">
+                  <p className="font-body text-xs font-semibold text-alert">
                     {t('You already supported this one, or it is closed.')}
                   </p>
                 )}
                 {s?.status === 'error' && (
-                  <p role="alert" className="font-body text-xs font-semibold text-danger">
+                  <p role="alert" className="font-body text-xs font-semibold text-alert">
                     {s.message}
                   </p>
                 )}

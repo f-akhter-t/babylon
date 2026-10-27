@@ -23,8 +23,8 @@ function StepHeading({ number, done, children }) {
       <span
         aria-hidden="true"
         className={clsx(
-          'flex h-7 w-7 shrink-0 items-center justify-center rounded-full font-body text-sm font-bold text-white transition duration-300',
-          done ? 'scale-110 bg-forest' : 'bg-navy',
+          'flex h-7 w-7 shrink-0 items-center justify-center rounded-full font-body text-sm font-bold text-paper transition duration-300',
+          done ? 'scale-110 bg-forest' : 'bg-ink',
         )}
       >
         {done ? (
@@ -198,9 +198,9 @@ export default function ReportForm({
       type="submit"
       disabled={!canSubmit}
       className={clsx(
-        'group w-full rounded-full bg-navy px-6 py-4 font-body text-sm font-bold text-white transition duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest/60 focus-visible:ring-offset-2',
+        'group w-full rounded-full bg-ink px-6 py-4 font-body text-sm font-bold text-paper transition duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 focus-visible:ring-offset-2',
         canSubmit
-          ? 'shadow-lg shadow-navy/25 hover:-translate-y-0.5 hover:bg-navy/90 hover:shadow-xl active:translate-y-0 active:scale-[0.99]'
+          ? 'shadow-lg shadow-navy/25 hover:-translate-y-0.5 hover:bg-ink/90 hover:shadow-xl active:translate-y-0 active:scale-[0.99]'
           : 'cursor-not-allowed opacity-50',
       )}
     >
@@ -238,7 +238,7 @@ export default function ReportForm({
           aria-valuemin={0}
           aria-valuemax={3}
           aria-valuenow={doneCount}
-          className="h-2 flex-1 overflow-hidden rounded-full bg-navy/10"
+          className="h-2 flex-1 overflow-hidden rounded-full bg-ink/10"
         >
           <div
             className="h-full origin-left rounded-full bg-forest transition-transform duration-500 ease-out"
@@ -287,7 +287,7 @@ export default function ReportForm({
                 type="button"
                 onClick={removePhoto}
                 disabled={locked}
-                className="min-h-11 shrink-0 rounded-full px-3 py-1 font-body text-xs font-semibold text-forest transition hover:bg-forest/10 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest/50 disabled:cursor-not-allowed disabled:opacity-50"
+                className="min-h-11 shrink-0 rounded-full px-3 py-1 font-body text-xs font-semibold text-accent transition hover:bg-forest/10 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {t('Remove')}
               </button>
@@ -305,16 +305,16 @@ export default function ReportForm({
             onDragLeave={() => setDragging(false)}
             onDrop={handleDrop}
             className={clsx(
-              'group flex h-36 w-full flex-col items-center justify-center gap-1.5 rounded-2xl border-2 border-dashed px-4 text-center transition duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest/50',
+              'group flex h-36 w-full flex-col items-center justify-center gap-1.5 rounded-2xl border-2 border-dashed px-4 text-center transition duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50',
               dragging
-                ? 'scale-[1.02] border-forest bg-white shadow-lg'
-                : 'border-forest/60 bg-white/70 hover:scale-[1.01] hover:border-forest hover:bg-white hover:shadow-md',
+                ? 'scale-[1.02] border-accent bg-white shadow-lg'
+                : 'border-accent/60 bg-white/70 hover:scale-[1.01] hover:border-accent hover:bg-white hover:shadow-md',
             )}
           >
             <svg
               viewBox="0 0 24 24"
               className={clsx(
-                'h-8 w-8 text-forest transition-transform duration-300 group-hover:scale-110',
+                'h-8 w-8 text-accent transition-transform duration-300 group-hover:scale-110',
                 !dragging && 'animate-float',
               )}
               fill="none"
@@ -337,7 +337,7 @@ export default function ReportForm({
         )}
 
         {photoError && (
-          <p role="alert" className="font-body text-xs font-semibold text-danger">
+          <p role="alert" className="font-body text-xs font-semibold text-alert">
             {photoError}
           </p>
         )}
@@ -379,7 +379,7 @@ export default function ReportForm({
                       onCategoryChange?.(c)
                     }
               }
-              className="transition hover:-translate-y-0.5 hover:shadow-md active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest/50"
+              className="transition hover:-translate-y-0.5 hover:shadow-md active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50"
             />
           ))}
         </div>
@@ -408,7 +408,7 @@ export default function ReportForm({
               onChange={(e) => setTitle(e.target.value.slice(0, TITLE_MAX))}
               {...textLock}
               aria-describedby="report-title-help"
-              className="w-full rounded-full border border-navy/15 bg-white px-4 py-3 font-body text-sm text-navy transition hover:border-forest/50 focus:border-forest focus:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest/40 disabled:opacity-50"
+              className="w-full rounded-full border border-navy/15 bg-white px-4 py-3 font-body text-sm text-navy transition hover:border-accent/50 focus:border-accent focus:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 disabled:opacity-50"
             />
             <p id="report-title-help" className="font-body text-xs text-muted">
               {t('A short name for the problem, {min} to {max} characters.', { min: TITLE_MIN, max: TITLE_MAX })}
@@ -430,12 +430,12 @@ export default function ReportForm({
           onChange={(e) => setDescription(e.target.value.slice(0, MAX_DESCRIPTION))}
           rows={4}
           placeholder={t('Large pothole in the left lane, about half a metre wide…')}
-          className="w-full resize-none rounded-2xl border border-navy/15 bg-white px-4 py-3 font-body text-sm text-navy placeholder:text-muted transition hover:border-forest/50 focus:border-forest focus:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest/40 disabled:opacity-50"
+          className="w-full resize-none rounded-2xl border border-navy/15 bg-white px-4 py-3 font-body text-sm text-navy placeholder:text-muted transition hover:border-accent/50 focus:border-accent focus:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 disabled:opacity-50"
         />
         <p
           className={clsx(
             'text-right font-body text-xs transition-colors',
-            description.length >= NEAR_LIMIT ? 'font-semibold text-danger' : 'text-muted',
+            description.length >= NEAR_LIMIT ? 'font-semibold text-alert' : 'text-muted',
           )}
         >
           {n(description.length)}/{n(MAX_DESCRIPTION)}
@@ -449,7 +449,7 @@ export default function ReportForm({
             <button
               type="button"
               onClick={onCancel}
-              className="flex shrink-0 items-center justify-center rounded-full border-2 border-navy/20 bg-white px-6 py-3.5 font-body text-sm font-bold text-navy transition hover:border-navy focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest/60 focus-visible:ring-offset-2"
+              className="flex shrink-0 items-center justify-center rounded-full border-2 border-navy/20 bg-white px-6 py-3.5 font-body text-sm font-bold text-navy transition hover:border-navy focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 focus-visible:ring-offset-2"
             >
               {t('Cancel')}
             </button>
@@ -459,12 +459,12 @@ export default function ReportForm({
           !deleted && submitButton
         )}
         {submitError && (
-          <p role="alert" className="text-center font-body text-xs font-semibold text-danger">
+          <p role="alert" className="text-center font-body text-xs font-semibold text-alert">
             {submitError}
           </p>
         )}
         {locked ? (
-          <p className="text-center font-body text-xs font-semibold text-danger">
+          <p className="text-center font-body text-xs font-semibold text-alert">
             {t(lockedReason)}
           </p>
         ) : (

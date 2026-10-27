@@ -29,7 +29,7 @@ export default function FixedThisWeekSection({ issues }) {
         )}
 
         {!loading && list.length === 0 && (
-          <p className="text-slate md:col-span-2 xl:col-span-3">
+          <p className="text-soft md:col-span-2 xl:col-span-3">
             {t('No issues were closed this week yet.')}
           </p>
         )}

@@ -39,17 +39,17 @@ export default function HeroSlide({ slide, active = true, as: Heading = 'h2' }) 
   return (
     <div className="max-w-[560px]">
       <div className="flex flex-wrap items-center gap-2">
-        <span className="inline-flex items-center gap-2 rounded-full border border-slate bg-white/5 px-4 py-2 text-[13px] font-bold uppercase tracking-widest text-brand">
+        <span className="inline-flex items-center gap-2 rounded-full border border-soft bg-paper/5 px-4 py-2 text-[13px] font-bold uppercase tracking-widest text-brand">
           <StaircaseIcon level={3} />
           {t(slide.badge)}
         </span>
-        <span className="inline-flex items-center gap-2 rounded-full border border-slate bg-white/5 px-4 py-2 text-[13px] font-bold uppercase tracking-widest text-mint">
+        <span className="inline-flex items-center gap-2 rounded-full border border-soft bg-paper/5 px-4 py-2 text-[13px] font-bold uppercase tracking-widest text-frost">
           <span aria-hidden="true" className="size-2.5 rounded-full bg-flag-red" />
           {t('For all of Bangladesh')}
         </span>
       </div>
 
-      <Heading className="mt-5.5 font-heading text-[40px] font-extrabold leading-[0.98] tracking-[-0.04em] text-mint sm:text-[64px] xl:text-[76px]">
+      <Heading className="mt-5.5 font-heading text-[40px] font-extrabold leading-[0.98] tracking-[-0.04em] text-frost sm:text-[64px] xl:text-[76px]">
         {slide.headline.map((line, i) => (
           <Line key={line} shown={shown} order={i} className="block">
             {t(line)}

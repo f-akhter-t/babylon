@@ -39,10 +39,10 @@ function buildSteps(identity, sent) {
 }
 
 const MARKERS = {
-  done: 'bg-forest text-white',
-  current: 'bg-navy',
-  todo: 'border-2 border-dashed border-navy/30 bg-white text-slate',
-  rejected: 'bg-danger text-white',
+  done: 'bg-forest text-paper',
+  current: 'bg-ink',
+  todo: 'border-2 border-dashed border-navy/30 bg-white text-soft',
+  rejected: 'bg-danger text-paper',
 }
 
 const SPOKEN = {
@@ -69,7 +69,7 @@ function Step({ step, number, last, reachedNext }) {
         <span
           ref={lineRef}
           aria-hidden="true"
-          className={clsx(LINE, reachedNext ? 'bg-forest' : 'bg-navy/15')}
+          className={clsx(LINE, reachedNext ? 'bg-forest' : 'bg-ink/15')}
         />
       )}
 
@@ -101,7 +101,7 @@ function Step({ step, number, last, reachedNext }) {
           {t(step.label)}
           <span className="sr-only">{` ${t(SPOKEN[step.look])}`}</span>
         </h3>
-        {step.line && <p className="mt-1 text-xs leading-snug text-slate">{t(step.line)}</p>}
+        {step.line && <p className="mt-1 text-xs leading-snug text-soft">{t(step.line)}</p>}
       </div>
     </li>
   )

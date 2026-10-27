@@ -93,7 +93,7 @@ export default function ReviewPanel({ issue, onApprove, onReject, busy = false }
             )}
           </div>
           <span className="inline-flex shrink-0 items-center gap-2 rounded-full bg-slate/15 px-3 py-1 font-body text-sm font-semibold text-navy">
-            <StaircaseIcon level={3} className="text-slate" />
+            <StaircaseIcon level={3} className="text-soft" />
             {t('Awaiting check')}
           </span>
         </div>
@@ -122,7 +122,7 @@ export default function ReviewPanel({ issue, onApprove, onReject, busy = false }
                     type="checkbox"
                     checked={checked[index]}
                     onChange={() => toggle(index)}
-                    className="h-6 w-6 shrink-0 accent-forest"
+                    className="h-6 w-6 shrink-0 accent-accent"
                   />
                   {t(label)}
                 </label>
@@ -154,7 +154,7 @@ export default function ReviewPanel({ issue, onApprove, onReject, busy = false }
               aria-invalid={reasonError ? true : undefined}
               aria-describedby={reasonError ? REJECT_ERROR_ID : undefined}
               placeholder={t('Tell the department what is still wrong')}
-              className="mt-2 w-full rounded-tile border border-navy/60 bg-white p-3 font-body text-sm text-navy placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-forest"
+              className="mt-2 w-full rounded-tile border border-navy/60 bg-white p-3 font-body text-sm text-navy placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-accent"
             />
           </div>
         </div>
@@ -169,8 +169,8 @@ export default function ReviewPanel({ issue, onApprove, onReject, busy = false }
             aria-describedby={!canApprove ? APPROVE_REASON_ID : undefined}
             onClick={approve}
             className={clsx(
-              'min-h-11 rounded-full bg-forest px-3 py-2.5 font-body text-sm font-bold text-mint transition-opacity motion-reduce:transition-none sm:px-6 sm:text-base',
-              'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forest',
+              'min-h-11 rounded-full bg-forest px-3 py-2.5 font-body text-sm font-bold text-frost transition-opacity motion-reduce:transition-none sm:px-6 sm:text-base',
+              'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent',
               // ! beats the global "button:not(:disabled)" pointer rule in index.css.
               canApprove && !busy ? 'hover:opacity-90' : 'cursor-not-allowed! opacity-50',
             )}
@@ -181,7 +181,7 @@ export default function ReviewPanel({ issue, onApprove, onReject, busy = false }
             type="button"
             disabled={busy}
             onClick={reject}
-            className="min-h-11 rounded-full border-2 border-navy bg-white px-3 py-2.5 font-body text-sm font-bold text-navy transition-colors hover:bg-mint-deep focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forest motion-reduce:transition-none sm:px-6 sm:text-base"
+            className="min-h-11 rounded-full border-2 border-navy bg-white px-3 py-2.5 font-body text-sm font-bold text-navy transition-colors hover:bg-mint-deep focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent motion-reduce:transition-none sm:px-6 sm:text-base"
           >
             {t('Reject and send back')}
           </button>
@@ -192,7 +192,7 @@ export default function ReviewPanel({ issue, onApprove, onReject, busy = false }
           </p>
         )}
         {reasonError && (
-          <p id={REJECT_ERROR_ID} role="alert" className="mt-2 font-body text-sm font-bold text-danger">
+          <p id={REJECT_ERROR_ID} role="alert" className="mt-2 font-body text-sm font-bold text-alert">
             {reasonError}
           </p>
         )}

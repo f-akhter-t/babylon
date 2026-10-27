@@ -3,11 +3,11 @@ import clsx from 'clsx'
 import { useT } from '../../i18n/useLanguage'
 
 const tones = {
-  verified: { label: 'Verified', light: 'bg-brand/25 text-forest', dark: 'bg-brand text-navy' },
-  'not-verified': { label: 'Not verified', light: 'bg-navy/10 text-slate', dark: 'bg-mint/15 text-mint' },
-  'not-submitted': { label: 'Not submitted', light: 'bg-navy/10 text-slate', dark: 'bg-mint/15 text-mint' },
-  pending: { label: 'Pending review', light: 'bg-amber/30 text-navy', dark: 'bg-amber text-navy' },
-  rejected: { label: 'Rejected', light: 'bg-danger/10 text-danger', dark: 'bg-danger text-mint' },
+  verified: { label: 'Verified', light: 'bg-brand/25 text-accent', dark: 'bg-brand text-ink' },
+  'not-verified': { label: 'Not verified', light: 'bg-ink/10 text-soft', dark: 'bg-frost/15 text-frost' },
+  'not-submitted': { label: 'Not submitted', light: 'bg-ink/10 text-soft', dark: 'bg-frost/15 text-frost' },
+  pending: { label: 'Pending review', light: 'bg-amber/30 text-ink', dark: 'bg-amber text-ink' },
+  rejected: { label: 'Rejected', light: 'bg-danger/10 text-alert', dark: 'bg-danger text-frost' },
 }
 
 // A small status label for the phone and identity sections.

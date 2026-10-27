@@ -31,14 +31,14 @@ function QueueSection({ label, children }) {
     <section
       aria-labelledby="identity-queue-heading"
       className={clsx(
-        'min-w-0 overflow-hidden rounded-panel bg-navy p-4 lg:w-72 lg:shrink-0',
+        'min-w-0 overflow-hidden rounded-panel bg-ink p-4 lg:w-72 lg:shrink-0',
         fit.column,
       )}
     >
-      <h2 id="identity-queue-heading" className="px-1 font-heading text-xl font-extrabold text-mint">
+      <h2 id="identity-queue-heading" className="px-1 font-heading text-xl font-extrabold text-frost">
         {t('Submissions')}
       </h2>
-      <p className="mt-1 px-1 font-body text-sm text-mint/70">{label}</p>
+      <p className="mt-1 px-1 font-body text-sm text-frost/70">{label}</p>
       <div className={clsx('mt-4', fit.column, fit.grow)}>{children}</div>
     </section>
   )

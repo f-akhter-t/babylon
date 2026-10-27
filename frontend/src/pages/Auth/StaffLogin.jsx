@@ -72,7 +72,7 @@ function StaffLoginPage() {
     >
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         {notice && (
-          <p role="status" className="font-body text-sm font-bold text-forest">
+          <p role="status" className="font-body text-sm font-bold text-accent">
             {t(notice)}
           </p>
         )}

@@ -23,7 +23,7 @@ export default function WelcomeHeader({ name, profile, onSkip }) {
         <p className="mt-2 font-body text-base text-navy">
           {t('Let\'s set up your profile. Start with your name and division.')}
         </p>
-        <p className="mt-1 font-body text-sm text-slate">
+        <p className="mt-1 font-body text-sm text-soft">
           {t('Verifying your email, phone and identity is optional. You can do it any time from your profile.')}
         </p>
         <Button to="/map" variant="outline" className="mt-5" onClick={onSkip}>
