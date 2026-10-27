@@ -65,10 +65,11 @@ Check it: open http://localhost:5000/api/health. It answers `{"success":true,...
 | `npm run seed:public` | Only the public data (three accounts, 12 issues, votes).                     |
 | `npm run seed:admin`  | Only the admin data (44 issues, 5 identity checks, 5 citizens).              |
 | `npm run seed:citizen` | Only the citizen data (two citizens with their reports, votes and notices). |
+| `npm run clean:seed`  | Shows which demo rows (emails ending in `.test`) are in your database. Add `-- --yes` to remove them. Real accounts and reports stay. |
 | `npm run token -- <role> <email> [department]` | Prints a sign-in token for Postman. Roles: `citizen`, `department`, `admin`. |
 | `npm test`            | Runs all backend tests. They use fakes, so no database, Gemini or CLIP is needed. |
 
-The seed refuses to run when `NODE_ENV=production`. To start again from nothing, drop your database in Atlas, then run `npm run seed`.
+The seed refuses to run when `NODE_ENV=production`. To start again from nothing, drop your database in Atlas, then run `npm run seed`. To remove only the demo rows and keep real ones, run `npm run clean:seed` to see what would go, then `npm run clean:seed -- --yes`. It refuses to run when `NODE_ENV=production`, like the seed.
 
 ### Frontend with the backend
 
