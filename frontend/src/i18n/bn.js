@@ -932,6 +932,9 @@ const bn = {
   'Close the Babylon helper': 'ব্যাবিলন সহায়ক বন্ধ করুন',
   'Open the Babylon helper': 'ব্যাবিলন সহায়ক খুলুন',
   'Ask Babylon': 'ব্যাবিলনকে জিজ্ঞাসা করুন',
+  'Dark mode': 'ডার্ক মোড',
+  'Switch to light mode': 'লাইট মোডে যান',
+  'Switch to dark mode': 'ডার্ক মোডে যান',
 }
 
 // Server text with numbers in it. [pattern, builder]; the builder gets the

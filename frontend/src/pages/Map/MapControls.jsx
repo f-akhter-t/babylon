@@ -10,7 +10,7 @@ import { useT } from '../../i18n/useLanguage'
 const TILE =
   'flex size-11 items-center justify-center transition duration-150 ease-out motion-safe:active:scale-90'
 const IDLE = 'bg-white text-navy hover:bg-mint active:bg-mint-deep'
-const ACTIVE = 'bg-navy text-brand hover:bg-navy/90'
+const ACTIVE = 'bg-ink text-brand hover:bg-ink/90'
 const SINGLE = 'rounded-chip border border-navy/20 shadow-md hover:shadow-lg'
 
 // Zoom in, zoom out, "back to my area" and "drop a pin". Lives inside the
@@ -39,7 +39,7 @@ export default function MapControls({ report, dropping, onToggleDrop }) {
         >
           <PlusIcon />
         </button>
-        <span className="h-px bg-navy/15" />
+        <span className="h-px bg-ink/15" />
         <button
           type="button"
           aria-label={t('Zoom out')}

@@ -163,7 +163,7 @@ export default function EditForm({ issue, email }) {
         type="button"
         onClick={handleCancel}
         // min-h-11 -my-3: a 44px tap area without moving the heading below.
-        className="group -my-3 inline-flex min-h-11 items-center gap-1 rounded-full font-body text-sm font-semibold text-navy/70 transition hover:text-navy focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest/50"
+        className="group -my-3 inline-flex min-h-11 items-center gap-1 rounded-full font-body text-sm font-semibold text-navy/70 transition hover:text-navy focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50"
         style={enter('rise-in', 0)}
       >
         <span
@@ -182,7 +182,7 @@ export default function EditForm({ issue, email }) {
         <h1
           ref={headingRef}
           tabIndex={-1}
-          className="rounded-tile font-heading text-4xl font-extrabold text-navy focus:outline-none focus-visible:ring-2 focus-visible:ring-forest md:text-5xl"
+          className="rounded-tile font-heading text-4xl font-extrabold text-navy focus:outline-none focus-visible:ring-2 focus-visible:ring-accent md:text-5xl"
         >
           {t('Edit your report')}
         </h1>
@@ -196,7 +196,7 @@ export default function EditForm({ issue, email }) {
           ref={lockedRef}
           tabIndex={-1}
           role="alert"
-          className="mt-5 flex flex-col gap-3 rounded-card border-2 border-amber-dark bg-white p-4 font-body text-navy shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-forest sm:flex-row sm:items-center sm:justify-between"
+          className="mt-5 flex flex-col gap-3 rounded-card border-2 border-amber-dark bg-white p-4 font-body text-navy shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-accent sm:flex-row sm:items-center sm:justify-between"
         >
           <p className="text-sm font-semibold">
             {lockedReason === DELETED_ELSEWHERE
@@ -206,7 +206,7 @@ export default function EditForm({ issue, email }) {
           <button
             type="button"
             onClick={() => setExit(lockedReason === DELETED_ELSEWHERE ? { to: '/my-reports' } : {})}
-            className="shrink-0 rounded-full bg-navy px-4 py-2 text-sm font-bold text-white transition hover:bg-navy/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest/60 focus-visible:ring-offset-2"
+            className="shrink-0 rounded-full bg-ink px-4 py-2 text-sm font-bold text-paper transition hover:bg-ink/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 focus-visible:ring-offset-2"
           >
             {lockedReason === DELETED_ELSEWHERE ? t('Back to My reports') : t('Back to the issue')}
           </button>
@@ -239,7 +239,7 @@ export default function EditForm({ issue, email }) {
           <button
             type="button"
             onClick={() => setAskingDelete(true)}
-            className="inline-flex min-h-11 items-center rounded-full border-2 border-danger px-5 font-body text-sm font-bold text-danger transition-colors hover:bg-danger/10 motion-reduce:transition-none"
+            className="inline-flex min-h-11 items-center rounded-full border-2 border-alert px-5 font-body text-sm font-bold text-alert transition-colors hover:bg-danger/10 motion-reduce:transition-none"
           >
             {t('Delete report')}
           </button>

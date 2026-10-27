@@ -13,7 +13,7 @@ export default function ProgressCard({ issue }) {
         <h2 id="progress-heading" className="font-heading text-2xl font-extrabold text-navy">
           {t('Progress')}
         </h2>
-        <p className="text-sm font-semibold text-slate">{t('Step {n} of {count}', { n: current, count: 3 })}</p>
+        <p className="text-sm font-semibold text-soft">{t('Step {n} of {count}', { n: current, count: 3 })}</p>
       </div>
 
       {/* No gap between columns: each step's line runs up to the next marker. */}

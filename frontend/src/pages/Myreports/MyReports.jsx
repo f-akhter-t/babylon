@@ -125,7 +125,7 @@ function MyReportsPage() {
               <div
                 className={clsx(
                   'rounded-2xl px-4 py-3 transition duration-150 hover:-translate-y-0.5 hover:shadow-lift',
-                  s.dark ? 'bg-navy text-mint' : 'bg-mint'
+                  s.dark ? 'bg-ink text-frost' : 'bg-mint'
                 )}
               >
                 <div className="flex items-center gap-1.5 text-[13px] font-semibold">
@@ -149,7 +149,7 @@ function MyReportsPage() {
                   aria-pressed={filter === f}
                   className={clsx(
                     'rounded-full border-[1.5px] border-navy px-[15px] py-[7px] font-semibold transition-colors max-md:min-h-11',
-                    filter === f ? 'bg-navy text-mint' : 'hover:bg-white'
+                    filter === f ? 'bg-ink text-frost' : 'hover:bg-white'
                   )}
                 >
                   {t(f)}
@@ -228,7 +228,7 @@ function MyReportsPage() {
               {(loggedOut || noReportsAtAll) && (
                 <Link
                   to={loggedOut ? '/login' : '/report'}
-                  className="inline-flex min-h-11 items-center rounded-full bg-forest px-5 py-[11px] font-bold text-mint"
+                  className="inline-flex min-h-11 items-center rounded-full bg-forest px-5 py-[11px] font-bold text-frost"
                 >
                   {loggedOut ? t('Log in') : t('Report an issue')}
                 </Link>

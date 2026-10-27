@@ -4,23 +4,23 @@ import StaircaseIcon from '../../components/ui/StaircaseIcon'
 const tones = {
   mint: {
     card: 'bg-mint',
-    icon: 'text-forest',
-    number: 'text-forest',
+    icon: 'text-accent',
+    number: 'text-accent',
     title: 'text-navy',
-    body: 'text-slate',
+    body: 'text-soft',
   },
   forest: {
     card: 'bg-forest',
-    icon: 'text-mint',
+    icon: 'text-frost',
     number: 'text-brand',
-    title: 'text-mint',
-    body: 'text-mint',
+    title: 'text-frost',
+    body: 'text-frost',
   },
   navy: {
-    card: 'bg-navy',
+    card: 'bg-ink',
     icon: 'text-brand',
     number: 'text-brand',
-    title: 'text-mint',
+    title: 'text-frost',
     body: 'text-page',
   },
 }

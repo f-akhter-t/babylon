@@ -12,8 +12,8 @@ const HEIGHTS = {
 }
 
 const BAR = {
-  dark: { done: 'bg-brand', pending: 'bg-amber', todo: 'bg-mint/15' },
-  light: { done: 'bg-forest', pending: 'bg-amber', todo: 'bg-navy/10' },
+  dark: { done: 'bg-brand', pending: 'bg-amber', todo: 'bg-frost/15' },
+  light: { done: 'bg-forest', pending: 'bg-amber', todo: 'bg-ink/10' },
 }
 
 const SPOKEN = {
@@ -34,12 +34,12 @@ export default function CompletenessMeter({ profile, tone = 'dark', size = 'md' 
           className={clsx(
             'font-body font-semibold',
             size === 'lg' ? 'text-base' : 'text-sm',
-            dark ? 'text-mint' : 'text-navy',
+            dark ? 'text-frost' : 'text-navy',
           )}
         >
           {t('Profile completeness')}
         </p>
-        <p className={clsx('font-body text-xs', dark ? 'text-mint/70' : 'text-slate')}>
+        <p className={clsx('font-body text-xs', dark ? 'text-frost/70' : 'text-soft')}>
           {t('{done} of {total} done', { done, total: steps.length })}
         </p>
       </div>
@@ -59,7 +59,7 @@ export default function CompletenessMeter({ profile, tone = 'dark', size = 'md' 
             <span
               className={clsx(
                 'font-body text-xs font-semibold',
-                dark ? 'text-mint/80' : 'text-navy',
+                dark ? 'text-frost/80' : 'text-navy',
               )}
             >
               {t(step.label)}

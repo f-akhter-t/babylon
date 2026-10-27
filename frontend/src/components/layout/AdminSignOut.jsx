@@ -23,7 +23,7 @@ export default function AdminSignOut({ className }) {
   return (
     <div className={clsx('px-2', className)}>
       {session && (
-        <p className="font-body text-sm text-mint">
+        <p className="font-body text-sm text-frost">
           {roleLabel
             ? t('Signed in as {name} ({role}).', { name: session.name, role: t(roleLabel) })
             : t('Signed in as {name}.', { name: session.name })}
@@ -32,7 +32,7 @@ export default function AdminSignOut({ className }) {
       <button
         type="button"
         onClick={handleLogout}
-        className="mt-2 min-h-11 w-full rounded-full border border-mint/40 px-4 py-2.5 font-body text-sm font-bold text-mint transition-colors hover:bg-mint/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-mint motion-reduce:transition-none"
+        className="mt-2 min-h-11 w-full rounded-full border border-frost/40 px-4 py-2.5 font-body text-sm font-bold text-frost transition-colors hover:bg-frost/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-mint motion-reduce:transition-none"
       >
         {t('Log out')}
       </button>

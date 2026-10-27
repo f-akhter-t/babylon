@@ -40,7 +40,7 @@ export default function FeedGrid({ ref, issues, isGhost = () => false, instant =
           <button
             type="button"
             onClick={onClearFilters}
-            className="mt-1 font-body text-sm font-semibold text-forest underline-offset-2 hover:underline"
+            className="mt-1 font-body text-sm font-semibold text-accent underline-offset-2 hover:underline"
           >
             {t('Clear filters')}
           </button>

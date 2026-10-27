@@ -35,7 +35,7 @@ export default function MapPopup({ issue, viewer, onClose, onToggleVote, onToggl
           <PopupPhoto issue={issue} />
           <div className="flex min-w-0 flex-col gap-1.5">
             <h2 className="font-heading text-base font-extrabold leading-tight">{issue.title}</h2>
-            <span className="text-xs text-slate">
+            <span className="text-xs text-soft">
               {t(issue.category)} · {t('Reported {when}', { when: format.daysAgo(issue.daysAgo) })}
             </span>
             <div className="flex flex-wrap gap-1.5">

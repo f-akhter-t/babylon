@@ -54,7 +54,7 @@ export default function PopupActions({
               className={clsx(
                 'flex h-11 shrink-0 items-center justify-center gap-2 rounded-full border-2 border-navy transition motion-safe:active:scale-90',
                 followLabel ? 'px-5 text-sm font-semibold' : 'w-11',
-                followed ? 'bg-navy text-brand' : 'text-navy hover:bg-navy/10',
+                followed ? 'bg-ink text-brand' : 'text-navy hover:bg-ink/10',
               )}
             >
               <BellIcon size={18} className={clsx(followed && 'fill-current')} />
@@ -74,9 +74,9 @@ export default function PopupActions({
         )}
       </div>
 
-      {staff && <span className="text-xs text-slate">{t('Only citizens can upvote and follow.')}</span>}
+      {staff && <span className="text-xs text-soft">{t('Only citizens can upvote and follow.')}</span>}
       {viewer.canAct && followed && (
-        <span className="text-xs font-medium text-forest">
+        <span className="text-xs font-medium text-accent">
           {t('Following. You will get alerts when this issue changes.')}
         </span>
       )}

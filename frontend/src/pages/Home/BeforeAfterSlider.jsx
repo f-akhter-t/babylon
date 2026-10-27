@@ -80,10 +80,10 @@ export default function BeforeAfterSlider({
         )}
       </div>
 
-      <span className="absolute bottom-3.5 left-3.5 rounded-full bg-navy px-3 py-1.5 text-[11px] font-extrabold uppercase tracking-[0.06em] text-mint">
+      <span className="absolute bottom-3.5 left-3.5 rounded-full bg-ink px-3 py-1.5 text-[11px] font-extrabold uppercase tracking-[0.06em] text-frost">
         {t('Before')}
       </span>
-      <span className="absolute bottom-3.5 right-3.5 rounded-full bg-brand px-3 py-1.5 text-[11px] font-extrabold uppercase tracking-[0.06em] text-navy">
+      <span className="absolute bottom-3.5 right-3.5 rounded-full bg-brand px-3 py-1.5 text-[11px] font-extrabold uppercase tracking-[0.06em] text-ink">
         {t('After')}
       </span>
 

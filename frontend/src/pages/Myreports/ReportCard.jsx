@@ -30,7 +30,7 @@ export default function ReportCard({ report, onOpen }) {
         {r.photoUrl ? (
           <img src={r.photoUrl} alt={t('Photo of {title}', { title: r.title })} className="h-full min-h-0 w-full object-cover" />
         ) : (
-          <div className="grid place-items-center bg-slate text-xs text-mint">
+          <div className="grid place-items-center bg-slate text-xs text-frost">
             <span className="flex items-center gap-1.5"><CameraIcon />{t('No photo added')}</span>
           </div>
         )}
@@ -82,7 +82,7 @@ export default function ReportCard({ report, onOpen }) {
             <Link
               to={`/issues/${r.id}`}
               aria-label={t('Open issue page: {title}', { title: r.title })}
-              className={clsx(linkClass, 'text-forest')}
+              className={clsx(linkClass, 'text-accent')}
             >
               {t('Open issue page')}
             </Link>

@@ -27,7 +27,7 @@ export default function BeforeAfterSlider({ before, after, alt }) {
 
   if (failed) {
     return (
-      <div className="flex h-40 w-full items-center justify-center bg-slate/20 font-body text-xs text-slate">
+      <div className="flex h-40 w-full items-center justify-center bg-slate/20 font-body text-xs text-soft">
         {t('Photo not available')}
       </div>
     )
@@ -58,10 +58,10 @@ export default function BeforeAfterSlider({ before, after, alt }) {
         onError={() => setFailed(true)}
       />
 
-      <span className="absolute bottom-2 left-2 rounded-full bg-navy px-2.5 py-1 font-body text-[10px] font-bold text-white">
+      <span className="absolute bottom-2 left-2 rounded-full bg-ink px-2.5 py-1 font-body text-[10px] font-bold text-paper">
         {t('Before').toUpperCase()}
       </span>
-      <span className="absolute bottom-2 right-2 rounded-full bg-brand px-2.5 py-1 font-body text-[10px] font-bold text-navy">
+      <span className="absolute bottom-2 right-2 rounded-full bg-brand px-2.5 py-1 font-body text-[10px] font-bold text-ink">
         {t('After').toUpperCase()}
       </span>
 

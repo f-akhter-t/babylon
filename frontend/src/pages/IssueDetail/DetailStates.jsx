@@ -37,7 +37,7 @@ export function DetailMessage({ error = false, deleted = false }) {
       >
         {t(title)}
       </h1>
-      <p className="text-sm text-slate">{t(text)}</p>
+      <p className="text-sm text-soft">{t(text)}</p>
       <Button to="/map" variant="dark">
         {t('Back to map')}
       </Button>

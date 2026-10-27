@@ -39,18 +39,18 @@ export default function SummaryCard({ profile, showMeter = true }) {
   return (
     <aside
       aria-label={t('Your summary')}
-      className="flex flex-col gap-5 rounded-card bg-navy p-6 text-mint shadow-sm"
+      className="flex flex-col gap-5 rounded-card bg-ink p-6 text-frost shadow-sm"
     >
       <div className="flex items-center gap-4">
         <span
           aria-hidden="true"
-          className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-brand font-heading text-xl font-extrabold text-navy"
+          className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-brand font-heading text-xl font-extrabold text-ink"
         >
           {initialsFor(profile.name)}
         </span>
         <div className="min-w-0">
           <p className="truncate font-heading text-xl font-extrabold">{profile.name}</p>
-          <p className="truncate font-body text-sm text-mint/70">{profile.email}</p>
+          <p className="truncate font-body text-sm text-frost/70">{profile.email}</p>
         </div>
       </div>
 
@@ -66,7 +66,7 @@ export default function SummaryCard({ profile, showMeter = true }) {
             <CountUp value={user.points} duration={1200} />
             <span className="sr-only">{t('points')}</span>
           </p>
-          <p className="mt-1 font-body text-sm text-mint/80">
+          <p className="mt-1 font-body text-sm text-frost/80">
             {user.reports === 1 ? t('points from 1 report') : t('points from {n} reports', { n: user.reports })}
           </p>
           <div
@@ -75,7 +75,7 @@ export default function SummaryCard({ profile, showMeter = true }) {
             aria-valuemin={0}
             aria-valuemax={100}
             aria-valuenow={Math.round(progress)}
-            className="mt-4 h-2 overflow-hidden rounded-full bg-mint/15"
+            className="mt-4 h-2 overflow-hidden rounded-full bg-frost/15"
           >
             {/* Scaled, not resized, so the bar never changes the layout. */}
             <div
@@ -88,7 +88,7 @@ export default function SummaryCard({ profile, showMeter = true }) {
               />
             </div>
           </div>
-          <p className="mt-2 font-body text-xs text-mint/70">
+          <p className="mt-2 font-body text-xs text-frost/70">
             {maxed
               ? t('You reached the top level.')
               : t('{n} points to reach level {level}.', { n: toNext, level: user.level + 1 })}
@@ -97,17 +97,17 @@ export default function SummaryCard({ profile, showMeter = true }) {
       ) : (
         <div role="status" className="flex flex-col gap-2">
           <span className="sr-only">{t('Loading your points…')}</span>
-          <div aria-hidden="true" className="h-5 w-32 rounded-full bg-mint/10 skeleton" />
-          <div aria-hidden="true" className="h-12 w-24 rounded-tile bg-mint/10 skeleton" />
+          <div aria-hidden="true" className="h-5 w-32 rounded-full bg-frost/10 skeleton" />
+          <div aria-hidden="true" className="h-12 w-24 rounded-tile bg-frost/10 skeleton" />
         </div>
       )}
 
       {showMeter ? (
-        <div className="border-t border-mint/15 pt-4">
+        <div className="border-t border-frost/15 pt-4">
           <CompletenessMeter profile={profile} />
         </div>
       ) : (
-        <div aria-hidden="true" className="border-t border-mint/15" />
+        <div aria-hidden="true" className="border-t border-frost/15" />
       )}
 
       <ul className="flex flex-col gap-2 font-body text-sm">

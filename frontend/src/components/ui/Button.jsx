@@ -2,11 +2,11 @@ import { Link } from 'react-router-dom'
 import clsx from 'clsx'
 
 const variants = {
-  primary: 'bg-forest text-white hover:bg-forest/90',
-  brand: 'bg-brand text-navy hover:bg-brand/90',
-  dark: 'bg-navy text-white hover:bg-navy/90',
-  outline: 'border-2 border-navy text-navy hover:bg-navy/10',
-  'outline-light': 'border-2 border-mint text-mint hover:bg-white/10',
+  primary: 'bg-forest text-paper hover:bg-forest/90',
+  brand: 'bg-brand text-ink hover:bg-brand/90',
+  dark: 'bg-ink text-paper hover:bg-ink/90',
+  outline: 'border-2 border-navy text-navy hover:bg-ink/10',
+  'outline-light': 'border-2 border-mint text-frost hover:bg-paper/10',
 }
 
 const sizes = {

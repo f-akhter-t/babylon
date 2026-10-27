@@ -45,7 +45,7 @@ export default function FeedFilters({
           value={search}
           onChange={(e) => onSearch(e.target.value)}
           placeholder={t('Search by title or street…')}
-          className="w-full rounded-full border border-navy/15 bg-white py-2.5 pl-10 pr-4 max-md:min-h-11 font-body text-sm text-navy placeholder:text-muted transition focus:border-forest focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest/40"
+          className="w-full rounded-full border border-navy/15 bg-white py-2.5 pl-10 pr-4 max-md:min-h-11 font-body text-sm text-navy placeholder:text-muted transition focus:border-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
         />
       </div>
 
@@ -60,7 +60,7 @@ export default function FeedFilters({
             tone="forest"
             active={category === 'All'}
             onClick={() => onCategory('All')}
-            className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest/50"
+            className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50"
           />
           {CATEGORIES.map((c) => (
             <CategoryChip
@@ -69,7 +69,7 @@ export default function FeedFilters({
               tone="forest"
               active={category === c}
               onClick={() => onCategory(c)}
-              className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest/50"
+              className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50"
             />
           ))}
         </div>
@@ -84,7 +84,7 @@ export default function FeedFilters({
               label={s.label}
               active={status === s.value}
               onClick={() => onStatus(s.value)}
-              className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest/50"
+              className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50"
             />
           ))}
         </div>

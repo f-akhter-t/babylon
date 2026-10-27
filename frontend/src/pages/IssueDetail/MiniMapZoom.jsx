@@ -31,7 +31,7 @@ export default function MiniMapZoom({ position = 'right-3 top-3' }) {
       <button type="button" aria-label={t('Zoom in')} onClick={() => map.zoomIn(1, { animate: !prefersLessMotion() })} className={BUTTON}>
         <PlusIcon size={16} />
       </button>
-      <span className="h-px bg-navy/15" />
+      <span className="h-px bg-ink/15" />
       <button type="button" aria-label={t('Zoom out')} onClick={() => map.zoomOut(1, { animate: !prefersLessMotion() })} className={BUTTON}>
         <MinusIcon size={16} />
       </button>

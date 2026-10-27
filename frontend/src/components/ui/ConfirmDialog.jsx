@@ -77,12 +77,12 @@ export default function ConfirmDialog({
       onCancel={handleCancelEvent}
       onClose={handleClose}
       onKeyDown={handleKeyDown}
-      className="motion-dialog m-auto w-[min(28rem,calc(100vw-2rem))] rounded-panel bg-mint p-6 font-body text-navy shadow-xl backdrop:bg-navy/60 sm:p-8"
+      className="motion-dialog m-auto w-[min(28rem,calc(100vw-2rem))] rounded-panel bg-mint p-6 font-body text-navy shadow-xl backdrop:bg-ink/60 sm:p-8"
     >
       <h2 id={titleId} className="font-heading text-2xl font-extrabold">
         {t(title)}
       </h2>
-      <p id={textId} className="mt-2 text-base text-slate">
+      <p id={textId} className="mt-2 text-base text-soft">
         {t(text)}
       </p>
       <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-end">
@@ -91,7 +91,7 @@ export default function ConfirmDialog({
           type="button"
           onClick={onCancel}
           disabled={busy}
-          className="min-h-11 rounded-full border-2 border-navy px-5 font-bold text-navy transition-colors hover:bg-navy/10 disabled:opacity-50 motion-reduce:transition-none"
+          className="min-h-11 rounded-full border-2 border-navy px-5 font-bold text-navy transition-colors hover:bg-ink/10 disabled:opacity-50 motion-reduce:transition-none"
         >
           {t(cancelLabel)}
         </button>
@@ -103,7 +103,7 @@ export default function ConfirmDialog({
           aria-busy={busy || undefined}
           className={clsx(
             'min-h-11 rounded-full px-5 font-bold transition-opacity hover:opacity-90 disabled:opacity-50 motion-reduce:transition-none',
-            tone === 'danger' ? 'bg-danger text-white' : 'bg-navy text-mint',
+            tone === 'danger' ? 'bg-danger text-paper' : 'bg-ink text-frost',
           )}
         >
           {t(confirmLabel)}

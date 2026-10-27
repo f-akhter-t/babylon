@@ -12,6 +12,12 @@
   <link
     href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;800&family=Figtree:wght@400;500;600;700&family=Noto+Sans+Bengali:wght@400;500;600;700;800&display=swap"
     rel="stylesheet" />
+  <script>
+    // Apply a saved dark-mode choice before the page paints, so it never flashes light.
+    try {
+      if (localStorage.getItem('babylon-theme') === 'dark') document.documentElement.dataset.theme = 'dark'
+    } catch (e) {}
+  </script>
   <title>Babylon</title>
 </head>
 

@@ -12,6 +12,7 @@ import { usePendingIdentityCount } from '../../hooks/usePendingIdentityCount'
 import { confirmLeave } from '../../utils/leaveGuard'
 import { enter, usePresence } from '../ui/motion'
 import LanguageToggle from './LanguageToggle'
+import ThemeToggle from '../ui/ThemeToggle'
 import { useT } from '../../i18n/useLanguage'
 // Each role reads its own notices: /citizen/alerts, /department/alerts or /admin/alerts.
 const alertsPathFor = (role) => (role === 'admin' ? '/admin/alerts' : role === 'department' ? '/department/alerts' : '/citizen/alerts')
@@ -44,7 +45,7 @@ function IdentityChecksLabel({ label }) {
       <span className="sr-only">{t('{label}, {waiting} waiting', { label, waiting })}</span>
       <span aria-hidden="true">
         {label}
-        <span className="ml-2 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-amber px-1.5 text-xs font-bold text-navy">
+        <span className="ml-2 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-amber px-1.5 text-xs font-bold text-ink">
           {waiting}
         </span>
       </span>
@@ -79,11 +80,11 @@ function initialsFor(name, fallback) {
 // `photo` (staff) shows instead of the initials; the initials stay in the name.
 function Avatar({ name, text, to, label, verified, photo }) {
   const circle =
-    'flex size-10 shrink-0 items-center justify-center rounded-full bg-forest text-sm font-semibold text-white max-lg:size-11'
+    'flex size-10 shrink-0 items-center justify-center rounded-full bg-forest text-sm font-semibold text-paper max-lg:size-11'
   const check = verified && (
     <span
       aria-hidden="true"
-      className="absolute -bottom-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-brand text-navy ring-2 ring-navy"
+      className="absolute -bottom-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-brand text-ink ring-2 ring-navy"
     >
       <svg
         viewBox="0 0 24 24"
@@ -200,7 +201,7 @@ export default function Navbar({
   }
 
   return (
-    <header ref={headerRef} className="sticky top-0 z-[1100] border-b border-white/10 bg-navy font-body">
+    <header ref={headerRef} className="sticky top-0 z-[1100] border-b border-paper/10 bg-ink font-body">
       <div className="flex flex-wrap items-center gap-4 px-5 py-3 lg:gap-8 lg:px-10">
         <div className="shrink-0">
           <Logo {...(locked ? { to: null } : {})} />
@@ -214,7 +215,7 @@ export default function Navbar({
               className={({ isActive }) =>
                 clsx(
                   'whitespace-nowrap rounded-full px-4 py-2 text-sm font-medium transition-colors',
-                  isActive ? 'bg-mint text-navy' : 'text-white/80 hover:text-white',
+                  isActive ? 'bg-mint text-navy' : 'text-paper/80 hover:text-paper',
                 )
               }
             >
@@ -228,13 +229,13 @@ export default function Navbar({
             <div className="hidden items-center gap-4 lg:flex">
               <Link
                 to="/login"
-                className="whitespace-nowrap text-sm font-semibold text-white transition-colors hover:text-brand"
+                className="whitespace-nowrap text-sm font-semibold text-paper transition-colors hover:text-brand"
               >
                 {t('Log in')}
               </Link>
               <Link
                 to="/signup"
-                className="whitespace-nowrap text-sm font-semibold text-white/80 transition-colors hover:text-brand"
+                className="whitespace-nowrap text-sm font-semibold text-paper/80 transition-colors hover:text-brand"
               >
                 {t('Sign up')}
               </Link>
@@ -242,6 +243,7 @@ export default function Navbar({
           )}
 
           <LanguageToggle className="hidden lg:inline-flex" />
+          <ThemeToggle className="hidden lg:grid" />
 
           {canReport && showReport && (
             <div className="hidden whitespace-nowrap lg:block">
@@ -278,7 +280,7 @@ export default function Navbar({
             <button
               type="button"
               onClick={handleLogout}
-              className="hidden whitespace-nowrap rounded-full border border-white/20 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-white/10 lg:block"
+              className="hidden whitespace-nowrap rounded-full border border-paper/20 px-4 py-2 text-sm font-semibold text-paper transition-colors hover:bg-paper/10 lg:block"
             >
               {t('Log out')}
             </button>
@@ -291,7 +293,7 @@ export default function Navbar({
             aria-label={open ? t('Close menu') : t('Open menu')}
             aria-expanded={open}
             aria-controls="mobile-menu"
-            className="flex size-11 shrink-0 items-center justify-center rounded-full border border-white/20 text-white transition-colors hover:bg-white/10 lg:hidden"
+            className="flex size-11 shrink-0 items-center justify-center rounded-full border border-paper/20 text-paper transition-colors hover:bg-paper/10 lg:hidden"
           >
             <svg
               viewBox="0 0 24 24"
@@ -327,7 +329,7 @@ export default function Navbar({
               : enter('rise-in', 0, 'var(--duration-base)')
           }
           className={clsx(
-            'flex flex-col gap-1 border-t border-white/10 px-5 pb-5 pt-3 lg:hidden',
+            'flex flex-col gap-1 border-t border-paper/10 px-5 pb-5 pt-3 lg:hidden',
             menu.closing && 'pointer-events-none',
           )}
         >
@@ -338,7 +340,7 @@ export default function Navbar({
                 className={({ isActive }) =>
                   clsx(
                     'flex items-center justify-between gap-3 rounded-tile px-4 py-3 transition-colors',
-                    isActive ? 'bg-mint text-navy' : 'text-white hover:bg-white/10',
+                    isActive ? 'bg-mint text-navy' : 'text-paper hover:bg-paper/10',
                   )
                 }
               >
@@ -347,7 +349,7 @@ export default function Navbar({
                   <span className="block truncate text-base font-semibold">{displayName}</span>
                 </span>
                 {isCitizen && profile.isVerified && (
-                  <span className="shrink-0 rounded-full bg-brand px-2.5 py-0.5 text-xs font-bold text-navy">
+                  <span className="shrink-0 rounded-full bg-brand px-2.5 py-0.5 text-xs font-bold text-ink">
                     {t('Verified')}
                   </span>
                 )}
@@ -361,7 +363,7 @@ export default function Navbar({
                 className={({ isActive }) =>
                   clsx(
                     'rounded-tile px-4 py-3 text-base font-medium transition-colors',
-                    isActive ? 'bg-mint text-navy' : 'text-white/80 hover:bg-white/10',
+                    isActive ? 'bg-mint text-navy' : 'text-paper/80 hover:bg-paper/10',
                   )
                 }
               >
@@ -370,19 +372,22 @@ export default function Navbar({
             ))}
           </nav>
 
-          <LanguageToggle className="mt-2 self-start" />
+          <div className="mt-2 flex items-center gap-3">
+            <LanguageToggle />
+            <ThemeToggle />
+          </div>
 
           {current === 'logged-out' && (
             <div className="mt-2 grid grid-cols-2 gap-2">
               <Link
                 to="/login"
-                className="rounded-full border border-white/20 px-4 py-3 text-center text-base font-semibold text-white transition-colors hover:bg-white/10"
+                className="rounded-full border border-paper/20 px-4 py-3 text-center text-base font-semibold text-paper transition-colors hover:bg-paper/10"
               >
                 {t('Log in')}
               </Link>
               <Link
                 to="/signup"
-                className="rounded-full border border-white/20 px-4 py-3 text-center text-base font-semibold text-white transition-colors hover:bg-white/10"
+                className="rounded-full border border-paper/20 px-4 py-3 text-center text-base font-semibold text-paper transition-colors hover:bg-paper/10"
               >
                 {t('Sign up')}
               </Link>
@@ -402,7 +407,7 @@ export default function Navbar({
             <button
               type="button"
               onClick={handleLogout}
-              className="mt-2 rounded-full border border-white/20 px-4 py-3 text-base font-semibold text-white transition-colors hover:bg-white/10"
+              className="mt-2 rounded-full border border-paper/20 px-4 py-3 text-base font-semibold text-paper transition-colors hover:bg-paper/10"
             >
               {t('Log out')}
             </button>

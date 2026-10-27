@@ -19,11 +19,11 @@ export default function IssueSummary({ issue }) {
       <h1
         id="issue-title"
         tabIndex={-1}
-        className="break-words rounded-tile font-heading text-3xl font-extrabold leading-tight text-navy focus:outline-none focus-visible:ring-2 focus-visible:ring-forest sm:text-4xl lg:text-5xl"
+        className="break-words rounded-tile font-heading text-3xl font-extrabold leading-tight text-navy focus:outline-none focus-visible:ring-2 focus-visible:ring-accent sm:text-4xl lg:text-5xl"
       >
         {issue.title}
       </h1>
-      <p className="text-sm text-slate">
+      <p className="text-sm text-soft">
         {t('Reported by {name} on {date}', { name: issue.reporter, date: issue.reportedOn })}
         <span aria-hidden="true"> · </span>
         <span className="font-semibold">{format.daysAgo(issue.daysAgo)}</span>

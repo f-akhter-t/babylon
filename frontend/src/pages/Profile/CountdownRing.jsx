@@ -18,7 +18,7 @@ export default function CountdownRing({ secondsLeft, total }) {
         strokeLinecap="round"
         strokeDasharray={CIRCUMFERENCE}
         strokeDashoffset={CIRCUMFERENCE * (1 - share)}
-        className="stroke-forest transition-[stroke-dashoffset] duration-1000 ease-linear"
+        className="stroke-accent transition-[stroke-dashoffset] duration-1000 ease-linear"
       />
     </svg>
   )

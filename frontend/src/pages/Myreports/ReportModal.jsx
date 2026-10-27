@@ -9,7 +9,7 @@ import { cardTitleId } from './cardTitleId'
 import { useT } from '../../i18n/useLanguage'
 
 const actionClass =
-  'inline-flex min-h-11 items-center rounded-full border-2 border-navy px-5 text-sm font-bold text-navy transition-colors hover:bg-navy/10 motion-reduce:transition-none'
+  'inline-flex min-h-11 items-center rounded-full border-2 border-navy px-5 text-sm font-bold text-navy transition-colors hover:bg-ink/10 motion-reduce:transition-none'
 
 // A report's details, on a native modal <dialog>: showModal() puts it in the
 // top layer and makes the page behind inert, so Tab stays inside. It opens
@@ -76,7 +76,7 @@ export default function ReportModal({ report, open = true, deleted = false, onCl
       // fills it.
       onMouseDown={(e) => e.target === e.currentTarget && onClose()}
       onKeyDown={keepTabInside}
-      className="motion-dialog m-auto max-h-[calc(100dvh-32px)] w-[860px] max-w-[calc(100vw-2rem)] overflow-hidden rounded-[26px] bg-mint p-0 text-navy backdrop:bg-navy/55"
+      className="motion-dialog m-auto max-h-[calc(100dvh-32px)] w-[860px] max-w-[calc(100vw-2rem)] overflow-hidden rounded-[26px] bg-mint p-0 text-navy backdrop:bg-ink/55"
     >
       <div className="relative max-h-[calc(100dvh-32px)] overflow-auto p-6">
         <button ref={closeRef} type="button" onClick={onClose} aria-label={t('Close')} className="absolute right-4 top-4 grid size-11 place-items-center rounded-full bg-white">
@@ -132,13 +132,13 @@ export default function ReportModal({ report, open = true, deleted = false, onCl
 
             <div className="mt-2 grid gap-5 md:grid-cols-2">
               <div>
-                <div className="relative grid h-[220px] place-items-center rounded-[20px] bg-slate text-mint">
+                <div className="relative grid h-[220px] place-items-center rounded-[20px] bg-slate text-frost">
                   {r.photoUrl ? (
                     <img src={r.photoUrl} alt={t('Photo of {title}', { title: r.title })} className="absolute inset-0 h-full w-full rounded-[20px] object-cover" />
                   ) : (
                     <span className="flex items-center gap-1.5"><CameraIcon size={20} />{t('No photo added')}</span>
                   )}
-                  <em className="absolute bottom-3 left-3 rounded-full bg-navy px-[11px] py-1.5 text-[11px] font-bold not-italic tracking-[.1em]">{t('Before').toUpperCase()}</em>
+                  <em className="absolute bottom-3 left-3 rounded-full bg-ink px-[11px] py-1.5 text-[11px] font-bold not-italic tracking-[.1em]">{t('Before').toUpperCase()}</em>
                 </div>
                 <div className="relative mt-2.5 h-[150px] overflow-hidden rounded-[20px]">
                   <span className="absolute left-2.5 top-2.5 z-10 rounded-full bg-white px-3 py-1.5 text-xs font-bold">{r.location || t('Location not set')}</span>
@@ -164,7 +164,7 @@ export default function ReportModal({ report, open = true, deleted = false, onCl
                     return (
                       <div key={label + i} className="relative flex gap-3 pb-3 last:pb-0">
                         {!last && <span className="absolute bottom-0 left-1.5 top-4 w-0.5 bg-mint-deep" aria-hidden="true" />}
-                        <i className={clsx('mt-[3px] h-3.5 w-3.5 flex-none rounded-full', last ? 'bg-navy ring-[3px] ring-brand' : 'bg-forest')} />
+                        <i className={clsx('mt-[3px] h-3.5 w-3.5 flex-none rounded-full', last ? 'bg-ink ring-[3px] ring-brand' : 'bg-forest')} />
                         <div>
                           <b className="block">{t(label)}</b>
                           {note && <span className="text-[13px] text-muted">{t(note)}</span>}

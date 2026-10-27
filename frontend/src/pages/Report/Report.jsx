@@ -61,7 +61,7 @@ function ReportPage() {
         <div className="mx-auto max-w-6xl">
           <Link
             to="/map"
-            className="group inline-flex min-h-11 items-center gap-1 font-body text-sm font-semibold text-navy/70 transition hover:text-navy focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest/50"
+            className="group inline-flex min-h-11 items-center gap-1 font-body text-sm font-semibold text-navy/70 transition hover:text-navy focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50"
             style={enter('rise-in', 0)}
           >
             <span

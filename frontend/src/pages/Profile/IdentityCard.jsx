@@ -109,7 +109,7 @@ export default function IdentityCard({ profile, onDirtyChange, announce }) {
   }
 
   const statusBox =
-    'rounded-tile bg-white/70 px-4 py-3 font-body text-sm text-navy focus:outline-none focus-visible:ring-2 focus-visible:ring-forest/50'
+    'rounded-tile bg-white/70 px-4 py-3 font-body text-sm text-navy focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/50'
 
   return (
     <ProfileCard
@@ -124,24 +124,24 @@ export default function IdentityCard({ profile, onDirtyChange, announce }) {
         {identity.status === 'pending' && (
           <div ref={statusRef} tabIndex={-1} className={statusBox}>
             <p className="font-bold">{t('We are checking your details.')}</p>
-            <p className="mt-1 text-slate">
+            <p className="mt-1 text-soft">
               {t('NID ending in {last4}, sent on {date}. A review usually takes 1 to 2 working days.', { last4: identity.nidLast4, date: date(identity.submittedAt) })}
             </p>
-            <p className="mt-1 text-slate">{t('Your card photo is deleted as soon as the review is done.')}</p>
+            <p className="mt-1 text-soft">{t('Your card photo is deleted as soon as the review is done.')}</p>
           </div>
         )}
 
         {identity.status === 'verified' && (
           <div ref={statusRef} tabIndex={-1} className={statusBox}>
             <p className="font-bold">{t('Your identity is verified.')}</p>
-            <p className="mt-1 text-slate">{`NID ending in ${identity.nidLast4}.`}</p>
+            <p className="mt-1 text-soft">{`NID ending in ${identity.nidLast4}.`}</p>
           </div>
         )}
 
         {identity.status === 'rejected' && (
-          <div ref={statusRef} tabIndex={-1} className={`${statusBox} border-2 border-danger/30`}>
+          <div ref={statusRef} tabIndex={-1} className={`${statusBox} border-2 border-alert/30`}>
             <p className="font-bold">{t('We could not verify your identity.')}</p>
-            <p className="mt-1 text-slate">
+            <p className="mt-1 text-soft">
               {t('Reason: {reason}', { reason: identity.reason || t('No reason given.') })}
             </p>
             {!resubmitting && (

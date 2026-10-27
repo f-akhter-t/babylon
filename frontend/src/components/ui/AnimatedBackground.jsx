@@ -10,7 +10,7 @@ import { CityPhoto } from './CityPhoto'
 // glows are soft radial gradients, so nothing is blurred while it moves.
 // It pauses while the tab is hidden and stays still for reduced motion.
 const GRADIENT =
-  'linear-gradient(135deg, #FFFFFF 0%, color-mix(in srgb, var(--color-page) 70%, white) 35%, color-mix(in srgb, var(--color-brand) 28%, white) 70%, color-mix(in srgb, var(--color-brand) 42%, white) 100%)'
+  'linear-gradient(135deg, var(--color-white) 0%, color-mix(in srgb, var(--color-page) 70%, var(--color-white)) 35%, color-mix(in srgb, var(--color-brand) var(--bg-tint-a), var(--color-white)) 70%, color-mix(in srgb, var(--color-brand) var(--bg-tint-b), var(--color-white)) 100%)'
 const glow = (color, strength) =>
   `radial-gradient(circle closest-side, color-mix(in srgb, ${color} ${strength}%, transparent), transparent)`
 
@@ -79,11 +79,11 @@ export default function AnimatedBackground({ photo = true }) {
 
       {/* two soft glows */}
       <div
-        className="absolute -left-32 -top-32 size-[32rem] will-change-transform"
+        className="bg-glow absolute -left-32 -top-32 size-[32rem] will-change-transform"
         style={{ backgroundImage: glow('var(--color-brand)', 45), ...play('float-a 26s ease-in-out infinite') }}
       />
       <div
-        className="absolute -right-32 bottom-[-10%] size-[32rem] will-change-transform"
+        className="bg-glow absolute -right-32 bottom-[-10%] size-[32rem] will-change-transform"
         style={{ backgroundImage: glow('var(--color-forest)', 14), ...play('float-b 32s ease-in-out infinite') }}
       />
 
@@ -94,7 +94,7 @@ export default function AnimatedBackground({ photo = true }) {
       {!still && (
         <div
           ref={pointerRef}
-          className="absolute left-0 top-0 size-[28vw] will-change-transform"
+          className="bg-glow absolute left-0 top-0 size-[28vw] will-change-transform"
           style={{
             backgroundImage: glow('white', 25),
             transform: 'translate3d(50vw, 50vh, 0) translate(-50%, -50%)',

@@ -46,7 +46,7 @@ export default function ProfilePhotoCard({ profile, announce }) {
         onRemove={() => save(null, 'Your photo is removed.')}
       />
       {busy && (
-        <p className="mt-2 font-body text-xs text-slate" aria-hidden="true">
+        <p className="mt-2 font-body text-xs text-soft" aria-hidden="true">
           {t('Saving your photo…')}
         </p>
       )}

@@ -10,18 +10,18 @@ import { useT } from '../../i18n/useLanguage'
 
 // One icon and colour per kind of notice (the kinds the server sends).
 const KINDS = {
-  welcome: { icon: <BellIcon size={18} />, style: 'bg-brand text-navy' },
-  filed: { icon: <BarsIcon size={18} />, style: 'bg-brand text-navy' },
-  'new-report': { icon: <BarsIcon size={18} />, style: 'bg-slate text-mint' },
-  'in-progress': { icon: <BarsIcon size={18} />, style: 'bg-slate text-mint' },
-  'fix-submitted': { icon: <BarsIcon size={18} />, style: 'bg-slate text-mint' },
-  'fix-waiting': { icon: <BarsIcon size={18} />, style: 'bg-amber text-navy' },
-  'fix-verified': { icon: <CheckIcon size={18} />, style: 'bg-brand text-navy' },
-  resolved: { icon: <CheckIcon size={18} />, style: 'bg-brand text-navy' },
-  'sent-back': { icon: <ReopenIcon size={18} />, style: 'bg-amber text-navy' },
-  'identity-verified': { icon: <UserIcon size={18} />, style: 'bg-brand text-navy' },
-  'identity-rejected': { icon: <UserIcon size={18} />, style: 'bg-amber text-navy' },
-  'level-up': { icon: <ArrowUpIcon size={18} />, style: 'bg-amber text-navy' },
+  welcome: { icon: <BellIcon size={18} />, style: 'bg-brand text-ink' },
+  filed: { icon: <BarsIcon size={18} />, style: 'bg-brand text-ink' },
+  'new-report': { icon: <BarsIcon size={18} />, style: 'bg-slate text-frost' },
+  'in-progress': { icon: <BarsIcon size={18} />, style: 'bg-slate text-frost' },
+  'fix-submitted': { icon: <BarsIcon size={18} />, style: 'bg-slate text-frost' },
+  'fix-waiting': { icon: <BarsIcon size={18} />, style: 'bg-amber text-ink' },
+  'fix-verified': { icon: <CheckIcon size={18} />, style: 'bg-brand text-ink' },
+  resolved: { icon: <CheckIcon size={18} />, style: 'bg-brand text-ink' },
+  'sent-back': { icon: <ReopenIcon size={18} />, style: 'bg-amber text-ink' },
+  'identity-verified': { icon: <UserIcon size={18} />, style: 'bg-brand text-ink' },
+  'identity-rejected': { icon: <UserIcon size={18} />, style: 'bg-amber text-ink' },
+  'level-up': { icon: <ArrowUpIcon size={18} />, style: 'bg-amber text-ink' },
 }
 const FALLBACK = KINDS.welcome
 
@@ -123,13 +123,13 @@ export default function NotificationBell({ email, alertsPath = '/citizen/alerts'
         aria-haspopup="dialog"
         aria-expanded={open}
         className={clsx(
-          'relative grid size-11 shrink-0 place-items-center rounded-full border-[1.5px] border-mint/20 text-mint transition-colors hover:bg-mint/10',
-          open && 'bg-mint/10',
+          'relative grid size-11 shrink-0 place-items-center rounded-full border-[1.5px] border-frost/20 text-frost transition-colors hover:bg-frost/10',
+          open && 'bg-frost/10',
         )}
       >
         <BellIcon />
         {unread > 0 && (
-          <span aria-hidden="true" className="absolute -right-1 -top-1 grid h-[18px] min-w-[18px] place-items-center rounded-full border-2 border-navy bg-amber px-1 text-[11px] font-extrabold text-navy">
+          <span aria-hidden="true" className="absolute -right-1 -top-1 grid h-[18px] min-w-[18px] place-items-center rounded-full border-2 border-navy bg-amber px-1 text-[11px] font-extrabold text-ink">
             {unread}
           </span>
         )}
@@ -159,14 +159,14 @@ export default function NotificationBell({ email, alertsPath = '/citizen/alerts'
             panel.closing && 'pointer-events-none',
           )}
         >
-          <div className="flex shrink-0 items-center gap-2 border-b border-slate/15 bg-white px-[18px] pb-3 pt-4">
+          <div className="flex shrink-0 items-center gap-2 border-b border-soft/15 bg-white px-[18px] pb-3 pt-4">
             <h2 className="font-heading text-xl font-extrabold tracking-tight">{t('Notifications')}</h2>
             <span className="rounded-full bg-amber px-[9px] py-0.5 text-xs font-extrabold">
               {unread ? t('{n} new', { n: unread }) : t('All caught up')}
             </span>
             <span className="flex-1" />
             {unread > 0 && (
-              <button type="button" onClick={() => markAllRead()} className="-my-2 min-h-11 px-1 text-sm font-bold text-forest underline underline-offset-[3px]">
+              <button type="button" onClick={() => markAllRead()} className="-my-2 min-h-11 px-1 text-sm font-bold text-accent underline underline-offset-[3px]">
                 {t('Mark all as read')}
               </button>
             )}
@@ -214,8 +214,8 @@ export default function NotificationBell({ email, alertsPath = '/citizen/alerts'
             })}
           </ul>
 
-          <div className="shrink-0 border-t border-slate/15 px-[18px] pb-3.5 pt-2.5 text-center">
-            <Link to={homeLink} onClick={() => close(false)} className="inline-flex min-h-11 items-center px-1 text-sm font-bold text-forest underline underline-offset-[3px]">
+          <div className="shrink-0 border-t border-soft/15 px-[18px] pb-3.5 pt-2.5 text-center">
+            <Link to={homeLink} onClick={() => close(false)} className="inline-flex min-h-11 items-center px-1 text-sm font-bold text-accent underline underline-offset-[3px]">
               {t(homeLabel)}
             </Link>
           </div>

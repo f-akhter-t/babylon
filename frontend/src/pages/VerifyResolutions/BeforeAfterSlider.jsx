@@ -69,7 +69,7 @@ export default function BeforeAfterSlider({ before, after, title }) {
         ) : (
           <span
             aria-hidden="true"
-            className="absolute left-3/4 top-1/2 -translate-x-1/2 -translate-y-1/2 font-body text-sm font-semibold text-mint"
+            className="absolute left-3/4 top-1/2 -translate-x-1/2 -translate-y-1/2 font-body text-sm font-semibold text-frost"
           >
             {t('Department after-photo')}
           </span>
@@ -90,7 +90,7 @@ export default function BeforeAfterSlider({ before, after, title }) {
         ) : (
           <span
             aria-hidden="true"
-            className="absolute left-1/4 top-1/2 -translate-x-1/2 -translate-y-1/2 font-body text-sm font-semibold text-mint"
+            className="absolute left-1/4 top-1/2 -translate-x-1/2 -translate-y-1/2 font-body text-sm font-semibold text-frost"
           >
             {t('Citizen photo')}
           </span>
@@ -99,13 +99,13 @@ export default function BeforeAfterSlider({ before, after, title }) {
 
       <span
         aria-hidden="true"
-        className="absolute left-4 top-4 rounded-full bg-navy px-3 py-1 font-body text-xs font-bold tracking-widest text-mint"
+        className="absolute left-4 top-4 rounded-full bg-ink px-3 py-1 font-body text-xs font-bold tracking-widest text-frost"
       >
         {t('Before').toUpperCase()}
       </span>
       <span
         aria-hidden="true"
-        className="absolute right-4 top-4 rounded-full bg-brand px-3 py-1 font-body text-xs font-bold tracking-widest text-navy"
+        className="absolute right-4 top-4 rounded-full bg-brand px-3 py-1 font-body text-xs font-bold tracking-widest text-ink"
       >
         {t('After').toUpperCase()}
       </span>

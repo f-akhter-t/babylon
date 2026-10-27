@@ -21,7 +21,7 @@ export default function IssuePhoto({ issue }) {
           alt={issue.title}
           className={FRAME}
         />
-        <figcaption className="mt-2 text-center text-xs text-slate">
+        <figcaption className="mt-2 text-center text-xs text-soft">
           {t('Drag the handle, or use the arrow keys, to compare before and after.')}
         </figcaption>
       </figure>
@@ -38,13 +38,13 @@ export default function IssuePhoto({ issue }) {
           className="size-full object-cover"
         />
       ) : (
-        <div className="flex size-full items-center justify-center gap-2 text-sm font-medium text-white">
+        <div className="flex size-full items-center justify-center gap-2 text-sm font-medium text-paper">
           <CameraIcon size={20} />
           {t('Citizen photo')}
           <span className="sr-only">{t('(not available)')}</span>
         </div>
       )}
-      <figcaption className="absolute bottom-4 left-4 rounded-full bg-navy px-3 py-1 text-xs font-bold uppercase tracking-wider text-white">
+      <figcaption className="absolute bottom-4 left-4 rounded-full bg-ink px-3 py-1 text-xs font-bold uppercase tracking-wider text-paper">
         {t('Before')}
       </figcaption>
     </figure>

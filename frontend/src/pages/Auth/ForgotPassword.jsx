@@ -133,7 +133,7 @@ function ForgotPasswordPage() {
           <p role="status" className="font-body text-sm text-navy">
             {t(notice)}
           </p>
-          <p className="font-body text-sm text-slate">
+          <p className="font-body text-sm text-soft">
             {t('Email:')} <span className="font-bold break-all text-navy">{email.trim()}</span>{' '}
             <button type="button" onClick={changeEmail} className={authLinkClass}>
               {t('Use a different email')}

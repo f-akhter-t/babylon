@@ -5,7 +5,7 @@ import { votesSinceSentence } from './reopenedText'
 import { useT } from '../../i18n/useLanguage'
 
 const CONTROL =
-  'inline-flex min-h-11 items-center justify-center rounded-full px-5 py-2 text-center font-body text-sm font-bold transition-colors motion-reduce:transition-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forest'
+  'inline-flex min-h-11 items-center justify-center rounded-full px-5 py-2 text-center font-body text-sm font-bold transition-colors motion-reduce:transition-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent'
 
 // Every reopened issue, each with two controls: send it to the verification
 // queue, or open its issue page. issues: getReopenedIssues().
@@ -58,8 +58,8 @@ export default function ReopenedList({ issues, onSend, sendingId = null }) {
                   onClick={() => onSend(issue)}
                   className={clsx(
                     CONTROL,
-                    'bg-navy text-mint',
-                    busy ? 'cursor-not-allowed opacity-50' : 'hover:bg-navy/90',
+                    'bg-ink text-frost',
+                    busy ? 'cursor-not-allowed opacity-50' : 'hover:bg-ink/90',
                   )}
                 >
                   {sendingId === issue.id ? t('Sending…') : t('Send to verification queue')}

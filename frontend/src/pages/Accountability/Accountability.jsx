@@ -42,12 +42,12 @@ const TEXT = {
 
 function StatCard({ label, children, valueClass }) {
   return (
-    <div className="min-w-0 rounded-card bg-navy px-5 py-4 xl:px-6 xl:py-5">
-      <p className="font-body text-sm font-bold text-mint">{label}</p>
+    <div className="min-w-0 rounded-card bg-ink px-5 py-4 xl:px-6 xl:py-5">
+      <p className="font-body text-sm font-bold text-frost">{label}</p>
       <p
         className={clsx(
           'mt-2 font-heading text-4xl font-extrabold sm:text-5xl lg:text-2xl xl:text-5xl',
-          valueClass ?? 'text-mint',
+          valueClass ?? 'text-frost',
         )}
       >
         {children}
@@ -206,7 +206,7 @@ function WeeklyChart({ weekly, weeks }) {
           {t('Received')}
         </span>
         <span className="flex items-center gap-2">
-          <span aria-hidden="true" className="w-8 border-t-4 border-forest" />
+          <span aria-hidden="true" className="w-8 border-t-4 border-accent" />
           {t('Resolved and verified')}
         </span>
       </div>
@@ -216,7 +216,7 @@ function WeeklyChart({ weekly, weeks }) {
         aria-expanded={showTable}
         aria-controls="weekly-table"
         onClick={() => setShowTable((open) => !open)}
-        className="mt-4 min-h-11 rounded-full border-2 border-navy bg-white px-5 py-2 font-body text-sm font-bold text-navy transition-colors hover:bg-mint-deep focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forest motion-reduce:transition-none"
+        className="mt-4 min-h-11 rounded-full border-2 border-navy bg-white px-5 py-2 font-body text-sm font-bold text-navy transition-colors hover:bg-mint-deep focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent motion-reduce:transition-none"
       >
         {showTable ? t('Hide the table of these figures.') : t('Show these figures as a table.')}
       </button>
@@ -249,9 +249,9 @@ function WeeklyChart({ weekly, weeks }) {
 function WaitingLongest({ items, fitMode }) {
   const t = useT()
   return (
-    <aside className={clsx('flex flex-col rounded-panel bg-navy p-4 sm:p-6', fit.column)}>
-      <h2 className="font-heading text-2xl font-extrabold text-mint">{t('Waiting longest')}</h2>
-      <p className="mt-2 font-body text-sm text-mint/70">
+    <aside className={clsx('flex flex-col rounded-panel bg-ink p-4 sm:p-6', fit.column)}>
+      <h2 className="font-heading text-2xl font-extrabold text-frost">{t('Waiting longest')}</h2>
+      <p className="mt-2 font-body text-sm text-frost/70">
         {t('Issues that have gone the longest without being resolved.')}
       </p>
 
@@ -261,7 +261,7 @@ function WaitingLongest({ items, fitMode }) {
         tabIndex={fitMode ? 0 : undefined}
         className={clsx(
           'mt-4 flex flex-col rounded-tile',
-          'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-mint',
+          'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-frost',
           fit.scroll,
           fit.grow,
           fit.min32,
@@ -270,16 +270,16 @@ function WaitingLongest({ items, fitMode }) {
         {items.map((item) => (
           <div
             key={item.title}
-            className="flex items-center justify-between gap-3 border-t border-mint/15 py-4"
+            className="flex items-center justify-between gap-3 border-t border-frost/15 py-4"
           >
             <div className="min-w-0">
-              <p className="break-words font-body text-base font-bold text-mint">{item.title}</p>
-              <p className="font-body text-sm text-mint/70">{t(item.department)}</p>
+              <p className="break-words font-body text-base font-bold text-frost">{item.title}</p>
+              <p className="font-body text-sm text-frost/70">{t(item.department)}</p>
               {item.reopened && (
-                <p className="font-body text-sm text-mint/70">{t('It was reopened after a fix.')}</p>
+                <p className="font-body text-sm text-frost/70">{t('It was reopened after a fix.')}</p>
               )}
             </div>
-            <span className="shrink-0 rounded-full bg-amber px-3 py-1 font-body text-sm font-bold text-navy">
+            <span className="shrink-0 rounded-full bg-amber px-3 py-1 font-body text-sm font-bold text-ink">
               {t('{days} days', { days: item.days })}
             </span>
           </div>
@@ -288,7 +288,7 @@ function WaitingLongest({ items, fitMode }) {
 
       <Link
         to="/admin/verify"
-        className="mt-4 flex min-h-11 shrink-0 items-center justify-center rounded-full bg-mint px-6 py-3 text-center font-body text-base font-bold text-navy transition-opacity hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-mint motion-reduce:transition-none"
+        className="mt-4 flex min-h-11 shrink-0 items-center justify-center rounded-full bg-mint px-6 py-3 text-center font-body text-base font-bold text-navy transition-opacity hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-frost motion-reduce:transition-none"
       >
         {t('Open verification queue')}
       </Link>
@@ -349,7 +349,7 @@ function AccountabilityPage() {
               value={weeks}
               onChange={(e) => setWeeks(Number(e.target.value))}
               aria-label={t('Period')}
-              className="min-h-11 w-full rounded-full border border-navy bg-white px-5 py-2 font-body text-sm font-bold text-navy focus:outline-none focus:ring-2 focus:ring-forest sm:w-auto"
+              className="min-h-11 w-full rounded-full border border-navy bg-white px-5 py-2 font-body text-sm font-bold text-navy focus:outline-none focus:ring-2 focus:ring-accent sm:w-auto"
             >
               {ACCOUNTABILITY_PERIODS.map((p) => (
                 <option key={p.weeks} value={p.weeks}>

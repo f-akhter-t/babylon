@@ -99,9 +99,9 @@ export default function OtpInput({ digits, onChange, disabled, invalid, shake, f
           onFocus={(e) => e.target.select()}
           className={clsx(
             'h-12 w-10 rounded-tile border-2 bg-white text-center font-heading text-xl font-extrabold text-navy transition sm:h-14 sm:w-12',
-            'focus:border-forest focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest/40',
-            'disabled:cursor-not-allowed disabled:bg-white/60 disabled:text-slate',
-            invalid ? 'border-danger' : digit ? 'border-forest/60' : 'border-navy/15',
+            'focus:border-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40',
+            'disabled:cursor-not-allowed disabled:bg-white/60 disabled:text-soft',
+            invalid ? 'border-alert' : digit ? 'border-accent/60' : 'border-navy/15',
           )}
         />
       ))}

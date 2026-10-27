@@ -118,7 +118,7 @@ export default function IssuesSidebar({
         >
           {t('Issues near you')}
         </h1>
-        <span className="pt-2 text-sm font-medium text-slate">{t('By priority')}</span>
+        <span className="pt-2 text-sm font-medium text-soft">{t('By priority')}</span>
       </div>
 
       <SearchBox value={search} onChange={onSearch} />
@@ -133,7 +133,7 @@ export default function IssuesSidebar({
       />
 
       {/* aria-live: screen readers hear the new count when filters change */}
-      <span aria-live="polite" className="-mb-1 text-sm font-medium text-slate">
+      <span aria-live="polite" className="-mb-1 text-sm font-medium text-soft">
         {ready && (issues.length === 1 ? t('1 issue') : t('{count} issues', { count: issues.length }))}
       </span>
 

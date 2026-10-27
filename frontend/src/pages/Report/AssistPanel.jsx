@@ -6,9 +6,9 @@ import { useT } from '../../i18n/useLanguage'
 const IDLE = { status: 'idle' }
 
 const primaryButton =
-  'min-h-11 shrink-0 rounded-full bg-navy px-5 py-2 font-body text-xs font-bold text-white transition hover:bg-navy/90 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest/60 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 disabled:active:scale-100'
+  'min-h-11 shrink-0 rounded-full bg-ink px-5 py-2 font-body text-xs font-bold text-paper transition hover:bg-ink/90 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 disabled:active:scale-100'
 const quietButton =
-  'min-h-11 shrink-0 rounded-full border-2 border-navy/20 bg-white px-5 py-2 font-body text-xs font-bold text-navy transition hover:border-navy active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest/60 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 disabled:active:scale-100'
+  'min-h-11 shrink-0 rounded-full border-2 border-navy/20 bg-white px-5 py-2 font-body text-xs font-bold text-navy transition hover:border-navy active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 disabled:active:scale-100'
 
 // F6 on the report form: the assistant looks at the photo and suggests a category
 // and a description. It only suggests; nothing changes in the form until the
@@ -79,7 +79,7 @@ export default function AssistPanel({
 
   return (
     <div
-      className="flex flex-col gap-3 rounded-2xl border border-forest/25 bg-white/70 p-4"
+      className="flex flex-col gap-3 rounded-2xl border border-accent/25 bg-white/70 p-4"
       aria-busy={busy}
     >
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -122,14 +122,14 @@ export default function AssistPanel({
           </div>
         )}
         {view.status === 'applied' && (
-          <p className="font-body text-xs font-semibold text-forest">
+          <p className="font-body text-xs font-semibold text-accent">
             {t('Added to your report. You can still change it.')}
           </p>
         )}
       </div>
 
       {view.status === 'error' && (
-        <p role="alert" className="font-body text-xs font-semibold text-danger">
+        <p role="alert" className="font-body text-xs font-semibold text-alert">
           {t(view.message)}
         </p>
       )}

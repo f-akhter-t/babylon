@@ -11,7 +11,7 @@ export function LevelCard({ user }) {
   const points = user?.points ?? 0
   const toNext = user?.nextTierAt != null ? user.nextTierAt - points : null
   return (
-    <div className={`flex h-full items-center gap-[22px] rounded-card bg-navy px-6 py-5 text-mint ${lift}`}>
+    <div className={`flex h-full items-center gap-[22px] rounded-card bg-ink px-6 py-5 text-frost ${lift}`}>
       <svg viewBox="0 0 240 130" className="h-auto w-[120px] flex-none" aria-hidden="true">
         <rect x="92" y="4" width="56" height="22" rx="10" className="fill-slate" />
         <rect x="72" y="28" width="96" height="20" className="fill-slate" opacity=".85" />
@@ -45,13 +45,13 @@ export function EarnCard({ items = [] }) {
           const text = typeof item === 'string' ? item : item.label ?? item.text ?? item.title
           return (
             <li key={i} className="flex items-center gap-2.5 text-sm">
-              <span className="flex-none text-forest"><CheckIcon /></span>
+              <span className="flex-none text-accent"><CheckIcon /></span>
               {t(text)}
             </li>
           )
         })}
       </ul>
-      <p className="mt-3 rounded-full bg-mint-deep px-3 py-1.5 text-xs font-bold text-forest">
+      <p className="mt-3 rounded-full bg-mint-deep px-3 py-1.5 text-xs font-bold text-accent">
         {t('Every report you file earns {points} points', { points: POINTS_PER_REPORT })}
       </p>
     </div>

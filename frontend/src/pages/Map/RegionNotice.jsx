@@ -18,7 +18,7 @@ export default function RegionNotice({ attempt }) {
     <div
       ref={ref}
       role="status"
-      className="pointer-events-none absolute left-1/2 top-32 z-1000 -translate-x-1/2 whitespace-nowrap rounded-full bg-danger px-4 py-2 text-sm font-semibold text-white shadow-xl lg:top-16"
+      className="pointer-events-none absolute left-1/2 top-32 z-1000 -translate-x-1/2 whitespace-nowrap rounded-full bg-danger px-4 py-2 text-sm font-semibold text-paper shadow-xl lg:top-16"
     >
       {t("Can't drop pin here, outside of region.")}
     </div>

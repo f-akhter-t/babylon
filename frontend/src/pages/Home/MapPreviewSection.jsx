@@ -34,22 +34,22 @@ export default function MapPreviewSection({ issues }) {
             <p className="text-[13px] font-bold uppercase tracking-widest text-brand">
               {t('Around you')}
             </p>
-            <h2 className="mt-2 font-heading text-4xl font-extrabold leading-[1.02] tracking-[-0.03em] text-mint md:text-5xl">
+            <h2 className="mt-2 font-heading text-4xl font-extrabold leading-[1.02] tracking-[-0.03em] text-frost md:text-5xl">
               {t('Already reported? Upvote it.')}
             </h2>
             <p className="mt-4 max-w-[420px] text-lg leading-normal text-page">
               {t('See what is broken near you. Already on the map? Upvote it instead of reporting it again.')}
             </p>
 
-            <ul className="mt-6 flex flex-wrap gap-x-6 gap-y-2 text-sm font-semibold text-mint">
+            <ul className="mt-6 flex flex-wrap gap-x-6 gap-y-2 text-sm font-semibold text-frost">
               {legend.map((item) => (
                 <li key={item.text} className="flex items-center gap-2">
-                  <span className={`size-3 rounded-full border-2 border-white ${item.color}`} />
+                  <span className={`size-3 rounded-full border-2 border-paper ${item.color}`} />
                   {n(counts[item.key] ?? 0)} {t(item.text)}
                 </li>
               ))}
             </ul>
-            <p className="mt-2 text-sm text-mint/70">{t('Tap a pin to see the report.')}</p>
+            <p className="mt-2 text-sm text-frost/70">{t('Tap a pin to see the report.')}</p>
 
             <div className="mt-7">
               <Button variant="outline-light" to="/map">

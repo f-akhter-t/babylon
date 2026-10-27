@@ -4,7 +4,7 @@ import CategoryChip from '../../components/ui/CategoryChip'
 export default function FilterRow({ label, options, value, onChange, tone }) {
   return (
     <div role="group" aria-label={label} className="flex flex-wrap items-center gap-2">
-      <span className="w-full text-xs font-semibold uppercase tracking-wider text-slate">
+      <span className="w-full text-xs font-semibold uppercase tracking-wider text-soft">
         {label}
       </span>
       {options.map((option) => (

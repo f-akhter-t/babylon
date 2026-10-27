@@ -43,7 +43,7 @@ export const fit = {
 
 // Focus ring for a scrolling region that gets tabIndex in fit mode.
 export const REGION_FOCUS =
-  'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forest'
+  'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent'
 
 // true while fit mode is on. Use it for things CSS cannot do, such as giving
 // a scrolling region tabIndex={0} only when it actually scrolls.

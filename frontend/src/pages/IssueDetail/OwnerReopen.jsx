@@ -41,11 +41,11 @@ export default function OwnerReopen({ issue, onReopened }) {
         <button
           type="button"
           onClick={() => setStage('confirm')}
-          className="rounded-full border border-navy px-4 py-2 font-body text-sm font-semibold text-navy transition hover:bg-navy hover:text-mint focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-navy/40"
+          className="rounded-full border border-navy px-4 py-2 font-body text-sm font-semibold text-navy transition hover:bg-ink hover:text-frost focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-navy/40"
         >
           {t('This problem came back')}
         </button>
-        <span className="text-xs text-slate">{t('Use this if the problem came back after the fix.')}</span>
+        <span className="text-xs text-soft">{t('Use this if the problem came back after the fix.')}</span>
       </div>
     )
   }
@@ -54,7 +54,7 @@ export default function OwnerReopen({ issue, onReopened }) {
     <div className="flex flex-col gap-3 rounded-[18px] bg-mint p-4">
       <p className="font-body text-sm font-bold text-navy">{t('Send this report back to the admin?')}</p>
       {error && (
-        <p role="alert" className="font-body text-sm font-semibold text-amber-dark">
+        <p role="alert" className="font-body text-sm font-semibold text-warn">
           {error}
         </p>
       )}
@@ -63,7 +63,7 @@ export default function OwnerReopen({ issue, onReopened }) {
           type="button"
           onClick={submit}
           disabled={stage === 'busy'}
-          className="rounded-full bg-forest px-4 py-2 font-body text-sm font-bold text-mint transition enabled:hover:-translate-y-0.5 disabled:opacity-50"
+          className="rounded-full bg-forest px-4 py-2 font-body text-sm font-bold text-frost transition enabled:hover:-translate-y-0.5 disabled:opacity-50"
         >
           {stage === 'busy' ? t('Sending…') : t('Send to the admin')}
         </button>

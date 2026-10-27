@@ -17,7 +17,7 @@ export default function NewReportsBar({ count, onShow, className }) {
           type="button"
           onClick={onShow}
           style={enter('rise-in', 0, 'var(--duration-base)')}
-          className="press min-h-11 rounded-full bg-navy px-5 font-body text-sm font-bold text-mint shadow-lg"
+          className="press min-h-11 rounded-full bg-ink px-5 font-body text-sm font-bold text-frost shadow-lg"
         >
           {count === 1 ? t('Show 1 new report') : t('Show {count} new reports', { count })}
         </button>

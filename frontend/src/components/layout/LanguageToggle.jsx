@@ -14,7 +14,7 @@ export default function LanguageToggle({ className }) {
     <div
       role="group"
       aria-label={t('Language')}
-      className={clsx('inline-flex rounded-full border border-white/20 p-0.5 text-xs font-semibold', className)}
+      className={clsx('inline-flex rounded-full border border-paper/20 p-0.5 text-xs font-semibold', className)}
     >
       {OPTIONS.map((option) => (
         <button
@@ -26,7 +26,7 @@ export default function LanguageToggle({ className }) {
           onClick={() => setLang(option.code)}
           className={clsx(
             'rounded-full px-3 py-1.5 transition-colors max-lg:py-2',
-            lang === option.code ? 'bg-mint text-navy' : 'text-white/80 hover:text-white',
+            lang === option.code ? 'bg-frost text-ink' : 'text-paper/80 hover:text-paper',
           )}
         >
           {option.label}

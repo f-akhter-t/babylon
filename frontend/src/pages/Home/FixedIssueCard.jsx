@@ -30,13 +30,13 @@ export default function FixedIssueCard({ issue, className }) {
             {issue.title}
           </Link>
         </h3>
-        <p className="mt-2.5 text-sm font-medium text-slate">
+        <p className="mt-2.5 text-sm font-medium text-soft">
           {issue.location} · {t(issue.category)}
         </p>
 
         <div className="mt-3.5 flex flex-wrap items-center justify-between gap-2">
-          <span className="inline-flex h-8 items-center gap-2 whitespace-nowrap rounded-full bg-mint-deep px-3.5 text-[13px] font-bold text-forest">
-            <StaircaseIcon level={3} className="text-forest" />
+          <span className="inline-flex h-8 items-center gap-2 whitespace-nowrap rounded-full bg-mint-deep px-3.5 text-[13px] font-bold text-accent">
+            <StaircaseIcon level={3} className="text-accent" />
             {t('Verified by admin')}
           </span>
           <span className="whitespace-nowrap text-sm font-bold text-navy">

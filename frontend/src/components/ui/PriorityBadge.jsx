@@ -2,11 +2,11 @@ import clsx from 'clsx'
 import { useT } from '../../i18n/useLanguage'
 
 const priorities = {
-  urgent: { label: 'Urgent', style: 'bg-amber text-navy' },
-  reopened: { label: 'Reopened', style: 'bg-amber text-navy' },
-  high: { label: 'High', style: 'bg-navy text-white' },
+  urgent: { label: 'Urgent', style: 'bg-amber text-ink' },
+  reopened: { label: 'Reopened', style: 'bg-amber text-ink' },
+  high: { label: 'High', style: 'bg-ink text-paper' },
   medium: { label: 'Medium', style: 'bg-mint text-navy' },
-  'fix-verified': { label: 'Fix verified', style: 'bg-brand text-navy' },
+  'fix-verified': { label: 'Fix verified', style: 'bg-brand text-ink' },
 }
 
 // `ai` marks a priority that CLIP set from the report photo, so people can tell it

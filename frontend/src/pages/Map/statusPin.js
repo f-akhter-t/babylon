@@ -6,7 +6,7 @@ import { DRAFT_PIN_SIZE, draftPinHtml, pinHtml } from './pinMarkup'
 // finds these class names because each one is written out in full below.
 
 const CLUSTER_CLASSES =
-  'flex size-full items-center justify-center rounded-full border-3 border-white bg-navy font-heading text-base font-extrabold text-white shadow-lg ring-4 ring-navy/25 transition duration-200 ease-out hover:bg-slate hover:ring-8 motion-safe:hover:scale-115'
+  'flex size-full items-center justify-center rounded-full border-3 border-paper bg-ink font-heading text-base font-extrabold text-paper shadow-lg ring-4 ring-navy/25 transition duration-200 ease-out hover:bg-slate hover:ring-8 motion-safe:hover:scale-115'
 
 // Icons are reused instead of rebuilt on every render.
 const cache = {}

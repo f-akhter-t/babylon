@@ -83,7 +83,7 @@ export default function Feed() {
       <Navbar />
 
       <main>
-        <section className="relative isolate overflow-hidden bg-navy px-6 py-16 text-white md:px-10">
+        <section className="relative isolate overflow-hidden bg-ink px-6 py-16 text-paper md:px-10">
           {/* A real street photo, faded right back so the heading stays easy to read. */}
           <img
             src="/images/login-roundabout.jpg"
@@ -92,14 +92,14 @@ export default function Feed() {
             loading="lazy"
             className="absolute inset-0 -z-10 size-full object-cover object-[center_42%] opacity-40 saturate-50"
           />
-          <div className="absolute inset-0 -z-10 bg-linear-to-r from-navy via-navy/55 to-navy/10" />
-          <div className="absolute inset-x-0 bottom-0 -z-10 h-16 bg-linear-to-t from-navy/80 to-transparent" />
+          <div className="absolute inset-0 -z-10 bg-linear-to-r from-ink via-ink/55 to-ink/10" />
+          <div className="absolute inset-x-0 bottom-0 -z-10 h-16 bg-linear-to-t from-ink/80 to-transparent" />
           <div className="mx-auto flex max-w-6xl flex-col items-start gap-4">
             <StaircaseIcon level={3} className="h-10 w-10 text-brand" />
             <h1 className="font-heading text-4xl font-extrabold md:text-5xl">
               {t('Every fix starts with a pin.')}
             </h1>
-            <p className="max-w-xl font-body text-white/70">
+            <p className="max-w-xl font-body text-paper/70">
               {t('Browse every issue the city is tracking, from freshly reported to fully resolved. Drag the slider on fixed issues to see the before and after.')}
             </p>
           </div>

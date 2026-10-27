@@ -97,13 +97,13 @@ export default function ResolvePanel({ issue, onSubmit, busy = false, error = nu
     <div>
       {title}
       {issue.sentBack && (
-        <p className="mt-4 min-w-0 break-words font-body text-sm font-bold text-danger">
+        <p className="mt-4 min-w-0 break-words font-body text-sm font-bold text-alert">
           {sentBackMessage(issue.sentBack, t)}
         </p>
       )}
 
       <p className="mt-5 font-body text-sm font-bold text-navy">{t('Before photo from the citizen')}</p>
-      <div className="mt-2 flex h-32 items-center justify-center overflow-hidden rounded-card bg-slate font-body text-sm font-semibold text-mint">
+      <div className="mt-2 flex h-32 items-center justify-center overflow-hidden rounded-card bg-slate font-body text-sm font-semibold text-frost">
         {beforeImg ? (
           <img
             src={beforeImg}
@@ -116,11 +116,11 @@ export default function ResolvePanel({ issue, onSubmit, busy = false, error = nu
       </div>
 
       <p className="mt-5 font-body text-sm font-bold text-navy">
-        After-photo <span className="text-danger">{t('(required)')}</span>
+        After-photo <span className="text-alert">{t('(required)')}</span>
       </p>
       {/* The file input covers the whole box (transparent), so the box is what
           scrolls into view and shows the focus ring. */}
-      <label className="relative mt-2 flex h-36 cursor-pointer flex-col items-center justify-center overflow-hidden rounded-card border-2 border-dashed border-forest bg-white px-3 text-center focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-forest">
+      <label className="relative mt-2 flex h-36 cursor-pointer flex-col items-center justify-center overflow-hidden rounded-card border-2 border-dashed border-accent bg-white px-3 text-center focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-accent">
         {previewUrl ? (
           <img
             src={previewUrl}
@@ -154,7 +154,7 @@ export default function ResolvePanel({ issue, onSubmit, busy = false, error = nu
         value={note}
         onChange={(e) => setNote(e.target.value)}
         placeholder={t('Filled and compacted. Surface sealed.')}
-        className="mt-2 w-full rounded-tile border border-navy/60 bg-white p-3 font-body text-sm text-navy placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-forest"
+        className="mt-2 w-full rounded-tile border border-navy/60 bg-white p-3 font-body text-sm text-navy placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-accent"
       />
       <p className="mt-3 font-body text-sm text-muted">
         {t('The issue stays In progress until the admin confirms the fix in the photo.')}
@@ -173,8 +173,8 @@ export default function ResolvePanel({ issue, onSubmit, busy = false, error = nu
             onSubmit(issue.id, { note, file })
           }}
           className={clsx(
-            'min-h-11 w-full rounded-full bg-navy px-6 py-3 font-body text-base font-bold text-mint transition-opacity motion-reduce:transition-none',
-            'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forest',
+            'min-h-11 w-full rounded-full bg-ink px-6 py-3 font-body text-base font-bold text-frost transition-opacity motion-reduce:transition-none',
+            'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent',
             // ! beats the global "button:not(:disabled)" pointer rule in index.css.
             needsPhoto || busy ? 'cursor-not-allowed! opacity-50' : 'hover:opacity-90',
           )}
@@ -190,7 +190,7 @@ export default function ResolvePanel({ issue, onSubmit, busy = false, error = nu
           <p
             id={SUBMIT_ERROR_ID}
             role="alert"
-            className="mt-2 min-w-0 break-words font-body text-sm font-bold text-danger"
+            className="mt-2 min-w-0 break-words font-body text-sm font-bold text-alert"
           >
             {error}
           </p>

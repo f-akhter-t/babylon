@@ -70,7 +70,7 @@ export default function PreviewMap({ issues, className, fade = false }) {
               >
                 {issue.title}
               </Link>
-              <p className="mt-1 text-sm font-semibold text-slate">{t('{n} upvotes', { n: issue.votes })}</p>
+              <p className="mt-1 text-sm font-semibold text-soft">{t('{n} upvotes', { n: issue.votes })}</p>
             </Popup>
           </Marker>
         ))}

@@ -19,7 +19,7 @@ export default function OwnerEdit({ issueId, access }) {
           <PencilIcon size={16} />
           {t('Edit')}
         </Button>
-        <span className="text-xs text-slate">{t('This is your report. You can change it until work starts.')}</span>
+        <span className="text-xs text-soft">{t('This is your report. You can change it until work starts.')}</span>
       </div>
     )
   }
@@ -35,7 +35,7 @@ export default function OwnerEdit({ issueId, access }) {
         <PencilIcon size={16} />
         {t('Edit')}
       </Button>
-      <span id="edit-locked-reason" className="text-xs font-medium text-slate">
+      <span id="edit-locked-reason" className="text-xs font-medium text-soft">
         {t(LOCKED_MESSAGE)}
       </span>
     </div>

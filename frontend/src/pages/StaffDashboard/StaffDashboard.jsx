@@ -23,17 +23,17 @@ const PRIORITY_LABEL = {
 }
 const PRIORITY_BAR = { urgent: 'bg-flag-red', high: 'bg-amber', medium: 'bg-brand' }
 
-function Tile({ label, value, hint, tone = 'text-mint', delay = 0 }) {
+function Tile({ label, value, hint, tone = 'text-frost', delay = 0 }) {
   return (
     <div
-      className="lift rounded-tile bg-white/[0.07] px-5 py-5 ring-1 ring-white/10 backdrop-blur-sm motion-safe:animate-[rise-in_0.5s_var(--ease-calm)_both]"
+      className="lift rounded-tile bg-white/[0.07] px-5 py-5 ring-1 ring-paper/10 backdrop-blur-sm motion-safe:animate-[rise-in_0.5s_var(--ease-calm)_both]"
       style={{ animationDelay: `${delay}s` }}
     >
-      <p className="font-body text-sm font-semibold uppercase tracking-wider text-mint/70">{label}</p>
+      <p className="font-body text-sm font-semibold uppercase tracking-wider text-frost/70">{label}</p>
       <p className={clsx('mt-3 font-heading text-5xl font-extrabold leading-none sm:text-6xl', tone)}>
         {typeof value === 'number' ? <CountUp value={value} /> : value}
       </p>
-      {hint && <p className="mt-3 font-body text-sm text-mint/65">{hint}</p>}
+      {hint && <p className="mt-3 font-body text-sm text-frost/65">{hint}</p>}
     </div>
   )
 }
@@ -52,7 +52,7 @@ function Ring({ percent, label, caption }) {
     <div className="flex flex-wrap items-center gap-x-5 gap-y-3">
       <div className="relative size-32 shrink-0 sm:size-40">
         <svg viewBox="0 0 100 100" className="size-full -rotate-90" aria-hidden="true">
-          <circle cx="50" cy="50" r={radius} fill="none" stroke="currentColor" strokeOpacity="0.12" strokeWidth="9" className="text-mint" />
+          <circle cx="50" cy="50" r={radius} fill="none" stroke="currentColor" strokeOpacity="0.12" strokeWidth="9" className="text-frost" />
           <circle
             cx="50"
             cy="50"
@@ -66,13 +66,13 @@ function Ring({ percent, label, caption }) {
             style={{ transition: 'stroke-dashoffset 1.2s var(--ease-calm)' }}
           />
         </svg>
-        <p className="absolute inset-0 flex items-center justify-center font-heading text-3xl font-extrabold text-mint sm:text-4xl">
+        <p className="absolute inset-0 flex items-center justify-center font-heading text-3xl font-extrabold text-frost sm:text-4xl">
           {num(percent)}%
         </p>
       </div>
       <div className="min-w-[9rem] flex-1">
-        <p className="font-body text-base font-bold text-mint">{label}</p>
-        <p className="mt-1 font-body text-sm text-mint/65">{caption}</p>
+        <p className="font-body text-base font-bold text-frost">{label}</p>
+        <p className="mt-1 font-body text-sm text-frost/65">{caption}</p>
       </div>
     </div>
   )
@@ -95,7 +95,7 @@ function Sparkline({ weekly }) {
         <path d={line('received')} fill="none" stroke="var(--color-mint)" strokeOpacity="0.7" strokeWidth="2" strokeDasharray="5 4" strokeLinecap="round" />
         <path d={line('resolved')} fill="none" stroke="var(--color-flag-green-light)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
       </svg>
-      <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1 font-body text-sm text-mint/70">
+      <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1 font-body text-sm text-frost/70">
         <span className="flex items-center gap-1.5"><span className="w-5 border-t-2 border-dashed border-mint/70" />{t('Received')}</span>
         <span className="flex items-center gap-1.5"><span className="w-5 border-t-[3px] border-flag-green-light" />{t('Resolved and verified')}</span>
       </div>
@@ -105,8 +105,8 @@ function Sparkline({ weekly }) {
 
 function Panel({ title, children, className }) {
   return (
-    <div className={clsx('rounded-tile bg-white/[0.06] p-5 ring-1 ring-white/10 sm:p-6', className)}>
-      <h3 className="mb-4 font-body text-base font-bold text-mint">{title}</h3>
+    <div className={clsx('rounded-tile bg-white/[0.06] p-5 ring-1 ring-paper/10 sm:p-6', className)}>
+      <h3 className="mb-4 font-body text-base font-bold text-frost">{title}</h3>
       {children}
     </div>
   )
@@ -118,7 +118,7 @@ function ActionLink({ to, children, primary }) {
       to={to}
       className={clsx(
         'inline-flex min-h-11 items-center justify-center rounded-full px-5 py-2 font-body text-sm font-bold transition-opacity hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-mint',
-        primary ? 'bg-mint text-navy' : 'border-2 border-mint/40 text-mint',
+        primary ? 'bg-mint text-navy' : 'border-2 border-frost/40 text-frost',
       )}
     >
       {children}
@@ -130,13 +130,13 @@ function Shell({ title, subtitle, children, actions }) {
   return (
     <section
       aria-labelledby="staff-overview-heading"
-      className="relative mt-6 overflow-hidden rounded-panel bg-gradient-to-br from-navy via-navy to-slate p-6 text-mint shadow-lg sm:p-8 lg:p-10"
+      className="relative mt-6 overflow-hidden rounded-panel bg-gradient-to-br from-ink via-ink to-slate p-6 text-frost shadow-lg sm:p-8 lg:p-10"
     >
       <StaircaseIcon level={3} className="pointer-events-none absolute -right-6 -top-6 h-48 w-48 text-brand opacity-[0.08]" />
       <div className="relative flex flex-wrap items-start justify-between gap-3">
         <div>
           <h2 id="staff-overview-heading" className="font-heading text-3xl font-extrabold sm:text-4xl">{title}</h2>
-          <p className="mt-1 font-body text-base text-mint/70">{subtitle}</p>
+          <p className="mt-1 font-body text-base text-frost/70">{subtitle}</p>
         </div>
         <div className="flex flex-wrap gap-2">{actions}</div>
       </div>
@@ -148,7 +148,7 @@ function Shell({ title, subtitle, children, actions }) {
 function Failed({ onRetry }) {
   const t = useT()
   return (
-    <p role="alert" className="font-body text-sm text-mint">
+    <p role="alert" className="font-body text-sm text-frost">
       {t('We could not load the overview.')}{' '}
       <button type="button" onClick={onRetry} className="font-bold underline">{t('Try again')}</button>
     </p>
@@ -161,7 +161,7 @@ function Loading() {
     <div role="status" className="grid gap-4 [grid-template-columns:repeat(auto-fit,minmax(min(100%,8rem),1fr))]">
       <span className="sr-only">{t('Loading the overview…')}</span>
       {[0, 1, 2, 3].map((n) => (
-        <div key={n} aria-hidden="true" className="h-24 rounded-tile bg-white/10 skeleton" />
+        <div key={n} aria-hidden="true" className="h-24 rounded-tile bg-paper/10 skeleton" />
       ))}
     </div>
   )
@@ -228,11 +228,11 @@ function DepartmentOverview({ department }) {
           <ul className="flex flex-col gap-4">
             {byPriority.map((p) => (
               <li key={p.key}>
-                <div className="flex justify-between font-body text-sm text-mint/80">
+                <div className="flex justify-between font-body text-sm text-frost/80">
                   <span>{t(PRIORITY_LABEL[p.key])}</span>
-                  <span className="font-bold text-mint">{num(p.count)}</span>
+                  <span className="font-bold text-frost">{num(p.count)}</span>
                 </div>
-                <div className="mt-1.5 h-3 overflow-hidden rounded-full bg-white/10">
+                <div className="mt-1.5 h-3 overflow-hidden rounded-full bg-paper/10">
                   <div
                     className={clsx('h-full rounded-full transition-[width] duration-1000', PRIORITY_BAR[p.key])}
                     style={{ width: `${(p.count / topPriority) * 100}%` }}
@@ -248,12 +248,12 @@ function DepartmentOverview({ department }) {
               {next.map((issue) => (
                 <li key={issue.id} className="flex items-start gap-3 font-body text-base">
                   <span aria-hidden="true" className={clsx('mt-1.5 size-2 shrink-0 rounded-full', PRIORITY_BAR[issue.priority] ?? 'bg-brand')} />
-                  <span className="min-w-0 break-words text-mint">{issue.title}</span>
+                  <span className="min-w-0 break-words text-frost">{issue.title}</span>
                 </li>
               ))}
             </ul>
           ) : (
-            <p className="font-body text-sm text-mint/70">{t('Nothing is waiting to start. Well done.')}</p>
+            <p className="font-body text-sm text-frost/70">{t('Nothing is waiting to start. Well done.')}</p>
           )}
         </Panel>
       </div>
@@ -309,7 +309,7 @@ function AdminOverview() {
           value={
             <>
               {num(Number(stats.avgDays.toFixed(1)))}
-              <span className="ml-1 font-body text-base font-bold text-mint/70">{t('days')}</span>
+              <span className="ml-1 font-body text-base font-bold text-frost/70">{t('days')}</span>
             </>
           }
           hint={t('Last 8 weeks')}
@@ -333,11 +333,11 @@ function AdminOverview() {
           <ul className="flex flex-col gap-4">
             {ranked.map((d) => (
               <li key={d.name}>
-                <div className="flex justify-between gap-2 font-body text-sm text-mint/80">
+                <div className="flex justify-between gap-2 font-body text-sm text-frost/80">
                   <span className="min-w-0 truncate">{t(d.name)}</span>
-                  <span className="shrink-0 font-bold text-mint">{num(Math.round(d.share * 100))}%</span>
+                  <span className="shrink-0 font-bold text-frost">{num(Math.round(d.share * 100))}%</span>
                 </div>
-                <div className="mt-1.5 h-3 overflow-hidden rounded-full bg-white/10">
+                <div className="mt-1.5 h-3 overflow-hidden rounded-full bg-paper/10">
                   <div className="h-full rounded-full bg-flag-green-light transition-[width] duration-1000" style={{ width: `${d.share * 100}%` }} />
                 </div>
               </li>
