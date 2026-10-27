@@ -1,11 +1,13 @@
 import { useState } from 'react'
 import clsx from 'clsx'
 import { PauseIcon, PlayIcon } from './HomeIcons'
+import { useT } from '../../i18n/useLanguage'
 
 const dot = { open: 'bg-amber', 'in-progress': 'bg-mint', resolved: 'bg-brand' }
 const label = { open: 'Reported', 'in-progress': 'In progress', resolved: 'Resolved' }
 
 function Items({ items, hidden = false }) {
+  const t = useT()
   return (
     <ul aria-hidden={hidden || undefined} className="flex shrink-0 items-center gap-10 pr-10">
       {items.map((item) => (
@@ -14,9 +16,9 @@ function Items({ items, hidden = false }) {
           className="flex items-center gap-2.5 whitespace-nowrap text-sm font-semibold text-mint"
         >
           <span className={clsx('size-2 rounded-full', dot[item.status])} />
-          <span className="text-brand">{label[item.status]}:</span>
+          <span className="text-brand">{t(label[item.status])}:</span>
           {item.title}
-          <span className="text-mint/60">· {item.time}</span>
+          <span className="text-mint/60">· {t(item.time)}</span>
         </li>
       ))}
     </ul>
@@ -24,6 +26,7 @@ function Items({ items, hidden = false }) {
 }
 
 export default function ActivityTicker({ items }) {
+  const t = useT()
   // Like the hero slides: people who asked for less motion start paused,
   // and anyone can pause or play it with the button.
   const [paused, setPaused] = useState(
@@ -42,7 +45,7 @@ export default function ActivityTicker({ items }) {
   }
 
   return (
-    <section aria-label="Recent reports" className="mt-10 flex items-center bg-navy">
+    <section aria-label={t('Recent reports')} className="mt-10 flex items-center bg-navy">
       {/* Hovering or focusing the moving track pauses it. The button sits
           outside the track, so it never holds the ticker paused itself. */}
       <div className="group/track min-w-0 flex-1 overflow-hidden py-3.5">
@@ -60,7 +63,7 @@ export default function ActivityTicker({ items }) {
       <button
         type="button"
         aria-pressed={paused}
-        aria-label="Pause the recent reports ticker"
+        aria-label={t('Pause the recent reports ticker')}
         onClick={toggle}
         className="mx-2 flex size-11 shrink-0 items-center justify-center rounded-full border border-mint/40 text-mint transition-colors hover:bg-mint/10 motion-reduce:transition-none sm:mx-4"
       >

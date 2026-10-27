@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom'
 import clsx from 'clsx'
 import { fit } from '../../components/layout/staffFit'
 import { votesSinceSentence } from './reopenedText'
+import { useT } from '../../i18n/useLanguage'
 
 const CONTROL =
   'inline-flex min-h-11 items-center justify-center rounded-full px-5 py-2 text-center font-body text-sm font-bold transition-colors motion-reduce:transition-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forest'
@@ -10,10 +11,11 @@ const CONTROL =
 // queue, or open its issue page. issues: getReopenedIssues().
 // sendingId: the issue being saved, if any.
 export default function ReopenedList({ issues, onSend, sendingId = null }) {
+  const t = useT()
   if (issues.length === 0) {
     return (
       <div className="mt-6 rounded-panel bg-mint p-6 font-body text-base text-navy sm:p-8">
-        No reopened issues are waiting. When a fixed problem comes back, it will appear here.
+        {t('No reopened issues are waiting. When a fixed problem comes back, it will appear here.')}
       </div>
     )
   }
@@ -22,7 +24,7 @@ export default function ReopenedList({ issues, onSend, sendingId = null }) {
 
   return (
     <ul
-      aria-label="Reopened issues"
+      aria-label={t('Reopened issues')}
       className={clsx('-mx-1 mt-6 flex flex-col gap-3 p-1', fit.scroll, fit.grow, fit.min32)}
     >
       {issues.map((issue) => {
@@ -38,12 +40,12 @@ export default function ReopenedList({ issues, onSend, sendingId = null }) {
               <h2 id={titleId} className="break-words font-heading text-lg font-bold">
                 {issue.title}
               </h2>
-              <p className="mt-1 font-body text-sm">{`It belongs to ${issue.department}.`}</p>
+              <p className="mt-1 font-body text-sm">{t('It belongs to {department}.', { department: issue.department })}</p>
               <p className="font-body text-sm">
-                {`It was first marked resolved on ${issue.reopenedFrom}.`}
+                {t('It was first marked resolved on {date}.', { date: issue.reopenedFrom })}
               </p>
               <p className="font-body text-sm font-bold">
-                {votesSinceSentence(issue)}
+                {votesSinceSentence(issue, t)}
               </p>
 
               {/* Named with the visible text and the issue title, for screen readers. */}
@@ -60,7 +62,7 @@ export default function ReopenedList({ issues, onSend, sendingId = null }) {
                     busy ? 'cursor-not-allowed opacity-50' : 'hover:bg-navy/90',
                   )}
                 >
-                  {sendingId === issue.id ? 'Sending…' : 'Send to verification queue'}
+                  {sendingId === issue.id ? t('Sending…') : t('Send to verification queue')}
                 </button>
                 <Link
                   id={viewId}
@@ -68,7 +70,7 @@ export default function ReopenedList({ issues, onSend, sendingId = null }) {
                   to={`/issues/${issue.id}`}
                   className={clsx(CONTROL, 'border-2 border-navy bg-white text-navy hover:bg-mint-deep')}
                 >
-                  View issue page
+                  {t('View issue page')}
                 </Link>
               </div>
             </article>

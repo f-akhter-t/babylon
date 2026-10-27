@@ -12,6 +12,7 @@ import { DEPARTMENTS } from '../../utils/departments'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import GuestOnly from './GuestOnly'
 import { validateNewAccount } from './validateNewAccount'
+import { useT } from '../../i18n/useLanguage'
 
 // Sign-up for department and admin accounts. Needs the staff access code; the
 // server checks it (it is not in this app).
@@ -24,6 +25,7 @@ export default function StaffSignup() {
 }
 
 function StaffSignupPage() {
+  const t = useT()
   useDocumentTitle('Staff sign up')
   const navigate = useNavigate()
   const [role, setRole] = useState('department')
@@ -64,15 +66,15 @@ function StaffSignupPage() {
       subtitle="Create a department or admin account with your staff access code."
       footer={
         <>
-          Already have a staff account?{' '}
+          {t('Already have a staff account?')}{' '}
           <Link to="/staff/login" className={authLinkClass}>
-            Sign in
+            {t('Sign in')}
           </Link>
         </>
       }
       extra={
         <Link to="/signup" className={authLinkClass}>
-          Not staff? Create a citizen account instead.
+          {t('Not staff? Create a citizen account instead.')}
         </Link>
       }
     >
@@ -110,7 +112,7 @@ function StaffSignupPage() {
           >
             {DEPARTMENTS.map((name) => (
               <option key={name} value={name}>
-                {name}
+                {t(name)}
               </option>
             ))}
           </Field>

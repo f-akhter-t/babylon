@@ -4,11 +4,14 @@ import StatusPill from '../../components/ui/StatusPill'
 import PriorityBadge from '../../components/ui/PriorityBadge'
 import BeforeAfterSlider from './BeforeAfterSlider'
 import { animate, DURATION, SPRING, VOTE_BUMP } from '../../components/ui/motion'
+import { useNumber, useT } from '../../i18n/useLanguage'
 
 // The vote count bumps when it changes: once for this person's own click,
 // and once when another tab changes it. The live update that follows a click
 // in this tab does not bump it a second time.
 export default function FeedCard({ issue, onUpvote }) {
+  const t = useT()
+  const n = useNumber()
   const votesRef = useRef(null)
   const lastVotes = useRef(issue.votes)
   const clicked = useRef(false)
@@ -52,12 +55,12 @@ export default function FeedCard({ issue, onUpvote }) {
               }}
             />
             <div className="hidden h-full w-full items-center justify-center font-body text-xs text-slate">
-              Photo not available
+              {t('Photo not available')}
             </div>
           </>
         )}
         <span className="absolute left-3 top-3 z-10 flex h-7 w-7 items-center justify-center rounded-full bg-navy font-body text-xs font-bold text-white">
-          {issue.rank}
+          {n(issue.rank)}
         </span>
         <PriorityBadge priority={issue.priority} ai={issue.aiAssessed} className="absolute right-3 top-3 z-10" />
       </div>
@@ -83,14 +86,14 @@ export default function FeedCard({ issue, onUpvote }) {
 
           {issue.status === 'resolved' ? (
             <span className="flex items-center gap-1 rounded-full bg-mint-deep px-3 py-1.5 font-body text-xs font-semibold text-navy">
-              ✓ {issue.votes}
+              ✓ {n(issue.votes)}
             </span>
           ) : (
             <button
               type="button"
               onClick={handleClick}
               aria-pressed={issue.voted}
-              aria-label={`${issue.voted ? 'Remove your vote from' : 'Upvote'} ${issue.title}, currently ${issue.votes} votes`}
+              aria-label={t(issue.voted ? 'Remove your vote from {title}, currently {votes} votes' : 'Upvote {title}, currently {votes} votes', { title: issue.title, votes: issue.votes })}
               className={`flex items-center gap-1 rounded-full border-2 px-3 py-1.5 font-body text-xs font-semibold transition max-md:min-h-11 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest/50 ${
                 issue.voted
                   ? 'border-forest bg-forest text-white hover:bg-forest/90'
@@ -102,7 +105,7 @@ export default function FeedCard({ issue, onUpvote }) {
                 ref={votesRef}
                 className="inline-block"
               >
-                {issue.votes}
+                {n(issue.votes)}
               </span>
             </button>
           )}

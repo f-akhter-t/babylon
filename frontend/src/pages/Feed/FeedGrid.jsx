@@ -1,28 +1,18 @@
 import FeedCard from './FeedCard'
 import Reveal from '../../components/ui/Reveal'
-
-function SkeletonCard() {
-  return (
-    <div className="skeleton rounded-card bg-mint/60">
-      <div className="h-40 bg-slate/20" />
-      <div className="space-y-2 p-4">
-        <div className="h-4 w-3/4 rounded bg-slate/20" />
-        <div className="h-3 w-1/2 rounded bg-slate/20" />
-        <div className="mt-3 h-6 w-full rounded-full bg-slate/10" />
-      </div>
-    </div>
-  )
-}
+import LogoLoader from '../../components/ui/LogoLoader'
+import { useT } from '../../i18n/useLanguage'
 
 // isGhost(id): a report removed while the list was in use. It keeps its
 // slot, faded out, and cannot be reached (inert) until the list lets go.
 // instant: new cards show without an entrance (a change made while the tab
 // was hidden).
 export default function FeedGrid({ ref, issues, isGhost = () => false, instant = false, loading, onUpvote, onClearFilters }) {
+  const t = useT()
   return (
     <>
       <div ref={ref} className="mt-8 grid scroll-mt-24 grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-        {loading && Array.from({ length: 6 }).map((_, i) => <SkeletonCard key={i} />)}
+        {loading && <LogoLoader label={t('Loading issues…')} className="col-span-full" />}
 
         {!loading &&
           issues.map((issue, index) => {
@@ -46,13 +36,13 @@ export default function FeedGrid({ ref, issues, isGhost = () => false, instant =
       {!loading && issues.length === 0 && (
         <div className="mt-14 flex flex-col items-center gap-2 text-center">
           <span className="text-3xl">🔍</span>
-          <p className="font-body text-muted">No issues match these filters yet.</p>
+          <p className="font-body text-muted">{t('No issues match these filters yet.')}</p>
           <button
             type="button"
             onClick={onClearFilters}
             className="mt-1 font-body text-sm font-semibold text-forest underline-offset-2 hover:underline"
           >
-            Clear filters
+            {t('Clear filters')}
           </button>
         </div>
       )}

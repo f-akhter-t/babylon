@@ -13,6 +13,7 @@ import { DetailLoading, DetailMessage } from './DetailStates'
 import PageBackdrop from './PageBackdrop'
 import IssueView from './IssueView'
 import { clearIssueNotice, peekIssueNotice } from './issueNotice'
+import { useT } from '../../i18n/useLanguage'
 
 // Status words for the live announcement, as the progress card shows them.
 const STATUS_WORDS = { open: 'Open', 'in-progress': 'In progress', resolved: 'Resolved' }
@@ -20,6 +21,7 @@ const STATUS_WORDS = { open: 'Open', 'in-progress': 'In progress', resolved: 'Re
 const SETTLE_MS = 400
 
 export default function IssueDetail() {
+  const t = useT()
   const { id } = useParams()
   const { issue, loading, error, update, deleted } = useIssue(id)
   const viewer = useViewer()
@@ -50,8 +52,8 @@ export default function IssueDetail() {
     lastStatus.current = status
     if (!status || !before || before === status || !update?.remote) return
     clearTimeout(settleTimer.current)
-    settleTimer.current = setTimeout(() => say(`This report is now ${STATUS_WORDS[status] ?? status}.`), SETTLE_MS)
-  }, [status, update, say])
+    settleTimer.current = setTimeout(() => say(t('This report is now {status}.', { status: STATUS_WORDS[status] ?? status })), SETTLE_MS)
+  }, [status, update, say, t])
   useEffect(() => () => clearTimeout(settleTimer.current), [])
   useEffect(() => {
     lastStatus.current = null // a new id starts fresh
@@ -77,7 +79,7 @@ export default function IssueDetail() {
         <div role="status">
           {showNotice && (
             <p className="mb-4 rounded-tile bg-mint px-4 py-3 text-sm font-semibold text-navy shadow-sm">
-              {noticeText}
+              {t(noticeText)}
             </p>
           )}
           <span className="sr-only">{spoken}</span>

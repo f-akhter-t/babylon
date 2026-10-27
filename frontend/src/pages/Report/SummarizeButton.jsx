@@ -6,6 +6,7 @@ import {
   canSummarize,
   getReportSummary,
 } from '../../services/assistApi'
+import { useT } from '../../i18n/useLanguage'
 
 const IDLE = { status: 'idle' }
 
@@ -29,6 +30,7 @@ export default function SummarizeButton({
   label = 'Use as title',
   disabled = false,
 }) {
+  const t = useT()
   const [state, setState] = useState(IDLE)
   const latest = useRef(0)
 
@@ -71,11 +73,11 @@ export default function SummarizeButton({
           aria-describedby={ready ? undefined : 'summarize-hint'}
           className={quietButton}
         >
-          {busy ? 'Writing a short title…' : 'Suggest a short title'}
+          {busy ? t('Writing a short title…') : t('Suggest a short title')}
         </button>
         {!ready && (
           <p id="summarize-hint" className="font-body text-xs text-muted">
-            {`Write at least ${SUMMARIZE_TEXT_MIN} characters first.`}
+            {t('Write at least {min} characters first.', { min: SUMMARIZE_TEXT_MIN })}
           </p>
         )}
       </div>
@@ -84,27 +86,27 @@ export default function SummarizeButton({
         {view.status === 'done' && (
           <div className="flex flex-col gap-3 rounded-xl bg-mint/70 p-3">
             <p className="font-body text-sm leading-relaxed text-navy">
-              <span className="font-bold">Suggested: </span>
+              <span className="font-bold">{t('Suggested:')} </span>
               {view.summary}
             </p>
             <div className="flex flex-wrap gap-2">
               <button type="button" onClick={use} disabled={disabled} className={primaryButton}>
-                {label}
+                {t(label)}
               </button>
               <button type="button" onClick={() => setState(IDLE)} className={quietButton}>
-                No thanks
+                {t('No thanks')}
               </button>
             </div>
           </div>
         )}
         {view.status === 'applied' && (
-          <p className="font-body text-xs font-semibold text-forest">Added. You can still change it.</p>
+          <p className="font-body text-xs font-semibold text-forest">{t('Added. You can still change it.')}</p>
         )}
       </div>
 
       {view.status === 'error' && (
         <p role="alert" className="font-body text-xs font-semibold text-danger">
-          {view.message}
+          {t(view.message)}
         </p>
       )}
     </div>

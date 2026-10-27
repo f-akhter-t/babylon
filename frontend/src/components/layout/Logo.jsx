@@ -8,11 +8,20 @@ const sizes = {
 }
 
 const tones = {
-  onDark: { text: 'text-mint', firstBar: 'fill-brand' },
-  onLight: { text: 'text-navy', firstBar: 'fill-forest' },
+  onDark: { text: 'text-mint', pin: 'fill-flag-green' },
+  onLight: { text: 'text-navy', pin: 'fill-flag-green' },
 }
 
-// The Babylon mark (a pin with three rising bars) and the word "Babylon".
+// The skyline, in white, stands on the pin and the red sun.
+const SKYLINE = [
+  { x: 9.8, y: 15, w: 2.6, h: 4.6 },
+  { x: 13, y: 12.8, w: 3, h: 6.8 },
+  { x: 16.6, y: 14.2, w: 2.6, h: 5.4 },
+  { x: 19.7, y: 16.2, w: 2.2, h: 3.4 },
+]
+
+// The Babylon mark (a green pin with a red sun and a city skyline, like the
+// Bangladesh flag) and the word "Babylon".
 //   size:  'sm' | 'md' | 'lg'
 //   tone:  'onDark' (mint) or 'onLight' (navy)
 //   to:    where it links; null shows it without a link (loading and error screens)
@@ -45,13 +54,12 @@ export default function Logo({
       >
         <path
           d="M16 29.5C16 29.5 25.5 21.5 25.5 13.5A9.5 9.5 0 0 0 6.5 13.5C6.5 21.5 16 29.5 16 29.5Z"
-          stroke="currentColor"
-          strokeWidth="2.5"
-          strokeLinejoin="round"
+          className={t.pin}
         />
-        <rect x="10.4" y="15.5" width="3.6" height="3.5" rx="0.8" className={t.firstBar} />
-        <rect x="14.2" y="12.5" width="3.6" height="6.5" rx="0.8" fill="currentColor" />
-        <rect x="18" y="9.5" width="3.6" height="9.5" rx="0.8" fill="currentColor" />
+        <circle cx="16" cy="12" r="5" className="fill-flag-red" />
+        {SKYLINE.map((b) => (
+          <rect key={b.x} x={b.x} y={b.y} width={b.w} height={b.h} rx="0.5" className="fill-white" />
+        ))}
       </svg>
       <span className={clsx(s.word, 'font-heading font-extrabold tracking-[-0.02em]')}>
         Babylon

@@ -6,6 +6,7 @@ import { animate, DROP_IN, SPRING } from '../../components/ui/motion'
 import DraftCard from './DraftCard'
 import RegionNotice from './RegionNotice'
 import { isInRegion } from './region'
+import { useT } from '../../i18n/useLanguage'
 
 const DRAFT_WIDTH = { min: 270, max: 300 }
 
@@ -14,6 +15,7 @@ const DRAFT_WIDTH = { min: 270, max: 300 }
 // /report with the pin's coordinates. Pins can only go inside the region
 // (see region.js).
 export default function DropPin({ active, issues, onPlaced, onStop, onUpvoteInstead }) {
+  const t = useT()
   const map = useMap()
   const [spot, setSpot] = useState(null)
   const [dragging, setDragging] = useState(false)
@@ -78,7 +80,7 @@ export default function DropPin({ active, issues, onPlaced, onStop, onUpvoteInst
         draggable
         autoPan // the map follows if you drag the pin to the edge
         zIndexOffset={2000}
-        title="Your new report. Drag to adjust."
+        title={t('Your new report. Drag to adjust.')}
         eventHandlers={{
           dragstart: () => setDragging(true),
           dragend: (event) => {

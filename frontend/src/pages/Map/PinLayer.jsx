@@ -5,8 +5,10 @@ import IssueMarker from './IssueMarker'
 import { clusterIcon } from './statusPin'
 import { groupNearby } from './clusters'
 import { animate, DROP_IN, DURATION, flyToBounds, prefersLessMotion, SPRING } from '../../components/ui/motion'
+import { useT } from '../../i18n/useLanguage'
 
 function ClusterMarker({ cluster, onClick }) {
+  const t = useT()
   const markerRef = useRef(null)
   const count = cluster.issues.length
 
@@ -21,7 +23,7 @@ function ClusterMarker({ cluster, onClick }) {
       ref={markerRef}
       position={[cluster.lat, cluster.lng]}
       icon={clusterIcon(count)}
-      title={`${count} reports here. Click to zoom in.`}
+      title={t('{count} reports here. Click to zoom in.', { count })}
       riseOnHover
       eventHandlers={{ click: onClick }}
     />

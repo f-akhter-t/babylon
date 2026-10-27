@@ -4,6 +4,7 @@ import AuthShell, { DemoHint, Field, FormError, SubmitButton, authLinkClass } fr
 import { DEMO_ACCOUNTS, DEMO_PASSWORD, homePathFor, login } from '../../services/auth'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import GuestOnly from './GuestOnly'
+import { useT } from '../../i18n/useLanguage'
 
 // Citizen log-in. Staff accounts sign in at /staff/login.
 export default function Login() {
@@ -23,6 +24,7 @@ function returnPathFrom(state) {
 }
 
 function LoginPage() {
+  const t = useT()
   useDocumentTitle('Log in')
   const navigate = useNavigate()
   const location = useLocation()
@@ -55,26 +57,27 @@ function LoginPage() {
 
   return (
     <AuthShell
+      photo={{ src: '/images/login-roundabout.jpg', side: 'right' }}
       title="Log in"
       subtitle="Sign in to report and follow issues in your area."
       footer={
         <>
-          New to Babylon?{' '}
+          {t('New to Babylon?')}{' '}
           <Link to="/signup" className={authLinkClass}>
-            Create an account
+            {t('Create an account')}
           </Link>
         </>
       }
       extra={
         <Link to="/staff/login" className={authLinkClass}>
-          Government or admin staff? Sign in here.
+          {t('Government or admin staff? Sign in here.')}
         </Link>
       }
     >
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         {notice && (
           <p role="status" className="font-body text-sm font-bold text-forest">
-            {notice}
+            {t(notice)}
           </p>
         )}
         <Field
@@ -100,7 +103,7 @@ function LoginPage() {
           state={{ email, door: 'citizen' }}
           className={`${authLinkClass} self-start`}
         >
-          Forgot password?
+          {t('Forgot password?')}
         </Link>
 
         <FormError
@@ -108,7 +111,7 @@ function LoginPage() {
           action={
             error?.code === 'staff-account' && (
               <Link to="/staff/login" state={{ email }} className={authLinkClass}>
-                Go to the staff sign-in page.
+                {t('Go to the staff sign-in page.')}
               </Link>
             )
           }
@@ -119,7 +122,7 @@ function LoginPage() {
 
       <DemoHint
         accounts={DEMO_ACCOUNTS.citizen}
-        lines={[`The demo account uses the password ${DEMO_PASSWORD}.`]}
+        lines={[t('The demo account uses the password {password}.', { password: DEMO_PASSWORD })]}
       />
     </AuthShell>
   )

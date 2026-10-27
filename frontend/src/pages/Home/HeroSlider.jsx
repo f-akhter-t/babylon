@@ -5,11 +5,13 @@ import HeroSlide from './HeroSlide'
 import HeroVideo from './HeroVideo'
 import HeroSearchCard from './HeroSearchCard'
 import useVideoAllowed from './useVideoAllowed'
+import { useT } from '../../i18n/useLanguage'
 
 // Clips are 8 seconds long, so each slide stays 8 seconds.
 const SLIDE_MS = 8000
 
 export default function HeroSlider({ slides = [], categories = [] }) {
+  const t = useT()
   const [index, setIndex] = useState(0)
   // People who turn on "reduce motion" start paused. They see the poster image.
   const [userPaused, setUserPaused] = useState(
@@ -33,7 +35,7 @@ export default function HeroSlider({ slides = [], categories = [] }) {
   return (
     <section
       aria-roledescription="carousel"
-      aria-label="Babylon highlights"
+      aria-label={t('Babylon highlights')}
       className="relative isolate overflow-hidden bg-navy"
       onPointerEnter={(e) => e.pointerType === 'mouse' && setHold(true)}
       onPointerLeave={(e) => e.pointerType === 'mouse' && setHold(false)}
@@ -67,7 +69,7 @@ export default function HeroSlider({ slides = [], categories = [] }) {
                 key={slide.id}
                 role="group"
                 aria-roledescription="slide"
-                aria-label={`${i + 1} of ${count}`}
+                aria-label={t('{n} of {count}', { n: i + 1, count })}
                 inert={i !== index}
                 className={clsx(
                   'col-start-1 row-start-1 transition-opacity duration-500 motion-reduce:transition-none',
@@ -89,7 +91,7 @@ export default function HeroSlider({ slides = [], categories = [] }) {
             onClick={() => setUserPaused((p) => !p)}
             className="min-h-11 px-2 text-sm font-semibold text-mint underline-offset-4 hover:underline"
           >
-            {userPaused ? 'Play slides' : 'Pause slides'}
+            {userPaused ? t('Play slides') : t('Pause slides')}
           </button>
         </div>
       </div>

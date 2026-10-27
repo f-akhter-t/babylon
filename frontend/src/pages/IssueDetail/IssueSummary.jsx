@@ -2,10 +2,13 @@ import StatusPill from '../../components/ui/StatusPill'
 import CategoryChip from '../../components/ui/CategoryChip'
 import PriorityBadge from '../../components/ui/PriorityBadge'
 import TranslateText from '../../components/ui/TranslateText'
-import { formatDate, formatDaysAgo } from '../../utils/format'
+import { useFormat } from '../../i18n/useFormat'
+import { useT } from '../../i18n/useLanguage'
 
 // Chips, title, who reported it and when, and the description.
 export default function IssueSummary({ issue }) {
+  const t = useT()
+  const format = useFormat()
   return (
     <div className="flex flex-col gap-3">
       <div className="flex flex-wrap items-center gap-2">
@@ -21,14 +24,14 @@ export default function IssueSummary({ issue }) {
         {issue.title}
       </h1>
       <p className="text-sm text-slate">
-        Reported by {issue.reporter} on {issue.reportedOn}
+        {t('Reported by {name} on {date}', { name: issue.reporter, date: issue.reportedOn })}
         <span aria-hidden="true"> · </span>
-        <span className="font-semibold">{formatDaysAgo(issue.daysAgo)}</span>
+        <span className="font-semibold">{format.daysAgo(issue.daysAgo)}</span>
         {issue.editedAt && (
           <>
             <span aria-hidden="true"> · </span>
             <span className="whitespace-nowrap rounded-full bg-mint px-2 py-0.5 text-xs font-semibold text-navy">
-              {`Edited on ${formatDate(issue.editedAt)}`}
+              {t('Edited on {date}', { date: format.date(issue.editedAt) })}
             </span>
           </>
         )}

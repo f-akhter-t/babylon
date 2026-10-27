@@ -19,6 +19,7 @@ import { DRAFT_PIN_SIZE, draftPinSvg } from '../Map/pinMarkup'
 import { pinIcon } from '../Map/statusPin'
 import MiniMapZoom from '../IssueDetail/MiniMapZoom'
 import { enter, flyTo, mapMotionOptions } from '../../components/ui/motion'
+import { useT } from '../../i18n/useLanguage'
 
 const START = { lat: MAP_CENTER[0], lng: MAP_CENTER[1] }
 const MATCH_RADIUS_M = 120 // an open issue this close counts as a possible duplicate
@@ -110,6 +111,7 @@ export default function LocationPicker({
   showMatches = true,
   initialPlace,
 }) {
+  const t = useT()
   const [position, setPosition] = useState(() => initial ?? START)
   const [placeName, setPlaceName] = useState('')
   const [found, setFound] = useState(null) // { lat, lng, division } for the last pin we looked up
@@ -263,7 +265,7 @@ export default function LocationPicker({
       if (!res.ok) throw new Error('Search failed')
       const results = await res.json()
       if (results.length === 0) {
-        setMessage('No place found. Try a street or landmark in Chattogram.')
+        setMessage('No place found. Try a street or landmark in Bangladesh.')
         return
       }
       moveTo({ lat: Number(results[0].lat), lng: Number(results[0].lon) })
@@ -302,7 +304,7 @@ export default function LocationPicker({
     getIssues()
       .then(setIssues)
       .catch(() => {}) // keep the list we already have
-    onToast?.(`You upvoted "${issue.title}", so there is no need to report it again.`)
+    onToast?.(t('You upvoted "{title}", so there is no need to report it again.', { title: issue.title }))
   }
 
   function handleDismiss() {
@@ -311,7 +313,7 @@ export default function LocationPicker({
 
   return (
     <section
-      aria-label="Choose the location"
+      aria-label={t('Choose the location')}
       className="relative isolate min-h-[560px] overflow-hidden rounded-card bg-mint shadow-sm transition-shadow duration-300 hover:shadow-xl"
       style={enter('rise-in', 0.2)}
     >
@@ -357,8 +359,8 @@ export default function LocationPicker({
           position={markerPosition}
           icon={dragPinIcon}
           draggable
-          alt="Report location pin"
-          title="The pin marks where the problem is. Drag it to change the spot."
+          alt={t('Report location pin')}
+          title={t('The pin marks where the problem is. Drag it to change the spot.')}
           zIndexOffset={1000}
           eventHandlers={eventHandlers}
         >
@@ -392,8 +394,8 @@ export default function LocationPicker({
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search street or landmark"
-            aria-label="Search street or landmark"
+            placeholder={t('Search street or landmark')}
+            aria-label={t('Search street or landmark')}
             className="w-full rounded-full border border-navy/15 bg-white py-2.5 pl-10 pr-4 font-body text-sm text-navy shadow-sm max-md:min-h-11 transition placeholder:text-muted hover:border-forest/50 focus:border-forest focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest/40"
           />
         </div>
@@ -417,11 +419,11 @@ export default function LocationPicker({
               <circle cx="12" cy="12" r="2" />
               <path d="M12 2v3M12 19v3M2 12h3M19 12h3" />
             </svg>
-            {locating ? 'Locating…' : 'Use my location'}
+            {locating ? t('Locating…') : t('Use my location')}
           </span>
         </button>
         <span className="sr-only" aria-live="polite">
-          {searching ? 'Searching' : ''}
+          {searching ? t('Searching') : ''}
         </span>
       </form>
 
@@ -430,7 +432,7 @@ export default function LocationPicker({
           role="status"
           className="absolute left-16 top-16 z-[1000] max-w-xs rounded-xl bg-white px-3 py-2 font-body text-xs font-semibold text-navy shadow"
         >
-          {message}
+          {t(message)}
         </p>
       )}
 
@@ -445,12 +447,12 @@ export default function LocationPicker({
             <div className="flex items-center gap-2">
               <StaircaseIcon level={1} className="h-5 w-5 text-amber-dark" />
               <h3 className="font-heading text-base font-extrabold text-navy">
-                Looks like a match nearby
+                {t('Looks like a match nearby')}
               </h3>
             </div>
             <p className="mt-2 font-body text-sm text-navy">
-              {match.issue.title} · {Math.round(match.distance)} m away · {match.issue.votes}{' '}
-              upvotes. Upvoting tells authorities what matters most.
+              {match.issue.title} · {t('{distance} m away', { distance: Math.round(match.distance) })} ·{' '}
+              {t('{n} upvotes', { n: match.issue.votes })}. {t('Upvoting tells authorities what matters most.')}
             </p>
             <div className="mt-3 flex flex-wrap gap-2">
               <button
@@ -458,14 +460,14 @@ export default function LocationPicker({
                 onClick={handleUpvote}
                 className="rounded-full bg-forest px-4 py-2 font-body text-sm font-bold text-white transition hover:-translate-y-0.5 hover:bg-forest/90 hover:shadow-md active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest/60 focus-visible:ring-offset-2"
               >
-                ↑ Upvote it instead
+                ↑ {t('Upvote it instead')}
               </button>
               <button
                 type="button"
                 onClick={handleDismiss}
                 className="rounded-full border-2 border-amber-dark px-4 py-2 font-body text-sm font-bold text-navy transition hover:-translate-y-0.5 hover:bg-amber/20 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest/50"
               >
-                Mine is different
+                {t('Mine is different')}
               </button>
             </div>
           </div>
@@ -477,17 +479,17 @@ export default function LocationPicker({
           aria-live="polite"
           className="pointer-events-auto rounded-2xl bg-white px-4 py-3 shadow-lg transition hover:-translate-y-0.5 hover:shadow-xl md:ml-auto"
         >
-          <p className="font-body text-xs text-muted">Selected location</p>
+          <p className="font-body text-xs text-muted">{t('Selected location')}</p>
           <p
             key={label}
             className="font-body text-sm font-bold text-navy"
             style={enter('rise-in', 0, 'var(--duration-base)')}
           >
-            {label}
+            {t(label)}
             {ward ? `, ${ward}` : ''}
           </p>
           <p className="font-body text-xs text-muted">
-            {division ? `${division} division` : 'Checking the division…'}
+            {division ? t('{division} division', { division: t(division) }) : t('Checking the division…')}
           </p>
         </div>
       </div>

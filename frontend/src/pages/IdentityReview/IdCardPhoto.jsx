@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import clsx from 'clsx'
 import Button from '../../components/ui/Button'
+import { useT } from '../../i18n/useLanguage'
 
 const FRAME = 'aspect-[86/54] w-full max-w-md rounded-tile'
 // Messages grow with their text instead of keeping the card shape.
@@ -47,6 +48,7 @@ function PhotoMessage({ id, title, children, warn = false }) {
 // (focus stays inside), Esc or Close closes it, and focus goes back to the
 // button that opened it.
 function PhotoDialog({ url, name, onClose }) {
+  const t = useT()
   const dialogRef = useRef(null)
   const closeRef = useRef(null)
 
@@ -75,19 +77,19 @@ function PhotoDialog({ url, name, onClose }) {
             id="identity-photo-dialog-title"
             className="font-heading text-lg font-extrabold text-navy sm:text-xl"
           >
-            {`NID card photo sent by ${name}`}
+            {t('NID card photo sent by {name}', { name })}
           </h2>
           <Button ref={closeRef} variant="outline" className="shrink-0 py-2" onClick={() => dialogRef.current.close()}>
-            Close
+            {t('Close')}
           </Button>
         </div>
         <img
           src={url}
-          alt={`Front of the NID card sent by ${name}, shown larger`}
+          alt={t('Front of the NID card sent by {name}, shown larger', { name })}
           className="max-h-[calc(100dvh-9rem)] w-full rounded-tile bg-navy/5 object-contain"
         />
         <p className="font-body text-xs text-slate">
-          This photo is deleted from storage as soon as you approve or reject.
+          {t('This photo is deleted from storage as soon as you approve or reject.')}
         </p>
       </div>
     </dialog>
@@ -98,6 +100,7 @@ function PhotoDialog({ url, name, onClose }) {
 // noteId: the id of the message shown instead of a photo, so Approve can point to it.
 // onUseReason fills in the suggested reject reason (no-photo case).
 export default function IdCardPhoto({ photo, name, noteId, onUseReason }) {
+  const t = useT()
   const [open, setOpen] = useState(false)
   const triggerRef = useRef(null)
 
@@ -109,25 +112,25 @@ export default function IdCardPhoto({ photo, name, noteId, onUseReason }) {
   if (photo.kind === 'loading') {
     return (
       <div role="status" className={clsx(FRAME, 'skeleton bg-white/60')}>
-        <span className="sr-only">Loading the card photo…</span>
+        <span className="sr-only">{t('Loading the card photo…')}</span>
       </div>
     )
   }
 
   if (photo.kind === 'sample') {
     return (
-      <PhotoMessage id={noteId} title="Sample submission, no real card photo">
-        This made-up submission has no photo. Approve or reject it to try the flow.
+      <PhotoMessage id={noteId} title={t('Sample submission, no real card photo')}>
+        {t('This made-up submission has no photo. Approve or reject it to try the flow.')}
       </PhotoMessage>
     )
   }
 
   if (photo.kind === 'missing') {
     return (
-      <PhotoMessage id={noteId} title="No card photo was saved with this submission" warn>
-        <p>It was sent before card photos were kept, so it cannot be approved. Reject it and ask the citizen to send it again.</p>
+      <PhotoMessage id={noteId} title={t('No card photo was saved with this submission')} warn>
+        <p>{t('It was sent before card photos were kept, so it cannot be approved. Reject it and ask the citizen to send it again.')}</p>
         <Button variant="outline" className="mt-3 max-w-full whitespace-normal! bg-white px-3! py-2 sm:px-5!" onClick={onUseReason}>
-          Use suggested reason
+          {t('Use suggested reason')}
         </Button>
       </PhotoMessage>
     )
@@ -135,10 +138,10 @@ export default function IdCardPhoto({ photo, name, noteId, onUseReason }) {
 
   if (photo.kind === 'error') {
     return (
-      <PhotoMessage id={noteId} title="The card photo could not be loaded" warn>
-        <p>This browser could not read its storage. Approve stays off until the photo loads.</p>
+      <PhotoMessage id={noteId} title={t('The card photo could not be loaded')} warn>
+        <p>{t('This browser could not read its storage. Approve stays off until the photo loads.')}</p>
         <Button variant="outline" className="mt-3 max-w-full whitespace-normal! bg-white px-3! py-2 sm:px-5!" onClick={photo.retry}>
-          Try again
+          {t('Try again')}
         </Button>
       </PhotoMessage>
     )
@@ -148,12 +151,12 @@ export default function IdCardPhoto({ photo, name, noteId, onUseReason }) {
     <figure className="flex w-full max-w-md flex-col gap-2">
       <img
         src={photo.url}
-        alt={`Front of the NID card sent by ${name}`}
+        alt={t('Front of the NID card sent by {name}', { name })}
         onClick={() => setOpen(true)}
         className={clsx(FRAME, 'cursor-zoom-in bg-navy/5 object-contain shadow-sm')}
       />
       <figcaption className="flex flex-wrap items-center justify-between gap-2">
-        <span className="font-body text-xs text-slate">Deleted as soon as you approve or reject.</span>
+        <span className="font-body text-xs text-slate">{t('Deleted as soon as you approve or reject.')}</span>
         <Button
           ref={triggerRef}
           variant="outline"
@@ -161,7 +164,7 @@ export default function IdCardPhoto({ photo, name, noteId, onUseReason }) {
           aria-haspopup="dialog"
           onClick={() => setOpen(true)}
         >
-          View larger
+          {t('View larger')}
         </Button>
       </figcaption>
       {open && <PhotoDialog url={photo.url} name={name} onClose={close} />}

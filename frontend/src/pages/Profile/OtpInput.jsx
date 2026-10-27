@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react'
 import clsx from 'clsx'
 import { animate, SHAKE } from '../../components/ui/motion'
+import { useT } from '../../i18n/useLanguage'
 
 const OTP_LENGTH = 6
 
@@ -12,6 +13,7 @@ const OTP_LENGTH = 6
 // Typing moves to the next box, Backspace on an empty box moves back,
 // arrow keys move between boxes, and pasting fills as many boxes as it can.
 export default function OtpInput({ digits, onChange, disabled, invalid, shake, firstRef, labelId }) {
+  const t = useT()
   const boxes = useRef([])
   const group = useRef(null)
 
@@ -87,7 +89,7 @@ export default function OtpInput({ digits, onChange, disabled, invalid, shake, f
           pattern="[0-9]*"
           autoComplete={index === 0 ? 'one-time-code' : 'off'}
           maxLength={index === 0 ? OTP_LENGTH : 1}
-          aria-label={`Digit ${index + 1} of ${OTP_LENGTH}`}
+          aria-label={t('Digit {n} of {total}', { n: index + 1, total: OTP_LENGTH })}
           aria-invalid={invalid || undefined}
           value={digit}
           disabled={disabled}

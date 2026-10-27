@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react'
 import clsx from 'clsx'
 import { ChevronsIcon } from './HomeIcons'
+import { useT } from '../../i18n/useLanguage'
 
 export default function BeforeAfterSlider({
   before,
@@ -9,6 +10,7 @@ export default function BeforeAfterSlider({
   interactive = true,
   className,
 }) {
+  const t = useT()
   const box = useRef(null)
   const dragging = useRef(false)
   const [pos, setPos] = useState(50) // divider position, 0 to 100
@@ -53,7 +55,7 @@ export default function BeforeAfterSlider({
       {showPhotos && (
         <img
           src={before}
-          alt={alt ? `${alt}, before` : ''}
+          alt={alt ? `${alt}, ${t('before')}` : ''}
           draggable={false}
           loading="lazy"
           onError={() => setBroken(true)}
@@ -69,7 +71,7 @@ export default function BeforeAfterSlider({
         {showPhotos && (
           <img
             src={after}
-            alt={alt ? `${alt}, after` : ''}
+            alt={alt ? `${alt}, ${t('after')}` : ''}
             draggable={false}
             loading="lazy"
             onError={() => setBroken(true)}
@@ -79,10 +81,10 @@ export default function BeforeAfterSlider({
       </div>
 
       <span className="absolute bottom-3.5 left-3.5 rounded-full bg-navy px-3 py-1.5 text-[11px] font-extrabold uppercase tracking-[0.06em] text-mint">
-        Before
+        {t('Before')}
       </span>
       <span className="absolute bottom-3.5 right-3.5 rounded-full bg-brand px-3 py-1.5 text-[11px] font-extrabold uppercase tracking-[0.06em] text-navy">
-        After
+        {t('After')}
       </span>
 
       <div
@@ -93,7 +95,7 @@ export default function BeforeAfterSlider({
           <div
             role="slider"
             tabIndex={0}
-            aria-label="Before and after"
+            aria-label={t('Before and after')}
             aria-valuemin={0}
             aria-valuemax={100}
             aria-valuenow={Math.round(pos)}

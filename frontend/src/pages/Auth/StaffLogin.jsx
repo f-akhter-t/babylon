@@ -9,6 +9,7 @@ import {
 } from '../../services/auth'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import GuestOnly from './GuestOnly'
+import { useT } from '../../i18n/useLanguage'
 
 // Sign-in for department and admin accounts. The role comes from the account.
 export default function StaffLogin() {
@@ -20,6 +21,7 @@ export default function StaffLogin() {
 }
 
 function StaffLoginPage() {
+  const t = useT()
   useDocumentTitle('Staff sign in')
   const navigate = useNavigate()
   const location = useLocation()
@@ -55,22 +57,22 @@ function StaffLoginPage() {
       subtitle="For government departments and Babylon administrators."
       footer={
         <>
-          Need a staff account?{' '}
+          {t('Need a staff account?')}{' '}
           <Link to="/staff/signup" className={authLinkClass}>
-            Create a staff account
+            {t('Create a staff account')}
           </Link>
         </>
       }
       extra={
         <Link to="/login" className={authLinkClass}>
-          Not staff? Go to the citizen log-in page.
+          {t('Not staff? Go to the citizen log-in page.')}
         </Link>
       }
     >
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         {notice && (
           <p role="status" className="font-body text-sm font-bold text-forest">
-            {notice}
+            {t(notice)}
           </p>
         )}
         <Field
@@ -96,7 +98,7 @@ function StaffLoginPage() {
           state={{ email, door: 'staff' }}
           className={`${authLinkClass} self-start`}
         >
-          Forgot password?
+          {t('Forgot password?')}
         </Link>
 
         <FormError
@@ -104,7 +106,7 @@ function StaffLoginPage() {
           action={
             error?.code === 'citizen-account' && (
               <Link to="/login" state={{ email }} className={authLinkClass}>
-                Go to the citizen log-in page.
+                {t('Go to the citizen log-in page.')}
               </Link>
             )
           }
@@ -116,7 +118,7 @@ function StaffLoginPage() {
       <DemoHint
         accounts={DEMO_ACCOUNTS.staff}
         lines={[
-          `Both demo accounts use the password ${DEMO_PASSWORD}.`,
+          t('Both demo accounts use the password {password}.', { password: DEMO_PASSWORD }),
           'To create a staff account, ask your administrator for the staff access code.',
         ]}
       />

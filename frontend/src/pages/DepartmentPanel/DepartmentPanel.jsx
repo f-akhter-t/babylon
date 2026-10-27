@@ -4,6 +4,7 @@ import clsx from 'clsx'
 import AdminLayout from '../../components/layout/AdminLayout'
 import StaircaseIcon from '../../components/ui/StaircaseIcon'
 import LoadError from '../../components/ui/LoadError'
+import LogoLoader from '../../components/ui/LogoLoader'
 import IssueTable from './IssueTable'
 import ResolvePanel from './ResolvePanel'
 import {
@@ -19,6 +20,7 @@ import { useViewer } from '../Map/useViewer'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import { ALL_ASSIGNED_LABEL, DEPARTMENT_FILTERS, filterFor, issuesFor } from './departmentFilters'
 import { fit, REGION_FOCUS, useFitMode } from '../../components/layout/staffFit'
+import { useT } from '../../i18n/useLanguage'
 
 const PANEL_ID = 'resolve-panel'
 const PANEL_HEADING_ID = 'resolve-panel-heading'
@@ -63,6 +65,7 @@ export default function DepartmentPanel() {
 }
 
 function DepartmentPanelPage() {
+  const t = useT()
   useDocumentTitle('Department panel')
   const { department } = useViewer()
   const [searchParams] = useSearchParams()
@@ -125,9 +128,9 @@ function DepartmentPanelPage() {
       const issue = await startWorkOn(id)
       window.dispatchEvent(new Event(ISSUES_EVENT))
       select(id)
-      setNotice({ tone: 'success', text: `Work has started on “${issue.title}”.` })
+      setNotice({ tone: 'success', text: t('Work has started on “{title}”.', { title: issue.title }) })
     } catch (err) {
-      setNotice({ tone: 'error', text: err.message })
+      setNotice({ tone: 'error', text: t(err.message) })
     } finally {
       setBusy(false)
     }
@@ -147,16 +150,16 @@ function DepartmentPanelPage() {
       closePanel()
       setNotice({
         tone: 'success',
-        text: `“${issue.title}” was sent to the admin for verification.`,
+        text: t('“{title}” was sent to the admin for verification.', { title: issue.title }),
       })
     } catch (err) {
-      setSubmitError(err.message)
+      setSubmitError(t(err.message))
     } finally {
       setBusy(false)
     }
   }
 
-  const heading = status ? DEPARTMENT_FILTERS[status].label : ALL_ASSIGNED_LABEL
+  const heading = t(status ? DEPARTMENT_FILTERS[status].label : ALL_ASSIGNED_LABEL)
 
   const open = issues.filter((i) => i.status === 'open').length
   const inProgress = issues.filter(
@@ -202,7 +205,7 @@ function DepartmentPanelPage() {
                 {heading}
               </h1>
               <p className="mt-1 font-body text-base text-muted">
-                Ranked by priority. Urgent problems stay at the top.
+                {t('Ranked by priority. Urgent problems stay at the top.')}
               </p>
             </div>
             <button
@@ -214,13 +217,13 @@ function DepartmentPanelPage() {
               className="min-h-11 max-w-full rounded-full border-2 border-navy bg-white px-5 py-2 text-left font-body text-sm font-bold text-navy transition-colors hover:bg-mint-deep focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forest motion-reduce:transition-none"
             >
               {panelOpen
-                ? 'Hide the Resolve with proof panel.'
-                : 'Show the Resolve with proof panel.'}
+                ? t('Hide the Resolve with proof panel.')
+                : t('Show the Resolve with proof panel.')}
             </button>
           </div>
           {!department && (
             <p role="alert" className="mt-3 font-body text-base font-bold text-danger">
-              {NO_DEPARTMENT}
+              {t(NO_DEPARTMENT)}
             </p>
           )}
           {notice && (
@@ -235,17 +238,15 @@ function DepartmentPanelPage() {
             </p>
           )}
           {loading && (
-            <p role="status" className="mt-6 font-body text-base text-navy">
-              Loading your department’s issues.
-            </p>
+            <LogoLoader label={t('Loading your department’s issues.')} compact className="mt-4" />
           )}
         </div>
 
         {!loading && (
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4 lg:col-start-1 lg:row-start-2">
-            <StatCard label="Open" value={open} level={1} iconClass="text-amber-dark" />
-            <StatCard label="In progress" value={inProgress} level={2} iconClass="text-slate" />
-            <StatCard label="Awaiting admin check" value={awaiting} dark />
+            <StatCard label={t('Open')} value={open} level={1} iconClass="text-amber-dark" />
+            <StatCard label={t('In progress')} value={inProgress} level={2} iconClass="text-slate" />
+            <StatCard label={t('Awaiting admin check')} value={awaiting} dark />
           </div>
         )}
 
@@ -266,7 +267,7 @@ function DepartmentPanelPage() {
             tabIndex={-1}
             className="mb-2 rounded-tile font-body text-xs font-bold uppercase tracking-widest text-forest focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forest"
           >
-            Resolve with proof
+            {t('Resolve with proof')}
           </h2>
           <ResolvePanel
             key={selected?.id ?? 'none'}
@@ -280,7 +281,7 @@ function DepartmentPanelPage() {
         {!loading && (
           <div
             role={fitMode ? 'region' : undefined}
-            aria-label={fitMode ? 'Issues' : undefined}
+            aria-label={fitMode ? t('Issues') : undefined}
             tabIndex={fitMode ? 0 : undefined}
             className={clsx(
               'min-w-0 rounded-card lg:col-start-1 lg:row-start-3',
@@ -298,7 +299,7 @@ function DepartmentPanelPage() {
               panelId={PANEL_ID}
             />
             {department && shown.length === 0 && (
-              <p className="mt-3 font-body text-base text-navy">No issues match this filter.</p>
+              <p className="mt-3 font-body text-base text-navy">{t('No issues match this filter.')}</p>
             )}
           </div>
         )}

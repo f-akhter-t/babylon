@@ -12,6 +12,7 @@ import {
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import GuestOnly from './GuestOnly'
 import { validateEmail, validatePassword } from './validateNewAccount'
+import { useT } from '../../i18n/useLanguage'
 
 // Forgot password, in two steps on one page: the email gets a code, then the
 // code and a new password go back together. Opened from either log-in page,
@@ -26,6 +27,7 @@ export default function ForgotPassword() {
 }
 
 function ForgotPasswordPage() {
+  const t = useT()
   useDocumentTitle('Forgot password')
   const navigate = useNavigate()
   const location = useLocation()
@@ -119,9 +121,9 @@ function ForgotPasswordPage() {
       }
       footer={
         <>
-          Remembered it?{' '}
+          {t('Remembered it?')}{' '}
           <Link to={loginPath} className={authLinkClass}>
-            Log in
+            {t('Log in')}
           </Link>
         </>
       }
@@ -129,18 +131,18 @@ function ForgotPasswordPage() {
       {onCodeStep ? (
         <form onSubmit={handleResetSubmit} className="flex flex-col gap-4">
           <p role="status" className="font-body text-sm text-navy">
-            {notice}
+            {t(notice)}
           </p>
           <p className="font-body text-sm text-slate">
-            Email: <span className="font-bold break-all text-navy">{email.trim()}</span>{' '}
+            {t('Email:')} <span className="font-bold break-all text-navy">{email.trim()}</span>{' '}
             <button type="button" onClick={changeEmail} className={authLinkClass}>
-              Use a different email
+              {t('Use a different email')}
             </button>
           </p>
 
           <Field
             id="code"
-            label={`${RESET_CODE_LENGTH}-digit code`}
+            label={t('{count}-digit code', { count: RESET_CODE_LENGTH })}
             inputMode="numeric"
             autoComplete="one-time-code"
             autoFocus
@@ -183,7 +185,7 @@ function ForgotPasswordPage() {
               'self-center text-navy disabled:cursor-not-allowed disabled:no-underline disabled:opacity-60',
             )}
           >
-            {waitLeft > 0 ? `Send a new code in ${waitLeft}s` : 'Send a new code'}
+            {waitLeft > 0 ? t('Send a new code in {seconds}s', { seconds: waitLeft }) : t('Send a new code')}
           </button>
         </form>
       ) : (

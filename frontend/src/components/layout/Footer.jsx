@@ -2,6 +2,7 @@
 import { Link } from 'react-router-dom'
 import Logo from './Logo'
 import { useViewer } from '../../pages/Map/useViewer'
+import { useT } from '../../i18n/useLanguage'
 
 const columns = [
   {
@@ -47,6 +48,7 @@ function visibleColumns(role) {
 }
 
 export default function Footer() {
+  const t = useT()
   const viewer = useViewer() // follows a login or logout in another tab
 
   return (
@@ -54,19 +56,26 @@ export default function Footer() {
       <div className="flex flex-col gap-10 md:flex-row md:justify-between">
         <div>
           <Logo />
-          <p className="mt-3 text-white/80">Report. Track. Resolve.</p>
+          <p className="mt-3 text-white/80">{t('Report. Track. Resolve.')}</p>
+          <p className="mt-3 inline-flex items-center gap-2 text-sm font-semibold text-white/80">
+            <svg viewBox="0 0 30 18" width="24" height="14" aria-hidden="true" className="rounded-[2px] ring-1 ring-white/25">
+              <rect width="30" height="18" className="fill-flag-green" />
+              <circle cx="13.5" cy="9" r="5" className="fill-flag-red" />
+            </svg>
+            {t('Made for all of Bangladesh')}
+          </p>
           <p className="mt-2 text-sm text-white/60">
-            Map data © OpenStreetMap contributors
+            {t('Map data © OpenStreetMap contributors')}
           </p>
         </div>
 
-        <nav aria-label="Footer" className="grid grid-cols-2 gap-8 sm:grid-cols-3 md:gap-16">
+        <nav aria-label={t('Footer')} className="grid grid-cols-2 gap-8 sm:grid-cols-3 md:gap-16">
           {/* Keeps the heading order right: the column titles below are h3. */}
-          <h2 className="sr-only">Site links</h2>
+          <h2 className="sr-only">{t('Site links')}</h2>
           {visibleColumns(viewer.role).map((column) => (
             <div key={column.title}>
               <h3 className="text-xs font-semibold uppercase tracking-widest text-brand">
-                {column.title}
+                {t(column.title)}
               </h3>
               <ul className="mt-1.5">
                 {column.links.map((link) => (
@@ -75,7 +84,7 @@ export default function Footer() {
                       to={link.to}
                       className="inline-flex min-h-11 min-w-11 items-center font-medium text-white transition-colors hover:text-brand"
                     >
-                      {link.label}
+                      {t(link.label)}
                     </Link>
                   </li>
                 ))}
@@ -87,8 +96,8 @@ export default function Footer() {
 
       {/* Closing row */}
       <div className="mt-10 flex flex-col gap-2 border-t border-white/10 py-6 text-sm text-white/60 sm:flex-row sm:items-center sm:justify-between">
-        <p>© 2026 Babylon. All rights reserved.</p>
-        <p>Frontend prototype</p>
+        <p>{t('© 2026 Babylon. All rights reserved.')}</p>
+        <p>{t('Frontend prototype')}</p>
       </div>
     </footer>
   )

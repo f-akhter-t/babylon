@@ -5,6 +5,7 @@ import CountUp from '../../components/ui/CountUp'
 import VerifyBadge from './VerifyBadge'
 import CompletenessMeter from './CompletenessMeter'
 import { getCurrentUser } from '../../services/api'
+import { useT } from '../../i18n/useLanguage'
 
 function initialsFor(name) {
   const parts = name.trim().split(/\s+/).filter(Boolean)
@@ -18,6 +19,7 @@ function initialsFor(name) {
 // The points count up and the bar fills from empty when the card appears.
 // showMeter: false during first-time setup, where the welcome block shows it.
 export default function SummaryCard({ profile, showMeter = true }) {
+  const t = useT()
   const [user, setUser] = useState(null)
 
   useEffect(() => {
@@ -36,7 +38,7 @@ export default function SummaryCard({ profile, showMeter = true }) {
 
   return (
     <aside
-      aria-label="Your summary"
+      aria-label={t('Your summary')}
       className="flex flex-col gap-5 rounded-card bg-navy p-6 text-mint shadow-sm"
     >
       <div className="flex items-center gap-4">
@@ -57,19 +59,19 @@ export default function SummaryCard({ profile, showMeter = true }) {
           <div className="flex items-center gap-2">
             <StaircaseIcon level={Math.min(user.level, 3)} className="h-5 w-5 text-brand" />
             <p className="font-body text-xs font-semibold uppercase tracking-[0.18em] text-brand">
-              {`Level ${user.level} · ${user.role}`}
+              {t('Level {level} · {role}', { level: user.level, role: t(user.role) })}
             </p>
           </div>
           <p className="mt-2 font-heading text-5xl font-extrabold leading-none">
             <CountUp value={user.points} duration={1200} />
-            <span className="sr-only"> points</span>
+            <span className="sr-only">{t('points')}</span>
           </p>
           <p className="mt-1 font-body text-sm text-mint/80">
-            {user.reports === 1 ? 'points from 1 report' : `points from ${user.reports} reports`}
+            {user.reports === 1 ? t('points from 1 report') : t('points from {n} reports', { n: user.reports })}
           </p>
           <div
             role="progressbar"
-            aria-label="Progress to the next level"
+            aria-label={t('Progress to the next level')}
             aria-valuemin={0}
             aria-valuemax={100}
             aria-valuenow={Math.round(progress)}
@@ -88,13 +90,13 @@ export default function SummaryCard({ profile, showMeter = true }) {
           </div>
           <p className="mt-2 font-body text-xs text-mint/70">
             {maxed
-              ? 'You reached the top level.'
-              : `${toNext} points to reach level ${user.level + 1}.`}
+              ? t('You reached the top level.')
+              : t('{n} points to reach level {level}.', { n: toNext, level: user.level + 1 })}
           </p>
         </div>
       ) : (
         <div role="status" className="flex flex-col gap-2">
-          <span className="sr-only">Loading your points…</span>
+          <span className="sr-only">{t('Loading your points…')}</span>
           <div aria-hidden="true" className="h-5 w-32 rounded-full bg-mint/10 skeleton" />
           <div aria-hidden="true" className="h-12 w-24 rounded-tile bg-mint/10 skeleton" />
         </div>
@@ -110,15 +112,15 @@ export default function SummaryCard({ profile, showMeter = true }) {
 
       <ul className="flex flex-col gap-2 font-body text-sm">
         <li className="flex items-center justify-between gap-3">
-          <span>Email address</span>
+          <span>{t('Email address')}</span>
           <VerifyBadge status={profile.emailVerified ? 'verified' : 'not-verified'} onDark />
         </li>
         <li className="flex items-center justify-between gap-3">
-          <span>Mobile number</span>
+          <span>{t('Mobile number')}</span>
           <VerifyBadge status={profile.phoneVerified ? 'verified' : 'not-verified'} onDark />
         </li>
         <li className="flex items-center justify-between gap-3">
-          <span>Identity</span>
+          <span>{t('Identity')}</span>
           <VerifyBadge status={profile.identity.status} onDark />
         </li>
       </ul>
@@ -128,7 +130,7 @@ export default function SummaryCard({ profile, showMeter = true }) {
         // min-h-11 -my-3: a 44px tap area without changing the card's spacing.
         className="-my-3 inline-flex min-h-11 items-center self-start rounded-full font-body text-sm font-semibold text-brand underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/60"
       >
-        See your alerts and points
+        {t('See your alerts and points')}
       </Link>
     </aside>
   )

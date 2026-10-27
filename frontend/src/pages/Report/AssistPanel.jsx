@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react'
 import { resizeImage } from '../../utils/resizeImage'
 import { assistErrorMessage, getReportSuggestion } from '../../services/assistApi'
+import { useT } from '../../i18n/useLanguage'
 
 const IDLE = { status: 'idle' }
 
@@ -28,6 +29,7 @@ export default function AssistPanel({
   disabled = false,
   onApply,
 }) {
+  const t = useT()
   const [state, setState] = useState(IDLE)
   const latest = useRef(0)
 
@@ -82,19 +84,18 @@ export default function AssistPanel({
     >
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="min-w-0 flex-1">
-          <p className="font-body text-sm font-bold text-navy">Not sure what to write?</p>
+          <p className="font-body text-sm font-bold text-navy">{t('Not sure what to write?')}</p>
           <p className="font-body text-xs text-muted">
-            The assistant looks at your photo and suggests a category and a description. You can change
-            them before you submit.
+            {t('The assistant looks at your photo and suggests a category and a description. You can change them before you submit.')}
           </p>
         </div>
         <button type="button" onClick={ask} disabled={!canAsk} className={primaryButton}>
-          {busy ? 'Looking at your photo…' : 'Suggest from my photo'}
+          {busy ? t('Looking at your photo…') : t('Suggest from my photo')}
         </button>
       </div>
 
       {!photo && (
-        <p className="font-body text-xs text-muted">Add a photo first and the assistant can look at it.</p>
+        <p className="font-body text-xs text-muted">{t('Add a photo first and the assistant can look at it.')}</p>
       )}
 
       <div aria-live="polite" className="flex flex-col gap-3">
@@ -102,34 +103,34 @@ export default function AssistPanel({
           <div className="flex flex-col gap-3 rounded-xl bg-mint/70 p-3">
             {!category && (
               <p className="font-body text-xs text-navy">
-                <span className="font-bold">Category: </span>
-                {suggestion.category ?? 'The assistant could not tell. Please choose one yourself.'}
+                <span className="font-bold">{t('Category:')} </span>
+                {suggestion.category ? t(suggestion.category) : t('The assistant could not tell. Please choose one yourself.')}
               </p>
             )}
             <p className="font-body text-sm leading-relaxed text-navy">
-              <span className="sr-only">Description: </span>
+              <span className="sr-only">{t('Description:')} </span>
               {suggestion.description}
             </p>
             <div className="flex flex-wrap gap-2">
               <button type="button" onClick={use} disabled={disabled} className={primaryButton}>
-                {replaces ? 'Replace my description' : 'Use this suggestion'}
+                {replaces ? t('Replace my description') : t('Use this suggestion')}
               </button>
               <button type="button" onClick={() => setState(IDLE)} className={quietButton}>
-                No thanks
+                {t('No thanks')}
               </button>
             </div>
           </div>
         )}
         {view.status === 'applied' && (
           <p className="font-body text-xs font-semibold text-forest">
-            Added to your report. You can still change it.
+            {t('Added to your report. You can still change it.')}
           </p>
         )}
       </div>
 
       {view.status === 'error' && (
         <p role="alert" className="font-body text-xs font-semibold text-danger">
-          {view.message}
+          {t(view.message)}
         </p>
       )}
     </div>
