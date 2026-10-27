@@ -1,5 +1,5 @@
 import CategoryChip from '../../components/ui/CategoryChip'
-import { CATEGORIES } from '../../mock/issues'
+import { CATEGORIES } from '../../utils/departments'
 
 const STATUSES = [
   { value: 'All', label: 'All' },
