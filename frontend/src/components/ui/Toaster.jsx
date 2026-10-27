@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { dismissError, dismissInfo, updateClearance, useToastState } from './toast'
+import { useT } from '../../i18n/useLanguage'
 
 // Shows the toasts raised with useToast() (see toast.js): a navy pill at the
 // bottom centre, above any bar marked with data-toast-clearance.
@@ -38,6 +39,7 @@ function useAutoDismiss(info) {
 }
 
 export default function Toaster() {
+  const t = useT()
   const { info, errors, spoken, clearance } = useToastState()
   const showing = Boolean(info) || errors.length > 0
   const hover = useAutoDismiss(info)
@@ -67,7 +69,7 @@ export default function Toaster() {
     <>
       {/* Always in the page, so screen readers are listening before a toast arrives. */}
       <div aria-live="polite" aria-atomic="true" className="sr-only">
-        {spoken}
+        {t(spoken)}
       </div>
 
       <div
@@ -78,14 +80,14 @@ export default function Toaster() {
         <div role="alert" className="flex flex-col items-center gap-2">
           {errors.map((error) => (
             <div key={error.id} className={`${pill} flex items-center gap-3 py-1.5 pl-5 pr-1.5 text-left`}>
-              <span>{error.text}</span>
+              <span>{t(error.text)}</span>
               <button
                 type="button"
-                aria-label="Dismiss this message"
+                aria-label={t('Dismiss this message')}
                 onClick={() => dismissError(error.id)}
                 className="min-h-11 shrink-0 rounded-full border border-mint/40 px-4 font-bold text-mint transition-colors hover:bg-mint/10 motion-reduce:transition-none"
               >
-                Dismiss
+                {t('Dismiss')}
               </button>
             </div>
           ))}
@@ -94,7 +96,7 @@ export default function Toaster() {
         {/* The info toast is for the eyes; the live region above reads it out. */}
         {info && (
           <div key={info.id} aria-hidden="true" className={`${pill} px-5 py-2.5`} {...hover}>
-            {info.text}
+            {t(info.text)}
           </div>
         )}
       </div>

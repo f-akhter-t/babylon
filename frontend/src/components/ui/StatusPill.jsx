@@ -1,5 +1,6 @@
 import clsx from 'clsx'
 import StaircaseIcon from './StaircaseIcon'
+import { useT } from '../../i18n/useLanguage'
 
 const statuses = {
   open: { label: 'Open', level: 1 },
@@ -20,6 +21,7 @@ const iconStyles = {
 }
 
 export default function StatusPill({ status, className }) {
+  const t = useT()
   const { label, level } = statuses[status]
 
   return (
@@ -32,7 +34,7 @@ export default function StatusPill({ status, className }) {
       )}
     >
       <StaircaseIcon level={level} className={iconStyles[status]} />
-      {label}
+      {t(label)}
     </span>
   )
 }

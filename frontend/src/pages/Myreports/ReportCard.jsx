@@ -4,6 +4,7 @@ import ReportStatusPill from '../../components/ui/ReportStatusPill'
 import StaticMap from '../../components/ui/StaticMap'
 import { cardTitleId } from './cardTitleId'
 import { ArrowUpIcon, CameraIcon, PinIcon } from '../../components/ui/icons'
+import { useNumber, useT } from '../../i18n/useLanguage'
 
 // One report on My reports. The title is a button whose ::after covers the
 // whole card, so a click anywhere opens the details (like the Map sidebar).
@@ -13,6 +14,8 @@ const linkClass =
   "relative z-10 whitespace-nowrap font-bold underline underline-offset-[3px] before:absolute before:inset-x-0 before:top-1/2 before:h-11 before:-translate-y-1/2 before:content-['']"
 
 export default function ReportCard({ report, onOpen }) {
+  const t = useT()
+  const n = useNumber()
   const r = report
   return (
     <article
@@ -25,10 +28,10 @@ export default function ReportCard({ report, onOpen }) {
           cropped instead of growing under the text. */}
       <div className="grid h-[150px] grid-cols-[1.5fr_1fr] grid-rows-1 gap-0.5 bg-page">
         {r.photoUrl ? (
-          <img src={r.photoUrl} alt={`Photo of ${r.title}`} className="h-full min-h-0 w-full object-cover" />
+          <img src={r.photoUrl} alt={t('Photo of {title}', { title: r.title })} className="h-full min-h-0 w-full object-cover" />
         ) : (
           <div className="grid place-items-center bg-slate text-xs text-mint">
-            <span className="flex items-center gap-1.5"><CameraIcon />No photo added</span>
+            <span className="flex items-center gap-1.5"><CameraIcon />{t('No photo added')}</span>
           </div>
         )}
         <StaticMap lat={r.lat} lng={r.lng} status={r.mapStatus} className="h-full w-full" />
@@ -38,7 +41,7 @@ export default function ReportCard({ report, onOpen }) {
       <div className="flex flex-1 flex-col gap-2 bg-mint px-4 pb-4 pt-3.5">
         <div className="flex items-center justify-between gap-2">
           <ReportStatusPill status={r.status} />
-          <span className="text-[13px] text-muted">{r.dateLabel}</span>
+          <span className="text-[13px] text-muted">{t(r.dateLabel)}</span>
         </div>
         <h3 className="font-heading text-[19px] font-extrabold leading-[1.15] tracking-tight">
           <button
@@ -52,25 +55,25 @@ export default function ReportCard({ report, onOpen }) {
         </h3>
         <div className="flex flex-wrap items-center gap-1.5 text-[13px] text-muted">
           <PinIcon size={15} />
-          {r.location || 'Location not set'}
-          <span className="rounded-full border-[1.5px] border-navy px-[9px] text-xs font-bold text-navy">{r.category}</span>
+          {r.location || t('Location not set')}
+          <span className="rounded-full border-[1.5px] border-navy px-[9px] text-xs font-bold text-navy">{t(r.category)}</span>
         </div>
 
         <div className="border-t border-mint-deep pt-2 text-[13px] text-muted">
           {r.department ? (
             <>
-              <b className="text-navy">{r.department}</b>
+              <b className="text-navy">{t(r.department)}</b>
               <br />
-              {r.updateText}
+              {t(r.updateText)}
             </>
           ) : (
-            'Not yet assigned to a department'
+            t('Not yet assigned to a department')
           )}
         </div>
 
         <div className="mt-auto flex items-center justify-between gap-2 pt-1">
           <span className="inline-flex items-center gap-1 rounded-full border-[1.5px] border-navy px-[13px] py-[5px] font-bold">
-            <ArrowUpIcon size={13} /> {r.upvotes}
+            <ArrowUpIcon size={13} /> {n(r.upvotes)}
           </span>
           {/* Above the card's click layer, in reading order: the issue page, then
               Edit. The ::before strips give 44px tap targets without making the
@@ -78,18 +81,18 @@ export default function ReportCard({ report, onOpen }) {
           <span className="flex items-center gap-4">
             <Link
               to={`/issues/${r.id}`}
-              aria-label={`Open issue page: ${r.title}`}
+              aria-label={t('Open issue page: {title}', { title: r.title })}
               className={clsx(linkClass, 'text-forest')}
             >
-              Open issue page
+              {t('Open issue page')}
             </Link>
             {r.editState === 'ok' && (
               <Link
                 to={`/issues/${r.id}/edit`}
-                aria-label={`Edit report: ${r.title}`}
+                aria-label={t('Edit report: {title}', { title: r.title })}
                 className={clsx(linkClass, 'text-navy')}
               >
-                Edit report
+                {t('Edit report')}
               </Link>
             )}
           </span>

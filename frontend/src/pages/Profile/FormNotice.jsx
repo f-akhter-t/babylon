@@ -1,10 +1,12 @@
 import clsx from 'clsx'
+import { useT } from '../../i18n/useLanguage'
 
 // A one-line message under a form: tone 'success' after saving, 'error' when
 // something failed, 'info' for neutral notes. Renders nothing without text.
 // Errors are read out at once (role="alert"). Success and info messages are
 // read out by the page's announcer instead, so they are not heard twice.
 export default function FormNotice({ tone = 'info', children }) {
+  const t = useT()
   if (!children) return null
 
   return (
@@ -17,7 +19,7 @@ export default function FormNotice({ tone = 'info', children }) {
         tone === 'info' && 'bg-white/70 text-navy',
       )}
     >
-      {children}
+      {typeof children === 'string' ? t(children) : children}
     </p>
   )
 }

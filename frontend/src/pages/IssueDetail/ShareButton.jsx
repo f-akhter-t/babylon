@@ -1,5 +1,6 @@
 import { ShareIcon } from './DetailIcons'
 import { useToast } from '../../components/ui/toast'
+import { useT } from '../../i18n/useLanguage'
 
 // Phones and tablets get the system share sheet. Desktop Chrome on Windows
 // has one too, but there copying the link is what people expect.
@@ -10,6 +11,7 @@ function canUseShareSheet() {
 // Shares this page's address: the share sheet on touch devices, otherwise
 // it copies the link and says so in a toast.
 export default function ShareButton({ title }) {
+  const t = useT()
   const toast = useToast()
 
   async function share() {
@@ -25,7 +27,7 @@ export default function ShareButton({ title }) {
     }
     try {
       await navigator.clipboard.writeText(url)
-      toast.info('The link to this issue is copied.')
+      toast.info(t('The link to this issue is copied.'))
     } catch {
       toast.error("We couldn't copy the link. Use the address bar instead.") // clipboard blocked or not available
     }
@@ -38,7 +40,7 @@ export default function ShareButton({ title }) {
       className="inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-full border-2 border-navy/20 bg-white px-3.5 text-sm font-semibold text-navy transition hover:border-navy focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-navy motion-safe:active:scale-95"
     >
       <ShareIcon size={16} />
-      Share
+      {t('Share')}
     </button>
   )
 }

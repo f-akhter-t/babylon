@@ -5,6 +5,7 @@ import { signup, startSetup } from '../../services/auth'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import GuestOnly from './GuestOnly'
 import { validateNewAccount } from './validateNewAccount'
+import { useT } from '../../i18n/useLanguage'
 
 // Citizen sign-up. Staff accounts are created at /staff/signup.
 export default function Signup() {
@@ -16,6 +17,7 @@ export default function Signup() {
 }
 
 function SignupPage() {
+  const t = useT()
   useDocumentTitle('Create account')
   const navigate = useNavigate()
   const [name, setName] = useState('')
@@ -47,19 +49,20 @@ function SignupPage() {
 
   return (
     <AuthShell
+      photo={{ src: '/images/signup-crowd.jpg', side: 'left' }}
       title="Create account"
       subtitle="Join Babylon to report and follow issues in your area."
       footer={
         <>
-          Already have an account?{' '}
+          {t('Already have an account?')}{' '}
           <Link to="/login" className={authLinkClass}>
-            Log in
+            {t('Log in')}
           </Link>
         </>
       }
       extra={
         <Link to="/staff/login" className={authLinkClass}>
-          Government or admin staff? Sign in here.
+          {t('Government or admin staff? Sign in here.')}
         </Link>
       }
     >

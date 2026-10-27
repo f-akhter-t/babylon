@@ -5,6 +5,7 @@ import BeforeAfterSlider from './BeforeAfterSlider'
 import { isReopenedInQueue, REJECT_REASON_NEEDED } from '../../services/api'
 import { reopenedSentence } from './reopenedText'
 import { fit, REGION_FOCUS, useFitMode } from '../../components/layout/staffFit'
+import { useT } from '../../i18n/useLanguage'
 
 // Approve needs the first two checks in either list.
 const CHECKS = [
@@ -26,6 +27,7 @@ const APPROVE_REASON_ID = 'approve-needs-checks'
 const REJECT_ERROR_ID = 'reject-reason-error'
 
 export default function ReviewPanel({ issue, onApprove, onReject, busy = false }) {
+  const t = useT()
   const [checked, setChecked] = useState([false, false, false])
   const [reason, setReason] = useState('')
   const [reasonError, setReasonError] = useState('')
@@ -64,7 +66,7 @@ export default function ReviewPanel({ issue, onApprove, onReject, busy = false }
     <div className={clsx('flex min-w-0 flex-col rounded-panel bg-mint', fit.column)}>
       <div
         role={fitMode ? 'region' : undefined}
-        aria-label={fitMode ? 'Fix details' : undefined}
+        aria-label={fitMode ? t('Fix details') : undefined}
         tabIndex={fitMode ? 0 : undefined}
         className={clsx(
           '@container rounded-t-panel px-4 pt-4 pb-4 sm:px-6 sm:pt-6',
@@ -82,17 +84,17 @@ export default function ReviewPanel({ issue, onApprove, onReject, busy = false }
             {/* A reopened issue sent by the admin was not marked done by anyone. */}
             {isReopenedInQueue(issue) ? (
               <p className="mt-1 break-words font-body text-sm font-bold text-navy">
-                {reopenedSentence(issue)}
+                {reopenedSentence(issue, t)}
               </p>
             ) : (
               <p className="mt-1 break-words font-body text-sm text-muted">
-                {`${issue.location}. Reported on ${issue.reportedOn}. ${issue.department} marked it done on ${issue.submittedOn}.`}
+                {t('{location}. Reported on {reported}. {department} marked it done on {done}.', { location: issue.location, reported: issue.reportedOn, department: issue.department, done: issue.submittedOn })}
               </p>
             )}
           </div>
           <span className="inline-flex shrink-0 items-center gap-2 rounded-full bg-slate/15 px-3 py-1 font-body text-sm font-semibold text-navy">
             <StaircaseIcon level={3} className="text-slate" />
-            Awaiting check
+            {t('Awaiting check')}
           </span>
         </div>
 
@@ -106,9 +108,9 @@ export default function ReviewPanel({ issue, onApprove, onReject, busy = false }
 
         <div className="mt-6 grid gap-6 @2xl:grid-cols-2">
           <div>
-            <p className="font-body text-sm font-bold text-navy">Check before approving</p>
+            <p className="font-body text-sm font-bold text-navy">{t('Check before approving')}</p>
             {reopened && (
-              <p className="mt-1 font-body text-sm text-navy">{REOPENED_INTRO}</p>
+              <p className="mt-1 font-body text-sm text-navy">{t(REOPENED_INTRO)}</p>
             )}
             <div className="mt-2 flex flex-col gap-1">
               {checks.map((label, index) => (
@@ -122,23 +124,23 @@ export default function ReviewPanel({ issue, onApprove, onReject, busy = false }
                     onChange={() => toggle(index)}
                     className="h-6 w-6 shrink-0 accent-forest"
                   />
-                  {label}
+                  {t(label)}
                 </label>
               ))}
             </div>
           </div>
 
           <div className="min-w-0">
-            <p className="font-body text-sm font-bold text-navy">Department note</p>
+            <p className="font-body text-sm font-bold text-navy">{t('Department note')}</p>
             <p className="mt-2 break-words rounded-tile bg-white px-4 py-3 font-body text-base text-navy">
-              {issue.departmentNote ?? 'No note added.'}
+              {issue.departmentNote ?? t('No note added.')}
             </p>
 
             <label
               htmlFor="reject-reason"
               className="mt-4 block font-body text-sm font-bold text-navy"
             >
-              Reason, if sending back
+              {t('Reason, if sending back')}
             </label>
             <textarea
               ref={reasonRef}
@@ -151,7 +153,7 @@ export default function ReviewPanel({ issue, onApprove, onReject, busy = false }
               }}
               aria-invalid={reasonError ? true : undefined}
               aria-describedby={reasonError ? REJECT_ERROR_ID : undefined}
-              placeholder="Tell the department what is still wrong"
+              placeholder={t('Tell the department what is still wrong')}
               className="mt-2 w-full rounded-tile border border-navy/60 bg-white p-3 font-body text-sm text-navy placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-forest"
             />
           </div>
@@ -173,7 +175,7 @@ export default function ReviewPanel({ issue, onApprove, onReject, busy = false }
               canApprove && !busy ? 'hover:opacity-90' : 'cursor-not-allowed! opacity-50',
             )}
           >
-            Approve and close
+            {t('Approve and close')}
           </button>
           <button
             type="button"
@@ -181,12 +183,12 @@ export default function ReviewPanel({ issue, onApprove, onReject, busy = false }
             onClick={reject}
             className="min-h-11 rounded-full border-2 border-navy bg-white px-3 py-2.5 font-body text-sm font-bold text-navy transition-colors hover:bg-mint-deep focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forest motion-reduce:transition-none sm:px-6 sm:text-base"
           >
-            Reject and send back
+            {t('Reject and send back')}
           </button>
         </div>
         {!canApprove && (
           <p id={APPROVE_REASON_ID} className="mt-2 font-body text-sm text-navy">
-            Tick the first two checks to approve this fix.
+            {t('Tick the first two checks to approve this fix.')}
           </p>
         )}
         {reasonError && (

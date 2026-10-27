@@ -22,6 +22,7 @@ const VerifyResolutions = lazy(() => import('./pages/VerifyResolutions/VerifyRes
 const Accountability = lazy(() => import('./pages/Accountability/Accountability'))
 const IdentityReview = lazy(() => import('./pages/IdentityReview/IdentityReview'))
 const StaffProfile = lazy(() => import('./pages/StaffProfile/StaffProfile'))
+const StaffDashboardPage = lazy(() => import('./pages/StaffDashboard/StaffDashboardPage'))
 const Login = lazy(() => import('./pages/Auth/Login'))
 const Signup = lazy(() => import('./pages/Auth/Signup'))
 const StaffLogin = lazy(() => import('./pages/Auth/StaffLogin'))
@@ -55,6 +56,8 @@ export default function App() {
               <Route path="/my-reports" element={<MyReports />} />
               <Route path="/profile" element={<Profile />} />
               <Route path="/department" element={<DepartmentPanel />} />
+              <Route path="/department/dashboard" element={<StaffDashboardPage role="department" />} />
+              <Route path="/admin/dashboard" element={<StaffDashboardPage role="admin" />} />
               {/* Old "fix waiting" notices pointed at /admin, which has no page of its own. */}
               <Route path="/admin" element={<Navigate to="/admin/verify" replace />} />
               <Route path="/admin/verify" element={<VerifyResolutions />} />

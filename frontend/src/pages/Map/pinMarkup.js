@@ -2,6 +2,7 @@
 // the colour for each status. No Leaflet here, so pages without a live map
 // (the My reports cards) can draw the same pin without loading the map library.
 // Tailwind still finds these class names because each one is written out in full.
+import { SKYLINE, SKYLINE_VIEWBOX, litBuildings } from '../../components/ui/skyline'
 
 const pinFill = {
   open: 'fill-amber',
@@ -9,29 +10,22 @@ const pinFill = {
   resolved: 'fill-success',
 }
 
+// How many logo buildings are solid: more = closer to fixed.
+const level = { open: 1, 'in-progress': 2, resolved: 3 }
+
 const barFill = {
   open: 'fill-navy',
   'in-progress': 'fill-white',
   resolved: 'fill-white',
 }
 
-// How many staircase bars are solid: more steps = closer to fixed.
-const level = { open: 1, 'in-progress': 2, resolved: 3 }
-
-const bars = [
-  { x: 1, y: 8, h: 5 },
-  { x: 6, y: 5, h: 8 },
-  { x: 11, y: 2, h: 11 },
-]
-
 function staircase(status) {
-  return bars
-    .map(
-      (bar, i) =>
-        `<rect x="${bar.x}" y="${bar.y}" width="3.5" height="${bar.h}" rx="1"
-          class="${barFill[status]}" opacity="${i < level[status] ? 1 : 0.35}" />`,
-    )
-    .join('')
+  const lit = litBuildings(level[status])
+  return SKYLINE.map(
+    (bar, i) =>
+      `<rect x="${bar.x}" y="${bar.y}" width="${bar.w}" height="${bar.h}" rx="0.5"
+        class="${barFill[status]}" opacity="${i < lit ? 1 : 0.35}" />`,
+  ).join('')
 }
 
 // The ring sits under the pin's tip. Navy outline + strong amber fill so it
@@ -54,7 +48,7 @@ export function pinHtml(status, selected) {
       <svg viewBox="0 0 28 36" class="${SVG_CLASSES}">
         <path d="M14 35C14 35 2 22 2 13a12 12 0 0 1 24 0c0 9-12 22-12 22z"
           class="${pinFill[status]} ${outline}" stroke-width="2.5" />
-        <svg x="6" y="6" width="16" height="14" viewBox="0 0 16 14">${staircase(status)}</svg>
+        <svg x="7" y="7.5" width="14" height="8.2" viewBox="${SKYLINE_VIEWBOX}">${staircase(status)}</svg>
       </svg>
     </div>`
 }

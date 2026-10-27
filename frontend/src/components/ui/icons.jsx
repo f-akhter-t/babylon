@@ -1,3 +1,4 @@
+import { SKYLINE, SKYLINE_VIEWBOX, litBuildings } from './skyline'
 const base = { fill: 'none', stroke: 'currentColor', strokeWidth: 1.8, strokeLinecap: 'round', strokeLinejoin: 'round' }
 
 export const BellIcon = ({ size = 22 }) => (
@@ -44,11 +45,23 @@ export const CloseIcon = ({ size = 16 }) => (
   </svg>
 )
 
-// three-step "staircase" used for status and department updates
-export const BarsIcon = ({ size = 18, filled = 3, className = '' }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden="true" className={className}>
-    <rect x="4" y="13" width="4" height="7" rx="1" fill="currentColor" opacity={filled >= 1 ? 1 : 0.3} />
-    <rect x="10" y="9" width="4" height="11" rx="1" fill="currentColor" opacity={filled >= 2 ? 1 : 0.3} />
-    <rect x="16" y="4" width="4" height="16" rx="1" fill="currentColor" opacity={filled >= 3 ? 1 : 0.3} />
-  </svg>
-)
+// the four logo buildings, used for status and department updates
+export const BarsIcon = ({ size = 18, filled = 3, className = '' }) => {
+  const lit = litBuildings(filled)
+  return (
+    <svg width={size} height={size * 0.6} viewBox={SKYLINE_VIEWBOX} aria-hidden="true" className={className}>
+      {SKYLINE.map((bar, index) => (
+        <rect
+          key={bar.x}
+          x={bar.x}
+          y={bar.y}
+          width={bar.w}
+          height={bar.h}
+          rx="0.5"
+          fill="currentColor"
+          opacity={index < lit ? 1 : 0.3}
+        />
+      ))}
+    </svg>
+  )
+}

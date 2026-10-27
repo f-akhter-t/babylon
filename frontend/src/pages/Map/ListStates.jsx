@@ -1,4 +1,5 @@
 import Button from '../../components/ui/Button'
+import { useT } from '../../i18n/useLanguage'
 
 // Grey placeholder cards shaped like IssueCard, shown while issues load.
 export function SkeletonCards({ count = 4 }) {
@@ -23,13 +24,14 @@ export function SkeletonCards({ count = 4 }) {
 
 // A friendly message with an optional button (Try again, Clear filters).
 export function StateMessage({ title, text, actionLabel, onAction, role }) {
+  const t = useT()
   return (
     <div role={role} className="flex flex-col items-center gap-2 rounded-tile bg-mint px-5 py-8 text-center">
-      <span className="font-heading text-lg font-extrabold text-navy">{title}</span>
-      <span className="text-sm text-slate">{text}</span>
+      <span className="font-heading text-lg font-extrabold text-navy">{t(title)}</span>
+      <span className="text-sm text-slate">{t(text)}</span>
       {onAction && (
         <Button variant="outline" onClick={onAction} className="mt-2">
-          {actionLabel}
+          {t(actionLabel)}
         </Button>
       )}
     </div>

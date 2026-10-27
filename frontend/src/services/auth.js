@@ -52,8 +52,8 @@ export function profilePathFor(role) {
 }
 
 export function homePathFor(role) {
-  if (role === 'department') return '/department'
-  if (role === 'admin') return '/admin/verify'
+  if (role === 'department') return '/department/dashboard'
+  if (role === 'admin') return '/admin/dashboard'
   return '/map'
 }
 

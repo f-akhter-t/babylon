@@ -22,6 +22,7 @@ import VerifyCodeCard from './VerifyCodeCard'
 import EmailCard from '../Profile/EmailCard'
 import ProfilePhotoCard from './ProfilePhotoCard'
 import SetupChecklist from './SetupChecklist'
+import { useT } from '../../i18n/useLanguage'
 
 const LEAVE_MESSAGE = 'You have changes that are not saved. Leave this page anyway?'
 const DETAILS_FORM_ID = 'staff-details-form'
@@ -40,6 +41,7 @@ export default function StaffProfile({ role }) {
 }
 
 function StaffProfilePage({ role }) {
+  const t = useT()
   const { session } = useViewer()
   const { profile, loading, error, reload } = useProfile()
   const email = session.email
@@ -125,7 +127,7 @@ function StaffProfilePage({ role }) {
 
   async function finishSetup() {
     await completeOnboarding(email)
-    toast.info('Your profile is set up.')
+    toast.info(t('Your profile is set up.'))
     navigate(homePathFor(role))
   }
 
@@ -153,14 +155,16 @@ function StaffProfilePage({ role }) {
               aria-describedby={gated ? GATE_BANNER_ID : undefined}
               className="w-fit max-w-full rounded-chip break-words font-heading text-3xl font-extrabold text-navy focus:outline-none focus-visible:ring-2 focus-visible:ring-forest/50 sm:text-4xl"
             >
-              {onboarded ? 'Your profile' : 'Set up your profile'}
+              {t(onboarded ? 'Your profile' : 'Set up your profile')}
             </h1>
             <p className="mt-1 font-body text-sm text-slate">
-              {onboarded
-                ? 'Keep your details up to date so citizens and other staff know who is handling their reports.'
-                : isDepartment
-                  ? 'Before you start, add your job title and verify your phone number, your email address, your Employee ID and your department.'
-                  : 'Before you start, add your job title and verify your phone number, your email address and your Employee ID.'}
+              {t(
+                onboarded
+                  ? 'Keep your details up to date so citizens and other staff know who is handling their reports.'
+                  : isDepartment
+                    ? 'Before you start, add your job title and verify your phone number, your email address, your Employee ID and your department.'
+                    : 'Before you start, add your job title and verify your phone number, your email address and your Employee ID.',
+              )}
             </p>
           </div>
 
@@ -169,7 +173,7 @@ function StaffProfilePage({ role }) {
               id={GATE_BANNER_ID}
               className="mt-4 rounded-tile border border-amber bg-amber/20 px-4 py-3 font-body text-sm font-semibold text-navy"
             >
-              Finish setting up your profile to continue.
+              {t('Finish setting up your profile to continue.')}
             </p>
           )}
 
@@ -208,7 +212,7 @@ function StaffProfilePage({ role }) {
                     profile={profile}
                     onDirtyChange={onDirty.phone}
                     announce={announce}
-                    intro="Your team can reach you on this number. We check it with a one-time code."
+                    intro={t('Your team can reach you on this number. We check it with a one-time code.')}
                   />
                 </div>
                 <div style={enter('rise-in', 0.21)}>
@@ -227,16 +231,16 @@ function StaffProfilePage({ role }) {
                   <VerifyCodeCard
                     id="staff-employee-id"
                     inputId="staff-employee-id-input"
-                    title="Employee ID"
-                    intro="Enter the ID from your staff card once, so we know this account is really yours."
+                    title={t('Employee ID')}
+                    intro={t('Enter the ID from your staff card once, so we know this account is really yours.')}
                     note={
                       onboarded && !profile.employeeIdVerified
                         ? 'Your account is already set up. Please verify your Employee ID when you can.'
                         : undefined
                     }
                     badgeLabel="Employee ID verified"
-                    label="Employee ID"
-                    hint="Your Employee ID is on your staff card."
+                    label={t('Employee ID')}
+                    hint={t('Your Employee ID is on your staff card.')}
                     verified={profile.employeeIdVerified}
                     done={{ label: 'Your Employee ID', value: profile.employeeId }}
                     verify={async (code) => (await verifyEmployeeId(email, code)).employeeId}
@@ -260,8 +264,8 @@ function StaffProfilePage({ role }) {
                 <div style={enter('rise-in', 0.35)}>
                   <ProfileCard
                     id="profile-security"
-                    title="Security"
-                    intro="Change the password you use to log in. You stay logged in on this device."
+                    title={t('Security')}
+                    intro={t('Change the password you use to log in. You stay logged in on this device.')}
                   >
                     <ChangePasswordCard email={email} />
                   </ProfileCard>

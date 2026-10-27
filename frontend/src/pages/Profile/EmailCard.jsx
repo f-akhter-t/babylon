@@ -6,6 +6,7 @@ import VerifyBadge from './VerifyBadge'
 import OtpInput from './OtpInput'
 import CountdownRing from './CountdownRing'
 import { requestEmailCode, verifyEmailCode } from '../../services/api'
+import { useT } from '../../i18n/useLanguage'
 
 const CODE_LENGTH = 6
 const emptyCode = () => Array.from({ length: CODE_LENGTH }, () => '')
@@ -20,6 +21,7 @@ const emptyCode = () => Array.from({ length: CODE_LENGTH }, () => '')
 // note: an optional line shown above the button (used for an account whose setup
 // was finished before this check existed).
 export default function EmailCard({ profile, onDirtyChange, announce, note }) {
+  const t = useT()
   const [step, setStep] = useState('ask') // 'ask' | 'code'
   const [digits, setDigits] = useState(emptyCode)
   const [shake, setShake] = useState(0)
@@ -63,7 +65,7 @@ export default function EmailCard({ profile, onDirtyChange, announce, note }) {
     const text = 'Your email address is verified.'
     setJustVerified(true)
     setNotice(null)
-    announce(text, { toast: true })
+    announce(t(text), { toast: true })
     setFocusRequest({ target: 'verified', n: Date.now() })
   }
 
@@ -84,7 +86,7 @@ export default function EmailCard({ profile, onDirtyChange, announce, note }) {
       setLocked(false)
       setStep('code')
       setFocusRequest({ target: 'code', n: sentAt })
-      announce(`We sent a 6-digit code to ${result.email}. Type it in the boxes.`)
+      announce(t('We sent a 6-digit code to {to}. Type it in the boxes.', { to: result.email }))
     } catch (err) {
       setNotice({ tone: 'error', text: err.message || 'We could not send a code. Please try again.' })
     } finally {
@@ -116,14 +118,18 @@ export default function EmailCard({ profile, onDirtyChange, announce, note }) {
     }
   }
 
+  const sendLine = t('We will send a {n}-digit code to {to}.', { n: CODE_LENGTH, to: '\u0000' }).split('\u0000')
+
   const resendLabel =
-    secondsLeft > 0 ? `Resend code in 0:${String(secondsLeft).padStart(2, '0')}` : 'Resend code'
+    secondsLeft > 0
+      ? t('Resend code in 0:{ss}', { ss: String(secondsLeft).padStart(2, '0') })
+      : t('Resend code')
 
   return (
     <ProfileCard
       id="profile-email"
-      title="Email verification"
-      intro="We check that this address is yours with a one-time code."
+      title={t('Email verification')}
+      intro={t('We check that this address is yours with a one-time code.')}
       badge={<VerifyBadge status={verified ? 'verified' : 'not-verified'} />}
     >
       <div className="flex flex-col gap-4">
@@ -133,21 +139,22 @@ export default function EmailCard({ profile, onDirtyChange, announce, note }) {
             tabIndex={-1}
             className="rounded-tile bg-white/70 px-4 py-3 focus:outline-none focus-visible:ring-2 focus-visible:ring-forest/50"
           >
-            <p className="font-body text-xs text-muted">Verified email address</p>
+            <p className="font-body text-xs text-muted">{t('Verified email address')}</p>
             <p className="font-body text-base font-bold break-all text-navy">{profile.email}</p>
           </div>
         )}
 
         {!verified && step === 'ask' && (
           <div className="flex flex-col gap-3">
-            {note && <p className="font-body text-sm font-semibold text-navy">{note}</p>}
+            {note && <p className="font-body text-sm font-semibold text-navy">{t(note)}</p>}
             <p className="font-body text-sm text-navy">
-              We will send a {CODE_LENGTH}-digit code to{' '}
-              <span className="font-bold break-all">{profile.email}</span>.
+              {sendLine[0]}
+              <span className="font-bold break-all">{profile.email}</span>
+              {sendLine[1]}
             </p>
             <div>
               <Button variant="dark" onClick={sendCode} disabled={Boolean(busy)}>
-                {busy === 'sending' ? 'Sending…' : 'Send code'}
+                {busy === 'sending' ? t('Sending…') : t('Send code')}
               </Button>
             </div>
           </div>
@@ -156,11 +163,11 @@ export default function EmailCard({ profile, onDirtyChange, announce, note }) {
         {!verified && step === 'code' && (
           <form onSubmit={handleVerify} noValidate className="flex flex-col gap-4">
             <FormNotice tone="info">
-              {`We sent a ${CODE_LENGTH}-digit code to ${profile.email}. It can take a minute to arrive, so check your spam folder too.`}
+              {t('We sent a {n}-digit code to {to}. It can take a minute to arrive, so check your spam folder too.', { n: CODE_LENGTH, to: profile.email })}
             </FormNotice>
             <div className="flex flex-col gap-2">
               <p id="email-otp-label" className="font-body text-sm font-semibold text-navy">
-                Verification code
+                {t('Verification code')}
               </p>
               <OtpInput
                 digits={digits}
@@ -177,11 +184,11 @@ export default function EmailCard({ profile, onDirtyChange, announce, note }) {
             </div>
             <div className="flex flex-wrap items-center gap-3">
               <Button type="submit" variant="dark" disabled={!canVerify}>
-                {busy === 'verifying' ? 'Checking…' : 'Verify'}
+                {busy === 'verifying' ? t('Checking…') : t('Verify')}
               </Button>
               <Button variant="outline" onClick={sendCode} disabled={secondsLeft > 0 || Boolean(busy)}>
                 {secondsLeft > 0 && <CountdownRing secondsLeft={secondsLeft} total={resendTotal} />}
-                {busy === 'sending' ? 'Sending…' : resendLabel}
+                {busy === 'sending' ? t('Sending…') : resendLabel}
               </Button>
             </div>
           </form>

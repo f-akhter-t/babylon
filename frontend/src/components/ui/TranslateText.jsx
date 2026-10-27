@@ -1,12 +1,16 @@
 import { useState } from 'react'
 import { getToken } from '../../services/http'
 import { TRANSLATE_LANGUAGES, translateText } from '../../services/api'
+import { useLanguage, useT } from '../../i18n/useLanguage'
 
 // Report text with a small "Translate" control under it. Only for signed-in people
 // (the server needs a token). The original text is never replaced for good: the
 // translation shows below it, and "Show original" hides it again.
 export default function TranslateText({ text, className = '' }) {
-  const [to, setTo] = useState(TRANSLATE_LANGUAGES[0].code)
+  const t = useT()
+  const { lang } = useLanguage()
+  // A reader on the Bangla site most likely wants the report in Bangla.
+  const [to, setTo] = useState(lang === 'bn' ? 'bn' : TRANSLATE_LANGUAGES[0].code)
   const [state, setState] = useState({ status: 'idle' })
 
   async function run() {
@@ -27,7 +31,7 @@ export default function TranslateText({ text, className = '' }) {
       {signedIn && text && (
         <div className="mt-2 flex flex-wrap items-center gap-2 text-sm">
           <label htmlFor="translate-to" className="font-semibold text-slate">
-            Translate to
+            {t('Translate to')}
           </label>
           <select
             id="translate-to"
@@ -50,7 +54,7 @@ export default function TranslateText({ text, className = '' }) {
             disabled={state.status === 'loading'}
             className="rounded-full bg-navy px-4 py-1 font-semibold text-white transition hover:bg-navy/90 disabled:opacity-50"
           >
-            {state.status === 'loading' ? 'Translating…' : 'Translate'}
+            {state.status === 'loading' ? t('Translating…') : t('Translate')}
           </button>
           {state.status === 'done' && (
             <button
@@ -58,7 +62,7 @@ export default function TranslateText({ text, className = '' }) {
               onClick={() => setState({ status: 'idle' })}
               className="font-semibold text-forest underline"
             >
-              Show original only
+              {t('Show original only')}
             </button>
           )}
         </div>
@@ -71,7 +75,7 @@ export default function TranslateText({ text, className = '' }) {
         )}
         {state.status === 'error' && (
           <p role="alert" className="mt-2 text-sm font-semibold text-red-700">
-            {state.message}
+            {t(state.message)}
           </p>
         )}
       </div>

@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import clsx from 'clsx'
+import { useT } from '../../i18n/useLanguage'
 
 const tones = {
   verified: { label: 'Verified', light: 'bg-brand/25 text-forest', dark: 'bg-brand text-navy' },
@@ -14,6 +15,7 @@ const tones = {
 // It pops once when the status changes (not when the page first opens).
 // label replaces the usual wording, for example "Department verified".
 export default function VerifyBadge({ status, onDark = false, label }) {
+  const t = useT()
   const tone = tones[status] ?? tones['not-verified']
   const [shown, setShown] = useState(status)
   const [pops, setPops] = useState(0)
@@ -45,7 +47,7 @@ export default function VerifyBadge({ status, onDark = false, label }) {
           <path d="m5 12 5 5 9-10" />
         </svg>
       )}
-      {label ?? tone.label}
+      {t(label ?? tone.label)}
     </span>
   )
 }

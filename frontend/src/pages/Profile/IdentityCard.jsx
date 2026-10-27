@@ -9,12 +9,15 @@ import PhotoDropzone from './PhotoDropzone'
 import { submitIdentity } from '../../services/api'
 import { checkIdPhoto, checkNid, normalizeNid } from '../../utils/profileRules'
 import { canReadImage, UNREADABLE_PHOTO } from '../../utils/idPhoto'
-import { formatDate } from '../../utils/format'
+import { useFormat } from '../../i18n/useFormat'
+import { useT } from '../../i18n/useLanguage'
 
 // The full NID number lives only in this component's state and is never
 // stored; the profile keeps its last 4 digits. The card photo is kept by
 // submitIdentity only until an admin reviews it, then deleted.
 export default function IdentityCard({ profile, onDirtyChange, announce }) {
+  const t = useT()
+  const { date } = useFormat()
   const [sent, setSent] = useState(null) // identity returned by the last submit
   // Until the profile reloads, show what was just sent instead of the old status.
   const identity =
@@ -96,7 +99,7 @@ export default function IdentityCard({ profile, onDirtyChange, announce }) {
       setResubmitting(false)
       const text = 'Thank you. Your identity is sent for review.'
       setNotice({ tone: 'success', text })
-      announce(text, { toast: true })
+      announce(t(text), { toast: true })
       setFocusRequest((n) => n + 1)
     } catch (err) {
       setNotice({ tone: 'error', text: err.message || 'Something went wrong. Please try again.' })
@@ -111,8 +114,8 @@ export default function IdentityCard({ profile, onDirtyChange, announce }) {
   return (
     <ProfileCard
       id="profile-identity"
-      title="Identity"
-      intro="Verify your National ID so your reports carry more weight."
+      title={t('Identity')}
+      intro={t('Verify your National ID so your reports carry more weight.')}
       badge={<VerifyBadge status={identity.status} />}
     >
       <div className="flex flex-col gap-5">
@@ -120,30 +123,30 @@ export default function IdentityCard({ profile, onDirtyChange, announce }) {
 
         {identity.status === 'pending' && (
           <div ref={statusRef} tabIndex={-1} className={statusBox}>
-            <p className="font-bold">We are checking your details.</p>
+            <p className="font-bold">{t('We are checking your details.')}</p>
             <p className="mt-1 text-slate">
-              {`NID ending in ${identity.nidLast4}, sent on ${formatDate(identity.submittedAt)}. A review usually takes 1 to 2 working days.`}
+              {t('NID ending in {last4}, sent on {date}. A review usually takes 1 to 2 working days.', { last4: identity.nidLast4, date: date(identity.submittedAt) })}
             </p>
-            <p className="mt-1 text-slate">Your card photo is deleted as soon as the review is done.</p>
+            <p className="mt-1 text-slate">{t('Your card photo is deleted as soon as the review is done.')}</p>
           </div>
         )}
 
         {identity.status === 'verified' && (
           <div ref={statusRef} tabIndex={-1} className={statusBox}>
-            <p className="font-bold">Your identity is verified.</p>
+            <p className="font-bold">{t('Your identity is verified.')}</p>
             <p className="mt-1 text-slate">{`NID ending in ${identity.nidLast4}.`}</p>
           </div>
         )}
 
         {identity.status === 'rejected' && (
           <div ref={statusRef} tabIndex={-1} className={`${statusBox} border-2 border-danger/30`}>
-            <p className="font-bold">We could not verify your identity.</p>
+            <p className="font-bold">{t('We could not verify your identity.')}</p>
             <p className="mt-1 text-slate">
-              {`Reason: ${identity.reason || 'No reason given.'}`}
+              {t('Reason: {reason}', { reason: identity.reason || t('No reason given.') })}
             </p>
             {!resubmitting && (
               <Button variant="dark" className="mt-3" onClick={() => setResubmitting(true)}>
-                Submit again
+                {t('Submit again')}
               </Button>
             )}
           </div>
@@ -153,10 +156,10 @@ export default function IdentityCard({ profile, onDirtyChange, announce }) {
           <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-4">
             <TextField
               id="profile-nid"
-              label="NID number"
+              label={t('NID number')}
               inputMode="numeric"
               autoComplete="off"
-              placeholder="10, 13 or 17 digits"
+              placeholder={t('10, 13 or 17 digits')}
               maxLength={21}
               value={nid}
               onChange={(e) => {
@@ -169,7 +172,7 @@ export default function IdentityCard({ profile, onDirtyChange, announce }) {
                   ? 'Smart cards have 10 digits, older cards 13 or 17.'
                   : nidDigits === 1
                     ? 'Smart cards have 10 digits, older cards 13 or 17. You typed 1 digit.'
-                    : `Smart cards have 10 digits, older cards 13 or 17. You typed ${nidDigits} digits.`
+                    : t('Smart cards have 10 digits, older cards 13 or 17. You typed {n} digits.', { n: nidDigits })
               }
               error={nidTouched && nid ? nidError : ''}
               className="sm:max-w-sm"
@@ -177,7 +180,7 @@ export default function IdentityCard({ profile, onDirtyChange, announce }) {
 
             <div className="flex flex-col gap-1.5">
               <p id="profile-nid-photo-label" className="font-body text-sm font-semibold text-navy">
-                Photo of the front of your NID card
+                {t('Photo of the front of your NID card')}
               </p>
               <PhotoDropzone
                 id="profile-nid-photo"
@@ -193,13 +196,12 @@ export default function IdentityCard({ profile, onDirtyChange, announce }) {
             </div>
 
             <p className="font-body text-xs text-muted">
-              Your full NID number is never stored. Only its last 4 digits and the review status are
-              kept. Your card photo is kept only until an admin reviews it, then deleted.
+              {t('Your full NID number is never stored. Only its last 4 digits and the review status are kept. Your card photo is kept only until an admin reviews it, then deleted.')}
             </p>
 
             <div className="flex flex-wrap items-center gap-3">
               <Button type="submit" variant="dark" disabled={!canSubmit}>
-                {submitting ? 'Sending…' : 'Send for review'}
+                {submitting ? t('Sending…') : t('Send for review')}
               </Button>
               {identity.status === 'rejected' && !submitting && (
                 <Button
@@ -209,7 +211,7 @@ export default function IdentityCard({ profile, onDirtyChange, announce }) {
                     setResubmitting(false)
                   }}
                 >
-                  Cancel
+                  {t('Cancel')}
                 </Button>
               )}
             </div>

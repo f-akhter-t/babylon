@@ -6,6 +6,7 @@ import { ArrowUpIcon, BarsIcon, BellIcon, CheckIcon, CloseIcon, ReopenIcon, User
 import { useNotifications } from '../../hooks/useNotifications'
 import { enter, usePresence } from '../ui/motion'
 import { timeAgo } from '../../utils/format'
+import { useT } from '../../i18n/useLanguage'
 
 // One icon and colour per kind of notice (the kinds the server sends).
 const KINDS = {
@@ -32,6 +33,7 @@ const EDGE = 12 // px kept free at the screen edges
 // bell, so no sidebar or scrolling box can cut it off.
 //   email: whose notices. homeLink, homeLabel: the link at the bottom of the panel.
 export default function NotificationBell({ email, alertsPath = '/citizen/alerts', homeLink = '/my-reports', homeLabel = 'View my reports' }) {
+  const t = useT()
   const { items, unread, markRead, markAllRead } = useNotifications(email, alertsPath)
   const [open, setOpen] = useState(false)
   const [place, setPlace] = useState(null) // { top, left, width, maxHeight }
@@ -108,8 +110,8 @@ export default function NotificationBell({ email, alertsPath = '/citizen/alerts'
   }
 
   const label = unread
-    ? `Notifications, ${unread} unread.`
-    : 'Notifications, none unread.'
+    ? t('Notifications, {n} unread.', { n: unread })
+    : t('Notifications, none unread.')
 
   return (
     <>
@@ -137,7 +139,7 @@ export default function NotificationBell({ email, alertsPath = '/citizen/alerts'
         <section
           ref={panelRef}
           role="dialog"
-          aria-label="Notifications"
+          aria-label={t('Notifications')}
           tabIndex={-1}
           inert={panel.closing}
           aria-hidden={panel.closing || undefined}
@@ -158,17 +160,17 @@ export default function NotificationBell({ email, alertsPath = '/citizen/alerts'
           )}
         >
           <div className="flex shrink-0 items-center gap-2 border-b border-slate/15 bg-white px-[18px] pb-3 pt-4">
-            <h2 className="font-heading text-xl font-extrabold tracking-tight">Notifications</h2>
+            <h2 className="font-heading text-xl font-extrabold tracking-tight">{t('Notifications')}</h2>
             <span className="rounded-full bg-amber px-[9px] py-0.5 text-xs font-extrabold">
-              {unread ? `${unread} new` : 'All caught up'}
+              {unread ? t('{n} new', { n: unread }) : t('All caught up')}
             </span>
             <span className="flex-1" />
             {unread > 0 && (
               <button type="button" onClick={() => markAllRead()} className="-my-2 min-h-11 px-1 text-sm font-bold text-forest underline underline-offset-[3px]">
-                Mark all as read
+                {t('Mark all as read')}
               </button>
             )}
-            <button type="button" onClick={() => close(true)} aria-label="Close notifications" className="-my-2 -mr-2 grid size-11 shrink-0 place-items-center rounded-full hover:bg-mint">
+            <button type="button" onClick={() => close(true)} aria-label={t('Close notifications')} className="-my-2 -mr-2 grid size-11 shrink-0 place-items-center rounded-full hover:bg-mint">
               <CloseIcon />
             </button>
           </div>
@@ -176,9 +178,9 @@ export default function NotificationBell({ email, alertsPath = '/citizen/alerts'
           <ul className="flex min-h-0 flex-col gap-1.5 overflow-auto p-2">
             {items.length === 0 && (
               <li className="px-5 py-9 text-center text-muted">
-                <b className="text-navy">No notifications yet.</b>
+                <b className="text-navy">{t('No notifications yet.')}</b>
                 <br />
-                Updates about your reports and your work will show up here.
+                {t('Updates about your reports and your work will show up here.')}
               </li>
             )}
             {items.map((n) => {
@@ -203,7 +205,7 @@ export default function NotificationBell({ email, alertsPath = '/citizen/alerts'
                     {!n.read && (
                       <>
                         <span aria-hidden="true" className="absolute right-3 top-3.5 size-2 rounded-full bg-forest" />
-                        <span className="sr-only">Unread.</span>
+                        <span className="sr-only">{t('Unread.')}</span>
                       </>
                     )}
                   </Link>
@@ -214,7 +216,7 @@ export default function NotificationBell({ email, alertsPath = '/citizen/alerts'
 
           <div className="shrink-0 border-t border-slate/15 px-[18px] pb-3.5 pt-2.5 text-center">
             <Link to={homeLink} onClick={() => close(false)} className="inline-flex min-h-11 items-center px-1 text-sm font-bold text-forest underline underline-offset-[3px]">
-              {homeLabel}
+              {t(homeLabel)}
             </Link>
           </div>
         </section>,

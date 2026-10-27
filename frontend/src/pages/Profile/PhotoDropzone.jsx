@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react'
 import clsx from 'clsx'
 import Button from '../../components/ui/Button'
+import { useT } from '../../i18n/useLanguage'
 
 // Photo picker: drop a file or browse, like the Report form.
 // For the NID card (the default), the preview stays blurred until it is
@@ -18,6 +19,7 @@ export default function PhotoDropzone({
   alt = 'Preview of your NID card photo',
   busy = false,
 }) {
+  const t = useT()
   const inputRef = useRef(null)
   const [dragging, setDragging] = useState(false)
   const [revealed, setRevealed] = useState(false)
@@ -52,7 +54,7 @@ export default function PhotoDropzone({
           {avatar ? (
             <img
               src={photo.url}
-              alt={alt}
+              alt={t(alt)}
               className="size-24 shrink-0 rounded-full bg-navy/10 object-cover"
             />
           ) : (
@@ -81,14 +83,14 @@ export default function PhotoDropzone({
                   onClick={() => setRevealed((value) => !value)}
                   className="rounded-full px-3 py-1 font-body text-xs font-semibold text-forest transition hover:bg-forest/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest/50"
                 >
-                  {revealed ? 'Hide preview' : 'Show preview'}
+                  {revealed ? t('Hide preview') : t('Show preview')}
                 </button>
               )}
               <Button variant="outline" disabled={busy} onClick={() => inputRef.current?.click()}>
-                {avatar ? 'Choose another photo' : 'Choose another'}
+                {avatar ? t('Choose another photo') : t('Choose another')}
               </Button>
               <Button variant="outline" disabled={busy} onClick={onRemove}>
-                {avatar ? 'Remove photo' : 'Remove'}
+                {avatar ? t('Remove photo') : t('Remove')}
               </Button>
             </div>
           </div>
@@ -125,9 +127,9 @@ export default function PhotoDropzone({
             <path d="M14 10h4M14 13h3M6 16h6" />
           </svg>
           <span className="font-body text-sm font-semibold text-navy">
-            {dragging ? 'Drop it here' : 'Drop a photo here or browse'}
+            {dragging ? t('Drop it here') : t('Drop a photo here or browse')}
           </span>
-          <span className="font-body text-xs text-muted">JPG, PNG or WebP, up to 5 MB</span>
+          <span className="font-body text-xs text-muted">{t('JPG, PNG or WebP, up to 5 MB')}</span>
         </button>
       )}
 

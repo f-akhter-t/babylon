@@ -1,13 +1,14 @@
 import 'leaflet/dist/leaflet.css'
 import { MapContainer, Marker, TileLayer } from 'react-leaflet'
 import { Browser } from 'leaflet'
-import { formatDistance } from '../../utils/format'
+import { useFormat } from '../../i18n/useFormat'
 import { hasPosition } from '../../utils/position'
 import { pinIcon } from '../Map/statusPin'
 import { PinIcon } from '../Map/MapIcons'
 import MiniMapZoom from './MiniMapZoom'
 import { ExternalLinkIcon } from './DetailIcons'
 import { mapMotionOptions } from '../../components/ui/motion'
+import { useT } from '../../i18n/useLanguage'
 
 // Same tiles and credit as the big map (IssueMap.jsx).
 const ATTRIBUTION =
@@ -16,15 +17,17 @@ const ATTRIBUTION =
 // A small map with one pin on this issue. The mouse wheel scrolls the page,
 // not the map. On phones, one finger scrolls the page too (no dragging).
 export default function IssueMiniMap({ issue }) {
+  const t = useT()
+  const format = useFormat()
   // No coordinates (a department or admin seed row): there is no pin to show.
   if (!hasPosition(issue)) return null
 
   const position = [issue.lat, issue.lng]
-  const place = `${issue.location}, ${issue.ward} · ${formatDistance(issue.distanceM)} away`
+  const place = `${issue.location}, ${issue.ward} · ${t('{distance} away', { distance: format.distance(issue.distanceM) })}`
   const fullMap = `https://www.openstreetmap.org/?mlat=${issue.lat}&mlon=${issue.lng}#map=17/${issue.lat}/${issue.lng}`
 
   return (
-    <section aria-label="Location on the map">
+    <section aria-label={t('Location on the map')}>
       {/* isolate keeps Leaflet's own z-index values inside this box (under the navbar). */}
       <div className="relative isolate h-60 overflow-hidden rounded-panel shadow-lg shadow-navy/10 lg:h-64">
         <MapContainer
@@ -54,9 +57,9 @@ export default function IssueMiniMap({ issue }) {
         rel="noopener noreferrer"
         className="ml-auto flex min-h-11 w-fit items-center gap-1.5 rounded-full px-2 text-sm font-semibold text-navy hover:underline focus-visible:outline-2 focus-visible:outline-navy"
       >
-        Open in OpenStreetMap
+        {t('Open in OpenStreetMap')}
         <ExternalLinkIcon size={14} />
-        <span className="sr-only">(opens in a new tab)</span>
+        <span className="sr-only">{t('(opens in a new tab)')}</span>
       </a>
     </section>
   )

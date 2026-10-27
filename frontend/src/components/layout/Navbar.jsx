@@ -5,11 +5,14 @@ import Logo from './Logo'
 import NotificationBell from './NotificationBell'
 import Button from '../ui/Button'
 import { homePathFor, isSetupPending, logout, profilePathFor } from '../../services/auth'
+import FlagStripe from './FlagStripe'
 import { useViewer } from '../../pages/Map/useViewer'
 import { useProfile } from '../../hooks/useProfile'
 import { usePendingIdentityCount } from '../../hooks/usePendingIdentityCount'
 import { confirmLeave } from '../../utils/leaveGuard'
 import { enter, usePresence } from '../ui/motion'
+import LanguageToggle from './LanguageToggle'
+import { useT } from '../../i18n/useLanguage'
 // Each role reads its own notices: /citizen/alerts, /department/alerts or /admin/alerts.
 const alertsPathFor = (role) => (role === 'admin' ? '/admin/alerts' : role === 'department' ? '/department/alerts' : '/citizen/alerts')
 const citizenLinks = [
@@ -18,9 +21,13 @@ const citizenLinks = [
   { label: 'My reports', to: '/my-reports' },
 ]
 
-const departmentLinks = [{ label: 'Department panel', to: '/department' }]
+const departmentLinks = [
+  { label: 'Dashboard', to: '/department/dashboard' },
+  { label: 'Department panel', to: '/department' },
+]
 
 const adminLinks = [
+  { label: 'Dashboard', to: '/admin/dashboard' },
   { label: 'Verify resolutions', to: '/admin/verify' },
   { label: 'Accountability', to: '/admin/accountability' },
   { label: 'Identity checks', to: '/admin/identity', count: 'identity' },
@@ -29,11 +36,12 @@ const adminLinks = [
 // "Identity checks" with the number waiting. Only rendered in admin links,
 // so only admins run the count.
 function IdentityChecksLabel({ label }) {
+  const t = useT()
   const waiting = usePendingIdentityCount()
   if (!waiting) return label
   return (
     <>
-      <span className="sr-only">{`${label}, ${waiting} waiting`}</span>
+      <span className="sr-only">{t('{label}, {waiting} waiting', { label, waiting })}</span>
       <span aria-hidden="true">
         {label}
         <span className="ml-2 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-amber px-1.5 text-xs font-bold text-navy">
@@ -44,8 +52,9 @@ function IdentityChecksLabel({ label }) {
   )
 }
 
-function linkLabel(link) {
-  return link.count === 'identity' ? <IdentityChecksLabel label={link.label} /> : link.label
+function linkLabel(link, t) {
+  const label = t(link.label)
+  return link.count === 'identity' ? <IdentityChecksLabel label={label} /> : label
 }
 
 const linksByVariant = {
@@ -121,6 +130,7 @@ export default function Navbar({
   showReport = true,
   initials = 'NR',
 }) {
+  const t = useT()
   const navigate = useNavigate()
   // The live session (it follows a login or logout in another tab). The
   // whole bar, the avatar included, comes from it: pages pass nothing.
@@ -174,7 +184,7 @@ export default function Navbar({
   const avatarText = session ? initialsFor(displayName, initials) : initials
   // Every account's avatar opens its own profile page. Guests have no avatar.
   const profilePath = session ? profilePathFor(session.role) : null
-  const avatarLabel = isCitizen && profile.isVerified ? 'Your profile, verified' : 'Your profile'
+  const avatarLabel = isCitizen && profile.isVerified ? t('Your profile, verified') : t('Your profile')
   const avatarPhoto = !isCitizen ? profile.profile?.photo : ''
 
   function handleLogout() {
@@ -196,7 +206,7 @@ export default function Navbar({
           <Logo {...(locked ? { to: null } : {})} />
         </div>
 
-        <nav aria-label="Main" className="hidden items-center gap-2 lg:flex">
+        <nav aria-label={t('Main')} className="hidden items-center gap-2 lg:flex">
           {links.map((link) => (
             <NavLink
               key={link.to}
@@ -208,7 +218,7 @@ export default function Navbar({
                 )
               }
             >
-              {linkLabel(link)}
+              {linkLabel(link, t)}
             </NavLink>
           ))}
         </nav>
@@ -220,22 +230,24 @@ export default function Navbar({
                 to="/login"
                 className="whitespace-nowrap text-sm font-semibold text-white transition-colors hover:text-brand"
               >
-                Log in
+                {t('Log in')}
               </Link>
               <Link
                 to="/signup"
                 className="whitespace-nowrap text-sm font-semibold text-white/80 transition-colors hover:text-brand"
               >
-                Sign up
+                {t('Sign up')}
               </Link>
             </div>
           )}
+
+          <LanguageToggle className="hidden lg:inline-flex" />
 
           {canReport && showReport && (
             <div className="hidden whitespace-nowrap lg:block">
               <Button to="/report" variant="brand">
                 <span aria-hidden="true" className="text-lg leading-none">+</span>
-                Report an issue
+                {t('Report an issue')}
               </Button>
             </div>
           )}
@@ -246,7 +258,7 @@ export default function Navbar({
             <NotificationBell
               email={session.email}
               alertsPath={alertsPathFor(session.role)}
-              {...(isCitizen ? {} : { homeLink: homePathFor(session.role), homeLabel: 'Open your panel' })}
+              {...(isCitizen ? {} : { homeLink: homePathFor(session.role), homeLabel: t('Open your panel') })}
             />
           )}
         
@@ -268,7 +280,7 @@ export default function Navbar({
               onClick={handleLogout}
               className="hidden whitespace-nowrap rounded-full border border-white/20 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-white/10 lg:block"
             >
-              Log out
+              {t('Log out')}
             </button>
           )}
 
@@ -276,7 +288,7 @@ export default function Navbar({
             ref={menuButtonRef}
             type="button"
             onClick={() => setOpen((value) => !value)}
-            aria-label={open ? 'Close menu' : 'Open menu'}
+            aria-label={open ? t('Close menu') : t('Open menu')}
             aria-expanded={open}
             aria-controls="mobile-menu"
             className="flex size-11 shrink-0 items-center justify-center rounded-full border border-white/20 text-white transition-colors hover:bg-white/10 lg:hidden"
@@ -319,7 +331,7 @@ export default function Navbar({
             menu.closing && 'pointer-events-none',
           )}
         >
-          <nav aria-label="Main" className="flex flex-col gap-1">
+          <nav aria-label={t('Main')} className="flex flex-col gap-1">
             {session && (
               <NavLink
                 to={profilePath}
@@ -331,12 +343,12 @@ export default function Navbar({
                 }
               >
                 <span className="min-w-0">
-                  <span className="block text-xs opacity-70">Your profile</span>
+                  <span className="block text-xs opacity-70">{t('Your profile')}</span>
                   <span className="block truncate text-base font-semibold">{displayName}</span>
                 </span>
                 {isCitizen && profile.isVerified && (
                   <span className="shrink-0 rounded-full bg-brand px-2.5 py-0.5 text-xs font-bold text-navy">
-                    Verified
+                    {t('Verified')}
                   </span>
                 )}
               </NavLink>
@@ -353,10 +365,12 @@ export default function Navbar({
                   )
                 }
               >
-                {linkLabel(link)}
+                {linkLabel(link, t)}
               </NavLink>
             ))}
           </nav>
+
+          <LanguageToggle className="mt-2 self-start" />
 
           {current === 'logged-out' && (
             <div className="mt-2 grid grid-cols-2 gap-2">
@@ -364,13 +378,13 @@ export default function Navbar({
                 to="/login"
                 className="rounded-full border border-white/20 px-4 py-3 text-center text-base font-semibold text-white transition-colors hover:bg-white/10"
               >
-                Log in
+                {t('Log in')}
               </Link>
               <Link
                 to="/signup"
                 className="rounded-full border border-white/20 px-4 py-3 text-center text-base font-semibold text-white transition-colors hover:bg-white/10"
               >
-                Sign up
+                {t('Sign up')}
               </Link>
             </div>
           )}
@@ -379,7 +393,7 @@ export default function Navbar({
             <div className="mt-2 [&>*]:w-full [&>*]:justify-center">
               <Button to="/report" variant="brand">
                 <span aria-hidden="true" className="text-lg leading-none">+</span>
-                Report an issue
+                {t('Report an issue')}
               </Button>
             </div>
           )}
@@ -390,11 +404,12 @@ export default function Navbar({
               onClick={handleLogout}
               className="mt-2 rounded-full border border-white/20 px-4 py-3 text-base font-semibold text-white transition-colors hover:bg-white/10"
             >
-              Log out
+              {t('Log out')}
             </button>
           )}
         </div>
       )}
+      <FlagStripe />
     </header>
   )
 }

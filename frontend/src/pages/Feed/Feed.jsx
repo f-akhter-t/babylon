@@ -14,11 +14,13 @@ import NewReportsBar from '../../components/ui/NewReportsBar'
 import { prefersLessMotion } from '../../components/ui/motion'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import { useToast } from '../../components/ui/toast'
+import { useT } from '../../i18n/useLanguage'
 
 const EMPTY = []
 const LOAD_FAILED = 'We could not load the issues. Check your connection and try again.'
 
 export default function Feed() {
+  const t = useT()
   useDocumentTitle('Issue feed')
   const [category, setCategory] = useState('All')
   const [status, setStatus] = useState('All')
@@ -77,19 +79,28 @@ export default function Feed() {
 
   return (
     <>
-      <AnimatedBackground />
+      <AnimatedBackground photo={false} />
       <Navbar />
 
       <main>
-        <section className="bg-navy px-6 py-16 text-white md:px-10">
+        <section className="relative isolate overflow-hidden bg-navy px-6 py-16 text-white md:px-10">
+          {/* A real street photo, faded right back so the heading stays easy to read. */}
+          <img
+            src="/images/login-roundabout.jpg"
+            alt=""
+            aria-hidden="true"
+            loading="lazy"
+            className="absolute inset-0 -z-10 size-full object-cover object-[center_42%] opacity-40 saturate-50"
+          />
+          <div className="absolute inset-0 -z-10 bg-linear-to-r from-navy via-navy/55 to-navy/10" />
+          <div className="absolute inset-x-0 bottom-0 -z-10 h-16 bg-linear-to-t from-navy/80 to-transparent" />
           <div className="mx-auto flex max-w-6xl flex-col items-start gap-4">
             <StaircaseIcon level={3} className="h-10 w-10 text-brand" />
             <h1 className="font-heading text-4xl font-extrabold md:text-5xl">
-              Every fix starts with a pin.
+              {t('Every fix starts with a pin.')}
             </h1>
             <p className="max-w-xl font-body text-white/70">
-              Browse every issue the city is tracking, from freshly reported to fully
-              resolved. Drag the slider on fixed issues to see the before and after.
+              {t('Browse every issue the city is tracking, from freshly reported to fully resolved. Drag the slider on fixed issues to see the before and after.')}
             </p>
           </div>
         </section>
@@ -108,7 +119,7 @@ export default function Feed() {
             />
 
             <h2 ref={headingRef} tabIndex={-1} className="sr-only">
-              Issues
+              {t('Issues')}
             </h2>
             <p role="status" className="sr-only">
               {held.message}

@@ -30,6 +30,6 @@ export function issuesFor(status, assigned, completed) {
 
 // The admin's reason for sending a fix back, as one sentence (issue.sentBack
 // from the API: { reason, on }). Shown in the table and the Resolve panel.
-export function sentBackMessage(sentBack) {
-  return `The admin sent this back on ${sentBack.on}. Reason: ${sentBack.reason}`
+export function sentBackMessage(sentBack, t) {
+  return t('The admin sent this back on {date}. Reason: {reason}', { date: sentBack.on, reason: sentBack.reason })
 }

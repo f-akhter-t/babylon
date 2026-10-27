@@ -3,6 +3,7 @@ import { Link, useSearchParams } from 'react-router-dom'
 import clsx from 'clsx'
 import AdminLayout from '../../components/layout/AdminLayout'
 import LoadError from '../../components/ui/LoadError'
+import LogoLoader from '../../components/ui/LogoLoader'
 import ReviewPanel from './ReviewPanel'
 import ReopenedList from './ReopenedList'
 import {
@@ -18,6 +19,7 @@ import { useAsync } from '../../hooks/useAsync'
 import RequireRole from '../Auth/RequireRole'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import { fit } from '../../components/layout/staffFit'
+import { useT } from '../../i18n/useLanguage'
 
 const PRIORITY_LABEL = {
   urgent: 'Urgent priority',
@@ -27,6 +29,7 @@ const PRIORITY_LABEL = {
 }
 
 function QueueCard({ issue, selected, onSelect }) {
+  const t = useT()
   const strong = issue.priority === 'urgent' || issue.priority === 'high'
 
   // aria-current marks the one being reviewed (not aria-pressed: picking it
@@ -45,8 +48,8 @@ function QueueCard({ issue, selected, onSelect }) {
       <p className="break-words font-heading text-base font-bold text-navy">{issue.title}</p>
       <p className="mt-1 break-words font-body text-sm text-muted">
         {isReopenedInQueue(issue)
-          ? reopenedSentence(issue)
-          : `${issue.department} sent this on ${issue.submittedOn}.`}
+          ? reopenedSentence(issue, t)
+          : t('{department} sent this on {date}.', { department: issue.department, date: issue.submittedOn })}
       </p>
       <span
         className={clsx(
@@ -54,7 +57,7 @@ function QueueCard({ issue, selected, onSelect }) {
           strong ? 'bg-navy text-mint' : 'bg-white text-navy',
         )}
       >
-        {PRIORITY_LABEL[issue.priority] ?? issue.priority}
+        {t(PRIORITY_LABEL[issue.priority] ?? issue.priority)}
       </span>
     </button>
   )
@@ -87,6 +90,7 @@ const VIEWS = {
 }
 
 function VerifyResolutionsPage() {
+  const t = useT()
   const [searchParams] = useSearchParams()
   const viewKey = searchParams.get('view') === 'reopened' ? 'reopened' : 'queue'
   const view = VIEWS[viewKey]
@@ -121,7 +125,7 @@ function VerifyResolutionsPage() {
       setSelectedId(null)
       setNotice({ tone: 'success', text: message, view: 'queue' })
     } catch (err) {
-      setNotice({ tone: 'error', text: err.message, view: 'queue' })
+      setNotice({ tone: 'error', text: t(err.message), view: 'queue' })
     } finally {
       setBusy(false)
     }
@@ -136,7 +140,7 @@ function VerifyResolutionsPage() {
       await sendReopenedToQueue(issue.id)
       setNotice({
         tone: 'success',
-        text: `“${issue.title}” was sent to the verification queue.`,
+        text: t('“{title}” was sent to the verification queue.', { title: issue.title }),
         view: 'reopened',
       })
       headingRef.current?.focus()
@@ -164,7 +168,7 @@ function VerifyResolutionsPage() {
       <AdminLayout variant="admin" active={view.nav}>
         <div className="p-4 sm:p-6 lg:p-8">
           <h1 className="font-heading text-3xl font-extrabold text-navy sm:text-4xl">
-            {view.heading}
+            {t(view.heading)}
           </h1>
           <div className="mt-6">
             <LoadError message={view.loadError} onRetry={retry} />
@@ -183,17 +187,14 @@ function VerifyResolutionsPage() {
             tabIndex={-1}
             className="rounded-tile font-heading text-3xl font-extrabold text-navy focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forest sm:text-4xl"
           >
-            {view.heading}
+            {t(view.heading)}
           </h1>
           <p className="mt-1 font-body text-base text-muted">
-            These problems were marked resolved, but citizens reported them again. Send one to
-            the verification queue to approve or reject it there.
+            {t('These problems were marked resolved, but citizens reported them again. Send one to the verification queue to approve or reject it there.')}
           </p>
           {noticeLine}
           {loading ? (
-            <p role="status" className="mt-6 font-body text-base text-navy">
-              {view.loading}
-            </p>
+            <LogoLoader label={t(view.loading)} className="mt-2" />
           ) : (
             <ReopenedList issues={data.reopened} onSend={sendToQueue} sendingId={sendingId} />
           )}
@@ -206,11 +207,10 @@ function VerifyResolutionsPage() {
     <AdminLayout variant="admin" active={view.nav}>
       <div className={clsx('p-4 sm:p-6 lg:p-8', fit.page)}>
         <h1 className="font-heading text-3xl font-extrabold text-navy sm:text-4xl">
-          Verify resolutions
+          {t('Verify resolutions')}
         </h1>
         <p className="mt-1 font-body text-base text-muted">
-          Compare the citizen&apos;s photo with the department&apos;s after-photo, then
-          approve or send it back.
+          {t('Compare the citizen\'s photo with the department\'s after-photo, then approve or send it back.')}
         </p>
 
         {noticeLine}
@@ -218,22 +218,20 @@ function VerifyResolutionsPage() {
         {reopened && (
           <div className="mt-5 flex flex-col items-start gap-3 rounded-card border border-amber-dark bg-amber/20 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-5">
             <div className="min-w-0 break-words font-body text-base text-navy">
-              <p className="font-bold">A closed problem came back.</p>
-              <p>{bannerSentence(reopened)}</p>
+              <p className="font-bold">{t('A closed problem came back.')}</p>
+              <p>{bannerSentence(reopened, t)}</p>
             </div>
             <Link
               to={`/issues/${reopened.id}`}
               className="inline-flex min-h-11 shrink-0 items-center rounded-full bg-navy px-5 py-2 font-body text-sm font-bold text-mint transition-opacity hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forest motion-reduce:transition-none"
             >
-              Review reopened issue
+              {t('Review reopened issue')}
             </Link>
           </div>
         )}
 
         {loading ? (
-          <p role="status" className="mt-6 font-body text-base text-navy">
-            {view.loading}
-          </p>
+          <LogoLoader label={t(view.loading)} className="mt-6" />
         ) : (
           // From lg: the queue on the left, the review on the right. In fit mode
           // both scroll inside themselves and the review's buttons stay pinned.
@@ -247,7 +245,7 @@ function VerifyResolutionsPage() {
           >
             <div className={clsx('flex min-w-0 flex-col', fit.column)}>
               <p id="verify-queue-label" className="font-body text-sm font-bold text-muted">
-                Waiting for your check
+                {t('Waiting for your check')}
               </p>
               <ul
                 aria-labelledby="verify-queue-label"
@@ -272,20 +270,20 @@ function VerifyResolutionsPage() {
                 onApprove={(issue) =>
                   finish(
                     () => approveResolution(issue.id),
-                    `“${issue.title}” was approved and closed.`,
+                    t('“{title}” was approved and closed.', { title: issue.title }),
                   )
                 }
                 onReject={(issue, reason) =>
                   finish(
                     () => rejectResolution(issue.id, reason),
-                    `“${issue.title}” was sent back to ${issue.department}.`,
+                    t('“{title}” was sent back to {department}.', { title: issue.title, department: issue.department }),
                   )
                 }
                 busy={busy}
               />
             ) : (
               <div className="self-start rounded-panel bg-mint p-6 font-body text-base text-muted sm:p-8">
-                Nothing is waiting for your check.
+                {t('Nothing is waiting for your check.')}
               </div>
             )}
           </div>
