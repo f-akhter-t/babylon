@@ -1,6 +1,6 @@
 # Babylon
 
-Babylon is a civic issue reporting app for Chattogram. Citizens drop a pin on a map to report a problem such as a pothole, overflowing bins or a broken street light, then follow it until it is fixed. City departments work through the issues assigned to them, and an admin checks each fix against its photo before it is closed and keeps an eye on how every department is doing.
+Babylon is a civic issue reporting app for Bangladesh. Citizens drop a pin on a map to report a problem such as a pothole, overflowing bins or a broken street light, then follow it until it is fixed. City departments work through the issues assigned to them, and an admin checks each fix against its photo before it is closed and keeps an eye on how every department is doing.
 
 > **Mock data.** There is no server yet. Every issue, account and report lives in the browser: sample data in `frontend/src/mock/`, and anything you create in `localStorage`, `sessionStorage` or IndexedDB. Clearing site data resets the app.
 
