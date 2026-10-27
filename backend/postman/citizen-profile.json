@@ -28,7 +28,7 @@
             "profile"
           ]
         },
-        "description": "Seed first: node scripts/seed.department.js. Token: npm run token --silent -- citizen citizen@babylon.test.\nExpect 200. data has name, email, role \"citizen\", department null, phone, phoneVerified, address, division, identity {status \"not-submitted\", nidLast4 \"\", submittedAt null, reason \"\"}, isVerified false, jobTitle, employeeId, onboarded."
+        "description": "Expect 200. data has name, email, role \"citizen\", department null, phone, phoneVerified, address, division, identity, isVerified false, jobTitle, employeeId, onboarded. identity.status is \"not-submitted\" for an account with no NID, and \"pending\" (nidLast4 and submittedAt filled in) while a submitted NID waits for admin review. Token: npm run token --silent -- citizen citizen@babylon.test."
       },
       "response": []
     },
@@ -999,7 +999,7 @@
             "duplicates"
           ]
         },
-        "description": "Expected: 200. data.checked true, data.matches has 1 item with similarity near 1. No imageEmbedding in the match. Needs CLIP on and a filed report in the citizen's division."
+        "description": "Expected: 403. success false, code forbidden. A department (staff) token is not allowed on this citizen route."
       },
       "response": []
     },
@@ -1070,7 +1070,7 @@
             "duplicates"
           ]
         },
-        "description": "Expected: 200. data.checked true, data.matches empty list."
+        "description": "Expected: 401. success false, code unauthorized. No Authorization header is sent on purpose."
       },
       "response": []
     }

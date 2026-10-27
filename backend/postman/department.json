@@ -388,7 +388,7 @@
             "profile"
           ]
         },
-        "description": "Expected: 200. data.division is Dhaka, the text has no photo and no passwordHash, and identity.status is \"none\" for now. D7 changes it to \"not-submitted\", so update this line in that PR."
+        "description": "Expected: 200. data.division is Dhaka, the text has no photo and no passwordHash, and identity.status is \"not-submitted\" when no NID was sent. It is \"pending\" while a submitted NID waits for admin review."
       },
       "response": []
     },
