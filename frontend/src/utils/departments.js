@@ -8,6 +8,9 @@ export const CATEGORY_DEPARTMENT = {
   Lighting: 'Electricity',
 }
 
+// The report categories, in the order the filters list them.
+export const CATEGORIES = ['Roads', 'Waste', 'Water', 'Lighting', 'Bridges']
+
 // The departments, for the staff sign-up list.
 export const DEPARTMENTS = ['Roads & Highways', 'Waste Management', 'Water Supply', 'Electricity']
 

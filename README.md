@@ -2,7 +2,7 @@
 
 Babylon is a civic issue reporting app for Chattogram. Citizens drop a pin on a map to report a problem such as a pothole, overflowing bins or a broken street light, then follow it until it is fixed. City departments work through the issues assigned to them, and an admin checks each fix against its photo before it is closed and keeps an eye on how every department is doing.
 
-> **Backend and frontend.** The Express backend in `backend/` serves the data, accounts and the admin, department and citizen work. The frontend talks to it through `frontend/src/services/http.js`. Anything a page still reads from `frontend/src/mock/` is waiting for its backend step.
+> **Backend and frontend.** The Express backend in `backend/` serves the data, accounts and the admin, department and citizen work. The frontend talks to it through `frontend/src/services/http.js`.
 
 ## Stack
 
@@ -197,9 +197,8 @@ babylon/
         │   ├── layout/ Navbar, Footer, Logo and the staff panel layout
         │   └── ui/     shared pieces such as Button, StatusPill and LoadError
         ├── hooks/      shared React hooks
-        ├── mock/       sample data for the pages not yet moved to the backend
         ├── pages/      one folder per page (Home, Map, Feed, Report, Profile, staff panels…)
-        ├── services/   http.js and the API files; accounts (auth.js) and browser stores
+        ├── services/   http.js and the API files; accounts and the session (auth.js)
         └── utils/      small helpers for dates, maps, images and form rules
 ```
 

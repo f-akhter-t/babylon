@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react'
 import clsx from 'clsx'
-import { CATEGORIES } from '../../mock/issues'
+import { CATEGORIES } from '../../utils/departments'
 import SearchBox from './SearchBox'
 import IssueCard from './IssueCard'
 import NewReportsBar from '../../components/ui/NewReportsBar'

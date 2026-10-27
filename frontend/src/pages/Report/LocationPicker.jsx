@@ -12,8 +12,7 @@ import {
 import 'leaflet/dist/leaflet.css'
 import StaircaseIcon from '../../components/ui/StaircaseIcon'
 import { getIssues, upvoteIssue } from '../../services/api'
-import { MAP_CENTER } from '../../mock/issues'
-import { distanceInMeters } from '../../utils/geo'
+import { distanceInMeters, MAP_CENTER } from '../../utils/geo'
 import { divisionFromPlaceName } from '../../utils/divisions'
 import { DRAFT_PIN_SIZE, draftPinSvg } from '../Map/pinMarkup'
 import { pinIcon } from '../Map/statusPin'
@@ -248,8 +247,7 @@ export default function LocationPicker({
     setSearching(true)
     setMessage('')
     try {
-      // known issues first, so search also works offline with the mock data
-      // if the list fails, go straight to the place search
+      // known issues first; if the list fails, go straight to the place search
       const list = await getIssues({ search: q }).catch(() => [])
       const known = list.find((i) => typeof i.lat === 'number')
       if (known) {

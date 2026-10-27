@@ -5,9 +5,9 @@ import clsx from 'clsx'
 import { ArrowUpIcon, BarsIcon, BellIcon, CheckIcon, CloseIcon, ReopenIcon, UserIcon } from '../ui/icons'
 import { useNotifications } from '../../hooks/useNotifications'
 import { enter, usePresence } from '../ui/motion'
-import { timeAgo } from '../../services/notifications'
+import { timeAgo } from '../../utils/format'
 
-// One icon and colour per kind of notice (services/notifications.js).
+// One icon and colour per kind of notice (the kinds the server sends).
 const KINDS = {
   welcome: { icon: <BellIcon size={18} />, style: 'bg-brand text-navy' },
   filed: { icon: <BarsIcon size={18} />, style: 'bg-brand text-navy' },

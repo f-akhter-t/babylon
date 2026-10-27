@@ -1,7 +1,7 @@
 // What the admin panel reads and does on the backend. api.js re-exports these,
 // so pages keep importing them from there. They live in their own file so the
-// tests can load them without the rest of the mock API.
-import { get, post, getToken } from './http.js'
+// tests can load them without the rest of api.js.
+import { download, get, post } from './http.js'
 
 // ---------- Verify resolutions ----------
 
@@ -64,21 +64,12 @@ export async function reviewIdentity(submission, { decision, reason = '' }) {
 //   { kind: 'photo', blob }   the photo, for this submission only
 //   { kind: 'missing' }       the server has none (already reviewed, or never sent)
 //   { kind: 'error' }         the server could not be reached or refused
-// The photo is a picture, not JSON, so it cannot go through http.js yet.
-// TODO: when http.js has the authenticated blob download (plan gate G2), use it here.
-const API_URL = String(import.meta.env?.VITE_API_URL ?? '/api').replace(/\/+$/, '')
-
 export async function getIdentityPhoto(submission) {
   try {
-    const token = getToken()
-    const response = await fetch(`${API_URL}/admin/identity/${encodeURIComponent(submission.id)}/photo`, {
-      headers: token ? { Authorization: `Bearer ${token}` } : {},
-    })
-    if (response.status === 404) return { kind: 'missing' }
-    if (!response.ok) return { kind: 'error' }
-    return { kind: 'photo', blob: await response.blob() }
-  } catch {
-    return { kind: 'error' }
+    const blob = await download(`/admin/identity/${encodeURIComponent(submission.id)}/photo`)
+    return { kind: 'photo', blob }
+  } catch (error) {
+    return { kind: error.status === 404 ? 'missing' : 'error' }
   }
 }
 
