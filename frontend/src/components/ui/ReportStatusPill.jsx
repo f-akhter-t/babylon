@@ -6,7 +6,7 @@ import { statusLabel } from './statusLabel'
 const STATUS = {
   open:        { bg: 'bg-amber/25', bars: 1, tint: 'text-amber-dark' },
   in_progress: { bg: 'bg-slate/15', bars: 2, tint: 'text-slate' },
-  resolved:    { bg: 'bg-mint-deep', bars: 3, tint: 'text-forest' },
+  resolved:    { bg: 'bg-success-soft', bars: 3, tint: 'text-success' },
   reopened:    { bg: 'bg-amber',     bars: 0, tint: 'text-navy' },
 }
  

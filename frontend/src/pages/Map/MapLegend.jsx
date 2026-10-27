@@ -5,7 +5,7 @@ import StaircaseIcon from '../../components/ui/StaircaseIcon'
 const items = [
   { label: 'Open', level: 1, color: 'text-amber-dark' },
   { label: 'In progress', level: 2, color: 'text-slate' },
-  { label: 'Resolved', level: 3, color: 'text-forest' },
+  { label: 'Resolved', level: 3, color: 'text-success' },
 ]
 
 export default function MapLegend({ className }) {

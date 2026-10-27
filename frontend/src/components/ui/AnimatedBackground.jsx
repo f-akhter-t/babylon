@@ -9,7 +9,7 @@ import { prefersLessMotion } from './motion'
 // glows are soft radial gradients, so nothing is blurred while it moves.
 // It pauses while the tab is hidden and stays still for reduced motion.
 const GRADIENT =
-  'linear-gradient(135deg, color-mix(in srgb, var(--color-page) 80%, white) 0%, color-mix(in srgb, var(--color-page) 95%, var(--color-slate)) 35%, color-mix(in srgb, var(--color-page) 86%, var(--color-slate)) 65%, color-mix(in srgb, var(--color-page) 74%, var(--color-slate)) 100%)'
+  'linear-gradient(135deg, #FFFFFF 0%, color-mix(in srgb, var(--color-page) 70%, white) 35%, color-mix(in srgb, var(--color-brand) 28%, white) 70%, color-mix(in srgb, var(--color-brand) 42%, white) 100%)'
 const glow = (color, strength) =>
   `radial-gradient(circle closest-side, color-mix(in srgb, ${color} ${strength}%, transparent), transparent)`
 
@@ -78,11 +78,11 @@ export default function AnimatedBackground() {
       {/* two soft glows */}
       <div
         className="absolute -left-32 -top-32 size-[32rem] will-change-transform"
-        style={{ backgroundImage: glow('var(--color-slate)', 40), ...play('float-a 26s ease-in-out infinite') }}
+        style={{ backgroundImage: glow('var(--color-brand)', 45), ...play('float-a 26s ease-in-out infinite') }}
       />
       <div
         className="absolute -right-32 bottom-[-10%] size-[32rem] will-change-transform"
-        style={{ backgroundImage: glow('var(--color-navy)', 22), ...play('float-b 32s ease-in-out infinite') }}
+        style={{ backgroundImage: glow('var(--color-forest)', 14), ...play('float-b 32s ease-in-out infinite') }}
       />
 
       {/* the faint glow that follows the pointer */}
