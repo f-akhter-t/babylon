@@ -1,19 +1,11 @@
-// Every page gets its data from here. Now it reads src/mock/.
-// Later, each function becomes a fetch() call. Pages will not change,
-// because every function is already async.
+// Every page gets its data from here. Each function calls the Express backend
+// (through the files imported below), and this file re-exports them all, so a
+// page imports from one place.
 import * as citizen from './profileApi'
 import { PROFILE_EVENT } from './profileApi'
-import { issues as rawIssues } from '../mock/issues'
-import {
-  ACCOUNTABILITY_PERIODS,
-  CATEGORY_DEPARTMENT,
-  DEFAULT_PERIOD_WEEKS,
-} from '../utils/departments'
+import { ACCOUNTABILITY_PERIODS, DEFAULT_PERIOD_WEEKS } from '../utils/departments'
 import { UNREADABLE_PHOTO } from '../utils/idPhoto'
-import {
-  getSession,
-  updateSession,
-} from './auth'
+import { getSession, updateSession } from './auth'
 import * as staff from './staffApi'
 import * as emailCheck from './emailCheckApi'
 import { ISSUES_EVENT } from './issuesEvent'
@@ -25,175 +17,11 @@ import {
   normalizePhone,
 } from '../utils/profileRules'
 
-
-// ---------- Points and levels ----------
+// ---------- Points ----------
 export const POINTS_PER_REPORT = 60
-
-export const LEVELS = [
-  { level: 1, name: 'Newcomer', min: 0 },
-  { level: 2, name: 'Reporter', min: 120 },
-  { level: 3, name: 'Watcher', min: 300 },
-  { level: 4, name: 'Guardian', min: 600 },
-  { level: 5, name: 'Champion', min: 1000 },
-]
-
-// Department comes from the category, decided in one place.
-const withDepartment = (issue) => ({
-  ...issue,
-  department: CATEGORY_DEPARTMENT[issue.category],
-})
-
-const all = rawIssues.map(withDepartment)
-
-// ---------- Reports made on this device ----------
-// There is no backend yet, so a report a citizen submits is kept in the
-// browser (localStorage) and added to the same list as the mock issues.
-// When Express arrives, createIssue becomes a POST and this block goes away.
-
-const SUBMITTED_KEY = 'babylon.submittedIssues'
-
-function loadSubmitted() {
-  try {
-    const raw = window.localStorage.getItem(SUBMITTED_KEY)
-    return raw ? JSON.parse(raw) : []
-  } catch {
-    return []
-  }
-}
-
-const submitted = loadSubmitted()
-all.push(...submitted.map(withDepartment))
-
-// Reports their citizen deleted (see deleteIssue), by issue id. A list of its
-// own, so deleted mock issues stay deleted too.
-const DELETED_KEY = 'babylon.deletedIssues'
-
-function loadDeleted() {
-  try {
-    const list = JSON.parse(window.localStorage.getItem(DELETED_KEY))
-    return Array.isArray(list) ? list.map(String) : []
-  } catch {
-    return []
-  }
-}
-
-let deletedIds = loadDeleted()
-
-// Takes an issue out of the lists in memory (not out of storage).
-function dropFromMemory(id) {
-  const key = String(id)
-  for (const list of [all, submitted]) {
-    const index = list.findIndex((item) => String(item.id) === key)
-    if (index !== -1) list.splice(index, 1)
-  }
-}
-deletedIds.forEach(dropFromMemory)
 
 // Pages listen to this to refresh when a report is created, upvoted or an alert is read.
 export { ISSUES_EVENT }
-const notifyIssuesChanged = () => window.dispatchEvent(new Event(ISSUES_EVENT))
-
-// Another tab (another citizen) upvoted or reported: pick it up here.
-window.addEventListener('storage', (e) => {
-  if (e.key !== SUBMITTED_KEY) return
-  for (const item of loadSubmitted()) {
-    const live = all.find((i) => String(i.id) === String(item.id))
-    const kept = submitted.find((i) => String(i.id) === String(item.id))
-    if (live) live.votes = item.votes
-    if (kept) kept.votes = item.votes
-    if (!live) {
-      all.push(withDepartment(item))
-      submitted.push(item)
-    }
-  }
-  notifyIssuesChanged()
-})
-
-// Another tab deleted a report: drop it here too.
-window.addEventListener('storage', (e) => {
-  if (e.key !== DELETED_KEY) return
-  deletedIds = loadDeleted()
-  deletedIds.forEach(dropFromMemory)
-  notifyIssuesChanged()
-})
-
-// Changes a citizen made to their own report (see updateIssue), by issue id.
-// Kept apart from the reports themselves, so mock issues can be edited too.
-const EDITS_KEY = 'babylon.issueEdits'
-
-function loadEdits() {
-  try {
-    return JSON.parse(window.localStorage.getItem(EDITS_KEY)) ?? {}
-  } catch {
-    return {}
-  }
-}
-
-const edits = loadEdits()
-for (const [id, changes] of Object.entries(edits)) {
-  const index = all.findIndex((issue) => String(issue.id) === id)
-  if (index !== -1) all[index] = withDepartment({ ...all[index], ...changes })
-}
-
-// Another tab saved an edit: apply it here too. Read-only: it only reads the
-// store and tells the pages, and never writes storage, so it cannot loop.
-window.addEventListener('storage', (e) => {
-  if (e.key !== EDITS_KEY) return
-  for (const [id, changes] of Object.entries(loadEdits())) {
-    edits[id] = changes
-    const index = all.findIndex((issue) => String(issue.id) === id)
-    if (index !== -1) all[index] = withDepartment({ ...all[index], ...changes })
-  }
-  notifyIssuesChanged()
-})
-
-// ---------- Department and admin workflow ----------
-// Start work, submit for verification, approve and reject, saved by issue id
-// on top of the issues above (like the edits). Citizens see the status change
-// at once. The after-photo waiting for the admin (pendingAfterImg) and a
-// "sent back" reason stay in this store: only the department and verify
-// loaders add them, never the citizen pages.
-// Mock only: a real backend checks the role and department on the server.
-const WORKFLOW_KEY = 'babylon.issueWorkflow'
-
-function loadWorkflow() {
-  try {
-    return JSON.parse(window.localStorage.getItem(WORKFLOW_KEY)) ?? {}
-  } catch {
-    return {}
-  }
-}
-
-let workflow = loadWorkflow()
-
-function publicPart(entry) {
-  const { pendingAfterImg, sentBack, sentBackHistory, updatedAt, ...rest } = entry
-  void [pendingAfterImg, sentBack, sentBackHistory, updatedAt]
-  return rest
-}
-
-function applyWorkflow() {
-  for (const [id, entry] of Object.entries(workflow)) {
-    const issue = all.find((item) => String(item.id) === id)
-    if (issue) Object.assign(issue, publicPart(entry))
-  }
-}
-applyWorkflow()
-
-// Another tab (another admin or the department) moved an issue on.
-window.addEventListener('storage', (e) => {
-  if (e.key !== WORKFLOW_KEY) return
-  workflow = loadWorkflow()
-  applyWorkflow()
-  notifyIssuesChanged()
-})
-
-
-
-// ---------- Notifications ----------
-// Every notice is one whole sentence with a link, sent to one account (copied
-// to each staff account of a department, or to every admin).
-
 
 export const REJECT_REASON_NEEDED = 'Write a reason before sending this back.'
 
@@ -203,19 +31,8 @@ export function isReopenedInQueue(issue) {
   return issue.priority === 'reopened' && issue.verification === 'awaiting'
 }
 
-
-
-// ---------- Issues (Map, Feed, Detail) ----------
-// getIssues and getIssueById are served by the backend now (publicApi.js,
-// re-exported below).
-
-// ---------- Editing a report ----------
-// The citizen who filed a report may change its title, description, category,
-// photo and pin while it is still Open. Votes, follows and status are never
-// part of an edit. Every rule is checked again here, like a backend would.
-
 // ---------- Home and the public issue pages ----------
-// Served by the backend now (publicApi.js). Pages still import them from here.
+// Served by the backend (publicApi.js). Pages import them from here.
 export {
   getFixedThisWeek,
   getHeroCategories,
@@ -226,13 +43,9 @@ export {
   getStats,
 } from './publicApi'
 
-// ---------- Department panel ---------
-
-
 // ---------- Admin ----------
-
 export { ACCOUNTABILITY_PERIODS, DEFAULT_PERIOD_WEEKS }
-// Served by the backend now (adminApi.js). Pages still import them from here.
+// Served by the backend (adminApi.js). Pages import them from here.
 export {
   approveResolution,
   getAdminCounts,
@@ -248,22 +61,23 @@ export {
   translateText,
 } from './adminApi'
 
-// Served by the backend now (departmentApi.js). Pages still import them from here.
-export { loadDepartmentPanel, startWork, submitForVerification } from './departmentApi'
+export const ALREADY_REVIEWED = 'This submission was already reviewed.'
 
-// ---------- Citizen (My reports, points and alerts) ----------
-// Everything here belongs to the logged-in account only, found by its email
-// (pass session.email). No email = no data. Points = 60 per report this account filed.
+// ---------- Department panel ----------
+// Served by the backend (departmentApi.js). Pages import them from here.
+export {
+  getDepartmentSummary,
+  loadDepartmentPanel,
+  startWork,
+  submitForVerification,
+} from './departmentApi'
 
-// ---------- Citizen profile ----------
-
+// ---------- Profiles ----------
+// Citizens (profileApi.js) and department and admin accounts (staffApi.js) are
+// both on the server. The person comes from the token, so `email` is only there
+// for the pages' sake.
 export { PROFILE_EVENT }
 
-
-
-
-// Department and admin accounts live on the server now (staffApi.js); citizens
-// are still the mock above until the citizen profile is swapped.
 const isStaff = () => {
   const role = getSession()?.role
   return role === 'department' || role === 'admin'
@@ -278,7 +92,7 @@ export async function getProfile(email) {
   return citizen.getProfile()
 }
 
-// details: { name, address, division }. Checked again here, like a backend would.
+// details: { name, address, division }. Checked again by the server.
 export async function saveProfile(email, details) {
   const profile = await citizen.saveProfile(details)
   if (profile?.name) updateSession({ name: profile.name })
@@ -289,9 +103,7 @@ export async function saveProfile(email, details) {
 // Department and admin accounts: name, job title, phone (the same code check
 // as citizens), a department code for department accounts, an Employee ID and a
 // photo. All of it is saved and checked by the server (staffApi.js); the secrets
-// (department codes, the staff list) never reach the browser. The functions keep
-// the names and arguments the pages use; the person comes from the token, so
-// `email` is only there for the pages' sake.
+// (department codes, the staff list) never reach the browser.
 
 // details: { name, jobTitle }. Checked here for the form, and again by the server.
 export async function saveStaffDetails(email, details) {
@@ -331,20 +143,14 @@ export async function verifyEmployeeId(email, value) {
 }
 
 // Email check for staff and citizens: a code goes to the account's own address
-// (emailCheckApi.js). A citizen's profile is still kept in this browser (see
-// above), so once the server says the address is verified it is remembered here
-// too; after the citizen profile moves to the server it comes with the profile.
+// (emailCheckApi.js).
 // -> { status: 'sent', email, resendIn } | { status: 'verified' }; throws the
 // server's whole-sentence message otherwise.
-function rememberEmailVerified() {
-  profileChanged()
-}
-
 export async function requestEmailCode() {
   const sent = isStaff()
     ? await staff.sendEmailCode()
     : await emailCheck.sendEmailCode(emailCheck.CITIZEN_EMAIL_PATH)
-  if (sent.status === 'verified') rememberEmailVerified()
+  if (sent.status === 'verified') profileChanged()
   return sent
 }
 
@@ -353,7 +159,7 @@ export async function verifyEmailCode(code) {
   const result = isStaff()
     ? await staff.verifyEmailCode(code.trim())
     : await emailCheck.verifyEmailCode(emailCheck.CITIZEN_EMAIL_PATH, code.trim())
-  if (result.status === 'verified') rememberEmailVerified()
+  if (result.status === 'verified') profileChanged()
   return result
 }
 
@@ -420,12 +226,11 @@ export async function completeOnboarding() {
   return user
 }
 
-
 // The number a staff member last asked a code for, kept until it is verified
 // (the server needs it again with the code).
 const staffPhones = {}
 
-// Returns { phone, resendIn } once a code is "sent".
+// Returns { phone, resendIn } once a code is sent.
 export async function requestOtp(email, phoneInput) {
   if (isStaff()) {
     if (checkPhone(phoneInput)) throw new Error('Please enter a valid mobile number first.')
@@ -452,28 +257,12 @@ export async function verifyOtp(email, code) {
   return citizen.verifyOtp(code)
 }
 
-// nid is the full number and photo is a File. The full number is never kept:
-// the profile only gets the last 4 digits. The photo is made smaller and saved
-// in its own store FIRST; only then does the profile say Pending (and the
-// profile event fire), so a Pending submission always has its photo.
-// Throws a whole-sentence message; nothing changes on the profile then.
+// nid is the full number and photo is a File. The server keeps only the last 4
+// digits of the number. Throws a whole-sentence message; nothing changes on the
+// profile then.
 export async function submitIdentity(email, details) {
   return citizen.submitIdentity(details)
 }
-
-// ---------- Admin: identity checks ----------
-// The queue lists every account whose identity is waiting for review, plus a
-// few sample submissions (src/mock/) so the demo queue is never empty.
-// Real decisions are saved on the citizen's profile, so their Profile page and
-// the navbar badge update. Sample decisions live only in this module, so the
-// sidebar badge and the queue always agree, and a reload starts the demo again.
-// The queue never sees the full NID number. The card photo of a real
-// submission is read separately (getIdentityPhoto) and deleted after review.
-
-export const ALREADY_REVIEWED = 'This submission was already reviewed.'
-export const NO_PHOTO_TO_APPROVE =
-  'No card photo was saved with this submission, so it cannot be approved. Reject it and ask the citizen to send it again.'
-'The card photo could not be loaded on this device, so this submission cannot be approved yet. Please try again.'
 
 // The citizen's calls to the backend (reports, votes, me, points).
 export * from './citizenApi.js'

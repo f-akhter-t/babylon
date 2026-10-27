@@ -5,6 +5,7 @@ import { TITLE_MAX, TITLE_MIN } from '../../services/api'
 import { enter } from '../../components/ui/motion'
 import AssistPanel from './AssistPanel'
 import SummarizeButton from './SummarizeButton'
+import DuplicatePanel from './DuplicatePanel'
 
 const REPORT_CATEGORIES = ['Roads', 'Waste', 'Water', 'Lighting', 'Bridges']
 const MAX_PHOTO_MB = 5
@@ -346,6 +347,7 @@ export default function ReportForm({
             onApply={applySuggestion}
           />
         )}
+        {!editing && <DuplicatePanel photo={photo?.file ?? null} disabled={locked} />}
       </section>
 
       {/* 2: category */}

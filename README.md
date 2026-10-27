@@ -2,7 +2,7 @@
 
 Babylon is a civic issue reporting app for Chattogram. Citizens drop a pin on a map to report a problem such as a pothole, overflowing bins or a broken street light, then follow it until it is fixed. City departments work through the issues assigned to them, and an admin checks each fix against its photo before it is closed and keeps an eye on how every department is doing.
 
-> **Backend and frontend.** The Express backend in `backend/` serves the data, accounts and the admin, department and citizen work. The frontend talks to it through `frontend/src/services/http.js`. Anything a page still reads from `frontend/src/mock/` is waiting for its backend step.
+> **Backend and frontend.** The Express backend in `backend/` serves the data, accounts and the admin, department and citizen work. The frontend talks to it through `frontend/src/services/http.js`.
 
 ## Stack
 
@@ -65,10 +65,11 @@ Check it: open http://localhost:5000/api/health. It answers `{"success":true,...
 | `npm run seed:public` | Only the public data (three accounts, 12 issues, votes).                     |
 | `npm run seed:admin`  | Only the admin data (44 issues, 5 identity checks, 5 citizens).              |
 | `npm run seed:citizen` | Only the citizen data (two citizens with their reports, votes and notices). |
+| `npm run clean:seed`  | Shows which demo rows (emails ending in `.test`) are in your database. Add `-- --yes` to remove them. Real accounts and reports stay. |
 | `npm run token -- <role> <email> [department]` | Prints a sign-in token for Postman. Roles: `citizen`, `department`, `admin`. |
 | `npm test`            | Runs all backend tests. They use fakes, so no database, Gemini or CLIP is needed. |
 
-The seed refuses to run when `NODE_ENV=production`. To start again from nothing, drop your database in Atlas, then run `npm run seed`.
+The seed refuses to run when `NODE_ENV=production`. To start again from nothing, drop your database in Atlas, then run `npm run seed`. To remove only the demo rows and keep real ones, run `npm run clean:seed` to see what would go, then `npm run clean:seed -- --yes`. It refuses to run when `NODE_ENV=production`, like the seed.
 
 ### Frontend with the backend
 
@@ -172,6 +173,8 @@ Every account uses the password `password123`.
 
 New citizens sign up at `/signup`. New department and admin accounts sign up at `/staff/signup` with the staff access code (`STAFF_ACCESS_CODE` in `backend/.env`), then finish a short setup on their profile: department code (department staff only), Employee ID, name and job title, a phone code and an email code (a photo is optional). Until "Finish setup" is done the server refuses the account on its panel routes. The three accounts above are already set up, so they skip all of it.
 
+The sign-in pages list these accounts only while the app runs with `npm run dev`, or on a build made with `VITE_SHOW_DEMO_ACCOUNTS=true`. A normal production build hides them; the accounts stay in the seed.
+
 These accounts are for the demo only. They are not real credentials, and they are visible in the seed on purpose. The staff access code, department codes and Employee ID list are server settings and never appear in the frontend. A real service would give each staff member a personal invitation instead of one shared code.
 
 ## Folder layout
@@ -197,9 +200,8 @@ babylon/
         │   ├── layout/ Navbar, Footer, Logo and the staff panel layout
         │   └── ui/     shared pieces such as Button, StatusPill and LoadError
         ├── hooks/      shared React hooks
-        ├── mock/       sample data for the pages not yet moved to the backend
         ├── pages/      one folder per page (Home, Map, Feed, Report, Profile, staff panels…)
-        ├── services/   http.js and the API files; accounts (auth.js) and browser stores
+        ├── services/   http.js and the API files; accounts and the session (auth.js)
         └── utils/      small helpers for dates, maps, images and form rules
 ```
 

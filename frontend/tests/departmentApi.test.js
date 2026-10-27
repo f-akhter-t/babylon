@@ -11,6 +11,22 @@ beforeEach(() => {
   net.reset()
 })
 
+describe('department summary', () => {
+  it('getDepartmentSummary reads GET /department/summary and returns the counts', async () => {
+    const counts = { department: 'Roads & Highways', assigned: 4, open: 2, inProgress: 1, awaiting: 1, completed: 3 }
+    net.reply(200, ok(counts))
+    assert.deepEqual(await api.getDepartmentSummary(), counts)
+    assert.equal(net.calls.length, 1)
+    assert.equal(net.calls[0].url, '/api/department/summary')
+    assert.equal(net.calls[0].method, 'GET')
+  })
+
+  it('a refusal comes back as the server sentence', async () => {
+    net.reply(403, fail('forbidden', 'This is not your department.'))
+    await assert.rejects(api.getDepartmentSummary(), { message: 'This is not your department.' })
+  })
+})
+
 describe('department panel', () => {
   it('loadDepartmentPanel reads the assigned and completed lists', async () => {
     net.reply(200, ok([{ id: 'a' }]))

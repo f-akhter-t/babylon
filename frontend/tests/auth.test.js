@@ -136,42 +136,41 @@ describe('signup', () => {
   })
 })
 
-describe('the saved accounts the unswapped api.js still reads', () => {
-  it('a new citizen can be found by email, and has no password stored', async () => {
-    net.reply(201, ok(signedIn(newcomer)))
+describe('what the browser keeps after signing in', () => {
+  it('only the token and the session, and no password in either', async () => {
+    net.reply(201, ok(signedIn(newcomer, 'sara-token')))
     await auth.signup({ name: 'Sara Khan', email: 'sara@example.com', password: 'secret1', role: 'citizen' })
-    assert.deepEqual(auth.getAccount('sara@example.com'), { name: 'Sara Khan', email: 'sara@example.com', role: 'citizen' })
-    assert.equal(auth.getAccountName('SARA@example.com'), 'Sara Khan')
+    assert.equal(store.size, 2)
+    assert.equal(store.has('babylon-session'), true)
+    assert.equal([...store.values()].some((value) => value.includes('secret1')), false)
   })
 
-  it('the three demo accounts are not saved a second time', async () => {
-    net.reply(200, ok(signedIn(admin)))
-    await auth.login({ email: admin.email, password: 'x', door: 'staff' })
-    assert.deepEqual(auth.staffEmails({ role: 'admin' }), ['admin@babylon.test'])
-    assert.equal(JSON.parse(store.get('babylon-users') ?? '[]').length, 0)
-  })
-
-  it('logging in twice does not duplicate the account', async () => {
+  it('logging in twice keeps one session, not two', async () => {
     net.reply(200, ok(signedIn(newcomer)))
     await auth.login({ email: newcomer.email, password: 'x', door: 'citizen' })
     await auth.login({ email: newcomer.email, password: 'x', door: 'citizen' })
-    assert.equal(JSON.parse(store.get('babylon-users')).length, 1)
+    assert.equal(store.size, 2)
   })
 
-  it('the setup flag is not kept in the saved accounts, only in the session', async () => {
+  it('the setup flag lives in the session', async () => {
     const officer = { id: 'u5', name: 'Imran Ali', email: 'imran@city.gov', role: 'department', department: 'Waste Management', onboarded: false }
     net.reply(200, ok(signedIn(officer)))
     await auth.login({ email: officer.email, password: 'x', door: 'staff' })
-    assert.equal(JSON.parse(store.get('babylon-users'))[0].onboarded, undefined)
     assert.equal(auth.getSession().onboarded, false)
   })
+})
 
-  it('a name changed on the Profile page is kept after the next log-in', async () => {
-    net.reply(200, ok(signedIn(newcomer)))
-    await auth.login({ email: newcomer.email, password: 'x', door: 'citizen' })
-    auth.renameAccount(newcomer.email, 'Sara K.')
-    const again = await auth.login({ email: newcomer.email, password: 'x', door: 'citizen' })
-    assert.equal(again.name, 'Sara K.')
+describe('showDemoAccounts', () => {
+  it('is on while developing, and on when the build asks for it', () => {
+    assert.equal(auth.showDemoAccounts({ DEV: true }), true)
+    assert.equal(auth.showDemoAccounts({ VITE_SHOW_DEMO_ACCOUNTS: 'true' }), true)
+  })
+
+  it('is off for a normal production build, and when there is no environment', () => {
+    assert.equal(auth.showDemoAccounts({ DEV: false }), false)
+    assert.equal(auth.showDemoAccounts({}), false)
+    assert.equal(auth.showDemoAccounts({ VITE_SHOW_DEMO_ACCOUNTS: 'false' }), false)
+    assert.equal(auth.showDemoAccounts(undefined), false)
   })
 })
 

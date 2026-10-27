@@ -6,6 +6,7 @@ import ScrollToTop from './components/layout/ScrollToTop'
 import RouteFade from './components/ui/RouteFade'
 import OnboardingGate from './components/layout/OnboardingGate'
 import Toaster from './components/ui/Toaster'
+import ChatWidget from './components/ui/ChatWidget'
 
 // Each page's code loads only when someone opens it.
 const Home = lazy(() => import('./pages/Home/Home'))
@@ -72,6 +73,8 @@ export default function App() {
           </OnboardingGate>
         </Suspense>
       </ErrorBoundary>
+            {/* The help chat is for signed-in citizens only; it hides itself for everyone else. */}
+      <ChatWidget />
       {/* Outside the boundary and Suspense, so toasts survive a page change or a crash. */}
       <Toaster />
     </>

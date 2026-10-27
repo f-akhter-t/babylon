@@ -5,6 +5,7 @@ import { fail, installBrowser, installFetch, ok } from './helpers.js'
 const store = installBrowser()
 const net = installFetch()
 const api = await import('../src/services/adminApi.js')
+const http = await import('../src/services/http.js')
 
 beforeEach(() => {
   store.clear()
@@ -80,22 +81,33 @@ describe('identity review', () => {
 })
 
 describe('identity photo', () => {
-  const answer = (status, blob = null) => {
-    globalThis.fetch = async () => ({ ok: status === 200, status, blob: async () => blob })
+  let seen
+  const answer = (status, body = null) => {
+    seen = null
+    globalThis.fetch = async (url, init) => {
+      seen = { url, headers: init.headers }
+      return { ok: status === 200, status, blob: async () => body, json: async () => body }
+    }
   }
+  const refusal = (code) => ({ success: false, code, message: 'The server said no.' })
 
-  it('a 200 gives the picture', async () => {
+  it('a 200 gives the picture, asked for with the saved token', async () => {
+    http.setToken('admin-token')
     answer(200, 'BLOB')
     assert.deepEqual(await api.getIdentityPhoto({ id: 'i1' }), { kind: 'photo', blob: 'BLOB' })
+    assert.equal(seen.url, '/api/admin/identity/i1/photo')
+    assert.equal(seen.headers.Authorization, 'Bearer admin-token')
   })
 
   it('a 404 means missing', async () => {
-    answer(404)
+    answer(404, refusal('not-found'))
     assert.deepEqual(await api.getIdentityPhoto({ id: 'i1' }), { kind: 'missing' })
   })
 
   it('any other failure, or no network, means error', async () => {
-    answer(500)
+    answer(500, refusal('server-error'))
+    assert.deepEqual(await api.getIdentityPhoto({ id: 'i1' }), { kind: 'error' })
+    answer(403, refusal('forbidden'))
     assert.deepEqual(await api.getIdentityPhoto({ id: 'i1' }), { kind: 'error' })
     globalThis.fetch = async () => {
       throw new TypeError('Failed to fetch')
