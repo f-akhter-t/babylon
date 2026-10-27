@@ -12,6 +12,13 @@ export async function loadDepartmentPanel() {
   return { assigned, completed }
 }
 
+// The counts for the sidebar badges, without loading the issues themselves:
+// { department, assigned, open, inProgress, awaiting, completed }. The server
+// counts them with the same rule as the two lists above.
+export async function getDepartmentSummary() {
+  return get('/department/summary')
+}
+
 // Open becomes In progress. Returns the issue.
 export async function startWork(id) {
   return patch(`/department/issues/${encodeURIComponent(id)}/status`, { status: 'in-progress' })

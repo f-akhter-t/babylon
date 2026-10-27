@@ -65,7 +65,12 @@ export const ALREADY_REVIEWED = 'This submission was already reviewed.'
 
 // ---------- Department panel ----------
 // Served by the backend (departmentApi.js). Pages import them from here.
-export { loadDepartmentPanel, startWork, submitForVerification } from './departmentApi'
+export {
+  getDepartmentSummary,
+  loadDepartmentPanel,
+  startWork,
+  submitForVerification,
+} from './departmentApi'
 
 // ---------- Profiles ----------
 // Citizens (profileApi.js) and department and admin accounts (staffApi.js) are

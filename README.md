@@ -172,6 +172,8 @@ Every account uses the password `password123`.
 
 New citizens sign up at `/signup`. New department and admin accounts sign up at `/staff/signup` with the staff access code (`STAFF_ACCESS_CODE` in `backend/.env`), then finish a short setup on their profile: department code (department staff only), Employee ID, name and job title, a phone code and an email code (a photo is optional). Until "Finish setup" is done the server refuses the account on its panel routes. The three accounts above are already set up, so they skip all of it.
 
+The sign-in pages list these accounts only while the app runs with `npm run dev`, or on a build made with `VITE_SHOW_DEMO_ACCOUNTS=true`. A normal production build hides them; the accounts stay in the seed.
+
 These accounts are for the demo only. They are not real credentials, and they are visible in the seed on purpose. The staff access code, department codes and Employee ID list are server settings and never appear in the frontend. A real service would give each staff member a personal invitation instead of one shared code.
 
 ## Folder layout
