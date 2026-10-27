@@ -6,7 +6,7 @@
 const pinFill = {
   open: 'fill-amber',
   'in-progress': 'fill-slate',
-  resolved: 'fill-forest',
+  resolved: 'fill-success',
 }
 
 const barFill = {

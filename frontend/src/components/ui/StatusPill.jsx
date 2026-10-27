@@ -10,13 +10,13 @@ const statuses = {
 const pillStyles = {
   open: 'bg-amber/30',
   'in-progress': 'bg-slate/15',
-  resolved: 'bg-mint-deep',
+  resolved: 'bg-success-soft',
 }
 
 const iconStyles = {
   open: 'text-amber-dark',
   'in-progress': 'text-slate',
-  resolved: 'text-forest',
+  resolved: 'text-success',
 }
 
 export default function StatusPill({ status, className }) {
