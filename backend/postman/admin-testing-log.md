@@ -2,7 +2,7 @@
 
 Send each request in `admin.json` by hand (Postman, Send button). Do not use the Runner, and do not add scripts. Write `[x]` when the answer is what "Expected" says, add the date, and write what you saw if it was not.
 
-Before you start, on a clean database: `node scripts/reset-db.mjs`, then `npm run seed:admin`, then `npm start`. Make the tokens with `npm run token -- admin admin@babylon.test`, `npm run token -- department roads@babylon.test "Roads & Highways"` and `npm run token -- citizen citizen@babylon.test`, and paste them into the collection variables `adminToken`, `departmentToken` and `citizenToken`. Run folder 0 first and copy the ids it shows into the collection variables by hand.
+Before you start, on a clean database (drop it in Atlas, or run `npm run clean:seed -- --yes`), then `npm run seed:admin`, then `npm start`. Make the tokens with `npm run token -- admin admin@babylon.test`, `npm run token -- department roads@babylon.test "Roads & Highways"` and `npm run token -- citizen citizen@babylon.test`, and paste them into the collection variables `adminToken`, `departmentToken` and `citizenToken`. Run folder 0 first and copy the ids it shows into the collection variables by hand.
 
 The Expected text is copied from each request's Description in `admin.json`. Translate (folder 6) needs a working `GEMINI_API_KEY` in `backend/.env`; without it the valid requests answer 503 `ai-unavailable`, which is also a correct result to write down.
 
