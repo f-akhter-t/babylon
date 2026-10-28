@@ -4,6 +4,7 @@ import SliderDots from '../../components/ui/SliderDots'
 import HeroSlide from './HeroSlide'
 import HeroVideo from './HeroVideo'
 import HeroSearchCard from './HeroSearchCard'
+import Alpona from './Alpona'
 import useVideoAllowed from './useVideoAllowed'
 import { useT } from '../../i18n/useLanguage'
 
@@ -56,7 +57,8 @@ export default function HeroSlider({ slides = [], categories = [] }) {
             allowed={videoAllowed}
           />
         ))}
-        <div className="absolute inset-0 bg-ink/70 md:bg-transparent md:bg-linear-to-r md:from-ink/75 md:via-ink/35 md:to-ink/5" />
+        <div className="absolute inset-0 bg-ink/70 md:bg-transparent md:bg-linear-to-r md:from-ink/85 md:via-ink/50 md:to-ink/10" />
+        <Alpona />
       </div>
 
       <div className="px-5 pb-24 pt-8 md:px-10 md:pt-12 xl:px-18">

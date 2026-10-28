@@ -68,7 +68,7 @@ export default function ProgressStep({ step, last, reachedNext }) {
           {t(step.label)}
           <span className="sr-only">{t(SPOKEN[look])}</span>
           {step.current && (
-            <span aria-hidden="true" className="rounded-full bg-amber px-2 py-0.5 text-xs font-bold">
+            <span aria-hidden="true" className="rounded-full bg-amber px-2 py-0.5 text-xs font-bold text-ink">
               {t('You are here')}
             </span>
           )}

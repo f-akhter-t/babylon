@@ -1,7 +1,9 @@
 // src/components/layout/Footer.jsx
 import { Link } from 'react-router-dom'
 import Logo from './Logo'
+import FlagStripe from './FlagStripe'
 import { useViewer } from '../../pages/Map/useViewer'
+import { corner, MOTIFS } from '../../utils/alponaArt'
 import { useT } from '../../i18n/useLanguage'
 
 const columns = [
@@ -47,12 +49,50 @@ function visibleColumns(role) {
     .filter((column) => column.links.length > 0)
 }
 
+// The same line art as the home page hero, very faint and not animated: the
+// vine alpona in the top-right corner and the four drawings along the bottom.
+// Built from our own drawing code (no user input).
+const FOOTER_ART = { corner: corner(), motifs: MOTIFS.map((make) => make()) }
+const artProps = {
+  viewBox: '0 0 400 400',
+  fill: 'none',
+  stroke: 'currentColor',
+  strokeWidth: 1.5,
+  strokeLinecap: 'round',
+  strokeLinejoin: 'round',
+}
+
+function FooterArt() {
+  return (
+    <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden text-brand">
+      <svg
+        {...artProps}
+        className="absolute -right-3 -top-3 w-[200px] max-w-none opacity-[0.18] [mask-image:linear-gradient(to_top_left,black_35%,transparent_85%)] [transform:scale(-1,-1)] lg:w-[230px]"
+        dangerouslySetInnerHTML={{ __html: FOOTER_ART.corner }}
+      />
+      <div className="absolute inset-x-0 bottom-0 flex items-end justify-around gap-2 px-4 opacity-[0.15] [mask-image:linear-gradient(to_top,black_20%,transparent_90%)]">
+        {FOOTER_ART.motifs.map((art, i) => (
+          <svg
+            key={i}
+            {...artProps}
+            className={`w-1/2 max-w-[170px] sm:w-1/4 ${i > 1 ? 'max-sm:hidden' : ''}`}
+            dangerouslySetInnerHTML={{ __html: art }}
+          />
+        ))}
+      </div>
+    </div>
+  )
+}
+
 export default function Footer() {
   const t = useT()
   const viewer = useViewer() // follows a login or logout in another tab
 
   return (
-    <footer className="bg-ink px-5 pt-10 font-body text-paper md:px-10 md:pt-12 xl:px-18">
+    <footer className="relative isolate overflow-hidden bg-ink font-body text-paper">
+      <FooterArt />
+      <FlagStripe />
+      <div className="relative px-5 pt-10 md:px-10 md:pt-12 xl:px-18">
       <div className="flex flex-col gap-10 md:flex-row md:justify-between">
         <div>
           <Logo />
@@ -97,7 +137,8 @@ export default function Footer() {
       {/* Closing row */}
       <div className="mt-10 flex flex-col gap-2 border-t border-paper/10 py-6 text-sm text-paper/60 sm:flex-row sm:items-center sm:justify-between">
         <p>{t('© 2026 Babylon. All rights reserved.')}</p>
-        <p>{t('Frontend prototype')}</p>
+        <p>{t('Frontend prototype')} · {t('Made in Bangladesh')}</p>
+      </div>
       </div>
     </footer>
   )

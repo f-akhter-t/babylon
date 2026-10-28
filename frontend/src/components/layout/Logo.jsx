@@ -1,16 +1,17 @@
 import { Link } from 'react-router-dom'
 import clsx from 'clsx'
-import { useT } from '../../i18n/useLanguage'
+import { useLanguage, useT } from '../../i18n/useLanguage'
 
+// tag: the size of the small "For Bangladesh" line under the name (none on sm).
 const sizes = {
-  sm: { mark: 'size-7', word: 'text-xl' },
-  md: { mark: 'size-8 sm:size-[36px]', word: 'text-2xl sm:text-[28px]' },
-  lg: { mark: 'size-10', word: 'text-3xl' },
+  sm: { mark: 'size-7', word: 'text-xl', tag: null },
+  md: { mark: 'size-8 sm:size-[36px]', word: 'text-2xl sm:text-[28px]', tag: 'text-[9px] sm:text-[10px]', tagBn: 'text-[13.5px] sm:text-[15.5px]' },
+  lg: { mark: 'size-10', word: 'text-3xl', tag: 'text-[11px]', tagBn: 'text-[16.5px]' },
 }
 
 const tones = {
-  onDark: { text: 'text-frost', pin: 'fill-flag-green' },
-  onLight: { text: 'text-navy', pin: 'fill-flag-green' },
+  onDark: { text: 'text-frost', pin: 'fill-flag-green', line: 'bg-flag-green-light' },
+  onLight: { text: 'text-navy', pin: 'fill-flag-green', line: 'bg-flag-green' },
 }
 
 // The skyline, in white, stands on the pin and the red sun.
@@ -37,6 +38,7 @@ export default function Logo({
   ...linkProps
 }) {
   const tr = useT()
+  const { lang } = useLanguage()
   const s = sizes[size]
   const t = tones[tone]
   const isLink = to !== null
@@ -63,8 +65,31 @@ export default function Logo({
           <rect key={b.x} x={b.x} y={b.y} width={b.w} height={b.h} rx="0.5" className="fill-white" />
         ))}
       </svg>
-      <span className={clsx(s.word, 'font-heading font-extrabold tracking-[-0.02em]')}>
-        Babylon
+      <span className="flex flex-col">
+        <span className={clsx(s.word, 'font-heading font-extrabold leading-none tracking-[-0.02em]')}>
+          Babylon
+        </span>
+        {s.tag && (
+          <>
+            {/* The flag as a thin line: green, then red. */}
+            <span aria-hidden="true" className="mt-1.5 flex h-[2px] w-full">
+              <span className={clsx('flex-1', t.line)} />
+              <span className="flex-1 bg-flag-red" />
+            </span>
+            {/* English is set in small capitals; Bangla keeps its normal letters. */}
+            {/* Bangla is set larger so it is as wide as the name and the flag line. */}
+            <span
+              className={clsx(
+                'mt-1 font-body font-bold',
+                lang === 'bn'
+                  ? clsx(s.tagBn, 'whitespace-nowrap leading-snug tracking-normal')
+                  : clsx(s.tag, 'uppercase tracking-[0.2em]'),
+              )}
+            >
+              {tr('For Bangladesh')}
+            </span>
+          </>
+        )}
       </span>
     </>
   )

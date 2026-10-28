@@ -161,7 +161,7 @@ export default function NotificationBell({ email, alertsPath = '/citizen/alerts'
         >
           <div className="flex shrink-0 items-center gap-2 border-b border-soft/15 bg-white px-[18px] pb-3 pt-4">
             <h2 className="font-heading text-xl font-extrabold tracking-tight">{t('Notifications')}</h2>
-            <span className="rounded-full bg-amber px-[9px] py-0.5 text-xs font-extrabold">
+            <span className="rounded-full bg-amber px-[9px] py-0.5 text-xs font-extrabold text-ink">
               {unread ? t('{n} new', { n: unread }) : t('All caught up')}
             </span>
             <span className="flex-1" />

@@ -9,6 +9,7 @@ import {
   getRecentActivity,
   getIssues,
 } from '../../services/api'
+import Greeting from './Greeting'
 import HeroSlider from './HeroSlider'
 import StatsRow from './StatsRow'
 import ActivityTicker from './ActivityTicker'
@@ -50,6 +51,7 @@ export default function Home() {
     <div className="font-body">
       <Navbar />
       <main>
+        <Greeting />
         <HeroSlider slides={data?.slides} categories={data?.categories} />
         <StatsRow stats={data?.stats} />
         <ActivityTicker items={data?.activity} />

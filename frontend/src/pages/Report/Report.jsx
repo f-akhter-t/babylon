@@ -4,6 +4,7 @@ import Navbar from '../../components/layout/Navbar'
 import Footer from '../../components/layout/Footer'
 import AnimatedBackground from '../../components/ui/AnimatedBackground'
 import ReportForm from './ReportForm'
+import ThankYou from './ThankYou'
 import LocationPicker from './LocationPicker'
 import { createIssue, POINTS_PER_REPORT } from '../../services/api'
 import { resizeImage } from '../../utils/resizeImage'
@@ -27,6 +28,7 @@ function ReportPage() {
   useDocumentTitle('Report an issue')
   const toast = useToast()
   const [category, setCategory] = useState('')
+  const [thanks, setThanks] = useState(false) // true after a report is saved
   const [location, setLocation] = useState(null) // { lat, lng, label, ward, division } from the map
   const [searchParams] = useSearchParams()
 
@@ -50,6 +52,7 @@ function ReportPage() {
       location,
     })
     toast.info(t('Your report is submitted. You earned {points} points.', { points: POINTS_PER_REPORT }))
+    setThanks(true)
   }
 
   return (
@@ -85,6 +88,9 @@ function ReportPage() {
             </p>
           </div>
 
+          {thanks ? (
+            <ThankYou onAnother={() => setThanks(false)} />
+          ) : (
           <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
             <ReportForm onSubmit={handleSubmit} onCategoryChange={setCategory} />
             <LocationPicker
@@ -94,6 +100,7 @@ function ReportPage() {
               initial={pinnedFromMap}
             />
           </div>
+          )}
         </div>
       </main>
 

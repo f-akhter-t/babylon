@@ -29,7 +29,7 @@ export default function FinalCtaBand() {
               {t('See a problem?')}
               <span className="block text-brand">{t('Report it in 30 seconds.')}</span>
             </h2>
-            <p className="mt-4 max-w-[480px] text-lg leading-normal text-page">
+            <p className="mt-4 max-w-[480px] text-lg leading-normal text-frost">
               {t('Snap a photo, drop a pin, pick a category. We send it to the right department.')}
             </p>
 
@@ -42,7 +42,7 @@ export default function FinalCtaBand() {
               </Button>
             </div>
 
-            <ul className="mt-7 flex max-w-[560px] flex-wrap gap-x-6 gap-y-2 text-sm font-semibold text-page">
+            <ul className="mt-7 flex max-w-[560px] flex-wrap gap-x-6 gap-y-2 text-sm font-semibold text-frost">
               {perks.map((perk) => (
                 <li key={perk} className="flex items-center gap-2">
                   <CheckIcon className="size-4 text-brand" />
