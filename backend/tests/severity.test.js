@@ -30,7 +30,7 @@ test('with CLIP off, assessPhoto answers null ("AI skipped")', async () => {
   assert.equal(await assessPhoto(PIXEL), null)
 })
 
-test('the real default is off unless CLIP_ENABLED=true, so it answers null', async () => {
+test('the real service answers null when CLIP_ENABLED=false', async () => {
   assert.equal(await defaultAssessPhoto(PIXEL), null)
 })
 
