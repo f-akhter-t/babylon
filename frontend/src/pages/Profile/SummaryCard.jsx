@@ -4,6 +4,7 @@ import StaircaseIcon from '../../components/ui/StaircaseIcon'
 import CountUp from '../../components/ui/CountUp'
 import VerifyBadge from './VerifyBadge'
 import CompletenessMeter from './CompletenessMeter'
+import Badges from './Badges'
 import { getCurrentUser } from '../../services/api'
 import { useT } from '../../i18n/useLanguage'
 
@@ -39,12 +40,18 @@ export default function SummaryCard({ profile, showMeter = true }) {
   return (
     <aside
       aria-label={t('Your summary')}
-      className="flex flex-col gap-5 rounded-card bg-ink p-6 text-frost shadow-sm"
+      className="relative flex flex-col gap-5 overflow-hidden rounded-card bg-ink p-6 text-frost shadow-sm"
     >
+      {/* A thin green and red stripe, like the flag, along the top. */}
+      <div aria-hidden="true" className="absolute inset-x-0 top-0 flex h-1.5">
+        <span className="h-full flex-1 bg-flag-green" />
+        <span className="h-full w-1/5 bg-flag-red" />
+        <span className="h-full flex-1 bg-flag-green" />
+      </div>
       <div className="flex items-center gap-4">
         <span
           aria-hidden="true"
-          className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-brand font-heading text-xl font-extrabold text-ink"
+          className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-brand font-heading text-xl font-extrabold text-ink ring-2 ring-flag-green-light ring-offset-2 ring-offset-ink"
         >
           {initialsFor(profile.name)}
         </span>
@@ -93,6 +100,11 @@ export default function SummaryCard({ profile, showMeter = true }) {
               ? t('You reached the top level.')
               : t('{n} points to reach level {level}.', { n: toNext, level: user.level + 1 })}
           </p>
+          <p className="mt-3 rounded-tile bg-flag-green-light/15 px-3 py-2 font-body text-sm text-frost">
+            {user.reports === 0
+              ? t('Your first report is a great way to start.')
+              : t('{name}, your reports are making your area better.', { name: profile.name.trim().split(/\s+/)[0] })}
+          </p>
         </div>
       ) : (
         <div role="status" className="flex flex-col gap-2">
@@ -101,6 +113,10 @@ export default function SummaryCard({ profile, showMeter = true }) {
           <div aria-hidden="true" className="h-12 w-24 rounded-tile bg-frost/10 skeleton" />
         </div>
       )}
+
+      <div className="border-t border-frost/15 pt-4">
+        <Badges user={user} profile={profile} />
+      </div>
 
       {showMeter ? (
         <div className="border-t border-frost/15 pt-4">
