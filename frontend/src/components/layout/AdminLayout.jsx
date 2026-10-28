@@ -13,6 +13,7 @@ import { fit } from './staffFit'
 import { useT } from '../../i18n/useLanguage'
 import PhotoBackdrop from '../ui/CityPhoto'
 import ThemeToggle from '../ui/ThemeToggle'
+import LanguageToggle from './LanguageToggle'
 
 const LG_QUERY = '(min-width: 64rem)'
 const MENU_ID = 'staff-menu'
@@ -103,6 +104,7 @@ function StaffNav({ variant, active, onSelect, department, note, counts, onNavig
         <p className="font-body text-xs font-bold uppercase tracking-widest text-brand">
           {t(config.label)}
         </p>
+        <LanguageToggle />
         <div className="flex items-center justify-center gap-3">
           <ThemeToggle />
           {!locked && bell}
@@ -271,7 +273,8 @@ export default function AdminLayout({
             {t(config.label)}
           </p>
         </div>
-        <div className="flex shrink-0 items-center gap-2">
+        <div className="flex shrink-0 flex-wrap items-center justify-end gap-2">
+          <LanguageToggle />
           <ThemeToggle />
           {bell}
           <button

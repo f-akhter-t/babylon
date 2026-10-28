@@ -939,6 +939,7 @@ const bn = {
   'Babylon home': 'ব্যাবিলন হোম',
   'The card photo is too small to read': 'কার্ডের ছবিটি পড়ার জন্য খুব ছোট',
   'Reject it and ask the citizen to send a clearer photo.': 'এটি প্রত্যাখ্যান করে নাগরিককে আরও স্পষ্ট ছবি পাঠাতে বলুন।',
+  "We can't find that page.": 'আমরা সেই পৃষ্ঠাটি খুঁজে পাচ্ছি না।',
 }
 
 // Server text with numbers in it. [pattern, builder]; the builder gets the
