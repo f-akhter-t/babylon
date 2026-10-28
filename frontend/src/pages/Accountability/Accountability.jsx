@@ -21,6 +21,8 @@ import {
 import { useAsync } from '../../hooks/useAsync'
 import RequireRole from '../Auth/RequireRole'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
+import DivisionSelect from '../../components/ui/DivisionSelect'
+import { useDivisionParam } from '../../hooks/useDivisionParam'
 import { fit, REGION_FOCUS, useFitMode } from '../../components/layout/staffFit'
 import { usePrefersReducedMotion } from '../../hooks/usePrefersReducedMotion'
 import { useT, useNumber } from '../../i18n/useLanguage'
@@ -310,13 +312,14 @@ function AccountabilityPage() {
   useDocumentTitle('Accountability')
   const [weeks, setWeeks] = useState(DEFAULT_PERIOD_WEEKS)
   // Keyed on the period: useAsync ignores the answer of an earlier load.
-  const load = useCallback(() => loadAccountability(weeks), [weeks])
+  const [division, setDivision] = useDivisionParam()
+  const load = useCallback(() => loadAccountability(weeks, division), [weeks, division])
   const { data, error, retry } = useAsync(load)
   const fitMode = useFitMode()
 
   // Figures are only ever labelled with their own period. While the new
   // period loads, the old figures stay (marked busy) under their old labels.
-  const ready = Boolean(data) && data.weeks === weeks && !error
+  const ready = Boolean(data) && data.weeks === weeks && (data.division ?? '') === division && !error
   const busy = !error && !ready
 
   // One polite live region, so each change is announced once: first the
@@ -345,6 +348,7 @@ function AccountabilityPage() {
           {/* Outside the area that reloads, so it keeps focus after a change.
               The status line sits under it, in the height the heading already uses. */}
           <div className="flex w-full flex-col items-stretch gap-1 sm:w-auto sm:items-end">
+            <DivisionSelect value={division} onChange={setDivision} />
             <select
               value={weeks}
               onChange={(e) => setWeeks(Number(e.target.value))}
@@ -367,6 +371,21 @@ function AccountabilityPage() {
         {error && (
           <div className="mt-6">
             <LoadError message={TEXT.loadError(weeks, t)} onRetry={retry} />
+          </div>
+        )}
+
+        {/* First load: grey blocks in the shape of the page, so it is never blank. */}
+        {!data && !error && (
+          <div aria-hidden="true" className="mt-6 animate-pulse">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              {[0, 1, 2, 3].map((i) => (
+                <div key={i} className="h-28 rounded-panel bg-mint" />
+              ))}
+            </div>
+            <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_18.75rem]">
+              <div className="h-80 rounded-panel bg-mint" />
+              <div className="h-80 rounded-panel bg-mint" />
+            </div>
           </div>
         )}
 

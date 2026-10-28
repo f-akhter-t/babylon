@@ -29,12 +29,12 @@ export default function Alpona() {
       {/* The corner is drawn at the bottom-left, so it is turned over to sit top-left. */}
       <svg
         {...svgProps}
-        className={`${base} -left-3 -top-3 w-[260px] opacity-[0.14] [mask-image:linear-gradient(to_bottom_right,black_35%,transparent_85%)] [transform:scaleY(-1)] lg:w-[420px]`}
+        className={`${base} -left-3 -top-3 w-[260px] opacity-[0.22] [mask-image:linear-gradient(to_bottom_right,black_35%,transparent_85%)] [transform:scaleY(-1)] lg:w-[420px]`}
         dangerouslySetInnerHTML={{ __html: cornerArt }}
       />
 
       <div
-        className={`${base} inset-x-0 bottom-0 flex items-end justify-around gap-2 px-4 opacity-[0.1] [mask-image:linear-gradient(to_top,black_30%,transparent_100%)]`}
+        className={`${base} inset-x-0 bottom-0 flex items-end justify-around gap-2 px-4 opacity-[0.17] [mask-image:linear-gradient(to_top,black_30%,transparent_100%)]`}
       >
         {motifs.map((art, i) => (
           <svg
@@ -52,7 +52,7 @@ export default function Alpona() {
         stroke="currentColor"
         strokeWidth="1.8"
         strokeLinejoin="round"
-        className={`${base} -right-10 top-1/2 h-[480px] -translate-y-1/2 opacity-[0.14] [mask-image:linear-gradient(to_left,black_45%,transparent_100%)] max-lg:hidden`}
+        className={`${base} -right-10 top-1/2 h-[480px] -translate-y-1/2 opacity-[0.22] [mask-image:linear-gradient(to_left,black_45%,transparent_100%)] max-lg:hidden`}
       >
         <path d={BANGLADESH_PATH} pathLength="1" style={{ '--i': 3 }} />
         <circle className="dot" cx={DHAKA.x} cy={DHAKA.y} r="5" fill="#E4463D" stroke="none" style={{ '--i': 12 }} />

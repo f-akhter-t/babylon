@@ -8,11 +8,12 @@ const viewerOf = (req) => req.user?.email
 const positionOf = ({ lat, lng }) => (lat === undefined ? undefined : [lat, lng])
 
 export async function list(req, res) {
-  const { category, status, search } = req.valid.query
+  const { category, status, search, division } = req.valid.query
   const data = await issues.listIssues({
     category,
     status,
     search,
+    division,
     from: positionOf(req.valid.query),
     viewerEmail: viewerOf(req),
   })

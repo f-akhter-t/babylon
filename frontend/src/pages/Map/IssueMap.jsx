@@ -2,7 +2,7 @@ import 'leaflet/dist/leaflet.css'
 import { useCallback, useState } from 'react'
 import { MapContainer, TileLayer } from 'react-leaflet'
 import clsx from 'clsx'
-import { MAP_CENTER } from '../../utils/geo'
+import { BANGLADESH_BOUNDS } from '../../utils/geo'
 import PinLayer from './PinLayer'
 import FlyToSelected from './FlyToSelected'
 import MapPopup from './MapPopup'
@@ -47,8 +47,7 @@ export default function IssueMap({
     <div className={clsx('relative isolate', className)}>
       <MapContainer
         {...mapMotionOptions()}
-        center={MAP_CENTER}
-        zoom={14}
+        bounds={BANGLADESH_BOUNDS}
         zoomControl={false}
         className="absolute! inset-0 bg-map-land!"
       >

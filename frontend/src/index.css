@@ -483,6 +483,14 @@ textarea:not(:disabled),
   stroke-dasharray: 0.004 0.01;
 }
 
+/* The bar along the greeting's bottom edge (pages/Home/Greeting.jsx) runs out
+   from right to left while the greeting is showing. */
+@keyframes greeting-run {
+  to {
+    transform: scaleX(0);
+  }
+}
+
 /* The one reduced-motion rule for the whole app: every CSS animation and
    transition ends at once. Motion started from JavaScript (element.animate,
    map moves, count-up, the background) checks the preference itself, at the

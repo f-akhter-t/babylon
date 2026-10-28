@@ -10,6 +10,7 @@ export const PUBLIC_MESSAGES = Object.freeze({
 
   categoryInvalid: 'Choose a category from the list.',
   statusInvalid: 'Choose a status from the list.',
+  divisionInvalid: 'Choose a division from the list.',
   searchTooLong: 'Search with 100 characters or fewer.',
   locationInvalid: 'Send both a valid latitude and a valid longitude.',
   idMissing: 'Choose an issue first.',

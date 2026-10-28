@@ -14,6 +14,8 @@ import NewReportsBar from '../../components/ui/NewReportsBar'
 import { prefersLessMotion } from '../../components/ui/motion'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import { useToast } from '../../components/ui/toast'
+import { useViewer } from '../Map/useViewer'
+import { useProfile } from '../../hooks/useProfile'
 import { useT } from '../../i18n/useLanguage'
 
 const EMPTY = []
@@ -27,10 +29,22 @@ export default function Feed() {
   const [search, setSearch] = useState('')
   const toast = useToast()
 
+  // A citizen sees only their own division's issues; everyone else sees all of
+  // Bangladesh. Their division comes from their profile, so wait for it first.
+  const viewer = useViewer()
+  const me = useProfile()
+  const isCitizen = viewer.role === 'citizen'
+  const division = isCitizen ? (me.profile?.division ?? '') : ''
+  const waiting = isCitizen && me.loading
+
   // Live: another tab's new, changed or deleted report shows up here without a
   // reload. New filters load afresh; retry keeps the filters.
-  const filterKey = JSON.stringify([category, status, search])
-  const load = useCallback(() => getIssues({ category, status, search, includeUnlocated: true }), [category, status, search])
+  const filterKey = JSON.stringify([category, status, search, division])
+  const load = useCallback(
+    // A promise that never settles keeps the list on "loading" until the profile is here.
+    () => (waiting ? new Promise(() => {}) : getIssues({ category, status, search, division, includeUnlocated: true })),
+    [category, status, search, division, waiting],
+  )
   const { data, error, loading, retry, update } = useLiveIssues(load, { list: (list) => list })
   const failed = Boolean(error) && !loading
   const issues = loading || failed ? EMPTY : data
@@ -102,6 +116,11 @@ export default function Feed() {
             <p className="max-w-xl font-body text-paper/70">
               {t('Browse every issue the city is tracking, from freshly reported to fully resolved. Drag the slider on fixed issues to see the before and after.')}
             </p>
+            {division && (
+              <p className="font-body text-sm font-semibold text-brand">
+                {t('Showing issues in {division} division', { division: t(division) })}
+              </p>
+            )}
           </div>
         </section>
 
