@@ -2,6 +2,7 @@ import { useRef } from 'react'
 import Logo from '../../components/layout/Logo'
 import FlagStripe from '../../components/layout/FlagStripe'
 import ThemeToggle from '../../components/ui/ThemeToggle'
+import LanguageToggle from '../../components/layout/LanguageToggle'
 import clsx from 'clsx'
 import { useT } from '../../i18n/useLanguage'
 
@@ -169,7 +170,8 @@ export default function AuthShell({ variant = 'citizen', title, subtitle, childr
             {t('Staff')}
           </span>
         )}
-        <ThemeToggle className="ml-auto" />
+        <LanguageToggle className="ml-auto" />
+        <ThemeToggle />
       </header>
       <FlagStripe />
 
