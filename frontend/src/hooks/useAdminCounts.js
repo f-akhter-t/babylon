@@ -14,7 +14,7 @@ async function countsFor(variant, department) {
 // Updates by itself when issues change (this tab or another one).
 export function useAdminCounts(variant, department) {
   const [counts, setCounts] = useState({})
-  const identity = usePendingIdentityCount()
+  const identity = usePendingIdentityCount(variant === 'admin')
 
   useEffect(() => {
     let ignore = false

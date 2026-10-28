@@ -236,7 +236,7 @@ export default function ChatWidget() {
         aria-label={open ? t('Close the Babylon helper') : t('Open the Babylon helper')}
         onClick={() => setOpen((o) => !o)}
         className={clsx(
-          'group fixed right-4 z-40 h-14 w-14 rounded-full focus-visible:outline-none',
+          'group fixed right-4 z-40 h-12 w-12 rounded-full focus-visible:outline-none sm:h-14 sm:w-14',
           onMap ? 'bottom-24' : 'bottom-4',
         )}
       >

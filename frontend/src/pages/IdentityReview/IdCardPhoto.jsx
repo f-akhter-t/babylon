@@ -102,6 +102,9 @@ function PhotoDialog({ url, name, onClose }) {
 export default function IdCardPhoto({ photo, name, noteId, onUseReason }) {
   const t = useT()
   const [open, setOpen] = useState(false)
+  // A photo only a few pixels wide (a placeholder) would show as a big empty box.
+  const [smallUrl, setSmallUrl] = useState(null)
+  const tooSmall = photo.url !== null && smallUrl === photo.url
   const triggerRef = useRef(null)
 
   const close = useCallback(() => {
@@ -147,12 +150,21 @@ export default function IdCardPhoto({ photo, name, noteId, onUseReason }) {
     )
   }
 
+  if (tooSmall) {
+    return (
+      <PhotoMessage id={noteId} title={t('The card photo is too small to read')} warn>
+        {t('Reject it and ask the citizen to send a clearer photo.')}
+      </PhotoMessage>
+    )
+  }
+
   return (
     <figure className="flex w-full max-w-md flex-col gap-2">
       <img
         src={photo.url}
         alt={t('Front of the NID card sent by {name}', { name })}
         onClick={() => setOpen(true)}
+        onLoad={(e) => e.currentTarget.naturalWidth < 20 && setSmallUrl(photo.url)}
         className={clsx(FRAME, 'cursor-zoom-in bg-ink/5 object-contain shadow-sm')}
       />
       <figcaption className="flex flex-wrap items-center justify-between gap-2">

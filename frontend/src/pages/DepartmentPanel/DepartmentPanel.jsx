@@ -22,7 +22,7 @@ import { useViewer } from '../Map/useViewer'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import { ALL_ASSIGNED_LABEL, DEPARTMENT_FILTERS, filterFor, issuesFor } from './departmentFilters'
 import { fit, REGION_FOCUS, useFitMode } from '../../components/layout/staffFit'
-import { useT } from '../../i18n/useLanguage'
+import { useNumber, useT } from '../../i18n/useLanguage'
 
 const PANEL_ID = 'resolve-panel'
 const PANEL_HEADING_ID = 'resolve-panel-heading'
@@ -33,7 +33,8 @@ const NO_DEPARTMENT =
 const LOAD_FAILED = 'We could not load your department’s issues. Please try again.'
 const NO_ISSUES = Promise.resolve({ assigned: [], completed: [] })
 
-function StatCard({ label, value, level, iconClass, dark }) {
+function StatCard({ label, value, level, iconClass, dark, note }) {
+  const n = useNumber()
   return (
     <div
       className={clsx(
@@ -51,8 +52,9 @@ function StatCard({ label, value, level, iconClass, dark }) {
           dark ? 'text-brand' : 'text-navy',
         )}
       >
-        {value}
+        {n(value)}
       </p>
+      {note && <p className="font-body text-xs text-frost/70 max-sm:hidden sm:mt-1">{note}</p>}
     </div>
   )
 }
@@ -249,7 +251,7 @@ function DepartmentPanelPage() {
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4">
               <StatCard label={t('Open')} value={open} level={1} iconClass="text-warn" />
               <StatCard label={t('In progress')} value={inProgress} level={2} iconClass="text-soft" />
-              <StatCard label={t('Awaiting admin check')} value={awaiting} dark />
+              <StatCard label={t('Awaiting admin check')} value={awaiting} dark note={t('With the admin')} />
             </div>
             {department && <WeeklySummaryCard />}
           </div>

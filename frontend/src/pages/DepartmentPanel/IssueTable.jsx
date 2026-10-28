@@ -2,7 +2,7 @@ import clsx from 'clsx'
 import StatusPill from '../../components/ui/StatusPill'
 import StaircaseIcon from '../../components/ui/StaircaseIcon'
 import { sentBackMessage } from './departmentFilters'
-import { useT } from '../../i18n/useLanguage'
+import { useNumber, useT } from '../../i18n/useLanguage'
 
 // A table where the list is at least 48rem wide; stacked cards when it is narrower
 // (a phone, or the Resolve panel open beside it). Container queries, so it
@@ -138,6 +138,7 @@ export default function IssueTable({
   panelId,
 }) {
   const t = useT()
+  const n = useNumber()
   return (
     <div className="@container rounded-card bg-mint">
       <div
@@ -166,7 +167,7 @@ export default function IssueTable({
           )}
         >
           <span className="font-heading text-2xl font-extrabold text-accent @3xl:text-3xl">
-            {issue.rank}
+            {n(issue.rank)}
           </span>
 
           <div className="min-w-0">
@@ -186,7 +187,7 @@ export default function IssueTable({
               >
                 {t(PRIORITY_LABEL[issue.priority] ?? issue.priority)}
               </span>
-              <span>{issue.ward ? `${issue.location}, ${issue.ward}` : issue.location}</span>
+              <span>{issue.ward ? `${issue.location}, ${t(issue.ward)}` : issue.location}</span>
             </p>
             {issue.sentBack && (
               <p className="mt-1 min-w-0 break-words font-body text-sm font-bold text-alert">
@@ -202,13 +203,13 @@ export default function IssueTable({
             <span className="font-body text-base font-bold text-navy">
               <span aria-hidden="true">↑ </span>
               <span className="@3xl:hidden">
-                {issue.votes === 1 ? '1 vote' : `${issue.votes} votes`}
+                {t(issue.votes === 1 ? '1 vote' : `${issue.votes} votes`)}
               </span>
               <span aria-hidden="true" className="hidden @3xl:inline">
-                {issue.votes}
+                {n(issue.votes)}
               </span>
               <span className="hidden @3xl:inline @3xl:sr-only">
-                {issue.votes === 1 ? '1 vote' : `${issue.votes} votes`}
+                {t(issue.votes === 1 ? '1 vote' : `${issue.votes} votes`)}
               </span>
             </span>
 

@@ -935,11 +935,17 @@ const bn = {
   'Dark mode': 'ডার্ক মোড',
   'Switch to light mode': 'লাইট মোডে যান',
   'Switch to dark mode': 'ডার্ক মোডে যান',
+  'Drag the pin to adjust': 'ঠিক করতে পিনটি টানুন',
+  'Babylon home': 'ব্যাবিলন হোম',
+  'The card photo is too small to read': 'কার্ডের ছবিটি পড়ার জন্য খুব ছোট',
+  'Reject it and ask the citizen to send a clearer photo.': 'এটি প্রত্যাখ্যান করে নাগরিককে আরও স্পষ্ট ছবি পাঠাতে বলুন।',
 }
 
 // Server text with numbers in it. [pattern, builder]; the builder gets the
 // captured parts already in Bangla digits.
 export const patterns = [
+  [/^Ward (\d+)$/, (n) => `ওয়ার্ড ${n}`],
+  [/^(\d+) votes?$/, (n) => `${n}টি ভোট`],
   [/^Your name needs at least (\d+) characters\.$/, (n) => `আপনার নামে কমপক্ষে ${n}টি অক্ষর থাকতে হবে।`],
   [/^Your name can be at most (\d+) characters\.$/, (n) => `আপনার নাম সর্বোচ্চ ${n}টি অক্ষরের হতে পারে।`],
   [/^Your job title needs at least (\d+) characters\.$/, (n) => `আপনার পদবিতে কমপক্ষে ${n}টি অক্ষর থাকতে হবে।`],

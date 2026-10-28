@@ -23,7 +23,7 @@ export default function IssueMiniMap({ issue }) {
   if (!hasPosition(issue)) return null
 
   const position = [issue.lat, issue.lng]
-  const place = `${issue.location}, ${issue.ward} · ${t('{distance} away', { distance: format.distance(issue.distanceM) })}`
+  const place = `${issue.location}, ${t(issue.ward)} · ${t('{distance} away', { distance: format.distance(issue.distanceM) })}`
   const fullMap = `https://www.openstreetmap.org/?mlat=${issue.lat}&mlon=${issue.lng}#map=17/${issue.lat}/${issue.lng}`
 
   return (

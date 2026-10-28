@@ -45,7 +45,7 @@ export default function WeeklySummaryCard() {
         <h2 id="weekly-title" className="font-heading text-xl font-extrabold text-navy">
           {t('This week')}
         </h2>
-        <span className="font-body text-xs text-muted">{t('Last {days} days', { days: data.days })} · {data.department}</span>
+        <span className="font-body text-xs text-muted">{t('Last {days} days', { days: data.days })} · {t(data.department)}</span>
       </div>
 
       <dl className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-5">
