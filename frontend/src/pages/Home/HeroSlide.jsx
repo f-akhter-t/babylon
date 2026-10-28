@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
 import clsx from 'clsx'
 import Button from '../../components/ui/Button'
-import StaircaseIcon from '../../components/ui/StaircaseIcon'
 import { PlusIcon, ArrowRightIcon, CheckIcon } from './HomeIcons'
 import { useT } from '../../i18n/useLanguage'
 
@@ -25,11 +24,13 @@ function Line({ as: Tag = 'span', shown, order, className, children }) {
 // so the page has only one h1.
 export default function HeroSlide({ slide, active = true, as: Heading = 'h2' }) {
   const t = useT()
-  // Wait one frame so the first slide also animates on page load.
+  // Wait a moment so the first slide also animates on page load. A timer, not
+  // requestAnimationFrame: a browser stops animation frames in a tab or window
+  // that is in the background, which left the text hidden until you clicked.
   const [mounted, setMounted] = useState(false)
   useEffect(() => {
-    const id = requestAnimationFrame(() => setMounted(true))
-    return () => cancelAnimationFrame(id)
+    const id = setTimeout(() => setMounted(true), 30)
+    return () => clearTimeout(id)
   }, [])
   const shown = active && mounted
 
@@ -37,10 +38,11 @@ export default function HeroSlide({ slide, active = true, as: Heading = 'h2' }) 
   const nextStep = headCount + slide.accent.length
 
   return (
-    <div className="max-w-[560px]">
+    // The soft shadow keeps the white text readable over a bright photo or video.
+    <div className="max-w-[560px] [text-shadow:0_2px_18px_rgb(0_0_0/0.55)]">
       <div className="flex flex-wrap items-center gap-2">
         <span className="inline-flex items-center gap-2 rounded-full border border-soft bg-paper/5 px-4 py-2 text-[13px] font-bold uppercase tracking-widest text-brand">
-          <StaircaseIcon level={3} />
+          <span aria-hidden="true" className="size-2.5 rounded-full bg-flag-green-light" />
           {t(slide.badge)}
         </span>
         <span className="inline-flex items-center gap-2 rounded-full border border-soft bg-paper/5 px-4 py-2 text-[13px] font-bold uppercase tracking-widest text-frost">
@@ -68,7 +70,7 @@ export default function HeroSlide({ slide, active = true, as: Heading = 'h2' }) 
         as="p"
         shown={shown}
         order={nextStep}
-        className="mt-5.5 max-w-[540px] text-lg leading-normal text-page"
+        className="mt-5.5 max-w-[540px] text-lg leading-normal text-frost"
       >
         {t(slide.text)}
       </Line>
@@ -86,7 +88,7 @@ export default function HeroSlide({ slide, active = true, as: Heading = 'h2' }) 
         as="ul"
         shown={shown}
         order={nextStep + 2}
-        className="mt-5.5 flex flex-wrap gap-x-5.5 gap-y-2 text-sm font-semibold text-page"
+        className="mt-5.5 flex flex-wrap gap-x-5.5 gap-y-2 text-sm font-semibold text-frost"
       >
         {slide.perks.map((perk) => (
           <li key={perk} className="flex items-center gap-2">

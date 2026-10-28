@@ -27,6 +27,7 @@ export default function NotFound() {
             {t('Page not found')}
           </h1>
           <p className="text-lg text-soft">{t("We can't find that page.")}</p>
+          <p className="font-heading text-xl font-bold text-good">{t('Wrong turn, friend.')}</p>
           <div className="flex flex-wrap justify-center gap-3">
             {isStaff && (
               <Button to={homePathFor(viewer.role)} variant="dark">

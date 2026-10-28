@@ -21,7 +21,7 @@ const tones = {
     icon: 'text-brand',
     number: 'text-brand',
     title: 'text-frost',
-    body: 'text-page',
+    body: 'text-frost',
   },
 }
 

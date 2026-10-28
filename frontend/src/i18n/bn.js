@@ -940,6 +940,21 @@ const bn = {
   'The card photo is too small to read': 'কার্ডের ছবিটি পড়ার জন্য খুব ছোট',
   'Reject it and ask the citizen to send a clearer photo.': 'এটি প্রত্যাখ্যান করে নাগরিককে আরও স্পষ্ট ছবি পাঠাতে বলুন।',
   "We can't find that page.": 'আমরা সেই পৃষ্ঠাটি খুঁজে পাচ্ছি না।',
+  'For Bangladesh': 'বাংলাদেশের জন্য',
+  'Good morning, {name}': 'শুভ সকাল, {name}',
+  'Good day, {name}': 'শুভ দুপুর, {name}',
+  'Good afternoon, {name}': 'শুভ বিকেল, {name}',
+  'Good evening, {name}': 'শুভ সন্ধ্যা, {name}',
+  'Today is Language Martyrs’ Day. We remember.': 'আজ শহীদ দিবস ও আন্তর্জাতিক মাতৃভাষা দিবস। আমরা স্মরণ করি।',
+  'Happy Independence Day, Bangladesh.': 'স্বাধীনতা দিবসের শুভেচ্ছা, বাংলাদেশ।',
+  'Shubho Noboborsho! Happy Bengali New Year.': 'শুভ নববর্ষ! পহেলা বৈশাখের শুভেচ্ছা।',
+  'Happy Victory Day, Bangladesh.': 'বিজয় দিবসের শুভেচ্ছা, বাংলাদেশ।',
+  'Thank you. Your city will remember you.': 'ধন্যবাদ, আপনার শহর আপনাকে মনে রাখবে।',
+  'Your report is with the team. You earned {points} points.': 'আপনার রিপোর্ট দলের কাছে পৌঁছেছে। আপনি {points} পয়েন্ট পেয়েছেন।',
+  'See my reports': 'আমার রিপোর্ট দেখুন',
+  'Report another issue': 'আরও একটি সমস্যা জানান',
+  'Made in Bangladesh': 'বাংলাদেশে তৈরি',
+  'Wrong turn, friend.': 'রাস্তা ভুল হয়ে গেছে, বন্ধু।',
 }
 
 // Server text with numbers in it. [pattern, builder]; the builder gets the

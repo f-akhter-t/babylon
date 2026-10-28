@@ -37,7 +37,7 @@ export default function MapPreviewSection({ issues }) {
             <h2 className="mt-2 font-heading text-4xl font-extrabold leading-[1.02] tracking-[-0.03em] text-frost md:text-5xl">
               {t('Already reported? Upvote it.')}
             </h2>
-            <p className="mt-4 max-w-[420px] text-lg leading-normal text-page">
+            <p className="mt-4 max-w-[420px] text-lg leading-normal text-frost">
               {t('See what is broken near you. Already on the map? Upvote it instead of reporting it again.')}
             </p>
 
