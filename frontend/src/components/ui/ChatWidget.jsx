@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useLocation } from 'react-router-dom'
 import clsx from 'clsx'
-import { useViewer } from '../../pages/Map/useViewer'
+import { getSession } from '../../services/auth'
 import { sendChat } from '../../services/extraApi'
 import { useT } from '../../i18n/useLanguage'
 
@@ -32,8 +32,10 @@ function TypingDots() {
 // Guests, departments and admins never see it.
 export default function ChatWidget() {
   const t = useT()
-  const viewer = useViewer()
   const { pathname } = useLocation()
+  // Read on every render, not once: this widget stays mounted across pages, so a
+  // login or logout (which always changes the page) must show or hide it at once.
+  const isCitizen = getSession()?.role === 'citizen'
   const [open, setOpen] = useState(false)
   const [messages, setMessages] = useState([]) // { role: 'user' | 'assistant', text }
   const [draft, setDraft] = useState('')
@@ -62,7 +64,7 @@ export default function ChatWidget() {
     return () => document.removeEventListener('keydown', onKey)
   }, [open])
 
-  if (!viewer.canAct) return null
+  if (!isCitizen) return null
 
   async function ask(text) {
     const question = text.trim()
