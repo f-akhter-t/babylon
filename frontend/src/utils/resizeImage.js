@@ -1,6 +1,6 @@
 // Shrinks a photo and returns it as a JPEG data URL.
-// Full-size phone photos are too big to keep in localStorage, so the mock
-// backend stores this smaller copy instead.
+// Full-size phone photos are too big to send as they are (the server limits the
+// size of each request), so photos go up as this smaller copy instead.
 export function resizeImage(file, maxSize = 800, quality = 0.7) {
   return new Promise((resolve, reject) => {
     const url = URL.createObjectURL(file)

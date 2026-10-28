@@ -2,40 +2,56 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import clsx from 'clsx'
 import AdminLayout from '../../components/layout/AdminLayout'
 import FormNotice from '../Profile/FormNotice'
-import IdentityQueueCard, { QueueSkeleton } from './IdentityQueueCard'
+import IdentityQueueCard from './IdentityQueueCard'
+import LogoLoader from '../../components/ui/LogoLoader'
 import IdentityReviewPanel from './IdentityReviewPanel'
 import RequireRole from '../Auth/RequireRole'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import { fit } from '../../components/layout/staffFit'
+import ListToolbar from '../../components/ui/ListToolbar'
+import Pager from '../../components/ui/Pager'
+import { useListView } from '../../hooks/useListView'
 import {
   ALREADY_REVIEWED,
   getIdentityQueue,
   PROFILE_EVENT,
   reviewIdentity,
 } from '../../services/api'
+import { useT } from '../../i18n/useLanguage'
 
 // A submission is the same one only while its date matches, so a citizen who
 // sends again after a rejection shows up as a fresh card.
 const keyOf = (submission) => `${submission.id}|${submission.submittedAt}`
 
+// Search and sort for the list (see hooks/useListView.js). Module level, so they never change.
+const NONE = []
+const submissionText = (item) => `${item.name} ${item.email}`
+const sentAt = (item) => Date.parse(item.submittedAt) || 0
+const SORTS = {
+  oldest: { label: 'Oldest first', compare: null }, // the server's order
+  newest: { label: 'Newest first', compare: (a, b) => sentAt(b) - sentAt(a) },
+  name: { label: 'Name', compare: (a, b) => String(a.name).localeCompare(String(b.name)) },
+}
+
 const PHOTO_NOT_DELETED =
   'The card photo could not be deleted yet. It will be removed automatically the next time this queue loads.'
 
 // The submissions list, in its own section beside (or above) the review panel.
-// Its list scrolls inside the section: sideways on small screens, down on large ones.
+// Its list scrolls down inside the section.
 function QueueSection({ label, children }) {
+  const t = useT()
   return (
     <section
       aria-labelledby="identity-queue-heading"
       className={clsx(
-        'min-w-0 overflow-hidden rounded-panel bg-navy p-4 lg:w-72 lg:shrink-0',
+        'min-w-0 overflow-hidden rounded-panel bg-ink p-4 lg:w-72 lg:shrink-0',
         fit.column,
       )}
     >
-      <h2 id="identity-queue-heading" className="px-1 font-heading text-xl font-extrabold text-mint">
-        Submissions
+      <h2 id="identity-queue-heading" className="px-1 font-heading text-xl font-extrabold text-frost">
+        {t('Submissions')}
       </h2>
-      <p className="mt-1 px-1 font-body text-sm text-mint/70">{label}</p>
+      <p className="mt-1 px-1 font-body text-sm text-frost/70">{label}</p>
       <div className={clsx('mt-4', fit.column, fit.grow)}>{children}</div>
     </section>
   )
@@ -52,8 +68,10 @@ export default function IdentityReview() {
 }
 
 function IdentityReviewPage() {
+  const t = useT()
   useDocumentTitle('Identity checks')
   const [queue, setQueue] = useState(null) // null while loading
+  const list = useListView(queue ?? NONE, { searchText: submissionText, sorts: SORTS, defaultSort: 'oldest', pageSize: 20 })
   const [selectedKey, setSelectedKey] = useState(null)
   const [notice, setNotice] = useState(null) // { tone, text }
   const [focusPanel, setFocusPanel] = useState(false)
@@ -132,7 +150,7 @@ function IdentityReviewPage() {
         setSelectedKey(keyOf(submission))
         load() // the card leaves the list and the panel explains why
       } else {
-        setNotice({ tone: 'error', text: err.message || 'Something went wrong. Please try again.' })
+        setNotice({ tone: 'error', text: t(err.message || 'Something went wrong. Please try again.') })
       }
       return
     }
@@ -146,11 +164,11 @@ function IdentityReviewPage() {
     setFocusPanel(Boolean(next))
     const done =
       decision === 'approve'
-        ? `Approved. ${submission.name} is now verified.`
-        : `Rejected. ${submission.name} will see your reason on their profile.`
+        ? t('Approved. {name} is now verified.', { name: submission.name })
+        : t('Rejected. {name} will see your reason on their profile.', { name: submission.name })
     setNotice({
       tone: 'success',
-      text: result.photoDeleted ? done : `${done} ${PHOTO_NOT_DELETED}`,
+      text: result.photoDeleted ? done : `${done} ${t(PHOTO_NOT_DELETED)}`,
     })
   }
 
@@ -158,11 +176,10 @@ function IdentityReviewPage() {
     <AdminLayout variant="admin" active="Identity checks">
       <div className={clsx('p-4 break-words sm:p-6 lg:p-8', fit.page)}>
         <h1 className="font-heading text-3xl font-extrabold text-navy sm:text-4xl">
-          Identity checks
+          {t('Identity checks')}
         </h1>
         <p className="mt-1 max-w-2xl font-body text-base text-muted">
-          Citizens who sent their National ID from the Profile page. Approve to give them the
-          Verified badge, or reject with a reason they can act on.
+          {t('Citizens who sent their National ID from the Profile page. Approve to give them the Verified badge, or reject with a reason they can act on.')}
         </p>
 
         {/* Read out after each action. Errors use FormNotice's own alert. */}
@@ -174,24 +191,16 @@ function IdentityReviewPage() {
         </div>
 
         {queue === null ? (
-          <div className="mt-6 flex flex-col gap-6 lg:flex-row lg:items-start">
-            <QueueSection label="Loading the queue…">
-              <QueueSkeleton />
-            </QueueSection>
-            <div
-              className="hidden h-96 min-w-0 flex-1 rounded-panel bg-mint skeleton lg:block"
-              aria-hidden="true"
-            />
-          </div>
+          <LogoLoader label={t('Loading the queue…')} className="mt-6" />
         ) : queue.length === 0 ? (
           <div className="mt-6 flex flex-col gap-4">
             {reviewedElsewhere && <FormNotice tone="error">{ALREADY_REVIEWED}</FormNotice>}
             <div className="rounded-panel bg-mint p-6 text-center sm:p-10">
               <p className="font-heading text-2xl font-extrabold text-navy">
-                No identity checks are waiting.
+                {t('No identity checks are waiting.')}
               </p>
               <p className="mt-2 font-body text-base text-muted">
-                New submissions from the Profile page will appear here.
+                {t('New submissions from the Profile page will appear here.')}
               </p>
             </div>
           </div>
@@ -209,23 +218,32 @@ function IdentityReviewPage() {
             <QueueSection
               label={
                 queue.length === 1
-                  ? 'One submission is waiting, oldest first.'
-                  : `${queue.length} submissions are waiting, oldest first.`
+                  ? t('One submission is waiting, oldest first.')
+                  : t('{n} submissions are waiting, oldest first.', { n: queue.length })
               }
             >
+              <ListToolbar
+                view={list}
+                sorts={SORTS}
+                onDark
+                searchLabel={t('Search submissions')}
+                placeholder={t('Search name or email')}
+              />
               <ul
                 ref={listRef}
                 aria-labelledby="identity-queue-heading"
                 className={clsx(
-                  'relative flex gap-3 overflow-x-auto p-1 pb-3',
-                  'lg:max-h-160 lg:flex-col lg:overflow-x-hidden lg:overflow-y-auto lg:pb-1',
+                  'relative mt-3 flex max-h-96 flex-col gap-3 overflow-y-auto p-1 lg:max-h-160',
                   fit.noMaxHeight,
                   fit.grow,
                   fit.min32,
                 )}
               >
-                {queue.map((item) => (
-                  <li key={keyOf(item)} className="w-56 shrink-0 lg:w-auto">
+                {list.total === 0 && (
+                  <li className="px-1 font-body text-sm text-frost/80">{t('No issues match your search.')}</li>
+                )}
+                {list.pageItems.map((item) => (
+                  <li key={keyOf(item)}>
                     <IdentityQueueCard
                       submission={item}
                       selected={selected ? keyOf(selected) === keyOf(item) : false}
@@ -234,6 +252,7 @@ function IdentityReviewPage() {
                   </li>
                 ))}
               </ul>
+              <Pager view={list} onDark />
             </QueueSection>
 
             <div ref={panelRef} className={clsx('min-w-0 flex-1 scroll-mt-4', fit.column)}>
@@ -249,7 +268,7 @@ function IdentityReviewPage() {
                   {reviewedElsewhere && (
                     <FormNotice tone="error">{ALREADY_REVIEWED}</FormNotice>
                   )}
-                  <p>Choose a submission from the list to review it.</p>
+                  <p>{t('Choose a submission from the list to review it.')}</p>
                 </div>
               )}
             </div>

@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
 import clsx from 'clsx'
 import Button from '../../components/ui/Button'
-import StaircaseIcon from '../../components/ui/StaircaseIcon'
 import { PlusIcon, ArrowRightIcon, CheckIcon } from './HomeIcons'
+import { useT } from '../../i18n/useLanguage'
 
 // One piece of the slide. It rises in and fades in after "order" steps.
 function Line({ as: Tag = 'span', shown, order, className, children }) {
@@ -23,11 +23,14 @@ function Line({ as: Tag = 'span', shown, order, className, children }) {
 // The text of one slide. "as" is h1 for the first slide and h2 for the others,
 // so the page has only one h1.
 export default function HeroSlide({ slide, active = true, as: Heading = 'h2' }) {
-  // Wait one frame so the first slide also animates on page load.
+  const t = useT()
+  // Wait a moment so the first slide also animates on page load. A timer, not
+  // requestAnimationFrame: a browser stops animation frames in a tab or window
+  // that is in the background, which left the text hidden until you clicked.
   const [mounted, setMounted] = useState(false)
   useEffect(() => {
-    const id = requestAnimationFrame(() => setMounted(true))
-    return () => cancelAnimationFrame(id)
+    const id = setTimeout(() => setMounted(true), 30)
+    return () => clearTimeout(id)
   }, [])
   const shown = active && mounted
 
@@ -35,22 +38,29 @@ export default function HeroSlide({ slide, active = true, as: Heading = 'h2' }) 
   const nextStep = headCount + slide.accent.length
 
   return (
-    <div className="max-w-[560px]">
-      <span className="inline-flex items-center gap-2 rounded-full border border-slate bg-white/5 px-4 py-2 text-[13px] font-bold uppercase tracking-widest text-brand">
-        <StaircaseIcon level={3} />
-        {slide.badge}
-      </span>
+    // The soft shadow keeps the white text readable over a bright photo or video.
+    <div className="max-w-[560px] [text-shadow:0_2px_18px_rgb(0_0_0/0.55)]">
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="inline-flex items-center gap-2 rounded-full border border-soft bg-paper/5 px-4 py-2 text-[13px] font-bold uppercase tracking-widest text-brand">
+          <span aria-hidden="true" className="size-2.5 rounded-full bg-flag-green-light" />
+          {t(slide.badge)}
+        </span>
+        <span className="inline-flex items-center gap-2 rounded-full border border-soft bg-paper/5 px-4 py-2 text-[13px] font-bold uppercase tracking-widest text-frost">
+          <span aria-hidden="true" className="size-2.5 rounded-full bg-flag-red" />
+          {t('For all of Bangladesh')}
+        </span>
+      </div>
 
-      <Heading className="mt-5.5 font-heading text-[40px] font-extrabold leading-[0.98] tracking-[-0.04em] text-mint sm:text-[64px] xl:text-[76px]">
+      <Heading className="mt-5.5 font-heading text-[40px] font-extrabold leading-[0.98] tracking-[-0.04em] text-frost sm:text-[64px] xl:text-[76px]">
         {slide.headline.map((line, i) => (
           <Line key={line} shown={shown} order={i} className="block">
-            {line}
+            {t(line)}
           </Line>
         ))}
         <span className="block text-brand">
           {slide.accent.map((line, i) => (
             <Line key={line} shown={shown} order={headCount + i} className="block">
-              {line}
+              {t(line)}
             </Line>
           ))}
         </span>
@@ -60,17 +70,17 @@ export default function HeroSlide({ slide, active = true, as: Heading = 'h2' }) 
         as="p"
         shown={shown}
         order={nextStep}
-        className="mt-5.5 max-w-[540px] text-lg leading-normal text-page"
+        className="mt-5.5 max-w-[540px] text-lg leading-normal text-frost"
       >
-        {slide.text}
+        {t(slide.text)}
       </Line>
 
       <Line as="div" shown={shown} order={nextStep + 1} className="mt-5.5 flex flex-wrap gap-3.5">
         <Button variant="brand" size="lg" to={slide.primary.to}>
-          <PlusIcon className="size-5" /> {slide.primary.label}
+          <PlusIcon className="size-5" /> {t(slide.primary.label)}
         </Button>
         <Button variant="outline-light" size="lg" to={slide.secondary.to}>
-          {slide.secondary.label} <ArrowRightIcon className="size-[18px]" />
+          {t(slide.secondary.label)} <ArrowRightIcon className="size-[18px]" />
         </Button>
       </Line>
 
@@ -78,12 +88,12 @@ export default function HeroSlide({ slide, active = true, as: Heading = 'h2' }) 
         as="ul"
         shown={shown}
         order={nextStep + 2}
-        className="mt-5.5 flex flex-wrap gap-x-5.5 gap-y-2 text-sm font-semibold text-page"
+        className="mt-5.5 flex flex-wrap gap-x-5.5 gap-y-2 text-sm font-semibold text-frost"
       >
         {slide.perks.map((perk) => (
           <li key={perk} className="flex items-center gap-2">
             <CheckIcon className="size-4 text-brand" />
-            {perk}
+            {t(perk)}
           </li>
         ))}
       </Line>

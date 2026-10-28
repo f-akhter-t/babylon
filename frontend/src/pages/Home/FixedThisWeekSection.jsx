@@ -3,10 +3,12 @@ import Button from '../../components/ui/Button'
 import Reveal from '../../components/ui/Reveal'
 import SectionHeading from './SectionHeading'
 import FixedIssueCard from './FixedIssueCard'
-import FixedIssueSkeleton from './FixedIssueSkeleton'
+import LogoLoader from '../../components/ui/LogoLoader'
 import { ArrowRightIcon } from './HomeIcons'
+import { useT } from '../../i18n/useLanguage'
 
 export default function FixedThisWeekSection({ issues }) {
+  const t = useT()
   const loading = issues === undefined
   const list = issues ?? []
   const oddCount = list.length % 2 === 1
@@ -14,20 +16,21 @@ export default function FixedThisWeekSection({ issues }) {
   return (
     <section className="px-5 pb-20 pt-16 md:px-10 xl:px-18">
       <Reveal>
-        <SectionHeading eyebrow="Proof, not promises" title="Fixed this week">
+        <SectionHeading eyebrow={t('Proof, not promises')} title={t('Fixed this week')}>
           <Button variant="outline" to="/feed">
-            See all resolved <ArrowRightIcon className="size-4" />
+            {t('See all resolved')} <ArrowRightIcon className="size-4" />
           </Button>
         </SectionHeading>
       </Reveal>
 
       <div className="mt-7 grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
-        {loading &&
-          [0, 1, 2].map((n) => <FixedIssueSkeleton key={n} />)}
+        {loading && (
+          <LogoLoader label={t('Loading this week’s fixes…')} className="md:col-span-2 xl:col-span-3" />
+        )}
 
         {!loading && list.length === 0 && (
-          <p className="text-slate md:col-span-2 xl:col-span-3">
-            No issues were closed this week yet.
+          <p className="text-soft md:col-span-2 xl:col-span-3">
+            {t('No issues were closed this week yet.')}
           </p>
         )}
 

@@ -1,11 +1,12 @@
 import { lazy, Suspense } from 'react'
-import { Routes, Route, useLocation } from 'react-router-dom'
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import ErrorBoundary from './components/layout/ErrorBoundary'
 import PageLoading from './components/layout/PageLoading'
 import ScrollToTop from './components/layout/ScrollToTop'
 import RouteFade from './components/ui/RouteFade'
 import OnboardingGate from './components/layout/OnboardingGate'
 import Toaster from './components/ui/Toaster'
+import ChatWidget from './components/ui/ChatWidget'
 
 // Each page's code loads only when someone opens it.
 const Home = lazy(() => import('./pages/Home/Home'))
@@ -21,10 +22,12 @@ const VerifyResolutions = lazy(() => import('./pages/VerifyResolutions/VerifyRes
 const Accountability = lazy(() => import('./pages/Accountability/Accountability'))
 const IdentityReview = lazy(() => import('./pages/IdentityReview/IdentityReview'))
 const StaffProfile = lazy(() => import('./pages/StaffProfile/StaffProfile'))
+const StaffDashboardPage = lazy(() => import('./pages/StaffDashboard/StaffDashboardPage'))
 const Login = lazy(() => import('./pages/Auth/Login'))
 const Signup = lazy(() => import('./pages/Auth/Signup'))
 const StaffLogin = lazy(() => import('./pages/Auth/StaffLogin'))
 const StaffSignup = lazy(() => import('./pages/Auth/StaffSignup'))
+const ForgotPassword = lazy(() => import('./pages/Auth/ForgotPassword'))
 const NotFound = lazy(() => import('./pages/NotFound/NotFound'))
 // The styleguide is a dev tool: production builds leave it out entirely,
 // so there /styleguide shows the Page not found page.
@@ -53,6 +56,10 @@ export default function App() {
               <Route path="/my-reports" element={<MyReports />} />
               <Route path="/profile" element={<Profile />} />
               <Route path="/department" element={<DepartmentPanel />} />
+              <Route path="/department/dashboard" element={<StaffDashboardPage role="department" />} />
+              <Route path="/admin/dashboard" element={<StaffDashboardPage role="admin" />} />
+              {/* Old "fix waiting" notices pointed at /admin, which has no page of its own. */}
+              <Route path="/admin" element={<Navigate to="/admin/verify" replace />} />
               <Route path="/admin/verify" element={<VerifyResolutions />} />
               <Route path="/admin/accountability" element={<Accountability />} />
               <Route path="/admin/identity" element={<IdentityReview />} />
@@ -63,11 +70,14 @@ export default function App() {
               <Route path="/signup" element={<Signup />} />
               <Route path="/staff/login" element={<StaffLogin />} />
               <Route path="/staff/signup" element={<StaffSignup />} />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </OnboardingGate>
         </Suspense>
       </ErrorBoundary>
+            {/* The help chat is for signed-in citizens only; it hides itself for everyone else. */}
+      <ChatWidget />
       {/* Outside the boundary and Suspense, so toasts survive a page change or a crash. */}
       <Toaster />
     </>

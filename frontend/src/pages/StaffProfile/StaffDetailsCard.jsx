@@ -5,6 +5,7 @@ import TextField from '../Profile/TextField'
 import FormNotice from '../Profile/FormNotice'
 import { saveStaffDetails } from '../../services/api'
 import { JOB_TITLE_MAX, NAME_MAX, checkJobTitle, checkName } from '../../utils/profileRules'
+import { useT } from '../../i18n/useLanguage'
 
 const FIELDS = ['name', 'jobTitle']
 
@@ -13,6 +14,7 @@ const fromProfile = (profile) => ({ name: profile.name, jobTitle: profile.jobTit
 // Name and job title. Works like the citizen's Personal details: its own Save,
 // and onStateChange({ dirty, canSave, saving }) for the phone save bar.
 export default function StaffDetailsCard({ profile, formId, onStateChange, announce }) {
+  const t = useT()
   const [saved, setSaved] = useState(() => fromProfile(profile)) // last saved values
   const [form, setForm] = useState(saved)
   const [touched, setTouched] = useState({})
@@ -74,8 +76,8 @@ export default function StaffDetailsCard({ profile, formId, onStateChange, annou
   return (
     <ProfileCard
       id="staff-details"
-      title="Your details"
-      intro="Citizens and other staff see your name and job title when you act on a report."
+      title={t('Your details')}
+      intro={t('Citizens and other staff see your name and job title when you act on a report.')}
     >
       <form
         id={formId}
@@ -90,7 +92,7 @@ export default function StaffDetailsCard({ profile, formId, onStateChange, annou
         <div className="grid gap-4 sm:grid-cols-2">
           <TextField
             id="staff-name"
-            label="Full name"
+            label={t('Full name')}
             value={form.name}
             maxLength={NAME_MAX}
             autoComplete="name"
@@ -100,11 +102,11 @@ export default function StaffDetailsCard({ profile, formId, onStateChange, annou
           />
           <TextField
             id="staff-job-title"
-            label="Job title"
+            label={t('Job title')}
             value={form.jobTitle}
             maxLength={JOB_TITLE_MAX}
             autoComplete="organization-title"
-            placeholder="Road maintenance officer"
+            placeholder={t('Road maintenance officer')}
             onChange={(e) => update('jobTitle', e.target.value)}
             onBlur={() => blur('jobTitle')}
             error={shown('jobTitle')}
@@ -113,11 +115,11 @@ export default function StaffDetailsCard({ profile, formId, onStateChange, annou
 
         <TextField
           id="staff-email"
-          label="Email"
+          label={t('Email')}
           type="email"
           value={profile.email}
           disabled
-          hint="Your email is your login, so it cannot be changed here."
+          hint={t('Your email is your login, so it cannot be changed here.')}
           className="sm:max-w-sm"
         />
 
@@ -125,11 +127,11 @@ export default function StaffDetailsCard({ profile, formId, onStateChange, annou
 
         <div className="flex flex-wrap items-center gap-3">
           <Button type="submit" variant="dark" disabled={saving || !dirty} className="max-md:min-h-11">
-            {saving ? 'Saving…' : 'Save details'}
+            {saving ? t('Saving…') : t('Save details')}
           </Button>
           {dirty && !saving && (
             <Button variant="outline" onClick={discard} className="max-md:min-h-11">
-              Discard changes
+              {t('Discard changes')}
             </Button>
           )}
         </div>

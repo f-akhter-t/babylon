@@ -1,5 +1,6 @@
 import { useEffect } from 'react'
 import { confirmLeave, setLeaveGuard } from '../../utils/leaveGuard'
+import { useT } from '../../i18n/useLanguage'
 
 // Marks the extra history entry that catches the browser's Back button.
 const GUARD_KEY = 'babylonUnsaved'
@@ -21,7 +22,9 @@ const ownBackSteps = new WeakSet()
 //   useUnsavedChanges(hasChanges, 'You have unsaved changes. Leave anyway?')
 // The app uses <BrowserRouter>, which has no navigation blocker, so links are
 // checked here before React Router handles the click.
-export function useUnsavedChanges(when, message) {
+export function useUnsavedChanges(when, englishMessage) {
+  const t = useT()
+  const message = t(englishMessage)
   useEffect(() => {
     if (!when) return
 

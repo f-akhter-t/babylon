@@ -7,16 +7,18 @@ import VerifyBadge from './VerifyBadge'
 import OtpInput from './OtpInput'
 import CountdownRing from './CountdownRing'
 import { enter } from '../../components/ui/motion'
-import { DEMO_OTP, OTP_RESEND_SECONDS, requestOtp, verifyOtp } from '../../services/api'
+import { requestOtp, verifyOtp } from '../../services/api'
 import { checkPhone, normalizePhone } from '../../utils/profileRules'
+import { useT } from '../../i18n/useLanguage'
 
-const emptyCode = () => Array.from({ length: DEMO_OTP.length }, () => '')
+const OTP_LENGTH = 6
+const emptyCode = () => Array.from({ length: OTP_LENGTH }, () => '')
 
 // A check mark that draws itself, shown right after a number is verified.
 function DrawnCheck() {
   return (
     <span
-      className="flex size-9 shrink-0 items-center justify-center rounded-full bg-brand/25 text-forest"
+      className="flex size-9 shrink-0 items-center justify-center rounded-full bg-brand/25 text-accent"
       style={enter('pop', 0.15)}
     >
       <svg viewBox="0 0 24 24" className="size-5" fill="none" aria-hidden="true">
@@ -40,6 +42,7 @@ export default function PhoneCard({
   announce,
   intro = 'A verified number lets departments call you about your reports.',
 }) {
+  const t = useT()
   const [step, setStep] = useState(profile.phone ? 'view' : 'edit')
   const [phoneInput, setPhoneInput] = useState('')
   const [touched, setTouched] = useState(false)
@@ -49,6 +52,7 @@ export default function PhoneCard({
   const [digits, setDigits] = useState(emptyCode)
   const [shake, setShake] = useState(0)
   const [locked, setLocked] = useState(false)
+  const [resendTotal, setResendTotal] = useState(30)
   const [busy, setBusy] = useState('') // '' | 'sending' | 'verifying'
   const [notice, setNotice] = useState(null) // { tone, text }
   // The number just verified, shown until the profile reloads with it.
@@ -94,11 +98,12 @@ export default function PhoneCard({
       setSentTo(result.phone)
       setNow(sentAt)
       setResendAt(sentAt + result.resendIn * 1000)
+      setResendTotal(result.resendIn)
       setDigits(emptyCode())
       setLocked(false)
       setStep('code')
       setFocusRequest({ target: 'code', n: sentAt })
-      announce(`We sent a 6-digit code to ${result.phone}. Type it in the boxes.`)
+      announce(t('We sent a 6-digit code to {to}. Type it in the boxes.', { to: result.phone }))
     } catch (err) {
       setNotice({ tone: 'error', text: err.message || 'We could not send a code. Please try again.' })
     } finally {
@@ -134,17 +139,19 @@ export default function PhoneCard({
         setTouched(false)
         const text = 'Your mobile number is verified.'
         setNotice({ tone: 'success', text })
-        announce(text, { toast: true })
+        announce(t(text), { toast: true })
         setFocusRequest({ target: 'verified', n: Date.now() })
       } else if (result.status === 'wrong') {
-        wrongCode(
-          result.attemptsLeft === 1
-            ? 'That code is not right. You have 1 try left.'
-            : `That code is not right. You have ${result.attemptsLeft} tries left.`,
-          false,
-        )
+        const text =
+          result.message ??
+          (typeof result.attemptsLeft === 'number'
+            ? result.attemptsLeft === 1
+              ? 'That code is not right. You have 1 try left.'
+              : `That code is not right. You have ${result.attemptsLeft} tries left.`
+            : 'That code is not right. Please try again.')
+        wrongCode(text, false)
       } else if (result.status === 'locked') {
-        wrongCode('Too many wrong codes. Ask for a new code to try again.', true)
+        wrongCode(result.message ?? 'Too many wrong codes. Ask for a new code to try again.', true)
       } else {
         wrongCode('This code has expired. Ask for a new code.', true)
       }
@@ -172,13 +179,13 @@ export default function PhoneCard({
 
   const resendLabel =
     secondsLeft > 0
-      ? `Resend code in 0:${String(secondsLeft).padStart(2, '0')}`
-      : 'Resend code'
+      ? t('Resend code in 0:{ss}', { ss: String(secondsLeft).padStart(2, '0') })
+      : t('Resend code')
 
   return (
     <ProfileCard
       id="profile-phone"
-      title="Mobile number"
+      title={t('Mobile number')}
       intro={intro}
       badge={<VerifyBadge status={verifiedPhone ? 'verified' : 'not-verified'} />}
     >
@@ -188,18 +195,18 @@ export default function PhoneCard({
             <div
               ref={verifiedRef}
               tabIndex={-1}
-              className="flex items-center gap-3 rounded-chip focus:outline-none focus-visible:ring-2 focus-visible:ring-forest/50"
+              className="flex items-center gap-3 rounded-chip focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/50"
             >
               {justVerified && <DrawnCheck />}
               <div>
-                <p className="font-body text-xs text-muted">Verified number</p>
+                <p className="font-body text-xs text-muted">{t('Verified number')}</p>
                 <p className="font-body text-base font-bold tracking-wide text-navy">
                   {verifiedPhone}
                 </p>
               </div>
             </div>
             <Button variant="outline" onClick={startEdit}>
-              Change number
+              {t('Change number')}
             </Button>
           </div>
         )}
@@ -230,11 +237,11 @@ export default function PhoneCard({
             />
             <div className="flex flex-wrap items-center gap-3">
               <Button type="submit" variant="dark" disabled={!canSend}>
-                {busy === 'sending' ? 'Sending…' : 'Send code'}
+                {busy === 'sending' ? t('Sending…') : t('Send code')}
               </Button>
               {verifiedPhone && (
                 <Button variant="outline" onClick={cancel} disabled={Boolean(busy)}>
-                  Cancel
+                  {t('Cancel')}
                 </Button>
               )}
             </div>
@@ -244,11 +251,11 @@ export default function PhoneCard({
         {step === 'code' && (
           <form onSubmit={handleVerify} noValidate className="flex flex-col gap-4">
             <FormNotice tone="info">
-              {`We sent a 6-digit code to ${sentTo}. This is a demo, so nothing is sent: use ${DEMO_OTP}.`}
+              {t('We sent a 6-digit code to {to}. Type it in the boxes.', { to: sentTo })}
             </FormNotice>
             <div className="flex flex-col gap-2">
               <p id="profile-otp-label" className="font-body text-sm font-semibold text-navy">
-                Verification code
+                {t('Verification code')}
               </p>
               <OtpInput
                 digits={digits}
@@ -265,7 +272,7 @@ export default function PhoneCard({
             </div>
             <div className="flex flex-wrap items-center gap-3">
               <Button type="submit" variant="dark" disabled={!canVerify}>
-                {busy === 'verifying' ? 'Checking…' : 'Verify'}
+                {busy === 'verifying' ? t('Checking…') : t('Verify')}
               </Button>
               <Button
                 variant="outline"
@@ -273,17 +280,17 @@ export default function PhoneCard({
                 disabled={secondsLeft > 0 || Boolean(busy)}
               >
                 {secondsLeft > 0 && (
-                  <CountdownRing secondsLeft={secondsLeft} total={OTP_RESEND_SECONDS} />
+                  <CountdownRing secondsLeft={secondsLeft} total={resendTotal} />
                 )}
-                {busy === 'sending' ? 'Sending…' : resendLabel}
+                {busy === 'sending' ? t('Sending…') : resendLabel}
               </Button>
               <button
                 type="button"
                 onClick={startEdit}
                 disabled={Boolean(busy)}
-                className="rounded-full px-2 py-1 font-body text-sm font-semibold text-forest underline-offset-2 hover:underline disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest/50"
+                className="rounded-full px-2 py-1 font-body text-sm font-semibold text-accent underline-offset-2 hover:underline disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50"
               >
-                Use a different number
+                {t('Use a different number')}
               </button>
             </div>
           </form>

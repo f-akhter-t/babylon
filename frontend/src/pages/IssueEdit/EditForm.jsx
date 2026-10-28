@@ -10,6 +10,7 @@ import { setIssueNotice } from '../IssueDetail/issueNotice'
 import ConfirmDialog from '../../components/ui/ConfirmDialog'
 import { useToast } from '../../components/ui/toast'
 import { enter } from '../../components/ui/motion'
+import { useT } from '../../i18n/useLanguage'
 
 const LEAVE_MESSAGE = 'You have changes that are not saved. Leave this page anyway?'
 const SAVED_MESSAGE = 'Your changes are saved.'
@@ -19,11 +20,12 @@ const DELETED_ELSEWHERE = 'This report was deleted.'
 
 // The form for one issue the logged-in citizen may edit (IssueEdit checks that).
 export default function EditForm({ issue, email }) {
+  const t = useT()
   const navigate = useNavigate()
   const fromDetail = Boolean(useLocation().state?.fromDetail)
   const headingRef = useRef(null)
   const lockedRef = useRef(null)
-  const [location, setLocation] = useState(null) // { lat, lng, label, ward } from the map
+  const [location, setLocation] = useState(null) // { lat, lng, label, ward, division } from the map
   const [fieldsDirty, setFieldsDirty] = useState(false)
   const [lockedReason, setLockedReason] = useState('')
   const [exit, setExit] = useState(null) // { notice } once saved or cancelled, { to } once deleted
@@ -42,7 +44,7 @@ export default function EditForm({ issue, email }) {
     [issue],
   )
   const initialPin = useMemo(() => ({ lat: issue.lat, lng: issue.lng }), [issue])
-  const initialPlace = useMemo(() => ({ label: issue.location, ward: issue.ward }), [issue])
+  const initialPlace = useMemo(() => ({ label: issue.location, ward: issue.ward, division: issue.division }), [issue])
 
   const pinChanged = Boolean(location) && (location.lat !== issue.lat || location.lng !== issue.lng)
   useUnsavedChanges((fieldsDirty || pinChanged) && !lockedReason && !exit, LEAVE_MESSAGE)
@@ -108,7 +110,7 @@ export default function EditForm({ issue, email }) {
   async function confirmDelete() {
     setDeleting(true)
     try {
-      await deleteIssue(issue.id, email)
+      await deleteIssue(issue.id)
       afterDialog.current = () => {
         toast.info(DELETED_MESSAGE)
         setExit({ to: '/my-reports' })
@@ -161,7 +163,7 @@ export default function EditForm({ issue, email }) {
         type="button"
         onClick={handleCancel}
         // min-h-11 -my-3: a 44px tap area without moving the heading below.
-        className="group -my-3 inline-flex min-h-11 items-center gap-1 rounded-full font-body text-sm font-semibold text-navy/70 transition hover:text-navy focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest/50"
+        className="group -my-3 inline-flex min-h-11 items-center gap-1 rounded-full font-body text-sm font-semibold text-navy/70 transition hover:text-navy focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50"
         style={enter('rise-in', 0)}
       >
         <span
@@ -180,12 +182,12 @@ export default function EditForm({ issue, email }) {
         <h1
           ref={headingRef}
           tabIndex={-1}
-          className="rounded-tile font-heading text-4xl font-extrabold text-navy focus:outline-none focus-visible:ring-2 focus-visible:ring-forest md:text-5xl"
+          className="rounded-tile font-heading text-4xl font-extrabold text-navy focus:outline-none focus-visible:ring-2 focus-visible:ring-accent md:text-5xl"
         >
-          Edit your report
+          {t('Edit your report')}
         </h1>
         <p className="font-body text-sm text-muted">
-          Votes and followers stay. Changes show on the map and in the feed straight away.
+          {t('Votes and followers stay. Changes show on the map and in the feed straight away.')}
         </p>
       </div>
 
@@ -194,19 +196,19 @@ export default function EditForm({ issue, email }) {
           ref={lockedRef}
           tabIndex={-1}
           role="alert"
-          className="mt-5 flex flex-col gap-3 rounded-card border-2 border-amber-dark bg-white p-4 font-body text-navy shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-forest sm:flex-row sm:items-center sm:justify-between"
+          className="mt-5 flex flex-col gap-3 rounded-card border-2 border-amber-dark bg-white p-4 font-body text-navy shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-accent sm:flex-row sm:items-center sm:justify-between"
         >
           <p className="text-sm font-semibold">
             {lockedReason === DELETED_ELSEWHERE
-              ? `${lockedReason} Your changes cannot be saved, but you can still copy them.`
-              : `${lockedReason} Your changes were not saved.`}
+              ? `${t(lockedReason)} ${t('Your changes cannot be saved, but you can still copy them.')}`
+              : `${t(lockedReason)} ${t('Your changes were not saved.')}`}
           </p>
           <button
             type="button"
             onClick={() => setExit(lockedReason === DELETED_ELSEWHERE ? { to: '/my-reports' } : {})}
-            className="shrink-0 rounded-full bg-navy px-4 py-2 text-sm font-bold text-white transition hover:bg-navy/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest/60 focus-visible:ring-offset-2"
+            className="shrink-0 rounded-full bg-ink px-4 py-2 text-sm font-bold text-paper transition hover:bg-ink/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 focus-visible:ring-offset-2"
           >
-            {lockedReason === DELETED_ELSEWHERE ? 'Back to My reports' : 'Back to the issue'}
+            {lockedReason === DELETED_ELSEWHERE ? t('Back to My reports') : t('Back to the issue')}
           </button>
         </div>
       )}
@@ -237,19 +239,19 @@ export default function EditForm({ issue, email }) {
           <button
             type="button"
             onClick={() => setAskingDelete(true)}
-            className="inline-flex min-h-11 items-center rounded-full border-2 border-danger px-5 font-body text-sm font-bold text-danger transition-colors hover:bg-danger/10 motion-reduce:transition-none"
+            className="inline-flex min-h-11 items-center rounded-full border-2 border-alert px-5 font-body text-sm font-bold text-alert transition-colors hover:bg-danger/10 motion-reduce:transition-none"
           >
-            Delete report
+            {t('Delete report')}
           </button>
         </div>
       )}
 
       <ConfirmDialog
         open={askingDelete}
-        title="Delete this report?"
-        text="This removes it from the map, the feed and My reports. This cannot be undone."
-        cancelLabel="Keep report"
-        confirmLabel="Delete report"
+        title={t('Delete this report?')}
+        text={t('This removes it from the map, the feed and My reports. This cannot be undone.')}
+        cancelLabel={t('Keep report')}
+        confirmLabel={t('Delete report')}
         tone="danger"
         busy={deleting}
         onCancel={() => setAskingDelete(false)}

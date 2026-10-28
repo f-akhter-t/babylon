@@ -4,37 +4,45 @@
 
 const STEP_FOR_STATUS = { open: 1, 'in-progress': 2, resolved: 3 }
 
-const line = (text, muted = false) => ({ text, muted })
+// `key` is the sentence with {name} places; the page translates it and fills `vars`.
+const fill = (key, vars) => key.replace(/\{(\w+)\}/g, (m, name) => vars?.[name] ?? m)
+const line = (key, vars, muted = false) => ({ text: fill(key, vars), key, vars, muted })
 
 function openLines(issue) {
-  return [line(`Reported ${issue.reportedOn}`), line(`Sent to ${issue.department} ${issue.sentOn}`)]
+  return [
+    line('Reported {date}', { date: issue.reportedOn }),
+    line('Sent to {department} {date}', { department: issue.department, date: issue.sentOn }),
+  ]
 }
 
 function inProgressLines(issue) {
   if (!issue.startedOn) {
     // A resolved issue without a start date is simply done: no grey text.
-    return issue.status === 'open' ? [line('Not started yet', true)] : []
+    return issue.status === 'open' ? [line('Not started yet', undefined, true)] : []
   }
-  const lines = [line(`Started ${issue.startedOn}`)]
-  if (issue.departmentNote) lines.push(line(issue.departmentNote))
+  const lines = [line('Started {date}', { date: issue.startedOn })]
+  if (issue.departmentNote) lines.push(line('{note}', { note: issue.departmentNote }))
   // Only the citizen who filed the report gets sentBackHistory (services/api.js).
   for (const back of issue.sentBackHistory ?? []) {
-    lines.push(line(`The department's fix was sent back on ${back.on}. Reason: ${back.reason}`))
+    lines.push(line("The department's fix was sent back on {date}. Reason: {reason}", { date: back.on, reason: back.reason }))
   }
   if (issue.verification === 'awaiting') {
-    lines.push(line(`Submitted ${issue.submittedOn}, waiting for the admin check`))
+    lines.push(line('Submitted {date}, waiting for the admin check', { date: issue.submittedOn }))
   }
   return lines
 }
 
 function resolvedLines(issue) {
   if (issue.status !== 'resolved') {
-    return [line('Needs an after-photo and an admin check', true)]
+    return [line('Needs an after-photo and an admin check', undefined, true)]
   }
   // A reopened issue the admin closed again without a new fix (no after-photo).
-  if (issue.reopenedFrom && !issue.afterImg) return [line(`The admin confirmed the fix from ${issue.reopenedFrom}`)]
-  const days = issue.fixedInDays === 1 ? '1 day' : `${issue.fixedInDays} days`
-  return [line(`Fixed in ${days}`)]
+  if (issue.reopenedFrom && !issue.afterImg) return [line('The admin confirmed the fix from {date}', { date: issue.reopenedFrom })]
+  return [
+    issue.fixedInDays === 1
+      ? line('Fixed in 1 day')
+      : line('Fixed in {days} days', { days: issue.fixedInDays }),
+  ]
 }
 
 export function buildProgress(issue) {
@@ -59,7 +67,7 @@ export function buildProgress(issue) {
   // Still reopened while the admin checks it again (its priority stays 'reopened').
   const reopened =
     issue.verification === 'reopened' || issue.priority === 'reopened'
-      ? `Reopened. First marked resolved ${issue.reopenedFrom}`
+      ? { key: 'Reopened. First marked resolved {date}', vars: { date: issue.reopenedFrom } }
       : null
 
   return { current, steps, reopened }

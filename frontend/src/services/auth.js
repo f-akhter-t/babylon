@@ -1,11 +1,10 @@
-// Mock login. Accounts live in the browser (localStorage) until the backend exists.
-// Later, each function becomes a fetch() call to Express and pages will not change.
-import { validatePassword } from '../pages/Auth/validateNewAccount'
+// Accounts and sign-in. Log-in, sign-up (citizens and staff), log-out and
+// change-password talk to the Express backend (through http.js). The browser
+// keeps only the token and the signed-in session (name, email, role), never a
+// password.
+import { clearToken, getToken, patch, post, setToken, setUnauthorizedHandler } from './http.js'
 
-const USERS_KEY = 'babylon-users'
 const SESSION_KEY = 'babylon-session'
-const NAMES_KEY = 'babylon-names' // names changed on the Profile page, by email
-const PASSWORDS_KEY = 'babylon-passwords' // changed passwords of the demo accounts, by email
 
 // Roles that sign up through the staff pages (/staff/login, /staff/signup).
 // Citizens use /login and /signup.
@@ -14,27 +13,7 @@ export const STAFF_ROLES = [
   { id: 'admin', label: 'Admin' },
 ]
 
-// Mock only: a real backend would issue a personal invitation to each staff
-// member instead of one shared code, and would never ship the code to the
-// browser. It is only compared inside signup() and never saved.
-const STAFF_ACCESS_CODE = 'BABYLON-STAFF-2026'
-export const DEMO_STAFF_CODE = STAFF_ACCESS_CODE
-
 const isStaffRole = (role) => role !== 'citizen'
-
-// Demo accounts so every role can be tried without signing up first. The demo
-// staff count as onboarded: their profiles come with demo details (api.js).
-const DEMO_USERS = [
-  { name: 'Nadia R.', email: 'citizen@babylon.test', password: 'password123', role: 'citizen' },
-  {
-    name: 'Rafiq Hasan',
-    email: 'roads@babylon.test',
-    password: 'password123',
-    role: 'department',
-    department: 'Roads & Highways',
-  },
-  { name: 'Tahmina Akter', email: 'admin@babylon.test', password: 'password123', role: 'admin' },
-]
 
 // Demo accounts listed on each sign-in page: citizens on /login, staff on /staff/login.
 export const DEMO_ACCOUNTS = {
@@ -46,87 +25,23 @@ export const DEMO_ACCOUNTS = {
 }
 export const DEMO_PASSWORD = 'password123'
 
-function readStored() {
-  try {
-    return JSON.parse(localStorage.getItem(USERS_KEY)) ?? []
-  } catch {
-    return []
-  }
+// The demo hints are for local work. They show while the app runs with
+// `npm run dev`, and on a build made with VITE_SHOW_DEMO_ACCOUNTS=true. A normal
+// production build hides them; the accounts themselves stay in the seed.
+export function showDemoAccounts(env = import.meta.env) {
+  return Boolean(env?.DEV) || env?.VITE_SHOW_DEMO_ACCOUNTS === 'true'
 }
+export const SHOW_DEMO_ACCOUNTS = showDemoAccounts()
 
-function allUsers() {
-  return [...DEMO_USERS, ...readStored()]
-}
-
-// Read-only: the emails of the staff accounts with this role (and, for a
-// department, this department). Used to send each of them a notification.
-export function staffEmails({ role, department } = {}) {
-  return allUsers()
-    .filter((u) => u.role === role && (role !== 'department' || u.department === department))
-    .map((u) => u.email)
-}
-
-function readNames() {
-  try {
-    return JSON.parse(localStorage.getItem(NAMES_KEY)) ?? {}
-  } catch {
-    return {}
-  }
-}
-
-function readPasswords() {
-  try {
-    return JSON.parse(localStorage.getItem(PASSWORDS_KEY)) ?? {}
-  } catch {
-    return {}
-  }
-}
-
-const isDemoUser = (email) => DEMO_USERS.some((u) => u.email.toLowerCase() === email.toLowerCase())
-
-// An account's current password. Every password check goes through here,
-// so a changed demo password is honoured everywhere.
-function passwordOf(user) {
-  return readPasswords()[user.email.toLowerCase()] ?? user.password
-}
-
-// The session never holds the password or the onboarding flag. The flag is
-// read from the account each time (isOnboarded), so a stale copy in a
-// session can never let anyone past the setup.
-function publicUser({ password, onboarded, ...user }) {
-  void password
-  void onboarded
-  const renamed = readNames()[user.email.toLowerCase()]
-  return renamed ? { ...user, name: renamed } : user
-}
-
-function findUser(email) {
-  if (!email) return null
-  return allUsers().find((u) => u.email.toLowerCase() === email.trim().toLowerCase()) ?? null
-}
-
-// The account's public details (no password), or null.
-export function getAccount(email) {
-  const user = findUser(email)
-  return user ? publicUser(user) : null
-}
-
-// Staff must finish their profile before using the app. Citizens and the
-// demo staff count as done; a stored staff account counts as done only once
-// its flag is set, so an older account with no flag goes through the setup.
-// Client-side only: a real backend must refuse a staff member's data until then.
-export function isOnboarded(email) {
-  const user = findUser(email)
-  if (!user || !isStaffRole(user.role)) return true
-  if (DEMO_USERS.includes(user)) return true
-  return user.onboarded === true
-}
-
-// Set once, by completeOnboarding in api.js. Nothing ever clears it.
-export function markOnboarded(email) {
-  const key = email.toLowerCase()
-  const stored = readStored().map((u) => (u.email.toLowerCase() === key ? { ...u, onboarded: true } : u))
-  localStorage.setItem(USERS_KEY, JSON.stringify(stored))
+// A staff account that has not finished its profile setup: the server said
+// onboarded: false when it signed in, and finishing the setup (api.js) sets it
+// to true. Read fresh from the saved session every time it is called, because
+// the gate and the layouts sit above pages that never remount. Citizens are
+// never held back. This only decides what the screens show: the server refuses
+// a staff token that is not onboarded on every panel route (403).
+export function isSetupPending() {
+  const session = getSession()
+  return Boolean(session) && isStaffRole(session.role) && session.onboarded === false
 }
 
 // Each staff account's own profile page.
@@ -137,132 +52,100 @@ export function profilePathFor(role) {
 }
 
 export function homePathFor(role) {
-  if (role === 'department') return '/department'
-  if (role === 'admin') return '/admin/verify'
-  return '/map'
+  if (role === 'department') return '/department/dashboard'
+  if (role === 'admin') return '/admin/dashboard'
+  return '/' // citizens land on the home page, where the greeting is
 }
 
+// A session needs a token as well as the saved account: one without the other
+// (an old demo-era session, a cleared token) counts as signed out.
 export function getSession() {
   try {
+    if (!getToken()) return null
     return JSON.parse(localStorage.getItem(SESSION_KEY))
   } catch {
     return null
   }
 }
 
-// Thrown when an account signs in through the other door. `code` lets the
-// page show a link to the right sign-in page next to the message.
-function wrongDoor(message, code) {
-  const error = new Error(message)
-  error.code = code
-  return error
-}
-
-// door: 'citizen' (/login) or 'staff' (/staff/login). Each door accepts only
-// its own accounts. The account type is revealed only after the right password.
-export async function login({ email, password, door }) {
-  const user = allUsers().find((u) => u.email.toLowerCase() === email.trim().toLowerCase())
-  if (!user || passwordOf(user) !== password) {
-    throw new Error('That email and password do not match an account.')
+// Saves the token and the account the server sent, and returns the session the
+// pages use: { name, email, role, department?, onboarded? } (no id). Only staff
+// carry `onboarded`: the setup they still have to finish (see isSetupPending).
+function startSession({ token, user }) {
+  setToken(token)
+  const session = {
+    name: user.name,
+    email: user.email,
+    role: user.role,
+    ...(user.department ? { department: user.department } : {}),
+    ...(isStaffRole(user.role) ? { onboarded: user.onboarded === true } : {}),
   }
-  if (door === 'citizen' && isStaffRole(user.role)) {
-    throw wrongDoor('This is a staff account, so please use the staff sign-in page.', 'staff-account')
-  }
-  if (door === 'staff' && !isStaffRole(user.role)) {
-    throw wrongDoor('This is a citizen account, so please use the citizen log-in page.', 'citizen-account')
-  }
-  const session = publicUser(user)
   localStorage.setItem(SESSION_KEY, JSON.stringify(session))
   return session
 }
 
-export async function signup({ name, email, password, role, department, accessCode }) {
-  if (role !== 'citizen' && !STAFF_ROLES.some((r) => r.id === role)) {
-    throw new Error('Choose a valid account type.')
-  }
-  if (isStaffRole(role) && accessCode?.trim() !== STAFF_ACCESS_CODE) {
-    throw new Error('The staff access code is not correct. Ask your administrator for the code.')
-  }
-  if (role === 'department' && !department) {
-    throw new Error('Choose the department you work for.')
-  }
-
-  const taken = allUsers().some(
-    (u) => u.email.toLowerCase() === email.trim().toLowerCase(),
-  )
-  if (taken) throw new Error('An account with this email already exists.')
-
-  const user = {
-    name: name.trim(),
-    email: email.trim(),
-    password,
-    role,
-    ...(role === 'department' ? { department } : {}),
-    // New staff start with the profile setup.
-    ...(isStaffRole(role) ? { onboarded: false } : {}),
-  }
-  localStorage.setItem(USERS_KEY, JSON.stringify([...readStored(), user]))
-  localStorage.setItem(SESSION_KEY, JSON.stringify(publicUser(user)))
-  return publicUser(user)
-}
-
-// Thrown by changePassword. `field` ('current' or 'new') tells the form
-// which field the message belongs to.
-function fieldError(message, field) {
-  const error = new Error(message)
-  error.field = field
-  return error
-}
-
-// Changes the password of any account, citizen or staff. The session stays
-// as it is, so the person remains signed in. Passwords are never trimmed.
-// Demo accounts are built in, so their new password is kept in a separate
-// list; accounts made through sign-up are updated where they are stored.
-export async function changePassword({ email, currentPassword, newPassword }) {
-  const user = allUsers().find((u) => u.email.toLowerCase() === email.trim().toLowerCase())
-  if (!user) throw new Error('We could not find your account. Please log in again.')
-  if (passwordOf(user) !== currentPassword) {
-    throw fieldError('Your current password is not correct.', 'current')
-  }
-  // confirm is the new password itself, so this only checks the rules.
-  const problem = validatePassword({ password: newPassword, confirm: newPassword })
-  if (problem) throw fieldError(problem, 'new')
-  if (newPassword === currentPassword) {
-    throw fieldError('Your new password must be different from your current password.', 'new')
-  }
-
-  const key = user.email.toLowerCase()
-  if (isDemoUser(key)) {
-    localStorage.setItem(PASSWORDS_KEY, JSON.stringify({ ...readPasswords(), [key]: newPassword }))
-  } else {
-    const stored = readStored().map((u) =>
-      u.email.toLowerCase() === key ? { ...u, password: newPassword } : u,
-    )
-    localStorage.setItem(USERS_KEY, JSON.stringify(stored))
-  }
-}
-
-export function logout() {
+function endSession() {
   localStorage.removeItem(SESSION_KEY)
+  clearToken()
 }
 
-// The name shown for an account, including a change made on the Profile page.
-export function getAccountName(email) {
-  if (!email) return null
-  const user = allUsers().find((u) => u.email.toLowerCase() === email.toLowerCase())
-  return user ? publicUser(user).name : null
+// The server says the token is no longer good (expired, or its account is gone).
+setUnauthorizedHandler(endSession)
+
+// door: 'citizen' (/login) or 'staff' (/staff/login). Each door accepts only its
+// own accounts, and the server reveals the account type only after the right
+// password. A wrong door is an error with code 'staff-account' or
+// 'citizen-account', so the page can link to the right sign-in page.
+export async function login({ email, password, door }) {
+  return startSession(await post('/auth/login', { email, password, door }, { auth: false }))
 }
 
-// Saves a new display name. The email stays the same, so reports, votes
-// and follows still belong to the account.
-export function renameAccount(email, name) {
-  const key = email.toLowerCase()
-  localStorage.setItem(NAMES_KEY, JSON.stringify({ ...readNames(), [key]: name }))
+// Citizens only: the server refuses any other role here. Staff sign up with
+// staffSignup below.
+export async function signup({ name, email, password, role }) {
+  return startSession(await post('/auth/signup', { name, email, password, role }, { auth: false }))
+}
 
+// A department or admin account. The server checks the staff access code (it is
+// not in the app) and makes the account NOT onboarded: the person lands on their
+// profile page to finish the setup. department is sent for a department account
+// only; a wrong code comes back with field 'accessCode'.
+export async function staffSignup({ name, email, password, role, department, accessCode }) {
+  const body = { name, email, password, role, accessCode }
+  if (role === 'department') body.department = department
+  return startSession(await post('/auth/staff/signup', body, { auth: false }))
+}
+
+// Changes the saved session of whoever is signed in: a new token (the setup was
+// finished) and/or changed details (a new name). It tells nobody; the caller
+// fires its own refresh event (PROFILE_EVENT in api.js).
+export function updateSession({ token, ...changes } = {}) {
+  if (token) setToken(token)
   const session = getSession()
-  if (session?.email.toLowerCase() === key) {
-    localStorage.setItem(SESSION_KEY, JSON.stringify({ ...session, name }))
+  if (!session) return null
+  const next = { ...session, ...changes }
+  try {
+    localStorage.setItem(SESSION_KEY, JSON.stringify(next))
+  } catch {
+    // storage blocked: the old session stays; the next sign-in sets it right
   }
+  return next
+}
+
+// Changes the password of whoever is signed in, citizen or staff. The server
+// reads the account from the token and stays signed in with the same token.
+// A wrong current password comes back with field 'current', a bad or unchanged
+// new one with field 'new', so the form puts each message under its own box.
+export async function changePassword({ currentPassword, newPassword }) {
+  await patch('/auth/password', { currentPassword, newPassword })
+}
+
+// The person is signed out here at once. The server is told too, but it keeps
+// no list of tokens, so a failure there changes nothing.
+export function logout() {
+  const token = getToken()
+  endSession()
+  if (token) post('/auth/logout', undefined, { token }).catch(() => {})
 }
 
 // ---------- First-time profile setup ----------

@@ -6,13 +6,17 @@ import IssueMap from './IssueMap'
 import { useMapFilters } from './useMapFilters'
 import { useIssues } from './useIssues'
 import { useStoredIds } from './useStoredIds'
+import { useVotes } from './useVotes'
+import { useToast } from '../../components/ui/toast'
 import { useListKeys } from './useListKeys'
 import { useViewer } from './useViewer'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
+import { useT } from '../../i18n/useLanguage'
 
 const NO_FILTERS = { category: 'All', status: 'All', q: '' }
 
 export default function Map() {
+  const t = useT()
   const { category, status, search, selectedId, update } = useMapFilters()
   const { issues, allIssues, loading, error, retry, update: liveUpdate, allUpdate } = useIssues({
     category,
@@ -20,14 +24,18 @@ export default function Map() {
     search,
   })
   const viewer = useViewer()
-  // Each account has its own votes and follows.
-  const [votedIds, toggleStoredVote] = useStoredIds(viewer.storageKey('voted'))
+  const toast = useToast()
+  // Votes live on the server; follows stay in this browser, one list per account.
+  const { withVotes, toggle: toggleStoredVote } = useVotes([...allIssues, ...issues])
   // This person's own vote in this tab: the sidebar card does not pop for it
   // (the button they pressed already answered). Another tab's vote does pop.
   const ownVote = useRef(null)
   const toggleVote = (id) => {
     ownVote.current = id
-    toggleStoredVote(id)
+    return toggleStoredVote(id).catch((error) => {
+      ownVote.current = null
+      toast.error(error.message)
+    })
   }
   const isOwnVote = (id) => {
     const own = ownVote.current === id
@@ -40,15 +48,7 @@ export default function Map() {
   // Add this citizen's own vote and follow on top of the data.
   // The order stays as the data gave it (ranking is not done in the page).
   const withMine = (list) =>
-    list.map((issue) => {
-      const voted = votedIds.includes(issue.id)
-      return {
-        ...issue,
-        votes: issue.votes + (voted ? 1 : 0),
-        voted,
-        followed: followedIds.includes(issue.id),
-      }
-    })
+    withVotes(list).map((issue) => ({ ...issue, followed: followedIds.includes(issue.id) }))
   const shownIssues = withMine(issues)
 
   const select = (id) => update({ issue: id })
@@ -68,8 +68,8 @@ export default function Map() {
   useEffect(() => {
     if (!deletedOpen) return
     update({ issue: null })
-    say('This report was deleted.')
-  }, [deletedOpen]) // eslint-disable-line react-hooks/exhaustive-deps -- update is a new function each render
+    say(t('This report was deleted.'))
+  }, [deletedOpen, t]) // eslint-disable-line react-hooks/exhaustive-deps -- update is a new function each render
 
   return (
     <div className="flex min-h-dvh flex-col font-body lg:h-dvh">

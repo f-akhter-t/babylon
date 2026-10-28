@@ -9,6 +9,7 @@ import {
   getRecentActivity,
   getIssues,
 } from '../../services/api'
+import Greeting from './Greeting'
 import HeroSlider from './HeroSlider'
 import StatsRow from './StatsRow'
 import ActivityTicker from './ActivityTicker'
@@ -17,9 +18,11 @@ import HowItWorksSection from './HowItWorksSection'
 import FixedThisWeekSection from './FixedThisWeekSection'
 import FinalCtaBand from './FinalCtaBand'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
+import { useT } from '../../i18n/useLanguage'
 
 export default function Home() {
-  useDocumentTitle('Babylon · Report. Track. Resolve.', { full: true })
+  const t = useT()
+  useDocumentTitle(t('Babylon · Report. Track. Resolve.'), { full: true })
   const [data, setData] = useState(null)
   const [failed, setFailed] = useState(false)
 
@@ -48,6 +51,7 @@ export default function Home() {
     <div className="font-body">
       <Navbar />
       <main>
+        <Greeting />
         <HeroSlider slides={data?.slides} categories={data?.categories} />
         <StatsRow stats={data?.stats} />
         <ActivityTicker items={data?.activity} />
@@ -57,7 +61,7 @@ export default function Home() {
             role="alert"
             className="px-5 pt-6 text-sm font-semibold text-navy md:px-10 xl:px-18"
           >
-            We could not load the latest data. Please refresh the page.
+            {t('We could not load the latest data. Please refresh the page.')}
           </p>
         )}
 
@@ -77,7 +81,7 @@ export default function Home() {
           <FixedThisWeekSection issues={data?.fixed} />
 
           <p className="absolute bottom-3 right-5 font-body text-xs text-navy/60">
-            Photo: Arif Hossain / Unsplash
+            {t('Photo: Arif Hossain / Unsplash')}
           </p>
         </div>
 

@@ -1,18 +1,19 @@
 import clsx from 'clsx'
 import { profileProgress } from './profileProgress'
 import { enter } from '../../components/ui/motion'
+import { useT } from '../../i18n/useLanguage'
 
-// Three steps of a staircase, one per section. Each turns green when that
+// Four steps of a staircase, one per section. Each turns green when that
 // section is done; identity under review shows amber.
 // tone: 'dark' on the navy summary card, 'light' on mint.
 const HEIGHTS = {
-  md: ['h-6', 'h-10', 'h-14'],
-  lg: ['h-10', 'h-16', 'h-24'],
+  md: ['h-5', 'h-8', 'h-11', 'h-14'],
+  lg: ['h-8', 'h-14', 'h-20', 'h-24'],
 }
 
 const BAR = {
-  dark: { done: 'bg-brand', pending: 'bg-amber', todo: 'bg-mint/15' },
-  light: { done: 'bg-forest', pending: 'bg-amber', todo: 'bg-navy/10' },
+  dark: { done: 'bg-brand', pending: 'bg-amber', todo: 'bg-frost/15' },
+  light: { done: 'bg-forest', pending: 'bg-amber', todo: 'bg-ink/10' },
 }
 
 const SPOKEN = {
@@ -22,6 +23,7 @@ const SPOKEN = {
 }
 
 export default function CompletenessMeter({ profile, tone = 'dark', size = 'md' }) {
+  const t = useT()
   const { steps, done } = profileProgress(profile)
   const dark = tone === 'dark'
 
@@ -32,17 +34,17 @@ export default function CompletenessMeter({ profile, tone = 'dark', size = 'md' 
           className={clsx(
             'font-body font-semibold',
             size === 'lg' ? 'text-base' : 'text-sm',
-            dark ? 'text-mint' : 'text-navy',
+            dark ? 'text-frost' : 'text-navy',
           )}
         >
-          Profile completeness
+          {t('Profile completeness')}
         </p>
-        <p className={clsx('font-body text-xs', dark ? 'text-mint/70' : 'text-slate')}>
-          {`${done} of ${steps.length} done`}
+        <p className={clsx('font-body text-xs', dark ? 'text-frost/70' : 'text-soft')}>
+          {t('{done} of {total} done', { done, total: steps.length })}
         </p>
       </div>
 
-      <ol className={clsx('mt-3 grid grid-cols-3 items-end', size === 'lg' ? 'gap-3' : 'gap-2')}>
+      <ol className={clsx('mt-3 grid grid-cols-4 items-end', size === 'lg' ? 'gap-3' : 'gap-2')}>
         {steps.map((step, index) => (
           <li key={step.key} className="flex flex-col gap-1.5">
             <span
@@ -57,11 +59,11 @@ export default function CompletenessMeter({ profile, tone = 'dark', size = 'md' 
             <span
               className={clsx(
                 'font-body text-xs font-semibold',
-                dark ? 'text-mint/80' : 'text-navy',
+                dark ? 'text-frost/80' : 'text-navy',
               )}
             >
-              {step.label}
-              <span className="sr-only">{`: ${SPOKEN[step.state]}`}</span>
+              {t(step.label)}
+              <span className="sr-only">{`: ${t(SPOKEN[step.state])}`}</span>
             </span>
           </li>
         ))}

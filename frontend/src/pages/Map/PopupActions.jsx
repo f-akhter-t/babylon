@@ -3,6 +3,7 @@ import clsx from 'clsx'
 import Button from '../../components/ui/Button'
 import { ArrowDownIcon, ArrowUpIcon, BellIcon } from './MapIcons'
 import LoginPrompt from './LoginPrompt'
+import { useNumber, useT } from '../../i18n/useLanguage'
 
 // Upvote, Follow and Details for one issue. Used in the map popup, and can be
 // used on the Issue detail page with showDetails={false}.
@@ -18,6 +19,8 @@ export default function PopupActions({
   showDetails = true,
   followLabel = false,
 }) {
+  const t = useT()
+  const n = useNumber()
   const [prompt, setPrompt] = useState(null) // 'upvote' | 'follow' | null
   const { voted, votes, followed } = issue
   const staff = !viewer.isGuest && !viewer.canAct
@@ -37,7 +40,7 @@ export default function PopupActions({
             >
               {/* After voting, the same button takes the vote back. */}
               {voted ? <ArrowDownIcon size={16} /> : <ArrowUpIcon size={16} />}
-              {voted ? 'Downvote' : 'Upvote'} · {votes}
+              {voted ? t('Downvote') : t('Upvote')} · {n(votes)}
             </Button>
             <button
               type="button"
@@ -45,17 +48,17 @@ export default function PopupActions({
               aria-pressed={viewer.canAct ? followed : undefined}
               // With a visible word, that word is the name; without one, aria-label is.
               aria-label={
-                followLabel ? undefined : followed ? 'Unfollow this issue' : 'Follow this issue'
+                followLabel ? undefined : followed ? t('Unfollow this issue') : t('Follow this issue')
               }
-              title={followed ? 'Following: click to unfollow' : 'Follow for status updates'}
+              title={followed ? t('Following: click to unfollow') : t('Follow for status updates')}
               className={clsx(
                 'flex h-11 shrink-0 items-center justify-center gap-2 rounded-full border-2 border-navy transition motion-safe:active:scale-90',
                 followLabel ? 'px-5 text-sm font-semibold' : 'w-11',
-                followed ? 'bg-navy text-brand' : 'text-navy hover:bg-navy/10',
+                followed ? 'bg-ink text-brand' : 'text-navy hover:bg-ink/10',
               )}
             >
               <BellIcon size={18} className={clsx(followed && 'fill-current')} />
-              {followLabel && (followed ? 'Following' : 'Follow')}
+              {followLabel && (followed ? t('Following') : t('Follow'))}
             </button>
           </>
         )}
@@ -66,15 +69,15 @@ export default function PopupActions({
             to={`/issues/${issue.id}`}
             className={clsx('text-navy!', staff && 'flex-1')}
           >
-            Details
+            {t('Details')}
           </Button>
         )}
       </div>
 
-      {staff && <span className="text-xs text-slate">Only citizens can upvote and follow.</span>}
+      {staff && <span className="text-xs text-soft">{t('Only citizens can upvote and follow.')}</span>}
       {viewer.canAct && followed && (
-        <span className="text-xs font-medium text-forest">
-          Following. You will get alerts when this issue changes.
+        <span className="text-xs font-medium text-accent">
+          {t('Following. You will get alerts when this issue changes.')}
         </span>
       )}
       {prompt && <LoginPrompt action={prompt} onClose={() => setPrompt(null)} />}

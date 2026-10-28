@@ -4,6 +4,7 @@ import Button from './Button'
 import { useToast } from './toast'
 import { changePassword } from '../../services/auth'
 import { validatePassword } from '../../pages/Auth/validateNewAccount'
+import { useT } from '../../i18n/useLanguage'
 
 const FIELDS = [
   {
@@ -34,7 +35,7 @@ const empty = { current: '', next: '', confirm: '' }
 const hidden = { current: false, next: false, confirm: false }
 
 const inputClasses =
-  'w-full rounded-2xl border bg-white py-3 pr-12 pl-4 font-body text-sm text-navy transition placeholder:text-muted hover:border-forest/50 focus:border-forest focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest/40 disabled:cursor-not-allowed disabled:bg-white/60 disabled:text-slate'
+  'w-full rounded-2xl border bg-white py-3 pr-12 pl-4 font-body text-sm text-navy transition placeholder:text-muted hover:border-accent/50 focus:border-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 disabled:cursor-not-allowed disabled:bg-white/60 disabled:text-soft'
 
 const iconProps = {
   viewBox: '0 0 24 24',
@@ -79,6 +80,7 @@ function checkForm(values) {
 // button and state, so it never marks the page around it as unsaved.
 //   <ChangePasswordCard email={session.email} />
 export default function ChangePasswordCard({ email }) {
+  const t = useT()
   const id = useId()
   const toast = useToast()
   const [values, setValues] = useState(empty)
@@ -125,7 +127,7 @@ export default function ChangePasswordCard({ email }) {
       setValues(empty)
       setShown(hidden)
       setErrors({})
-      toast.info('Your password is changed.')
+      toast.info(t('Your password is changed.'))
       focusField('current')
     } catch (error) {
       if (error.field === 'current') fail({ current: error.message })
@@ -160,7 +162,7 @@ export default function ChangePasswordCard({ email }) {
         return (
           <div key={field.key} className="flex flex-col gap-1.5">
             <label htmlFor={inputId} className="font-body text-sm font-semibold text-navy">
-              {field.label}
+              {t(field.label)}
             </label>
             <div className="relative">
               <input
@@ -178,27 +180,27 @@ export default function ChangePasswordCard({ email }) {
                 disabled={busy}
                 aria-invalid={Boolean(error)}
                 aria-describedby={clsx(hintId, errorId) || undefined}
-                className={clsx(inputClasses, error ? 'border-danger' : 'border-navy/15')}
+                className={clsx(inputClasses, error ? 'border-alert' : 'border-navy/15')}
               />
               <button
                 type="button"
-                aria-label={field.toggle}
+                aria-label={t(field.toggle)}
                 aria-pressed={isShown}
                 aria-controls={inputId}
                 onClick={() => setShown((s) => ({ ...s, [field.key]: !s[field.key] }))}
-                className="absolute inset-y-0 right-0 flex w-11 items-center justify-center rounded-r-2xl text-slate transition hover:text-navy focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest/50"
+                className="absolute inset-y-0 right-0 flex w-11 items-center justify-center rounded-r-2xl text-soft transition hover:text-navy focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50"
               >
                 <EyeIcon crossed={isShown} />
               </button>
             </div>
             {field.hint && (
               <p id={hintId} className="font-body text-xs text-muted">
-                {field.hint}
+                {t(field.hint)}
               </p>
             )}
             {error && (
-              <p id={errorId} className="font-body text-xs font-semibold text-danger">
-                {error}
+              <p id={errorId} className="font-body text-xs font-semibold text-alert">
+                {t(error)}
               </p>
             )}
           </div>
@@ -208,15 +210,15 @@ export default function ChangePasswordCard({ email }) {
       {formError && (
         <p
           role="alert"
-          className="rounded-tile bg-danger/10 px-4 py-2.5 font-body text-sm font-semibold text-danger"
+          className="rounded-tile bg-danger/10 px-4 py-2.5 font-body text-sm font-semibold text-alert"
         >
-          {formError}
+          {t(formError)}
         </p>
       )}
 
       <div>
         <Button type="submit" disabled={busy} className="max-md:min-h-11">
-          {busy ? 'Changing password…' : 'Change password'}
+          {busy ? t('Changing password…') : t('Change password')}
         </Button>
       </div>
     </form>

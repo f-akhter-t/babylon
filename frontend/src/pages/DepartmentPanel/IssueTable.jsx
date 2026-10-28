@@ -1,17 +1,36 @@
 import clsx from 'clsx'
 import StatusPill from '../../components/ui/StatusPill'
 import StaircaseIcon from '../../components/ui/StaircaseIcon'
-import { sentBackMessage } from './departmentFilters'
+import { sentBackMessage, waitingDays } from './departmentFilters'
+import { useNumber, useT } from '../../i18n/useLanguage'
 
 // A table where the list is at least 48rem wide; stacked cards when it is narrower
 // (a phone, or the Resolve panel open beside it). Container queries, so it
 // follows the list's own width.
-const COLUMNS = '@3xl:grid-cols-[56px_minmax(0,1fr)_80px_150px_170px]'
+const COLUMNS = '@3xl:grid-cols-[56px_minmax(0,1fr)_96px_72px_150px_170px]'
 
 const PRIORITY_LABEL = {
   urgent: 'Urgent priority',
   high: 'High priority',
   medium: 'Medium priority',
+}
+
+// How long the report has been waiting. Closed issues have no wait. Two weeks
+// or more is shown in red, so the oldest problems stand out.
+function WaitingCell({ issue }) {
+  const t = useT()
+  const n = useNumber()
+  const days = issue.status === 'resolved' ? null : waitingDays(issue)
+  let text = '—'
+  if (days === 0) text = t('Today')
+  else if (days === 1) text = t('1 day')
+  else if (days !== null) text = t('{days} days', { days: n(days) })
+  return (
+    <span className={clsx('font-body text-sm font-semibold', days >= 14 ? 'text-alert' : 'text-muted')}>
+      <span className="@3xl:hidden">{days === null ? '' : `${t('Waiting')}: `}</span>
+      {text}
+    </span>
+  )
 }
 
 // The issue's title. Open and in-progress issues: a button that picks the issue
@@ -32,7 +51,7 @@ function IssueTitle({ issue, selected, onSelect, panelId }) {
       className={clsx(
         text,
         'block min-h-11 w-full rounded-tile text-left hover:underline',
-        'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forest',
+        'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent',
       )}
     >
       {issue.title}
@@ -41,19 +60,20 @@ function IssueTitle({ issue, selected, onSelect, panelId }) {
 }
 
 function StatusCell({ issue }) {
+  const t = useT()
   if (issue.verification === 'awaiting') {
     return (
       <span className="inline-flex max-w-full items-center gap-2 rounded-full bg-slate/15 px-3 py-1 font-body text-sm font-semibold text-navy">
-        <StaircaseIcon level={3} className="text-slate" />
-        Awaiting check
+        <StaircaseIcon level={3} className="text-soft" />
+        {t('Awaiting check')}
       </span>
     )
   }
   if (issue.sentBack) {
     return (
       <span className="inline-flex max-w-full items-center gap-2 rounded-full bg-slate/15 px-3 py-1 font-body text-sm font-semibold text-navy">
-        <StaircaseIcon level={2} className="text-slate" />
-        Sent back
+        <StaircaseIcon level={2} className="text-soft" />
+        {t('Sent back')}
       </span>
     )
   }
@@ -61,17 +81,18 @@ function StatusCell({ issue }) {
 }
 
 function ActionButton({ issue, onStart, onSelect, busy }) {
+  const t = useT()
   const base =
-    'min-h-11 w-full rounded-full px-4 py-2.5 font-body text-sm font-bold transition-colors motion-reduce:transition-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forest'
+    'min-h-11 w-full rounded-full px-4 py-2.5 font-body text-sm font-bold transition-colors motion-reduce:transition-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent'
 
   if (issue.verification === 'awaiting') {
     return (
       <button
         type="button"
         disabled
-        className={clsx(base, 'cursor-not-allowed bg-slate/15 text-slate')}
+        className={clsx(base, 'cursor-not-allowed bg-slate/15 text-soft')}
       >
-        Waiting for admin
+        {t('Waiting for admin')}
       </button>
     )
   }
@@ -81,9 +102,9 @@ function ActionButton({ issue, onStart, onSelect, busy }) {
       <button
         type="button"
         disabled
-        className={clsx(base, 'cursor-not-allowed bg-slate/15 text-slate')}
+        className={clsx(base, 'cursor-not-allowed bg-slate/15 text-soft')}
       >
-        Closed
+        {t('Closed')}
       </button>
     )
   }
@@ -99,11 +120,11 @@ function ActionButton({ issue, onStart, onSelect, busy }) {
         }}
         className={clsx(
           base,
-          'bg-forest text-mint',
+          'bg-forest text-frost',
           busy ? 'cursor-not-allowed opacity-50' : 'hover:bg-forest/90',
         )}
       >
-        Start work
+        {t('Start work')}
       </button>
     )
   }
@@ -117,10 +138,10 @@ function ActionButton({ issue, onStart, onSelect, busy }) {
       }}
       className={clsx(
         base,
-        'border border-forest bg-white text-forest hover:bg-mint-deep',
+        'border border-accent bg-white text-accent hover:bg-mint-deep',
       )}
     >
-      Add after-photo
+      {t('Add after-photo')}
     </button>
   )
 }
@@ -134,6 +155,8 @@ export default function IssueTable({
   busy = false,
   panelId,
 }) {
+  const t = useT()
+  const n = useNumber()
   return (
     <div className="@container rounded-card bg-mint">
       <div
@@ -143,11 +166,12 @@ export default function IssueTable({
           COLUMNS,
         )}
       >
-        <span>Rank</span>
-        <span>Issue</span>
-        <span>Votes</span>
-        <span>Status</span>
-        <span>Action</span>
+        <span>{t('Rank')}</span>
+        <span>{t('Issue')}</span>
+        <span>{t('Waiting')}</span>
+        <span>{t('Votes')}</span>
+        <span>{t('Status')}</span>
+        <span>{t('Action')}</span>
       </div>
 
       {issues.map((issue) => (
@@ -161,8 +185,8 @@ export default function IssueTable({
             issue.id === selectedId ? 'bg-white' : 'hover:bg-white/50',
           )}
         >
-          <span className="font-heading text-2xl font-extrabold text-forest @3xl:text-3xl">
-            {issue.rank}
+          <span className="font-heading text-2xl font-extrabold text-accent @3xl:text-3xl">
+            {n(issue.rank)}
           </span>
 
           <div className="min-w-0">
@@ -177,34 +201,35 @@ export default function IssueTable({
               <span
                 className={clsx(
                   'font-bold',
-                  issue.priority === 'urgent' ? 'text-danger' : 'text-forest',
+                  issue.priority === 'urgent' ? 'text-alert' : 'text-accent',
                 )}
               >
-                {PRIORITY_LABEL[issue.priority] ?? issue.priority}
+                {t(PRIORITY_LABEL[issue.priority] ?? issue.priority)}
               </span>
-              <span>{issue.ward ? `${issue.location}, ${issue.ward}` : issue.location}</span>
+              <span>{issue.ward ? `${issue.location}, ${t(issue.ward)}` : issue.location}</span>
             </p>
             {issue.sentBack && (
-              <p className="mt-1 min-w-0 break-words font-body text-sm font-bold text-danger">
-                {sentBackMessage(issue.sentBack)}
+              <p className="mt-1 min-w-0 break-words font-body text-sm font-bold text-alert">
+                {sentBackMessage(issue.sentBack, t)}
               </p>
             )}
           </div>
 
           {/* Cards: one wrapping line under the title. Table: three columns. */}
           <div className="col-start-2 flex flex-wrap items-center gap-3 @3xl:contents">
+            <WaitingCell issue={issue} />
             {/* The arrow is decoration; screen readers hear "48 votes". The row
                 is relative so that text stays inside the scrolling list. */}
             <span className="font-body text-base font-bold text-navy">
               <span aria-hidden="true">↑ </span>
               <span className="@3xl:hidden">
-                {issue.votes === 1 ? '1 vote' : `${issue.votes} votes`}
+                {t(issue.votes === 1 ? '1 vote' : `${issue.votes} votes`)}
               </span>
               <span aria-hidden="true" className="hidden @3xl:inline">
-                {issue.votes}
+                {n(issue.votes)}
               </span>
               <span className="hidden @3xl:inline @3xl:sr-only">
-                {issue.votes === 1 ? '1 vote' : `${issue.votes} votes`}
+                {t(issue.votes === 1 ? '1 vote' : `${issue.votes} votes`)}
               </span>
             </span>
 

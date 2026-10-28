@@ -12,12 +12,13 @@ import {
 import 'leaflet/dist/leaflet.css'
 import StaircaseIcon from '../../components/ui/StaircaseIcon'
 import { getIssues, upvoteIssue } from '../../services/api'
-import { MAP_CENTER } from '../../mock/issues'
-import { distanceInMeters } from '../../utils/geo'
+import { distanceInMeters, MAP_CENTER } from '../../utils/geo'
+import { divisionFromPlaceName } from '../../utils/divisions'
 import { DRAFT_PIN_SIZE, draftPinSvg } from '../Map/pinMarkup'
 import { pinIcon } from '../Map/statusPin'
 import MiniMapZoom from '../IssueDetail/MiniMapZoom'
 import { enter, flyTo, mapMotionOptions } from '../../components/ui/motion'
+import { useT } from '../../i18n/useLanguage'
 
 const START = { lat: MAP_CENTER[0], lng: MAP_CENTER[1] }
 const MATCH_RADIUS_M = 120 // an open issue this close counts as a possible duplicate
@@ -99,7 +100,7 @@ function ClickToPlace({ onPlace }) {
 // Optional, for editing a report (the Report page leaves them out):
 //   excludeId: the issue being edited, never counted as a match or as "nearest".
 //   showMatches: false hides the "Looks like a match nearby" card.
-//   initialPlace: { label, ward } shown while the pin is still at `initial`.
+//   initialPlace: { label, ward, division } shown while the pin is still at `initial`.
 export default function LocationPicker({
   category,
   onChange,
@@ -109,8 +110,10 @@ export default function LocationPicker({
   showMatches = true,
   initialPlace,
 }) {
+  const t = useT()
   const [position, setPosition] = useState(() => initial ?? START)
   const [placeName, setPlaceName] = useState('')
+  const [found, setFound] = useState(null) // { lat, lng, division } for the last pin we looked up
   const [issues, setIssues] = useState([])
   const [dismissed, setDismissed] = useState([])
   const [hintVisible, setHintVisible] = useState(true)
@@ -148,6 +151,11 @@ export default function LocationPicker({
         const data = await res.json()
         const a = data.address ?? {}
         setPlaceName(a.road || a.neighbourhood || a.suburb || a.city_district || '')
+        setFound({
+          lat: position.lat,
+          lng: position.lng,
+          division: divisionFromPlaceName(a.state),
+        })
       } catch (err) {
         if (err.name !== 'AbortError') setPlaceName('')
       }
@@ -196,9 +204,14 @@ export default function LocationPicker({
     ward = initialPlace.ward ?? ''
   }
 
+  // The division of the pin. Empty while it is still being looked up, or when
+  // the lookup failed, so a report is never sent with a guessed division.
+  const lookedUp = found && found.lat === position.lat && found.lng === position.lng
+  const division = atInitial && initialPlace.division ? initialPlace.division : lookedUp ? found.division : ''
+
   useEffect(() => {
-    onChange?.({ lat: position.lat, lng: position.lng, label, ward })
-  }, [position.lat, position.lng, label, ward, onChange])
+    onChange?.({ lat: position.lat, lng: position.lng, label, ward, division })
+  }, [position.lat, position.lng, label, ward, division, onChange])
 
   function moveTo(next) {
     setPosition(next)
@@ -236,8 +249,7 @@ export default function LocationPicker({
     setSearching(true)
     setMessage('')
     try {
-      // known issues first, so search also works offline with the mock data
-      // if the list fails, go straight to the place search
+      // known issues first; if the list fails, go straight to the place search
       const list = await getIssues({ search: q }).catch(() => [])
       const known = list.find((i) => typeof i.lat === 'number')
       if (known) {
@@ -251,7 +263,7 @@ export default function LocationPicker({
       if (!res.ok) throw new Error('Search failed')
       const results = await res.json()
       if (results.length === 0) {
-        setMessage('No place found. Try a street or landmark in Chattogram.')
+        setMessage('No place found. Try a street or landmark in Bangladesh.')
         return
       }
       moveTo({ lat: Number(results[0].lat), lng: Number(results[0].lon) })
@@ -290,7 +302,7 @@ export default function LocationPicker({
     getIssues()
       .then(setIssues)
       .catch(() => {}) // keep the list we already have
-    onToast?.(`You upvoted "${issue.title}", so there is no need to report it again.`)
+    onToast?.(t('You upvoted "{title}", so there is no need to report it again.', { title: issue.title }))
   }
 
   function handleDismiss() {
@@ -299,7 +311,7 @@ export default function LocationPicker({
 
   return (
     <section
-      aria-label="Choose the location"
+      aria-label={t('Choose the location')}
       className="relative isolate min-h-[560px] overflow-hidden rounded-card bg-mint shadow-sm transition-shadow duration-300 hover:shadow-xl"
       style={enter('rise-in', 0.2)}
     >
@@ -329,7 +341,7 @@ export default function LocationPicker({
           center={markerPosition}
           radius={MATCH_RADIUS_M}
           interactive={false}
-          className="stroke-forest fill-forest/10 stroke-2 [stroke-dasharray:6_6]"
+          className="stroke-accent fill-accent/10 stroke-2 [stroke-dasharray:6_6]"
         />
 
         {match && (
@@ -345,14 +357,14 @@ export default function LocationPicker({
           position={markerPosition}
           icon={dragPinIcon}
           draggable
-          alt="Report location pin"
-          title="The pin marks where the problem is. Drag it to change the spot."
+          alt={t('Report location pin')}
+          title={t('The pin marks where the problem is. Drag it to change the spot.')}
           zIndexOffset={1000}
           eventHandlers={eventHandlers}
         >
           {hintVisible && (
             <Tooltip permanent direction="top" offset={[0, 0]} className="drag-hint">
-              Drag the pin to adjust
+              {t('Drag the pin to adjust')}
             </Tooltip>
           )}
         </Marker>
@@ -380,21 +392,21 @@ export default function LocationPicker({
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search street or landmark"
-            aria-label="Search street or landmark"
-            className="w-full rounded-full border border-navy/15 bg-white py-2.5 pl-10 pr-4 font-body text-sm text-navy shadow-sm max-md:min-h-11 transition placeholder:text-muted hover:border-forest/50 focus:border-forest focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest/40"
+            placeholder={t('Search street or landmark')}
+            aria-label={t('Search street or landmark')}
+            className="w-full rounded-full border border-navy/15 bg-white py-2.5 pl-10 pr-4 font-body text-sm text-navy shadow-sm max-md:min-h-11 transition placeholder:text-muted hover:border-accent/50 focus:border-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
           />
         </div>
         <button
           type="button"
           onClick={handleLocate}
           disabled={locating}
-          className="group shrink-0 rounded-full border border-navy/15 bg-white px-4 py-2.5 font-body text-sm font-semibold text-navy shadow-sm transition hover:-translate-y-0.5 hover:bg-mint hover:shadow-md active:scale-95 disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest/50"
+          className="group shrink-0 rounded-full border border-navy/15 bg-white px-4 py-2.5 font-body text-sm font-semibold text-navy shadow-sm transition hover:-translate-y-0.5 hover:bg-mint hover:shadow-md active:scale-95 disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50"
         >
           <span className="inline-flex items-center gap-1.5">
             <svg
               viewBox="0 0 24 24"
-              className={`h-4 w-4 text-forest transition-transform duration-300 group-hover:scale-110 ${locating ? 'animate-pulse' : ''}`}
+              className={`h-4 w-4 text-accent transition-transform duration-300 group-hover:scale-110 ${locating ? 'animate-pulse' : ''}`}
               fill="none"
               stroke="currentColor"
               strokeWidth="2"
@@ -405,11 +417,11 @@ export default function LocationPicker({
               <circle cx="12" cy="12" r="2" />
               <path d="M12 2v3M12 19v3M2 12h3M19 12h3" />
             </svg>
-            {locating ? 'Locating…' : 'Use my location'}
+            {locating ? t('Locating…') : t('Use my location')}
           </span>
         </button>
         <span className="sr-only" aria-live="polite">
-          {searching ? 'Searching' : ''}
+          {searching ? t('Searching') : ''}
         </span>
       </form>
 
@@ -418,7 +430,7 @@ export default function LocationPicker({
           role="status"
           className="absolute left-16 top-16 z-[1000] max-w-xs rounded-xl bg-white px-3 py-2 font-body text-xs font-semibold text-navy shadow"
         >
-          {message}
+          {t(message)}
         </p>
       )}
 
@@ -431,29 +443,29 @@ export default function LocationPicker({
             style={enter('rise-in', 0, 'var(--duration-base)')}
           >
             <div className="flex items-center gap-2">
-              <StaircaseIcon level={1} className="h-5 w-5 text-amber-dark" />
+              <StaircaseIcon level={1} className="h-5 w-5 text-warn" />
               <h3 className="font-heading text-base font-extrabold text-navy">
-                Looks like a match nearby
+                {t('Looks like a match nearby')}
               </h3>
             </div>
             <p className="mt-2 font-body text-sm text-navy">
-              {match.issue.title} · {Math.round(match.distance)} m away · {match.issue.votes}{' '}
-              upvotes. Upvoting tells authorities what matters most.
+              {match.issue.title} · {t('{distance} m away', { distance: Math.round(match.distance) })} ·{' '}
+              {t('{n} upvotes', { n: match.issue.votes })}. {t('Upvoting tells authorities what matters most.')}
             </p>
             <div className="mt-3 flex flex-wrap gap-2">
               <button
                 type="button"
                 onClick={handleUpvote}
-                className="rounded-full bg-forest px-4 py-2 font-body text-sm font-bold text-white transition hover:-translate-y-0.5 hover:bg-forest/90 hover:shadow-md active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest/60 focus-visible:ring-offset-2"
+                className="rounded-full bg-forest px-4 py-2 font-body text-sm font-bold text-paper transition hover:-translate-y-0.5 hover:bg-forest/90 hover:shadow-md active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 focus-visible:ring-offset-2"
               >
-                ↑ Upvote it instead
+                ↑ {t('Upvote it instead')}
               </button>
               <button
                 type="button"
                 onClick={handleDismiss}
-                className="rounded-full border-2 border-amber-dark px-4 py-2 font-body text-sm font-bold text-navy transition hover:-translate-y-0.5 hover:bg-amber/20 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest/50"
+                className="rounded-full border-2 border-amber-dark px-4 py-2 font-body text-sm font-bold text-navy transition hover:-translate-y-0.5 hover:bg-amber/20 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50"
               >
-                Mine is different
+                {t('Mine is different')}
               </button>
             </div>
           </div>
@@ -465,14 +477,17 @@ export default function LocationPicker({
           aria-live="polite"
           className="pointer-events-auto rounded-2xl bg-white px-4 py-3 shadow-lg transition hover:-translate-y-0.5 hover:shadow-xl md:ml-auto"
         >
-          <p className="font-body text-xs text-muted">Selected location</p>
+          <p className="font-body text-xs text-muted">{t('Selected location')}</p>
           <p
             key={label}
             className="font-body text-sm font-bold text-navy"
             style={enter('rise-in', 0, 'var(--duration-base)')}
           >
-            {label}
-            {ward ? `, ${ward}` : ''}
+            {t(label)}
+            {ward ? `, ${t(ward)}` : ''}
+          </p>
+          <p className="font-body text-xs text-muted">
+            {division ? t('{division} division', { division: t(division) }) : t('Checking the division…')}
           </p>
         </div>
       </div>

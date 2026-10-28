@@ -1,9 +1,10 @@
 import { useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import AuthShell, { DemoHint, Field, FormError, SubmitButton, authLinkClass } from './AuthShell'
-import { DEMO_ACCOUNTS, DEMO_PASSWORD, homePathFor, login } from '../../services/auth'
+import { DEMO_ACCOUNTS, DEMO_PASSWORD, homePathFor, login, SHOW_DEMO_ACCOUNTS } from '../../services/auth'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import GuestOnly from './GuestOnly'
+import { useT } from '../../i18n/useLanguage'
 
 // Citizen log-in. Staff accounts sign in at /staff/login.
 export default function Login() {
@@ -23,6 +24,7 @@ function returnPathFrom(state) {
 }
 
 function LoginPage() {
+  const t = useT()
   useDocumentTitle('Log in')
   const navigate = useNavigate()
   const location = useLocation()
@@ -31,12 +33,15 @@ function LoginPage() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState(null) // { message, code }
   const [busy, setBusy] = useState(false)
+  // Set when the password was just reset, so the person knows to log in with it.
+  const [notice, setNotice] = useState(location.state?.notice ?? '')
 
   const ready = email.trim() && password
 
   async function handleSubmit(event) {
     event.preventDefault()
     setError(null)
+    setNotice('')
     setBusy(true)
     try {
       const user = await login({ email, password, door: 'citizen' })
@@ -52,23 +57,29 @@ function LoginPage() {
 
   return (
     <AuthShell
+      photo={{ src: '/images/login-roundabout.jpg', side: 'right' }}
       title="Log in"
       subtitle="Sign in to report and follow issues in your area."
       footer={
         <>
-          New to Babylon?{' '}
+          {t('New to Babylon?')}{' '}
           <Link to="/signup" className={authLinkClass}>
-            Create an account
+            {t('Create an account')}
           </Link>
         </>
       }
       extra={
         <Link to="/staff/login" className={authLinkClass}>
-          Government or admin staff? Sign in here.
+          {t('Government or admin staff? Sign in here.')}
         </Link>
       }
     >
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+        {notice && (
+          <p role="status" className="font-body text-sm font-bold text-accent">
+            {t(notice)}
+          </p>
+        )}
         <Field
           id="email"
           label="Email"
@@ -87,13 +98,20 @@ function LoginPage() {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
         />
+        <Link
+          to="/forgot-password"
+          state={{ email, door: 'citizen' }}
+          className={`${authLinkClass} self-start`}
+        >
+          {t('Forgot password?')}
+        </Link>
 
         <FormError
           message={error?.message}
           action={
             error?.code === 'staff-account' && (
               <Link to="/staff/login" state={{ email }} className={authLinkClass}>
-                Go to the staff sign-in page.
+                {t('Go to the staff sign-in page.')}
               </Link>
             )
           }
@@ -102,10 +120,12 @@ function LoginPage() {
         <SubmitButton disabled={!ready || busy}>{busy ? 'Logging in…' : 'Log in'}</SubmitButton>
       </form>
 
-      <DemoHint
-        accounts={DEMO_ACCOUNTS.citizen}
-        lines={[`The demo account uses the password ${DEMO_PASSWORD}.`]}
-      />
+      {SHOW_DEMO_ACCOUNTS && (
+        <DemoHint
+          accounts={DEMO_ACCOUNTS.citizen}
+          lines={[t('The demo account uses the password {password}.', { password: DEMO_PASSWORD })]}
+        />
+      )}
     </AuthShell>
   )
 }

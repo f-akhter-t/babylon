@@ -11,6 +11,7 @@ import { useUnsavedChanges } from './useUnsavedChanges'
 import { enter } from '../../components/ui/motion'
 import PersonalDetailsCard from './PersonalDetailsCard'
 import PhoneCard from './PhoneCard'
+import EmailCard from './EmailCard'
 import IdentityCard from './IdentityCard'
 import SummaryCard from './SummaryCard'
 import JumpChips from './JumpChips'
@@ -20,6 +21,7 @@ import { ProfileError, ProfileLoading } from './ProfileStates'
 import WelcomeHeader from './WelcomeHeader'
 import ProfileCard from './ProfileCard'
 import ChangePasswordCard from '../../components/ui/ChangePasswordCard'
+import { useT } from '../../i18n/useLanguage'
 
 const LEAVE_MESSAGE = 'You have changes that are not saved. Leave this page anyway?'
 const DETAILS_FORM_ID = 'profile-details-form'
@@ -52,6 +54,7 @@ export default function Profile() {
 }
 
 function ProfilePage({ viewer }) {
+  const t = useT()
   const { profile, loading, error, reload } = useProfile()
   const email = viewer.session.email
   const firstTime = useFirstTimeSetup(email)
@@ -69,6 +72,7 @@ function ProfilePage({ viewer }) {
   const onDirty = useMemo(
     () => ({
       phone: (value) => markDirty('phone', value),
+      email: (value) => markDirty('email', value),
       identity: (value) => markDirty('identity', value),
     }),
     [markDirty],
@@ -138,10 +142,10 @@ function ProfilePage({ viewer }) {
           ) : (
             <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1" style={enter('rise-in', 0)}>
               <h1 className="font-heading text-4xl font-extrabold text-navy md:text-5xl">
-                Your profile
+                {t('Your profile')}
               </h1>
               <p className="font-body text-sm text-muted">
-                A verified profile helps departments trust and act on your reports.
+                {t('A verified profile helps departments trust and act on your reports.')}
               </p>
             </div>
           )}
@@ -174,6 +178,9 @@ function ProfilePage({ viewer }) {
                 <div style={enter('rise-in', 0.25)}>
                   <PhoneCard profile={profile} onDirtyChange={onDirty.phone} announce={announce} />
                 </div>
+                <div style={enter('rise-in', 0.3)}>
+                  <EmailCard profile={profile} onDirtyChange={onDirty.email} announce={announce} />
+                </div>
                 <div style={enter('rise-in', 0.35)}>
                   <IdentityCard
                     profile={profile}
@@ -187,8 +194,8 @@ function ProfilePage({ viewer }) {
                   <div style={enter('rise-in', 0.45)}>
                     <ProfileCard
                       id="profile-security"
-                      title="Security"
-                      intro="Change the password you use to log in. You stay logged in on this device."
+                      title={t('Security')}
+                      intro={t('Change the password you use to log in. You stay logged in on this device.')}
                     >
                       <ChangePasswordCard email={email} />
                     </ProfileCard>

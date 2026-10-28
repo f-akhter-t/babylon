@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef } from 'react'
 import clsx from 'clsx'
 import Button from '../../components/ui/Button'
 import { animate, RISE_IN, SPRING } from '../../components/ui/motion'
+import { useT } from '../../i18n/useLanguage'
 
 const TITLES = {
   upvote: 'Log in to upvote',
@@ -19,6 +20,7 @@ const REASONS = {
 // and then focus goes back to the button that opened it.
 // action: 'upvote' | 'follow' | 'report'
 export default function LoginPrompt({ action, onClose, className }) {
+  const t = useT()
   const boxRef = useRef(null)
   const loginRef = useRef(null)
   const openerRef = useRef(null) // the button that opened this box
@@ -55,7 +57,7 @@ export default function LoginPrompt({ action, onClose, className }) {
     <div
       ref={boxRef}
       role="dialog"
-      aria-label={TITLES[action]}
+      aria-label={t(TITLES[action])}
       className={clsx(
         'relative flex flex-col gap-2 rounded-tile border-2 border-navy bg-mint p-3 pr-9 font-body text-navy shadow-lg',
         className,
@@ -65,22 +67,22 @@ export default function LoginPrompt({ action, onClose, className }) {
       <button
         type="button"
         onClick={close}
-        aria-label="Close"
-        className="group absolute -right-0.5 -top-0.5 flex size-11 items-center justify-center rounded-full text-lg leading-none text-slate hover:text-navy"
+        aria-label={t('Close')}
+        className="group absolute -right-0.5 -top-0.5 flex size-11 items-center justify-center rounded-full text-lg leading-none text-soft hover:text-navy"
       >
         <span className="flex size-7 items-center justify-center rounded-full group-hover:bg-mint-deep">
           ×
         </span>
       </button>
-      <span className="font-heading text-base font-extrabold leading-tight">{TITLES[action]}</span>
-      <span className="text-xs text-slate">{REASONS[action]}</span>
+      <span className="font-heading text-base font-extrabold leading-tight">{t(TITLES[action])}</span>
+      <span className="text-xs text-soft">{t(REASONS[action])}</span>
       <div className="mt-1 flex gap-2">
         {/* "!" colours beat Leaflet's blue link colour inside map popups */}
-        <Button ref={loginRef} to="/login" variant="dark" className="flex-1 text-white!">
-          Log in
+        <Button ref={loginRef} to="/login" variant="dark" className="flex-1 text-paper!">
+          {t('Log in')}
         </Button>
         <Button to="/signup" variant="outline" className="flex-1 text-navy!">
-          Sign up
+          {t('Sign up')}
         </Button>
       </div>
     </div>

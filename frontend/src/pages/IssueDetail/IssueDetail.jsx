@@ -4,6 +4,8 @@ import Navbar from '../../components/layout/Navbar'
 import { canEditIssue } from '../../services/api'
 import { useViewer } from '../Map/useViewer'
 import { useStoredIds } from '../Map/useStoredIds'
+import { useVotes } from '../Map/useVotes'
+import { useToast } from '../../components/ui/toast'
 import { useIssue } from './useIssue'
 import { usePoliteMessage } from '../../hooks/usePoliteMessage'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
@@ -11,6 +13,7 @@ import { DetailLoading, DetailMessage } from './DetailStates'
 import PageBackdrop from './PageBackdrop'
 import IssueView from './IssueView'
 import { clearIssueNotice, peekIssueNotice } from './issueNotice'
+import { useT } from '../../i18n/useLanguage'
 
 // Status words for the live announcement, as the progress card shows them.
 const STATUS_WORDS = { open: 'Open', 'in-progress': 'In progress', resolved: 'Resolved' }
@@ -18,6 +21,7 @@ const STATUS_WORDS = { open: 'Open', 'in-progress': 'In progress', resolved: 'Re
 const SETTLE_MS = 400
 
 export default function IssueDetail() {
+  const t = useT()
   const { id } = useParams()
   const { issue, loading, error, update, deleted } = useIssue(id)
   const viewer = useViewer()
@@ -25,17 +29,12 @@ export default function IssueDetail() {
   const [notice] = useState(() => ({ id, message: peekIssueNotice(id) }))
   useEffect(() => clearIssueNotice(notice.id), [notice.id])
   const noticeText = notice.id === id ? notice.message : null
-  // The same per-account lists as the Map page, so votes and follows match.
-  const [votedIds, toggleVote] = useStoredIds(viewer.storageKey('voted'))
+  const toast = useToast()
+  // Follows stay in this browser (one list per account); votes live on the server.
   const [followedIds, toggleFollow] = useStoredIds(viewer.storageKey('followed'))
-  // Add this citizen's own vote and follow on top of the data.
-  const voted = issue ? votedIds.includes(issue.id) : false
-  const shown = issue && {
-    ...issue,
-    votes: issue.votes + (voted ? 1 : 0),
-    voted,
-    followed: followedIds.includes(issue.id),
-  }
+  const { withVotes, toggle } = useVotes(issue ? [issue] : [])
+  const toggleVote = (voteId) => toggle(voteId).catch((error) => toast.error(error.message))
+  const shown = issue && { ...withVotes([issue])[0], followed: followedIds.includes(issue.id) }
 
   let tabTitle = null // keep the old tab title while loading
   if (shown) tabTitle = shown.title
@@ -53,8 +52,8 @@ export default function IssueDetail() {
     lastStatus.current = status
     if (!status || !before || before === status || !update?.remote) return
     clearTimeout(settleTimer.current)
-    settleTimer.current = setTimeout(() => say(`This report is now ${STATUS_WORDS[status] ?? status}.`), SETTLE_MS)
-  }, [status, update, say])
+    settleTimer.current = setTimeout(() => say(t('This report is now {status}.', { status: STATUS_WORDS[status] ?? status })), SETTLE_MS)
+  }, [status, update, say, t])
   useEffect(() => () => clearTimeout(settleTimer.current), [])
   useEffect(() => {
     lastStatus.current = null // a new id starts fresh
@@ -80,7 +79,7 @@ export default function IssueDetail() {
         <div role="status">
           {showNotice && (
             <p className="mb-4 rounded-tile bg-mint px-4 py-3 text-sm font-semibold text-navy shadow-sm">
-              {noticeText}
+              {t(noticeText)}
             </p>
           )}
           <span className="sr-only">{spoken}</span>

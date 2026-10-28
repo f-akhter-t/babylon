@@ -2,15 +2,19 @@ import { useEffect, useRef } from 'react'
 import clsx from 'clsx'
 import StatusPill from '../../components/ui/StatusPill'
 import PriorityBadge from '../../components/ui/PriorityBadge'
-import { formatDistance } from '../../utils/format'
+import { useFormat } from '../../i18n/useFormat'
 import { ArrowUpIcon } from './MapIcons'
 import { animate, DURATION, RISE_IN, SPRING, VOTE_BUMP } from '../../components/ui/motion'
+import { useNumber, useT } from '../../i18n/useLanguage'
 
 // ghost: removed while the list was in use; it keeps its slot, faded and
 // unreachable, until the list lets go (see useHeldList).
 // isOwnVote(id): true when this tab's own vote changed the count, so the
 // number does not pop for it (the pressed button already answered).
 export default function IssueCard({ issue, ghost = false, selected, onSelect, isOwnVote = () => false }) {
+  const t = useT()
+  const n = useNumber()
+  const format = useFormat()
   const ref = useRef(null)
   const votesRef = useRef(null)
   const lastVotes = useRef(issue.votes)
@@ -52,7 +56,7 @@ export default function IssueCard({ issue, ghost = false, selected, onSelect, is
       )}
     >
       <span className="w-8 shrink-0 font-heading text-3xl font-extrabold leading-none text-navy">
-        {issue.rank}
+        {n(issue.rank)}
       </span>
 
       <div className="flex min-w-0 flex-1 flex-col gap-2">
@@ -67,24 +71,24 @@ export default function IssueCard({ issue, ghost = false, selected, onSelect, is
           {issue.title}
         </button>
 
-        <span className="text-sm text-slate">
-          {issue.category} · {formatDistance(issue.distanceM)} away
+        <span className="text-sm text-soft">
+          {t(issue.category)} · {t('{distance} away', { distance: format.distance(issue.distanceM) })}
         </span>
 
         <div className="flex flex-wrap items-center gap-2">
           <StatusPill status={issue.status} />
-          <PriorityBadge priority={issue.priority} />
+          <PriorityBadge priority={issue.priority} ai={issue.aiAssessed} />
           {/* Green when this citizen has upvoted it. */}
           <span
             ref={votesRef}
             className={clsx(
               'ml-auto flex origin-center items-center gap-1 text-sm font-semibold',
-              issue.voted ? 'text-forest' : 'text-navy',
+              issue.voted ? 'text-accent' : 'text-navy',
             )}
           >
             <ArrowUpIcon size={16} />
-            <span className="sr-only">Upvotes:</span>
-            {issue.votes}
+            <span className="sr-only">{t('Upvotes:')}</span>
+            {n(issue.votes)}
           </span>
         </div>
       </div>

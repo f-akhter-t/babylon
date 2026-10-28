@@ -1,11 +1,19 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { Link, useSearchParams } from 'react-router-dom'
 import clsx from 'clsx'
 import AdminLayout from '../../components/layout/AdminLayout'
 import StaircaseIcon from '../../components/ui/StaircaseIcon'
 import LoadError from '../../components/ui/LoadError'
+import LogoLoader from '../../components/ui/LogoLoader'
 import IssueTable from './IssueTable'
 import ResolvePanel from './ResolvePanel'
+import WeeklySummaryCard from './WeeklySummaryCard'
+import DivisionSelect from '../../components/ui/DivisionSelect'
+import { useDivisionParam } from '../../hooks/useDivisionParam'
+import ListToolbar from '../../components/ui/ListToolbar'
+import Pager from '../../components/ui/Pager'
+import { useListView } from '../../hooks/useListView'
+
 import {
   ISSUES_EVENT,
   loadDepartmentPanel,
@@ -17,8 +25,16 @@ import { resizeImage } from '../../utils/resizeImage'
 import RequireRole from '../Auth/RequireRole'
 import { useViewer } from '../Map/useViewer'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
-import { ALL_ASSIGNED_LABEL, DEPARTMENT_FILTERS, filterFor, issuesFor } from './departmentFilters'
-import { fit, REGION_FOCUS, useFitMode } from '../../components/layout/staffFit'
+import { ALL_ASSIGNED_LABEL, DEPARTMENT_FILTERS, filterFor, ISSUE_SORTS, issuesFor, issueText } from './departmentFilters'
+import { fit } from '../../components/layout/staffFit'
+import { useNumber, useT } from '../../i18n/useLanguage'
+
+const PRIORITIES = ['urgent', 'high', 'medium']
+const PRIORITY_NAMES = { urgent: 'Urgent priority', high: 'High priority', medium: 'Medium priority' }
+
+// Keeps only the chosen division and priority ('' means no limit).
+const narrow = (list, division, priority) =>
+  list.filter((i) => (!division || i.division === division) && (!priority || i.priority === priority))
 
 const PANEL_ID = 'resolve-panel'
 const PANEL_HEADING_ID = 'resolve-panel-heading'
@@ -29,12 +45,15 @@ const NO_DEPARTMENT =
 const LOAD_FAILED = 'We could not load your department’s issues. Please try again.'
 const NO_ISSUES = Promise.resolve({ assigned: [], completed: [] })
 
-function StatCard({ label, value, level, iconClass, dark }) {
+// to: where the list behind this number is, so one click starts the work.
+function StatCard({ label, value, level, iconClass, dark, note, to }) {
+  const n = useNumber()
   return (
-    <div
+    <Link
+      to={to}
       className={clsx(
-        'flex items-center justify-between gap-3 rounded-card px-5 py-3 sm:block sm:py-4',
-        dark ? 'bg-navy text-mint' : 'bg-mint text-navy',
+        'flex items-center justify-between gap-3 rounded-card px-5 py-3 transition-transform hover:-translate-y-0.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent motion-reduce:transition-none sm:block sm:py-4',
+        dark ? 'bg-ink text-frost' : 'bg-mint text-navy',
       )}
     >
       <div className="flex items-center gap-2 font-body text-sm font-semibold">
@@ -47,9 +66,10 @@ function StatCard({ label, value, level, iconClass, dark }) {
           dark ? 'text-brand' : 'text-navy',
         )}
       >
-        {value}
+        {n(value)}
       </p>
-    </div>
+      {note && <p className="font-body text-xs text-frost/70 max-sm:hidden sm:mt-1">{note}</p>}
+    </Link>
   )
 }
 
@@ -63,10 +83,15 @@ export default function DepartmentPanel() {
 }
 
 function DepartmentPanelPage() {
+  const t = useT()
+  const n = useNumber()
   useDocumentTitle('Department panel')
   const { department } = useViewer()
   const [searchParams] = useSearchParams()
   const status = filterFor(searchParams.get('status'))
+  const [division, setDivision] = useDivisionParam()
+  const priorityParam = searchParams.get('priority')
+  const priority = PRIORITIES.includes(priorityParam) ? priorityParam : ''
   const [selectedId, setSelectedId] = useState(null)
   const [busy, setBusy] = useState(false)
   const [notice, setNotice] = useState(null) // { tone: 'success' | 'error', text }
@@ -76,16 +101,16 @@ function DepartmentPanelPage() {
   const [panelOpen, setPanelOpen] = useState(false)
   const [focusPanel, setFocusPanel] = useState(0) // bumped to move focus to the panel
   const panelHeadingRef = useRef(null)
-  const toggleRef = useRef(null)
-  const fitMode = useFitMode()
+  const headingRef = useRef(null)
 
   const load = useCallback(
     () => (department ? loadDepartmentPanel(department) : NO_ISSUES),
     [department],
   )
   const { data, error, loading, retry, reload } = useAsync(load)
-  const issues = data?.assigned ?? []
-  const completed = data?.completed ?? []
+  // The chosen division and priority narrow everything on the page.
+  const issues = useMemo(() => narrow(data?.assigned ?? [], division, priority), [data, division, priority])
+  const completed = useMemo(() => narrow(data?.completed ?? [], division, priority), [data, division, priority])
 
   // An issue changed (here, in another tab, or by the admin): show the latest.
   useEffect(() => {
@@ -94,6 +119,7 @@ function DepartmentPanelPage() {
   }, [reload])
 
   const shown = issuesFor(status, issues, completed)
+  const view = useListView(shown, { searchText: issueText, sorts: ISSUE_SORTS, defaultSort: 'priority' })
   // Closed issues have nothing left to resolve, so they never open the panel.
   const selected =
     shown.find((issue) => issue.id === selectedId && issue.status !== 'resolved') ?? null
@@ -115,7 +141,7 @@ function DepartmentPanelPage() {
 
   function closePanel() {
     setPanelOpen(false)
-    toggleRef.current?.focus()
+    headingRef.current?.focus()
   }
 
   async function startWork(id) {
@@ -123,10 +149,11 @@ function DepartmentPanelPage() {
     setBusy(true)
     try {
       const issue = await startWorkOn(id)
+      window.dispatchEvent(new Event(ISSUES_EVENT))
       select(id)
-      setNotice({ tone: 'success', text: `Work has started on “${issue.title}”.` })
+      setNotice({ tone: 'success', text: t('Work has started on “{title}”.', { title: issue.title }) })
     } catch (err) {
-      setNotice({ tone: 'error', text: err.message })
+      setNotice({ tone: 'error', text: t(err.message) })
     } finally {
       setBusy(false)
     }
@@ -141,26 +168,42 @@ function DepartmentPanelPage() {
     try {
       const photoUrl = await resizeImage(file)
       const issue = await sendForVerification(id, { note, photoUrl })
+      window.dispatchEvent(new Event(ISSUES_EVENT))
       setSelectedId(null)
       closePanel()
       setNotice({
         tone: 'success',
-        text: `“${issue.title}” was sent to the admin for verification.`,
+        text: t('“{title}” was sent to the admin for verification.', { title: issue.title }),
       })
     } catch (err) {
-      setSubmitError(err.message)
+      setSubmitError(t(err.message))
     } finally {
       setBusy(false)
     }
   }
 
-  const heading = status ? DEPARTMENT_FILTERS[status].label : ALL_ASSIGNED_LABEL
+  const heading = t(status ? DEPARTMENT_FILTERS[status].label : ALL_ASSIGNED_LABEL)
 
   const open = issues.filter((i) => i.status === 'open').length
   const inProgress = issues.filter(
     (i) => i.status === 'in-progress' && i.verification !== 'awaiting',
   ).length
   const awaiting = issues.filter((i) => i.verification === 'awaiting').length
+  // Links keep the chosen division and priority.
+  const keep = (extra, withPriority = true) => {
+    const q = new URLSearchParams(extra)
+    if (division) q.set('division', division)
+    if (priority && withPriority) q.set('priority', priority)
+    const text = q.toString()
+    return text ? `/department?${text}` : '/department'
+  }
+  const tabs = [
+    { key: null, label: ALL_ASSIGNED_LABEL, count: issues.length },
+    { key: 'open', label: DEPARTMENT_FILTERS.open.label, count: open },
+    { key: 'in-progress', label: DEPARTMENT_FILTERS['in-progress'].label, count: inProgress },
+    { key: 'awaiting', label: DEPARTMENT_FILTERS.awaiting.label, count: awaiting },
+    { key: 'completed', label: DEPARTMENT_FILTERS.completed.label, count: completed.length },
+  ]
 
   if (error) {
     return (
@@ -190,35 +233,22 @@ function DepartmentPanelPage() {
           // The last row grows to fit a tall panel, so the heading rows never stretch.
           'grid grid-cols-1 gap-5 p-4 sm:gap-6 sm:p-6 lg:grid-rows-[auto_auto_1fr] lg:p-8',
           panelOpen ? 'lg:grid-cols-[minmax(0,1fr)_min(22.5rem,40%)]' : 'lg:grid-cols-1',
-          fit.departmentGrid,
         )}
       >
         <div className="min-w-0 lg:col-start-1 lg:row-start-1">
-          <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-3">
-            <div className="min-w-0">
-              <h1 className="break-words font-heading text-3xl font-extrabold text-navy sm:text-4xl">
-                {heading}
-              </h1>
-              <p className="mt-1 font-body text-base text-muted">
-                Ranked by priority. Urgent problems stay at the top.
-              </p>
-            </div>
-            <button
-              ref={toggleRef}
-              type="button"
-              aria-expanded={panelOpen}
-              aria-controls={PANEL_ID}
-              onClick={() => (panelOpen ? closePanel() : setPanelOpen(true))}
-              className="min-h-11 max-w-full rounded-full border-2 border-navy bg-white px-5 py-2 text-left font-body text-sm font-bold text-navy transition-colors hover:bg-mint-deep focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forest motion-reduce:transition-none"
-            >
-              {panelOpen
-                ? 'Hide the Resolve with proof panel.'
-                : 'Show the Resolve with proof panel.'}
-            </button>
-          </div>
+          <h1
+            ref={headingRef}
+            tabIndex={-1}
+            className="break-words rounded-tile font-heading text-3xl font-extrabold text-navy focus:outline-none sm:text-4xl"
+          >
+            {heading}
+          </h1>
+          <p className="mt-1 font-body text-base text-muted">
+            {t('Ranked by priority. Urgent problems stay at the top.')}
+          </p>
           {!department && (
-            <p role="alert" className="mt-3 font-body text-base font-bold text-danger">
-              {NO_DEPARTMENT}
+            <p role="alert" className="mt-3 font-body text-base font-bold text-alert">
+              {t(NO_DEPARTMENT)}
             </p>
           )}
           {notice && (
@@ -226,24 +256,25 @@ function DepartmentPanelPage() {
               role={notice.tone === 'error' ? 'alert' : 'status'}
               className={clsx(
                 'mt-3 break-words font-body text-base font-bold',
-                notice.tone === 'error' ? 'text-danger' : 'text-forest',
+                notice.tone === 'error' ? 'text-alert' : 'text-accent',
               )}
             >
               {notice.text}
             </p>
           )}
           {loading && (
-            <p role="status" className="mt-6 font-body text-base text-navy">
-              Loading your department’s issues.
-            </p>
+            <LogoLoader label={t('Loading your department’s issues.')} compact className="mt-4" />
           )}
         </div>
 
         {!loading && (
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4 lg:col-start-1 lg:row-start-2">
-            <StatCard label="Open" value={open} level={1} iconClass="text-amber-dark" />
-            <StatCard label="In progress" value={inProgress} level={2} iconClass="text-slate" />
-            <StatCard label="Awaiting admin check" value={awaiting} dark />
+          <div className="flex min-w-0 flex-col gap-5 sm:gap-6 lg:col-start-1 lg:row-start-2">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4">
+              <StatCard to={keep({ status: 'open' })} label={t('Open')} value={open} level={1} iconClass="text-warn" />
+              <StatCard to={keep({ status: 'in-progress' })} label={t('In progress')} value={inProgress} level={2} iconClass="text-soft" />
+              <StatCard to={keep({ status: 'awaiting' })} label={t('Awaiting admin check')} value={awaiting} dark note={t('With the admin')} />
+            </div>
+            {department && <WeeklySummaryCard />}
           </div>
         )}
 
@@ -258,14 +289,23 @@ function DepartmentPanelPage() {
             fit.barPadding,
           )}
         >
-          <h2
-            id={PANEL_HEADING_ID}
-            ref={panelHeadingRef}
-            tabIndex={-1}
-            className="mb-2 rounded-tile font-body text-xs font-bold uppercase tracking-widest text-forest focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forest"
-          >
-            Resolve with proof
-          </h2>
+          <div className="mb-2 flex items-center justify-between gap-3">
+            <h2
+              id={PANEL_HEADING_ID}
+              ref={panelHeadingRef}
+              tabIndex={-1}
+              className="rounded-tile font-body text-xs font-bold uppercase tracking-widest text-accent focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+            >
+              {t('Resolve with proof')}
+            </h2>
+            <button
+              type="button"
+              onClick={closePanel}
+              className="min-h-11 rounded-full border border-navy/40 bg-white px-4 py-2 font-body text-sm font-bold text-navy hover:bg-mint-deep focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+            >
+              {t('Close')}
+            </button>
+          </div>
           <ResolvePanel
             key={selected?.id ?? 'none'}
             issue={selected}
@@ -276,28 +316,62 @@ function DepartmentPanelPage() {
         </section>
 
         {!loading && (
-          <div
-            role={fitMode ? 'region' : undefined}
-            aria-label={fitMode ? 'Issues' : undefined}
-            tabIndex={fitMode ? 0 : undefined}
-            className={clsx(
-              'min-w-0 rounded-card lg:col-start-1 lg:row-start-3',
-              fit.scroll,
-              fit.min48,
-              REGION_FOCUS,
-            )}
-          >
-            <IssueTable
-              issues={shown}
-              selectedId={selectedId}
-              onSelect={select}
-              onStart={startWork}
-              busy={busy}
-              panelId={PANEL_ID}
+          <div className={clsx('flex min-w-0 flex-col gap-4 lg:col-start-1 lg:row-start-3', fit.column)}>
+            <nav aria-label={t('Issue views')} className="flex flex-wrap gap-2">
+              {tabs.map((tab) => (
+                <Link
+                  key={tab.label}
+                  to={keep(tab.key ? { status: tab.key } : {})}
+                  aria-current={tab.key === status ? 'page' : undefined}
+                  className={clsx(
+                    'inline-flex min-h-11 items-center gap-2 rounded-full border px-4 py-2 font-body text-sm font-bold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent motion-reduce:transition-none',
+                    tab.key === status
+                      ? 'border-ink bg-ink text-frost'
+                      : 'border-navy/40 bg-white text-navy hover:bg-mint-deep',
+                  )}
+                >
+                  {t(tab.label)}
+                  <span className={clsx('rounded-full px-2 text-xs', tab.key === status ? 'bg-frost/20' : 'bg-mint-deep')}>
+                    {n(tab.count)}
+                  </span>
+                </Link>
+              ))}
+            </nav>
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <DivisionSelect value={division} onChange={setDivision} />
+              {priority && (
+                <Link
+                  to={keep(status ? { status } : {}, false)}
+                  className="inline-flex min-h-11 items-center gap-2 rounded-full border border-navy/40 bg-white px-4 py-2 font-body text-sm font-bold text-navy hover:bg-mint-deep focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+                >
+                  {t(PRIORITY_NAMES[priority])} <span aria-hidden="true">×</span>
+                  <span className="sr-only">{t('Clear')}</span>
+                </Link>
+              )}
+            </div>
+            <ListToolbar
+              view={view}
+              sorts={ISSUE_SORTS}
+              searchLabel={t('Search issues')}
+              placeholder={t('Search by title, street or ward')}
             />
-            {department && shown.length === 0 && (
-              <p className="mt-3 font-body text-base text-navy">No issues match this filter.</p>
-            )}
+            {/* The whole page scrolls, so every row can use the full screen height. */}
+            <div className="min-w-0 rounded-card">
+              <IssueTable
+                issues={view.pageItems}
+                selectedId={selectedId}
+                onSelect={select}
+                onStart={startWork}
+                busy={busy}
+                panelId={PANEL_ID}
+              />
+              {department && view.total === 0 && (
+                <p className="mt-3 font-body text-base text-navy">
+                  {view.query ? t('No issues match your search.') : t('No issues match this filter.')}
+                </p>
+              )}
+            </div>
+            <Pager view={view} />
           </div>
         )}
       </div>

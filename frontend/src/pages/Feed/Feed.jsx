@@ -6,8 +6,7 @@ import StaircaseIcon from '../../components/ui/StaircaseIcon'
 import LoadError from '../../components/ui/LoadError'
 import FeedFilters from './FeedFilters'
 import FeedGrid from './FeedGrid'
-import { useViewer } from '../Map/useViewer'
-import { useStoredIds } from '../Map/useStoredIds'
+import { useVotes } from '../Map/useVotes'
 import { getIssues } from '../../services/api'
 import { useLiveIssues } from '../../hooks/useLiveIssues'
 import { useHeldList } from '../../hooks/useHeldList'
@@ -15,25 +14,37 @@ import NewReportsBar from '../../components/ui/NewReportsBar'
 import { prefersLessMotion } from '../../components/ui/motion'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import { useToast } from '../../components/ui/toast'
+import { useViewer } from '../Map/useViewer'
+import { useProfile } from '../../hooks/useProfile'
+import { useT } from '../../i18n/useLanguage'
 
 const EMPTY = []
 const LOAD_FAILED = 'We could not load the issues. Check your connection and try again.'
 
 export default function Feed() {
+  const t = useT()
   useDocumentTitle('Issue feed')
   const [category, setCategory] = useState('All')
   const [status, setStatus] = useState('All')
   const [search, setSearch] = useState('')
   const toast = useToast()
 
+  // A citizen sees only their own division's issues; everyone else sees all of
+  // Bangladesh. Their division comes from their profile, so wait for it first.
   const viewer = useViewer()
-  // Same key as Map and Issue detail, so a vote shows the same everywhere.
-  const [votedIds, toggleVote] = useStoredIds(viewer.storageKey('voted'))
+  const me = useProfile()
+  const isCitizen = viewer.role === 'citizen'
+  const division = isCitizen ? (me.profile?.division ?? '') : ''
+  const waiting = isCitizen && me.loading
 
   // Live: another tab's new, changed or deleted report shows up here without a
   // reload. New filters load afresh; retry keeps the filters.
-  const filterKey = JSON.stringify([category, status, search])
-  const load = useCallback(() => getIssues({ category, status, search }), [category, status, search])
+  const filterKey = JSON.stringify([category, status, search, division])
+  const load = useCallback(
+    // A promise that never settles keeps the list on "loading" until the profile is here.
+    () => (waiting ? new Promise(() => {}) : getIssues({ category, status, search, division, includeUnlocated: true })),
+    [category, status, search, division, waiting],
+  )
   const { data, error, loading, retry, update } = useLiveIssues(load, { list: (list) => list })
   const failed = Boolean(error) && !loading
   const issues = loading || failed ? EMPTY : data
@@ -42,6 +53,8 @@ export default function Feed() {
   const gridRef = useRef(null)
   const headingRef = useRef(null)
   const held = useHeldList(issues, { containerRef: gridRef, resetKey: filterKey, update, headingRef })
+  // Votes live on the server; a click shows at once, until the next refresh agrees.
+  const { withVotes, toggle: toggleVote } = useVotes(held.items)
   const focusNew = useRef(null) // the first new report, after "Show new reports"
 
   function showNew() {
@@ -66,35 +79,48 @@ export default function Feed() {
     card.querySelector('a[href]')?.focus({ preventScroll: true })
   })
 
-  function handleUpvote(issue) {
+  async function handleUpvote(issue) {
     if (issue.status === 'resolved') return
-    const wasVoted = votedIds.includes(issue.id)
-    toggleVote(issue.id)
-    toast.info(wasVoted ? 'Your vote was removed.' : 'You upvoted this issue.')
+    try {
+      const answer = await toggleVote(issue.id)
+      if (answer) toast.info(answer.voted ? 'You upvoted this issue.' : 'Your vote was removed.')
+    } catch (error) {
+      toast.error(error.message)
+    }
   }
 
-  // Overlay this viewer's own vote on top of the fetched count — same math as Map.
-  const shownIssues = held.items.map((issue) => {
-    const voted = votedIds.includes(issue.id)
-    return { ...issue, votes: issue.votes + (voted ? 1 : 0), voted }
-  })
+  const shownIssues = withVotes(held.items)
 
   return (
     <>
-      <AnimatedBackground />
+      <AnimatedBackground photo={false} />
       <Navbar />
 
       <main>
-        <section className="bg-navy px-6 py-16 text-white md:px-10">
+        <section className="relative isolate overflow-hidden bg-ink px-6 py-16 text-paper md:px-10">
+          {/* A real street photo, faded right back so the heading stays easy to read. */}
+          <img
+            src="/images/login-roundabout.jpg"
+            alt=""
+            aria-hidden="true"
+            loading="lazy"
+            className="absolute inset-0 -z-10 size-full object-cover object-[center_42%] opacity-40 saturate-50"
+          />
+          <div className="absolute inset-0 -z-10 bg-linear-to-r from-ink via-ink/55 to-ink/10" />
+          <div className="absolute inset-x-0 bottom-0 -z-10 h-16 bg-linear-to-t from-ink/80 to-transparent" />
           <div className="mx-auto flex max-w-6xl flex-col items-start gap-4">
             <StaircaseIcon level={3} className="h-10 w-10 text-brand" />
             <h1 className="font-heading text-4xl font-extrabold md:text-5xl">
-              Every fix starts with a pin.
+              {t('Every fix starts with a pin.')}
             </h1>
-            <p className="max-w-xl font-body text-white/70">
-              Browse every issue the city is tracking, from freshly reported to fully
-              resolved. Drag the slider on fixed issues to see the before and after.
+            <p className="max-w-xl font-body text-paper/70">
+              {t('Browse every issue the city is tracking, from freshly reported to fully resolved. Drag the slider on fixed issues to see the before and after.')}
             </p>
+            {division && (
+              <p className="font-body text-sm font-semibold text-brand">
+                {t('Showing issues in {division} division', { division: t(division) })}
+              </p>
+            )}
           </div>
         </section>
 
@@ -112,7 +138,7 @@ export default function Feed() {
             />
 
             <h2 ref={headingRef} tabIndex={-1} className="sr-only">
-              Issues
+              {t('Issues')}
             </h2>
             <p role="status" className="sr-only">
               {held.message}

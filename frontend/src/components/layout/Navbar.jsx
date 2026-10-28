@@ -4,22 +4,31 @@ import clsx from 'clsx'
 import Logo from './Logo'
 import NotificationBell from './NotificationBell'
 import Button from '../ui/Button'
-import { homePathFor, isOnboarded, logout, profilePathFor } from '../../services/auth'
+import { homePathFor, isSetupPending, logout, profilePathFor } from '../../services/auth'
+import FlagStripe from './FlagStripe'
 import { useViewer } from '../../pages/Map/useViewer'
 import { useProfile } from '../../hooks/useProfile'
 import { usePendingIdentityCount } from '../../hooks/usePendingIdentityCount'
 import { confirmLeave } from '../../utils/leaveGuard'
 import { enter, usePresence } from '../ui/motion'
-
+import LanguageToggle from './LanguageToggle'
+import ThemeToggle from '../ui/ThemeToggle'
+import { useT } from '../../i18n/useLanguage'
+// Each role reads its own notices: /citizen/alerts, /department/alerts or /admin/alerts.
+const alertsPathFor = (role) => (role === 'admin' ? '/admin/alerts' : role === 'department' ? '/department/alerts' : '/citizen/alerts')
 const citizenLinks = [
   { label: 'Map', to: '/map' },
   { label: 'Issue feed', to: '/feed' },
   { label: 'My reports', to: '/my-reports' },
 ]
 
-const departmentLinks = [{ label: 'Department panel', to: '/department' }]
+const departmentLinks = [
+  { label: 'Dashboard', to: '/department/dashboard' },
+  { label: 'Department panel', to: '/department' },
+]
 
 const adminLinks = [
+  { label: 'Dashboard', to: '/admin/dashboard' },
   { label: 'Verify resolutions', to: '/admin/verify' },
   { label: 'Accountability', to: '/admin/accountability' },
   { label: 'Identity checks', to: '/admin/identity', count: 'identity' },
@@ -28,14 +37,15 @@ const adminLinks = [
 // "Identity checks" with the number waiting. Only rendered in admin links,
 // so only admins run the count.
 function IdentityChecksLabel({ label }) {
+  const t = useT()
   const waiting = usePendingIdentityCount()
   if (!waiting) return label
   return (
     <>
-      <span className="sr-only">{`${label}, ${waiting} waiting`}</span>
+      <span className="sr-only">{t('{label}, {waiting} waiting', { label, waiting })}</span>
       <span aria-hidden="true">
         {label}
-        <span className="ml-2 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-amber px-1.5 text-xs font-bold text-navy">
+        <span className="ml-2 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-amber px-1.5 text-xs font-bold text-ink">
           {waiting}
         </span>
       </span>
@@ -43,8 +53,9 @@ function IdentityChecksLabel({ label }) {
   )
 }
 
-function linkLabel(link) {
-  return link.count === 'identity' ? <IdentityChecksLabel label={link.label} /> : link.label
+function linkLabel(link, t) {
+  const label = t(link.label)
+  return link.count === 'identity' ? <IdentityChecksLabel label={label} /> : label
 }
 
 const linksByVariant = {
@@ -69,11 +80,11 @@ function initialsFor(name, fallback) {
 // `photo` (staff) shows instead of the initials; the initials stay in the name.
 function Avatar({ name, text, to, label, verified, photo }) {
   const circle =
-    'flex size-10 shrink-0 items-center justify-center rounded-full bg-forest text-sm font-semibold text-white max-lg:size-11'
+    'flex size-10 shrink-0 items-center justify-center rounded-full bg-forest text-sm font-semibold text-paper max-lg:size-11'
   const check = verified && (
     <span
       aria-hidden="true"
-      className="absolute -bottom-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-brand text-navy ring-2 ring-navy"
+      className="absolute -bottom-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-brand text-ink ring-2 ring-navy"
     >
       <svg
         viewBox="0 0 24 24"
@@ -120,6 +131,7 @@ export default function Navbar({
   showReport = true,
   initials = 'NR',
 }) {
+  const t = useT()
   const navigate = useNavigate()
   // The live session (it follows a login or logout in another tab). The
   // whole bar, the avatar included, comes from it: pages pass nothing.
@@ -163,7 +175,7 @@ export default function Navbar({
   // A staff account still setting up its profile: only the avatar (to that
   // profile) and Log out are offered. The gate keeps it off these pages
   // anyway; this is a backstop so nothing here ever leads to a redirect.
-  const locked = Boolean(session) && !isOnboarded(session.email)
+  const locked = Boolean(session) && isSetupPending()
   const links = locked ? [] : (linksByVariant[current] ?? citizenLinks)
   const canReport = current !== 'admin' && current !== 'department' && !locked
   // Name, photo and Verified status from the profile, so a change shows at once.
@@ -173,7 +185,7 @@ export default function Navbar({
   const avatarText = session ? initialsFor(displayName, initials) : initials
   // Every account's avatar opens its own profile page. Guests have no avatar.
   const profilePath = session ? profilePathFor(session.role) : null
-  const avatarLabel = isCitizen && profile.isVerified ? 'Your profile, verified' : 'Your profile'
+  const avatarLabel = isCitizen && profile.isVerified ? t('Your profile, verified') : t('Your profile')
   const avatarPhoto = !isCitizen ? profile.profile?.photo : ''
 
   function handleLogout() {
@@ -189,13 +201,13 @@ export default function Navbar({
   }
 
   return (
-    <header ref={headerRef} className="sticky top-0 z-[1100] border-b border-white/10 bg-navy font-body">
+    <header ref={headerRef} className="sticky top-0 z-[1100] border-b border-paper/10 bg-ink font-body">
       <div className="flex flex-wrap items-center gap-4 px-5 py-3 lg:gap-8 lg:px-10">
         <div className="shrink-0">
           <Logo {...(locked ? { to: null } : {})} />
         </div>
 
-        <nav aria-label="Main" className="hidden items-center gap-2 lg:flex">
+        <nav aria-label={t('Main')} className="hidden items-center gap-2 lg:flex">
           {links.map((link) => (
             <NavLink
               key={link.to}
@@ -203,11 +215,11 @@ export default function Navbar({
               className={({ isActive }) =>
                 clsx(
                   'whitespace-nowrap rounded-full px-4 py-2 text-sm font-medium transition-colors',
-                  isActive ? 'bg-mint text-navy' : 'text-white/80 hover:text-white',
+                  isActive ? 'bg-mint text-navy' : 'text-paper/80 hover:text-paper',
                 )
               }
             >
-              {linkLabel(link)}
+              {linkLabel(link, t)}
             </NavLink>
           ))}
         </nav>
@@ -217,35 +229,41 @@ export default function Navbar({
             <div className="hidden items-center gap-4 lg:flex">
               <Link
                 to="/login"
-                className="whitespace-nowrap text-sm font-semibold text-white transition-colors hover:text-brand"
+                className="whitespace-nowrap text-sm font-semibold text-paper transition-colors hover:text-brand"
               >
-                Log in
+                {t('Log in')}
               </Link>
               <Link
                 to="/signup"
-                className="whitespace-nowrap text-sm font-semibold text-white/80 transition-colors hover:text-brand"
+                className="whitespace-nowrap text-sm font-semibold text-paper/80 transition-colors hover:text-brand"
               >
-                Sign up
+                {t('Sign up')}
               </Link>
             </div>
           )}
+
+          <LanguageToggle className="hidden lg:inline-flex" />
+          <ThemeToggle className="hidden lg:grid" />
 
           {canReport && showReport && (
             <div className="hidden whitespace-nowrap lg:block">
               <Button to="/report" variant="brand">
                 <span aria-hidden="true" className="text-lg leading-none">+</span>
-                Report an issue
+                {t('Report an issue')}
               </Button>
             </div>
           )}
 
           {/* Every signed-in account has a bell; staff get a link to their panel in it. */}
-          {session && !locked && (
+          
+        {session && !locked && (
             <NotificationBell
               email={session.email}
-              {...(isCitizen ? {} : { homeLink: homePathFor(session.role), homeLabel: 'Open your panel' })}
+              alertsPath={alertsPathFor(session.role)}
+              {...(isCitizen ? {} : { homeLink: homePathFor(session.role), homeLabel: t('Open your panel') })}
             />
           )}
+        
 
           {current !== 'logged-out' && (
             <Avatar
@@ -262,9 +280,9 @@ export default function Navbar({
             <button
               type="button"
               onClick={handleLogout}
-              className="hidden whitespace-nowrap rounded-full border border-white/20 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-white/10 lg:block"
+              className="hidden whitespace-nowrap rounded-full border border-paper/20 px-4 py-2 text-sm font-semibold text-paper transition-colors hover:bg-paper/10 lg:block"
             >
-              Log out
+              {t('Log out')}
             </button>
           )}
 
@@ -272,10 +290,10 @@ export default function Navbar({
             ref={menuButtonRef}
             type="button"
             onClick={() => setOpen((value) => !value)}
-            aria-label={open ? 'Close menu' : 'Open menu'}
+            aria-label={open ? t('Close menu') : t('Open menu')}
             aria-expanded={open}
             aria-controls="mobile-menu"
-            className="flex size-11 shrink-0 items-center justify-center rounded-full border border-white/20 text-white transition-colors hover:bg-white/10 lg:hidden"
+            className="flex size-11 shrink-0 items-center justify-center rounded-full border border-paper/20 text-paper transition-colors hover:bg-paper/10 lg:hidden"
           >
             <svg
               viewBox="0 0 24 24"
@@ -311,28 +329,28 @@ export default function Navbar({
               : enter('rise-in', 0, 'var(--duration-base)')
           }
           className={clsx(
-            'flex flex-col gap-1 border-t border-white/10 px-5 pb-5 pt-3 lg:hidden',
+            'flex flex-col gap-1 border-t border-paper/10 px-5 pb-5 pt-3 lg:hidden',
             menu.closing && 'pointer-events-none',
           )}
         >
-          <nav aria-label="Main" className="flex flex-col gap-1">
+          <nav aria-label={t('Main')} className="flex flex-col gap-1">
             {session && (
               <NavLink
                 to={profilePath}
                 className={({ isActive }) =>
                   clsx(
                     'flex items-center justify-between gap-3 rounded-tile px-4 py-3 transition-colors',
-                    isActive ? 'bg-mint text-navy' : 'text-white hover:bg-white/10',
+                    isActive ? 'bg-mint text-navy' : 'text-paper hover:bg-paper/10',
                   )
                 }
               >
                 <span className="min-w-0">
-                  <span className="block text-xs opacity-70">Your profile</span>
+                  <span className="block text-xs opacity-70">{t('Your profile')}</span>
                   <span className="block truncate text-base font-semibold">{displayName}</span>
                 </span>
                 {isCitizen && profile.isVerified && (
-                  <span className="shrink-0 rounded-full bg-brand px-2.5 py-0.5 text-xs font-bold text-navy">
-                    Verified
+                  <span className="shrink-0 rounded-full bg-brand px-2.5 py-0.5 text-xs font-bold text-ink">
+                    {t('Verified')}
                   </span>
                 )}
               </NavLink>
@@ -345,28 +363,33 @@ export default function Navbar({
                 className={({ isActive }) =>
                   clsx(
                     'rounded-tile px-4 py-3 text-base font-medium transition-colors',
-                    isActive ? 'bg-mint text-navy' : 'text-white/80 hover:bg-white/10',
+                    isActive ? 'bg-mint text-navy' : 'text-paper/80 hover:bg-paper/10',
                   )
                 }
               >
-                {linkLabel(link)}
+                {linkLabel(link, t)}
               </NavLink>
             ))}
           </nav>
+
+          <div className="mt-2 flex items-center gap-3">
+            <LanguageToggle />
+            <ThemeToggle />
+          </div>
 
           {current === 'logged-out' && (
             <div className="mt-2 grid grid-cols-2 gap-2">
               <Link
                 to="/login"
-                className="rounded-full border border-white/20 px-4 py-3 text-center text-base font-semibold text-white transition-colors hover:bg-white/10"
+                className="rounded-full border border-paper/20 px-4 py-3 text-center text-base font-semibold text-paper transition-colors hover:bg-paper/10"
               >
-                Log in
+                {t('Log in')}
               </Link>
               <Link
                 to="/signup"
-                className="rounded-full border border-white/20 px-4 py-3 text-center text-base font-semibold text-white transition-colors hover:bg-white/10"
+                className="rounded-full border border-paper/20 px-4 py-3 text-center text-base font-semibold text-paper transition-colors hover:bg-paper/10"
               >
-                Sign up
+                {t('Sign up')}
               </Link>
             </div>
           )}
@@ -375,7 +398,7 @@ export default function Navbar({
             <div className="mt-2 [&>*]:w-full [&>*]:justify-center">
               <Button to="/report" variant="brand">
                 <span aria-hidden="true" className="text-lg leading-none">+</span>
-                Report an issue
+                {t('Report an issue')}
               </Button>
             </div>
           )}
@@ -384,13 +407,14 @@ export default function Navbar({
             <button
               type="button"
               onClick={handleLogout}
-              className="mt-2 rounded-full border border-white/20 px-4 py-3 text-base font-semibold text-white transition-colors hover:bg-white/10"
+              className="mt-2 rounded-full border border-paper/20 px-4 py-3 text-base font-semibold text-paper transition-colors hover:bg-paper/10"
             >
-              Log out
+              {t('Log out')}
             </button>
           )}
         </div>
       )}
+      <FlagStripe />
     </header>
   )
 }

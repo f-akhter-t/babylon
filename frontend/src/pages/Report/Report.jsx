@@ -4,14 +4,15 @@ import Navbar from '../../components/layout/Navbar'
 import Footer from '../../components/layout/Footer'
 import AnimatedBackground from '../../components/ui/AnimatedBackground'
 import ReportForm from './ReportForm'
+import ThankYou from './ThankYou'
 import LocationPicker from './LocationPicker'
-import { useViewer } from '../Map/useViewer' // CHANGE 1
-import { createIssue, POINTS_PER_REPORT } from '../../services/api' // CHANGE 1
+import { createIssue, POINTS_PER_REPORT } from '../../services/api'
 import { resizeImage } from '../../utils/resizeImage'
 import { useToast } from '../../components/ui/toast'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import RequireCitizen from '../Auth/RequireCitizen'
 import { enter } from '../../components/ui/motion'
+import { useT } from '../../i18n/useLanguage'
 
 // Citizens only: guests log in first and come back here, staff go to their panel.
 export default function Report() {
@@ -23,11 +24,12 @@ export default function Report() {
 }
 
 function ReportPage() {
+  const t = useT()
   useDocumentTitle('Report an issue')
-  const viewer = useViewer() // CHANGE 2
   const toast = useToast()
   const [category, setCategory] = useState('')
-  const [location, setLocation] = useState(null) // { lat, lng, label, ward } from the map
+  const [thanks, setThanks] = useState(false) // true after a report is saved
+  const [location, setLocation] = useState(null) // { lat, lng, label, ward, division } from the map
   const [searchParams] = useSearchParams()
 
   // A pin dropped on the Map page arrives here as /report?lat=…&lng=…
@@ -38,19 +40,19 @@ function ReportPage() {
       ? { lat: paramLat, lng: paramLng }
       : null
 
-  // Mock backend: the report is saved in the browser and shows up in the feed.
+  // The server saves the report; the owner comes from the login, not from this form.
   // If this throws, the form keeps what the citizen typed and shows the message.
   async function handleSubmit({ photo, category: chosen, description }) {
-    if (!location) throw new Error('Pick a location on the map first.')
+    if (!location) throw new Error(t('Pick a location on the map first.'))
     const photoUrl = await resizeImage(photo)
     await createIssue({
       category: chosen,
       description,
       photoUrl,
       location,
-      reporter: viewer.session?.name, // CHANGE 3
     })
-    toast.info(`Your report is submitted. You earned ${POINTS_PER_REPORT} points.`) // CHANGE 3
+    toast.info(t('Your report is submitted. You earned {points} points.', { points: POINTS_PER_REPORT }))
+    setThanks(true)
   }
 
   return (
@@ -62,7 +64,7 @@ function ReportPage() {
         <div className="mx-auto max-w-6xl">
           <Link
             to="/map"
-            className="group inline-flex min-h-11 items-center gap-1 font-body text-sm font-semibold text-navy/70 transition hover:text-navy focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest/50"
+            className="group inline-flex min-h-11 items-center gap-1 font-body text-sm font-semibold text-navy/70 transition hover:text-navy focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50"
             style={enter('rise-in', 0)}
           >
             <span
@@ -71,7 +73,7 @@ function ReportPage() {
             >
               ‹
             </span>{' '}
-            Back to maps
+            {t('Back to maps')}
           </Link>
 
           <div
@@ -79,13 +81,16 @@ function ReportPage() {
             style={enter('rise-in', 0.05)}
           >
             <h1 className="font-heading text-4xl font-extrabold text-navy md:text-5xl">
-              Report an issue
+              {t('Report an issue')}
             </h1>
             <p className="font-body text-sm text-muted">
-              Photo, place, and a short description. It takes about a minute.
+              {t('Photo, place, and a short description. It takes about a minute.')}
             </p>
           </div>
 
+          {thanks ? (
+            <ThankYou onAnother={() => setThanks(false)} />
+          ) : (
           <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
             <ReportForm onSubmit={handleSubmit} onCategoryChange={setCategory} />
             <LocationPicker
@@ -95,6 +100,7 @@ function ReportPage() {
               initial={pinnedFromMap}
             />
           </div>
+          )}
         </div>
       </main>
 

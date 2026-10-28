@@ -4,17 +4,20 @@ import clsx from 'clsx'
 import useMyData from './useMyData'
 import { statusLabel } from '../../components/ui/statusLabel'
 import Reveal from '../../components/ui/Reveal'
+import LogoLoader from '../../components/ui/LogoLoader'
 import { BarsIcon, PinIcon } from '../../components/ui/icons'
 import ReportCard from './ReportCard'
 import ReportModal from './ReportModal'
 import { DURATION, prefersLessMotion, usePresence } from '../../components/ui/motion'
 import NewReportsBar from '../../components/ui/NewReportsBar'
+import PhotoBackdrop from '../../components/ui/CityPhoto'
 import { useHeldList } from '../../hooks/useHeldList'
 import { EarnCard, LevelCard } from './LevelCard'
 import Navbar from '../../components/layout/Navbar'
 import Footer from '../../components/layout/Footer'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import RequireCitizen from '../Auth/RequireCitizen'
+import { useNumber, useT } from '../../i18n/useLanguage'
 
 const FILTERS = ['All', 'Open', 'In progress', 'Resolved', 'Reopened']
 
@@ -28,6 +31,8 @@ export default function MyReports() {
 }
 
 function MyReportsPage() {
+  const t = useT()
+  const n = useNumber()
   useDocumentTitle('My reports')
   const { reports, user, earn, loading, update, email } = useMyData()
   const [filter, setFilter] = useState('All')
@@ -96,18 +101,19 @@ function MyReportsPage() {
   const loggedOut = !email
 
   return (
-    <div className="flex min-h-screen flex-col bg-page">
+    <div className="flex min-h-screen flex-col">
+      <PhotoBackdrop />
       <Navbar />
 
       <main className="mx-auto w-full max-w-[1180px] flex-1 px-6 pb-14 pt-8 font-body text-sm text-navy max-sm:px-3.5">
         <div className="flex flex-wrap items-end gap-3.5">
           <h1 className="font-heading text-[44px] font-extrabold leading-none tracking-tight max-md:text-[34px]">
-            My reports
+            {t('My reports')}
           </h1>
-          <p className="pb-2 text-muted">Track and manage the issues you've reported.</p>
+          <p className="pb-2 text-muted">{t("Track and manage the issues you've reported.")}</p>
         </div>
 
-        <h2 className="sr-only">Your progress</h2>
+        <h2 className="sr-only">{t('Your progress')}</h2>
         <div className="mt-5 grid gap-4 md:grid-cols-[1fr_1.3fr]">
           <Reveal><LevelCard user={user} /></Reveal>
           <Reveal delay={180}><EarnCard items={earn} /></Reveal>
@@ -119,14 +125,14 @@ function MyReportsPage() {
               <div
                 className={clsx(
                   'rounded-2xl px-4 py-3 transition duration-150 hover:-translate-y-0.5 hover:shadow-lift',
-                  s.dark ? 'bg-navy text-mint' : 'bg-mint'
+                  s.dark ? 'bg-ink text-frost' : 'bg-mint'
                 )}
               >
                 <div className="flex items-center gap-1.5 text-[13px] font-semibold">
                   {s.bars && <BarsIcon size={14} filled={s.bars} />}
-                  {s.label}
+                  {t(s.label)}
                 </div>
-                <p className="mt-0.5 font-heading text-[30px] font-extrabold tracking-tight">{s.value}</p>
+                <p className="mt-0.5 font-heading text-[30px] font-extrabold tracking-tight">{n(s.value)}</p>
               </div>
             </Reveal>
           ))}
@@ -134,7 +140,7 @@ function MyReportsPage() {
 
         <Reveal>
           <div className="flex flex-wrap items-center gap-3 rounded-[20px] bg-mint px-4 py-3 shadow-bar">
-            <div className="order-1 flex flex-wrap gap-2" role="group" aria-label="Filter by status">
+            <div className="order-1 flex flex-wrap gap-2" role="group" aria-label={t('Filter by status')}>
               {FILTERS.map((f) => (
                 <button
                   key={f}
@@ -143,10 +149,10 @@ function MyReportsPage() {
                   aria-pressed={filter === f}
                   className={clsx(
                     'rounded-full border-[1.5px] border-navy px-[15px] py-[7px] font-semibold transition-colors max-md:min-h-11',
-                    filter === f ? 'bg-navy text-mint' : 'hover:bg-white'
+                    filter === f ? 'bg-ink text-frost' : 'hover:bg-white'
                   )}
                 >
-                  {f}
+                  {t(f)}
                 </button>
               ))}
             </div>
@@ -155,7 +161,7 @@ function MyReportsPage() {
               <input
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder="Search by title or location"
+                placeholder={t('Search by title or location')}
                 className="flex-1 bg-transparent outline-none"
               />
             </label>
@@ -163,11 +169,11 @@ function MyReportsPage() {
         </Reveal>
 
         {loading ? (
-          <p className="mt-6 text-center text-muted">Loading your reports…</p>
+          <LogoLoader label={t('Loading your reports…')} className="mt-6" />
         ) : held.items.length > 0 ? (
           <>
             <h2 id="my-reports-heading" ref={headingRef} tabIndex={-1} className="sr-only">
-              Your reports
+              {t('Your reports')}
             </h2>
             <p role="status" className="sr-only">
               {held.message}
@@ -200,31 +206,31 @@ function MyReportsPage() {
                 )
               })}
             </div>
-            <p className="mt-3 text-xs text-muted">Map images © OpenStreetMap contributors</p>
+            <p className="mt-3 text-xs text-muted">{t('Map images © OpenStreetMap contributors')}</p>
           </>
         ) : (
           <Reveal className="mt-5">
             <div className="rounded-panel bg-mint px-5 py-12 text-center">
               <h2 className="mb-1.5 font-heading text-[28px] font-extrabold tracking-tight">
                 {loggedOut
-                  ? 'Log in to see your reports'
+                  ? t('Log in to see your reports')
                   : noReportsAtAll
-                    ? 'No reports yet'
-                    : 'No matching reports'}
+                    ? t('No reports yet')
+                    : t('No matching reports')}
               </h2>
               <p className="mb-[18px] text-muted">
                 {loggedOut
-                  ? 'Your reports, upvotes and points are saved to your account.'
+                  ? t('Your reports, upvotes and points are saved to your account.')
                   : noReportsAtAll
-                    ? 'Report a road or infrastructure problem. Your reports, upvotes and points will show up here.'
-                    : 'Try a different filter or search term.'}
+                    ? t('Report a road or infrastructure problem. Your reports, upvotes and points will show up here.')
+                    : t('Try a different filter or search term.')}
               </p>
               {(loggedOut || noReportsAtAll) && (
                 <Link
                   to={loggedOut ? '/login' : '/report'}
-                  className="inline-flex min-h-11 items-center rounded-full bg-forest px-5 py-[11px] font-bold text-mint"
+                  className="inline-flex min-h-11 items-center rounded-full bg-forest px-5 py-[11px] font-bold text-frost"
                 >
-                  {loggedOut ? 'Log in' : 'Report an issue'}
+                  {loggedOut ? t('Log in') : t('Report an issue')}
                 </Link>
               )}
             </div>

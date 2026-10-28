@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import BeforeAfterSlider from '../Home/BeforeAfterSlider'
 import { CameraIcon } from '../Map/MapIcons'
+import { useT } from '../../i18n/useLanguage'
 
 const FRAME = 'relative h-64 overflow-hidden rounded-panel bg-slate shadow-lg shadow-navy/10 sm:h-80 lg:h-88'
 
@@ -8,6 +9,7 @@ const FRAME = 'relative h-64 overflow-hidden rounded-panel bg-slate shadow-lg sh
 // Others: the citizen's "before" photo. If it fails to load, a slate
 // placeholder (same idea as PopupPhoto on the map).
 export default function IssuePhoto({ issue }) {
+  const t = useT()
   const [failed, setFailed] = useState(false)
 
   if (issue.afterImg) {
@@ -19,8 +21,8 @@ export default function IssuePhoto({ issue }) {
           alt={issue.title}
           className={FRAME}
         />
-        <figcaption className="mt-2 text-center text-xs text-slate">
-          Drag the handle, or use the arrow keys, to compare before and after.
+        <figcaption className="mt-2 text-center text-xs text-soft">
+          {t('Drag the handle, or use the arrow keys, to compare before and after.')}
         </figcaption>
       </figure>
     )
@@ -31,19 +33,19 @@ export default function IssuePhoto({ issue }) {
       {issue.beforeImg && !failed ? (
         <img
           src={issue.beforeImg}
-          alt={`Photo of ${issue.title}`}
+          alt={t('Photo of {title}', { title: issue.title })}
           onError={() => setFailed(true)}
           className="size-full object-cover"
         />
       ) : (
-        <div className="flex size-full items-center justify-center gap-2 text-sm font-medium text-white">
+        <div className="flex size-full items-center justify-center gap-2 text-sm font-medium text-paper">
           <CameraIcon size={20} />
-          Citizen photo
-          <span className="sr-only">(not available)</span>
+          {t('Citizen photo')}
+          <span className="sr-only">{t('(not available)')}</span>
         </div>
       )}
-      <figcaption className="absolute bottom-4 left-4 rounded-full bg-navy px-3 py-1 text-xs font-bold uppercase tracking-wider text-white">
-        Before
+      <figcaption className="absolute bottom-4 left-4 rounded-full bg-ink px-3 py-1 text-xs font-bold uppercase tracking-wider text-paper">
+        {t('Before')}
       </figcaption>
     </figure>
   )

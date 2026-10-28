@@ -1,0 +1,2463 @@
+{
+  "info": {
+    "name": "Babylon: Auth and Public",
+    "description": "Auth, staff accounts, the report assistant, the public pages, forgot password and the citizen email check.\nNo scripts. Send each request by hand and read the answer yourself.\nRun the folders top to bottom: Auth, then Staff accounts, then AI assistant, then Public, then Forgot password (it makes its own account, from the variable resetEmail), then Citizen email check (also its own account, from the variable checkEmail).\nNeeds the demo accounts and issues from `npm run seed:public`, and the staff settings (STAFF_ACCESS_CODE, DEPARTMENT_CODES, EMPLOYEE_ROSTER) in backend/.env.\nTokens and ids are passed on by hand: when a Description says 'copy data.token into the collection variable X', open the collection's Variables tab and paste it there. Never save your own codes back into this file.\nEvery Description says what answer to expect.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:5000/api"
+    },
+    {
+      "key": "citizenToken",
+      "value": ""
+    },
+    {
+      "key": "deptToken",
+      "value": ""
+    },
+    {
+      "key": "adminToken",
+      "value": ""
+    },
+    {
+      "key": "newToken",
+      "value": ""
+    },
+    {
+      "key": "newEmail",
+      "value": "postman-1@example.com"
+    },
+    {
+      "key": "issueId",
+      "value": ""
+    },
+    {
+      "key": "brokenToken",
+      "value": "not-a-real-token"
+    },
+    {
+      "key": "staffToken",
+      "value": ""
+    },
+    {
+      "key": "staffEmail",
+      "value": "staff-1@example.com"
+    },
+    {
+      "key": "staffAccessCode",
+      "value": ""
+    },
+    {
+      "key": "departmentCode",
+      "value": ""
+    },
+    {
+      "key": "employeeId",
+      "value": ""
+    },
+    {
+      "key": "resetEmail",
+      "value": "reset-1@example.com"
+    },
+    {
+      "key": "checkEmail",
+      "value": "check-1@example.com"
+    },
+    {
+      "key": "checkToken",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "1 Sign up a new citizen: 201 and a token",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/signup",
+            "description": "Expected: 201. data.token is a string, data.user.role = citizen, data.user.email is the email you sent, and the answer has no passwordHash.\nBefore sending: set the collection variable newEmail to an address nobody used yet (for example postman-1@example.com, then postman-2@example.com on the next full run).\nAfter: copy data.token into the collection variable newToken.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Postman Tester\",\n  \"email\": \"{{newEmail}}\",\n  \"password\": \"first-pass-1\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "2 Same email again: 409",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/signup",
+            "description": "Expected: 409. code = conflict, field = email. Sends the same newEmail as request 1.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Postman Tester\",\n  \"email\": \"{{newEmail}}\",\n  \"password\": \"first-pass-1\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "3 Sign up asking to be admin: 400",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/signup",
+            "description": "Expected: 400. field = role. A sign-up with role admin is refused, never quietly turned into a citizen.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Sneaky Person\",\n  \"email\": \"sneaky-{{$timestamp}}@example.com\",\n  \"password\": \"first-pass-1\",\n  \"role\": \"admin\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "4 Sign up with a 5-character password: 400",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/signup",
+            "description": "Expected: 400. field = password (at least 6 characters).",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Short Pass\",\n  \"email\": \"short-{{$timestamp}}@example.com\",\n  \"password\": \"12345\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "5 Log in with the new account: 200",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/login",
+            "description": "Expected: 200. data.user.email is newEmail. No passwordHash in the answer.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{newEmail}}\",\n  \"password\": \"first-pass-1\",\n  \"door\": \"citizen\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "6 Log in as the demo citizen: 200",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/login",
+            "description": "Expected: 200. data.user.role = citizen, data.token is a string, no passwordHash.\nAfter: copy data.token into the collection variable citizenToken.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"citizen@babylon.test\",\n  \"password\": \"password123\",\n  \"door\": \"citizen\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "7 Wrong password: 401",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/login",
+            "description": "Expected: 401. code = unauthorized.\nAfter: keep this answer open. Request 8 must give exactly the same body.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"citizen@babylon.test\",\n  \"password\": \"wrong-password\",\n  \"door\": \"citizen\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "8 Unknown email: the very same 401",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/login",
+            "description": "Expected: 401, with exactly the same code and message as request 7 (the app never says which emails exist).",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"nobody-here@babylon.test\",\n  \"password\": \"password123\",\n  \"door\": \"citizen\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "9 Staff account at the citizen door: 403 staff-account",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/login",
+            "description": "Expected: 403. code = staff-account. A staff email on the citizen door is refused after the password is right.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"roads@babylon.test\",\n  \"password\": \"password123\",\n  \"door\": \"citizen\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "10 Citizen at the staff door: 403 citizen-account",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/login",
+            "description": "Expected: 403. code = citizen-account. A citizen email on the staff door is refused after the password is right.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"citizen@babylon.test\",\n  \"password\": \"password123\",\n  \"door\": \"staff\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "11 Wrong password at the wrong door stays 401",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/login",
+            "description": "Expected: 401. code = unauthorized. A wrong password stays 401 even at the wrong door, so the door never leaks the account type.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"roads@babylon.test\",\n  \"password\": \"wrong-password\",\n  \"door\": \"citizen\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "12 Department officer at the staff door: 200",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/login",
+            "description": "Expected: 200. data.user.role = department, data.user.department = Roads & Highways.\nAfter: copy data.token into the collection variable deptToken.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"roads@babylon.test\",\n  \"password\": \"password123\",\n  \"door\": \"staff\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "13 Admin at the staff door: 200",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/login",
+            "description": "Expected: 200. data.user.role = admin.\nAfter: copy data.token into the collection variable adminToken.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@babylon.test\",\n  \"password\": \"password123\",\n  \"door\": \"staff\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "14 Log in without a door: 400",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/login",
+            "description": "Expected: 400. field = door.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"citizen@babylon.test\",\n  \"password\": \"password123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "15 Me with no token: 401",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/auth/me",
+            "description": "Expected: 401. code = unauthorized. No Authorization header is sent on purpose."
+          }
+        },
+        {
+          "name": "16 Me as the demo citizen: 200, no hash",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{citizenToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/me",
+            "description": "Expected: 200. data.email = citizen@babylon.test. A citizen gets only id, name, email, role, department, onboarded. No passwordHash.\nNeeds the collection variable citizenToken (request 6)."
+          }
+        },
+        {
+          "name": "17 Me as the department officer: 200",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{deptToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/me",
+            "description": "Expected: 200. data.department = Roads & Highways. A staff account also gets jobTitle, phone, phoneVerified, employeeId, employeeIdVerified, departmentVerified, photo and setupMissing (a list of what the setup still needs).\nNeeds the collection variable deptToken (request 12)."
+          }
+        },
+        {
+          "name": "18 Change password, wrong current: 400 current",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{newToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/password",
+            "description": "Expected: 400. field = current (the current password is wrong).\nNeeds the collection variable newToken (request 1).",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"currentPassword\": \"not-it\",\n  \"newPassword\": \"second-pass-2\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "19 Change password, same as current: 400 new",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{newToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/password",
+            "description": "Expected: 400. field = new (the new password must differ from the current one).\nNeeds newToken.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"currentPassword\": \"first-pass-1\",\n  \"newPassword\": \"first-pass-1\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "20 Change password, too short: 400 new",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{newToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/password",
+            "description": "Expected: 400. field = new (at least 6 characters).\nNeeds newToken.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"currentPassword\": \"first-pass-1\",\n  \"newPassword\": \"12345\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "21 Change password, no token: 401",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/password",
+            "description": "Expected: 401. No Authorization header is sent on purpose.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"currentPassword\": \"first-pass-1\",\n  \"newPassword\": \"second-pass-2\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "22 Change password: 200",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{newToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/password",
+            "description": "Expected: 200. data = null. The password is changed to second-pass-2.\nNeeds newToken.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"currentPassword\": \"first-pass-1\",\n  \"newPassword\": \"second-pass-2\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "23 The old password no longer logs in: 401",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/login",
+            "description": "Expected: 401. The old password first-pass-1 no longer works.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{newEmail}}\",\n  \"password\": \"first-pass-1\",\n  \"door\": \"citizen\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "24 The new password logs in: 200",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/login",
+            "description": "Expected: 200. The new password second-pass-2 works.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{newEmail}}\",\n  \"password\": \"second-pass-2\",\n  \"door\": \"citizen\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "25 Log out: 200",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{newToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/logout",
+            "description": "Expected: 200. The server keeps no list of tokens; logging out only means the app forgets the token.\nNeeds newToken."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Staff accounts",
+      "item": [
+        {
+          "name": "1 Staff sign-up: 201, not onboarded",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/staff/signup",
+            "description": "Expected: 201. data.user.role = department, data.user.onboarded = false, data.user.setupMissing lists 4 things (a job title, a verified phone number, a verified Employee ID, a verified department code). No passwordHash, and the access code is not in the answer.\nBefore sending: set the collection variables staffEmail (an address nobody used, for example staff-1@example.com) and staffAccessCode (the STAFF_ACCESS_CODE from your backend/.env).\nAfter: copy data.token into the collection variable staffToken. This token says onboarded: false.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Nusrat Jahan\",\n  \"email\": \"{{staffEmail}}\",\n  \"password\": \"staff-pass-1\",\n  \"role\": \"department\",\n  \"department\": \"Roads & Highways\",\n  \"accessCode\": \"{{staffAccessCode}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "2 Staff sign-up, wrong access code: 400",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/staff/signup",
+            "description": "Expected: 400. code = invalid, field = accessCode. Nothing is created.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Nusrat Jahan\",\n  \"email\": \"wrongcode-{{$timestamp}}@example.com\",\n  \"password\": \"staff-pass-1\",\n  \"role\": \"department\",\n  \"department\": \"Roads & Highways\",\n  \"accessCode\": \"not-the-code\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "3 Staff sign-up, same email: 409",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/staff/signup",
+            "description": "Expected: 409. code = conflict, field = email. Sends the same staffEmail as request 1 with the right access code.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Nusrat Jahan\",\n  \"email\": \"{{staffEmail}}\",\n  \"password\": \"staff-pass-1\",\n  \"role\": \"department\",\n  \"department\": \"Roads & Highways\",\n  \"accessCode\": \"{{staffAccessCode}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "4 Staff sign-up as a citizen: 400",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/staff/signup",
+            "description": "Expected: 400. field = role. Only department and admin are allowed here.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Nusrat Jahan\",\n  \"email\": \"asc-{{$timestamp}}@example.com\",\n  \"password\": \"staff-pass-1\",\n  \"role\": \"citizen\",\n  \"department\": \"Roads & Highways\",\n  \"accessCode\": \"{{staffAccessCode}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "5 Staff sign-up, no department: 400",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/staff/signup",
+            "description": "Expected: 400. field = department (a department account must name its department).",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Nusrat Jahan\",\n  \"email\": \"nodept-{{$timestamp}}@example.com\",\n  \"password\": \"staff-pass-1\",\n  \"role\": \"department\",\n  \"accessCode\": \"{{staffAccessCode}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "6 Admin sign-up: 201, no department",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/staff/signup",
+            "description": "Expected: 201. data.user.role = admin and data.user.department = null (a department sent with an admin is dropped). setupMissing has 3 things: no department code is needed for an admin.\nBefore sending: staffAccessCode must be set (request 1).",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Nusrat Jahan\",\n  \"email\": \"admin-{{$timestamp}}@example.com\",\n  \"password\": \"staff-pass-1\",\n  \"role\": \"admin\",\n  \"department\": \"Roads & Highways\",\n  \"accessCode\": \"{{staffAccessCode}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "7 Me as the new staff account: setup not done",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{staffToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/me",
+            "description": "Expected: 200. data.onboarded = false, data.setupMissing lists what is still needed (a job title, a verified phone number, a verified email address, a verified Employee ID, a verified department code), data.employeeIdVerified = false.\nNeeds the collection variable staffToken (request 1)."
+          }
+        },
+        {
+          "name": "8 The new token cannot open the department area yet: 403",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{staffToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/department/issues",
+            "description": "Expected: 403, code forbidden: 'Please finish setting up your staff account first.' A staff token that is not onboarded is refused by every panel route.\nNeeds staffToken."
+          }
+        },
+        {
+          "name": "9 Finish too early: 409",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{staffToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/staff/finish",
+            "description": "Expected: 409. code = conflict. The setup is not complete, so nothing changes and no new token is given.\nNeeds staffToken.",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "10 Department code, no token: 401",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/staff/verify-code",
+            "description": "Expected: 401. No Authorization header is sent on purpose.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"whatever\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "11 Department code with a citizen token: 403",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{citizenToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/staff/verify-code",
+            "description": "Expected: 403, code forbidden. A citizen is not staff.\nNeeds the collection variable citizenToken (Auth request 6).",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"whatever\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "12 Department code, wrong: 400",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{staffToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/staff/verify-code",
+            "description": "Expected: 400. field = code. The message names the department but never shows the right code.\nNeeds staffToken.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"WRONG-0000\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "13 Department code, right: 200",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{staffToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/staff/verify-code",
+            "description": "Expected: 200. data.departmentVerified = true, and 'a verified department code' is gone from data.setupMissing.\nBefore sending: set the collection variable departmentCode to this department's code (DEPARTMENT_CODES in your backend/.env, the Roads & Highways one).\nNeeds staffToken.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"{{departmentCode}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "14 Employee ID, not on the list: 400",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{staffToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/staff/verify-employee",
+            "description": "Expected: 400. field = employeeId. The message says the ID is not on the Roads & Highways staff list.\nNeeds staffToken.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"employeeId\": \"E-XX-0000\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "15 Employee ID, right: 200",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{staffToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/staff/verify-employee",
+            "description": "Expected: 200. data.employeeId is the ID in capitals, data.employeeIdVerified = true.\nBefore sending: set the collection variable employeeId to an ID from the Roads & Highways list in EMPLOYEE_ROSTER (backend/.env) that no other account holds.\nA second account asking for the same ID gets 409 conflict. A verified ID cannot be changed (409).\nNeeds staffToken.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"employeeId\": \"{{employeeId}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "16 Details, job title too short: 400",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{staffToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/staff/details",
+            "description": "Expected: 400. field = jobTitle (2 to 60 characters).\nNeeds staffToken.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"jobTitle\": \"x\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "17 Details: 200",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{staffToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/staff/details",
+            "description": "Expected: 200. data.name and data.jobTitle are saved, and 'a job title' is gone from setupMissing. An employeeId sent here is ignored on purpose: it can only come from request 15.\nNeeds staffToken.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Nusrat Jahan\",\n  \"jobTitle\": \"Road inspector\",\n  \"employeeId\": \"E-HACK-1\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "18 Photo, not an image: 400",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{staffToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/staff/photo",
+            "description": "Expected: 400. field = photo. Only a WebP, PNG or JPEG data URL under 300,000 characters is accepted.\nNeeds staffToken.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"photo\": \"hello\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "19 Photo: 200",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{staffToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/staff/photo",
+            "description": "Expected: 200. data.photo is the data URL you sent. Send {\"photo\": \"\"} to remove it.\nNeeds staffToken.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"photo\": \"data:image/webp;base64,UklGRhoAAABXRUJQVlA4TA0AAAAvAAAAEAcQERGIiP4HAA==\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "20 Phone code, bad number: 400",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{staffToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/staff/phone-code",
+            "description": "Expected: 400. field = phone (11 digits, 013 to 019; +880 is accepted).\nNeeds staffToken.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phone\": \"12345\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "21 Phone code: 200",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{staffToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/staff/phone-code",
+            "description": "Expected: 200. data = { phone: 01711000111, resendAfter: 30 }. The code itself is never in the answer. In dev mode (PHONE_CODE_MODE=dev) the code is 123456.\nSend it again at once: 429 too-many-requests ('Please wait N seconds').\nNeeds staffToken.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phone\": \"+880 1711-000111\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "22 Phone verify, wrong code: 400",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{staffToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/staff/phone-verify",
+            "description": "Expected: 400. field = code, message 'That code is not right. You have 2 tries left.' After 3 wrong codes: 423 locked.\nNeeds staffToken.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phone\": \"01711000111\",\n  \"code\": \"000000\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "23 Phone verify: 200",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{staffToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/staff/phone-verify",
+            "description": "Expected: 200. data.phone = 01711000111, data.phoneVerified = true, and 'a verified phone number' is gone from setupMissing.\nIf request 22 locked you: wait for the code to be sent again (request 21 after 30 seconds).\nNeeds staffToken.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phone\": \"01711000111\",\n  \"code\": \"123456\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "24 Email code, no token: 401",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/staff/email-code",
+            "description": "Expected: 401. No Authorization header is sent on purpose.",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "25 Email code with a citizen token: 403",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{citizenToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/staff/email-code",
+            "description": "Expected: 403, code forbidden. A citizen is not staff.\nNeeds the collection variable citizenToken (Auth request 6).",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "26 Email code: 200",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{staffToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/staff/email-code",
+            "description": "Expected: 200. data = { email: the account's own email (staffEmail), resendAfter: 30 }. The code is sent to the address the account signed up with; nothing in the body can change that, and the code itself is never in the answer.\nIn dev mode (EMAIL_MODE=dev) the code is 123456 and nothing is sent. With EMAIL_MODE=smtp the code arrives in the inbox of staffEmail.\nNeeds staffToken.",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "27 Email code, again at once: 429",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{staffToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/staff/email-code",
+            "description": "Expected: 429. code = too-many-requests, field = email, 'Please wait N seconds before asking for a new code.' Send it within 30 seconds of request 26.\nNeeds staffToken.",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "28 Email verify, wrong code: 400",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{staffToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/staff/email-verify",
+            "description": "Expected: 400. code = invalid, field = code, 'That code is not right or has expired. Check it, or ask for a new one.' Three wrong codes in a row give 423 locked, until a new code is asked for (request 26, 30 seconds after the last one).\nNeeds staffToken.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"000000\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "29 Email verify: 200",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{staffToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/staff/email-verify",
+            "description": "Expected: 200. data.emailVerified = true, and 'a verified email address' is gone from setupMissing.\nIn dev mode the code is 123456. With EMAIL_MODE=smtp, type the code from the email instead.\nIf a wrong code locked you (423): wait 30 seconds, send request 26 again, then this one.\nNeeds staffToken.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"123456\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "30 Email code, already verified: 409",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{staffToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/staff/email-code",
+            "description": "Expected: 409. code = conflict, 'Your email address is already verified.' Nothing is sent.\nNeeds staffToken after request 29.",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "31 Finish: 200 and a fresh token",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{staffToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/staff/finish",
+            "description": "Expected: 200. data.user.onboarded = true, data.user.setupMissing = [], and data.token is a NEW token with onboarded true.\nAfter: copy data.token into the collection variable staffToken (replace the old one). Then run request 32.\nNeeds staffToken with every step above done (including the email check, request 29).",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "32 The fresh token opens the department area: 200",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{staffToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/department/issues",
+            "description": "Expected: 200. The same request as request 8 now works, because the token says onboarded: true.\nNeeds the NEW staffToken from request 31."
+          }
+        },
+        {
+          "name": "33 Me after finishing: 200",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{staffToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/me",
+            "description": "Expected: 200. data.onboarded = true, data.setupMissing = [], and jobTitle, phone, employeeId, photo are the saved values (this is what the profile page shows after a reload).\nNeeds the NEW staffToken."
+          }
+        }
+      ]
+    },
+    {
+      "name": "AI assistant (F6, F8)",
+      "item": [
+        {
+          "name": "1 F6 assistant, no token: 401",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/citizen/reports/assist",
+            "description": "Expected: 401. No Authorization header is sent on purpose.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"photoUrl\": \"PASTE_PHOTO_DATA_URL\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "2 F6 assistant with a department token: 403",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{deptToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/citizen/reports/assist",
+            "description": "Expected: 403, code forbidden. Only citizens use the report assistant.\nNeeds the collection variable deptToken (Auth request 12).",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"photoUrl\": \"PASTE_PHOTO_DATA_URL\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "3 F6 assistant, not an image: 400",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{citizenToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/citizen/reports/assist",
+            "description": "Expected: 400. field = photoUrl. Nothing is sent to Gemini.\nNeeds citizenToken.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"photoUrl\": \"hello\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "4 F6 assistant, unknown category: 400",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{citizenToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/citizen/reports/assist",
+            "description": "Expected: 400. field = category (one of Roads, Waste, Water, Lighting, Bridges).\nNeeds citizenToken.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"photoUrl\": \"data:image/png;base64,iVBORw0KGgo=\",\n  \"category\": \"Other\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "5 F6 assistant: 200 with a suggestion",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{citizenToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/citizen/reports/assist",
+            "description": "Expected: 200. data = { category, description }. category is one of the 5 categories or null; description is 10 to 500 characters.\nReplace PASTE_PHOTO_DATA_URL with a real photo as a data URL. In PowerShell: \"data:image/jpeg;base64,\" + [Convert]::ToBase64String([IO.File]::ReadAllBytes(\"C:\\\\path\\\\pothole.jpg\")) | Set-Clipboard\nNeeds GEMINI_API_KEY in backend/.env and citizenToken.\nWith the key removed and the server restarted: 503, code ai-unavailable. More than 6 requests in a minute: 429 too-many-requests.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"photoUrl\": \"PASTE_PHOTO_DATA_URL\",\n  \"category\": \"Roads\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "6 F8 summarize, no token: 401",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/citizen/reports/summarize",
+            "description": "Expected: 401. No Authorization header is sent on purpose.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"text\": \"A very large pothole on Station Road near the school gate.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "7 F8 summarize, text too short: 400",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{citizenToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/citizen/reports/summarize",
+            "description": "Expected: 400. field = text (at least 10 characters, at most 2000).\nNeeds citizenToken.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"text\": \"short\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "8 F8 summarize: 200 with a summary",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{citizenToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/citizen/reports/summarize",
+            "description": "Expected: 200. data = { summary }: one line of at most 70 characters.\nNeeds GEMINI_API_KEY in backend/.env and citizenToken.\nWith the key removed and the server restarted: 503, code ai-unavailable. More than 10 requests in a minute: 429 too-many-requests.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"text\": \"There is a very large pothole on Station Road, right in front of the primary school gate. Motorbikes swerve around it and a child nearly fell last week.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Public",
+      "item": [
+        {
+          "name": "1 Health: 200",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/health",
+            "description": "Expected: 200. data.status = up."
+          }
+        },
+        {
+          "name": "2 Guest list: all 12 issues, ranked 1 to 12",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/issues",
+            "description": "Expected: 200. 12 issues, rank 1 to 12 in order. The first is 'Deep pothole near Wasa Circle'. Each has id and votes. No pendingAfterImg, departmentNote, reporterEmail or imageEmbedding anywhere, and no voted flag for a guest.\nAfter: copy data[0].id into the collection variable issueId."
+          }
+        },
+        {
+          "name": "3 Category and status combine",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/issues?category=Roads&status=open",
+            "description": "Expected: 200. At least one issue, and every one is category Roads and status open."
+          }
+        },
+        {
+          "name": "4 'All' means no filter",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/issues?category=All&status=All",
+            "description": "Expected: 200. 'All' means no filter, so there are 12 issues."
+          }
+        },
+        {
+          "name": "5 Search ignores case, matches title or street",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/issues?search=POTHOLE",
+            "description": "Expected: 200. At least one issue. The search ignores case and matches the title or the street; every title or location contains 'pothole'."
+          }
+        },
+        {
+          "name": "6 With a position, every issue has distanceM",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/issues?lat=22.354&lng=91.824",
+            "description": "Expected: 200. Every issue has a numeric distanceM."
+          }
+        },
+        {
+          "name": "7 A category that does not exist: 400",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/issues?category=Potholes",
+            "description": "Expected: 400. field = category."
+          }
+        },
+        {
+          "name": "8 Only a latitude: 400",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/issues?lat=22.354",
+            "description": "Expected: 400. A latitude without a longitude is refused."
+          }
+        },
+        {
+          "name": "9 Signed in: my two reports are mine and voted",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{citizenToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/issues",
+            "description": "Expected: 200. Every issue has voted and mine (true or false). Exactly two are mine, and both have voted = true.\nNeeds the collection variable citizenToken (request 6 in Auth)."
+          }
+        },
+        {
+          "name": "10 A broken token is just a guest: 200",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{brokenToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/issues",
+            "description": "Expected: 200. A broken token is treated as a guest: 12 issues and no mine flag."
+          }
+        },
+        {
+          "name": "11 One issue: 200",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/issues/{{issueId}}",
+            "description": "Expected: 200. data.id equals the issueId you saved. No pendingAfterImg in the answer.\nNeeds the collection variable issueId (request 2 of this folder)."
+          }
+        },
+        {
+          "name": "12 An unknown id: 404",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/issues/123",
+            "description": "Expected: 404. code = not-found."
+          }
+        },
+        {
+          "name": "13 Home hero: 3 slides",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/home/hero",
+            "description": "Expected: 200. data.slides has 3 items and data.categories has at least one."
+          }
+        },
+        {
+          "name": "14 Home stats: the four figures",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/home/stats",
+            "description": "Expected: 200. data has four numbers: received, resolved, avgDays, reopenedPercent."
+          }
+        },
+        {
+          "name": "15 Fixed this week: up to 3 resolved, with an after-photo",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/home/fixed-this-week",
+            "description": "Expected: 200. 1 to 3 issues, each status resolved with an afterImg."
+          }
+        },
+        {
+          "name": "16 Recent activity: 8 by default, newest first",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/home/activity",
+            "description": "Expected: 200. 8 items by default, newest first (createdAt falls down the list)."
+          }
+        },
+        {
+          "name": "17 Recent activity with limit=3",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/home/activity?limit=3",
+            "description": "Expected: 200. Exactly 3 items."
+          }
+        },
+        {
+          "name": "18 Recent activity with limit=0: 400",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/home/activity?limit=0",
+            "description": "Expected: 400. field = limit."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Forgot password (email code)",
+      "item": [
+        {
+          "name": "1 Sign up a citizen for the reset test: 201",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/signup",
+            "description": "Expected: 201. A new citizen whose password is old-pass-1.\nThis folder makes its own account. An email can be used once, so change the collection variable resetEmail (for example reset-2@example.com) before you run this folder again.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Reset Tester\",\n  \"email\": \"{{resetEmail}}\",\n  \"password\": \"old-pass-1\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "2 Forgot password: 200",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/forgot-password",
+            "description": "Expected: 200. message = \"If an account with that email exists, we have sent it a code.\", data = { resendAfter: 30 }. The code is never in the answer.\nNeeds EMAIL_MODE=dev in backend/.env (restart the backend after changing it). Then the code is always 123456 and nothing is emailed. With EMAIL_MODE=smtp the code arrives by email instead.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{resetEmail}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "3 Forgot password, unknown email: the very same 200",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/forgot-password",
+            "description": "Expected: 200, the very same message and data as request 2. The answer never says whether an account exists, and no code is made.\nExtra: send it 6 times within a minute. The 6th answers 429, code = too-many-requests.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"nobody-here@example.com\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "4 Forgot password, bad email: 400 email",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/forgot-password",
+            "description": "Expected: 400. field = email.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"not-an-email\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "5 Forgot password again at once: the same 200",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/forgot-password",
+            "description": "Expected: 200, the same answer as request 2. Sent within 30 seconds of request 2, so no second code is made and the first one still works.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{resetEmail}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "6 Reset password, wrong code: 400 code",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/reset-password",
+            "description": "Expected: 400. code = invalid, field = code. The password is not changed. This counts as try 1 of 3.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{resetEmail}}\",\n  \"code\": \"000000\",\n  \"newPassword\": \"reset-pass-3\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "7 Reset password, unknown email: the very same 400",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/reset-password",
+            "description": "Expected: 400. field = code, and the very same message as request 6. A missing account looks like a wrong code.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"nobody-here@example.com\",\n  \"code\": \"123456\",\n  \"newPassword\": \"reset-pass-3\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "8 Reset password, new password too short: 400 new",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/reset-password",
+            "description": "Expected: 400. field = new (at least 6 characters). The code is not used up and not counted as a try.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{resetEmail}}\",\n  \"code\": \"123456\",\n  \"newPassword\": \"12345\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "9 Reset password: 200",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/reset-password",
+            "description": "Expected: 200. message = \"Your password is changed. Please log in with it.\", data = null. There is no token: the person logs in again.\nThe password is now reset-pass-3.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{resetEmail}}\",\n  \"code\": \"123456\",\n  \"newPassword\": \"reset-pass-3\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "10 Reset password with the same code again: 400 code",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/reset-password",
+            "description": "Expected: 400. field = code. A code works once.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{resetEmail}}\",\n  \"code\": \"123456\",\n  \"newPassword\": \"another-pass-4\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "11 The old password no longer logs in: 401",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/login",
+            "description": "Expected: 401. old-pass-1 no longer works.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{resetEmail}}\",\n  \"password\": \"old-pass-1\",\n  \"door\": \"citizen\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "12 The new password logs in: 200",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/login",
+            "description": "Expected: 200. reset-pass-3 works.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{resetEmail}}\",\n  \"password\": \"reset-pass-3\",\n  \"door\": \"citizen\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "13 Forgot password again: 200",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/forgot-password",
+            "description": "Expected: 200. A new code is made (the old one was used up, so there is nothing to wait for). Needed for requests 14 and 15.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{resetEmail}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "14 Reset password, wrong code three times: 400, 400, 423",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/reset-password",
+            "description": "Send this request three times. Expected: 400 (field = code), 400, then 423 with code = locked. Three wrong tries lock the code.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{resetEmail}}\",\n  \"code\": \"000000\",\n  \"newPassword\": \"another-pass-4\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "15 Reset password with the right code once locked: 423",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/reset-password",
+            "description": "Expected: 423, code = locked, even though 123456 is the right code. The password stays reset-pass-3. A new code (request 13 after 30 seconds) clears the lock.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{resetEmail}}\",\n  \"code\": \"123456\",\n  \"newPassword\": \"another-pass-4\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Citizen email check",
+      "item": [
+        {
+          "name": "1 Sign up a citizen for the email check: 201",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/signup",
+            "description": "Expected: 201. data.token is a string and data.user.role = citizen.\nThis folder makes its own account. An email can be used once, so change the collection variable checkEmail (for example check-2@example.com) before you run this folder again. To receive a real email, use an address you can read and run the backend with EMAIL_MODE=smtp.\nAfter: copy data.token into the collection variable checkToken.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Email Check Tester\",\n  \"email\": \"{{checkEmail}}\",\n  \"password\": \"check-pass-1\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "2 Email code, no token: 401",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/citizen/profile/email-code",
+            "description": "Expected: 401. No Authorization header is sent on purpose.",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "3 Email code with a department token: 403",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{deptToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/citizen/profile/email-code",
+            "description": "Expected: 403, code forbidden. Only citizens have this check here; staff verify their email in the staff setup.\nNeeds the collection variable deptToken (Auth request 12).",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "4 Email code: 200",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{checkToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/citizen/profile/email-code",
+            "description": "Expected: 200. data = { email: the account's own email (checkEmail), resendAfter: 30 }. The code is sent to the address the account signed up with; nothing in the body can change that. The code is never in the answer.\nNeeds EMAIL_MODE=dev in backend/.env (restart the backend after changing it). Then the code is always 123456 and nothing is emailed. With EMAIL_MODE=smtp the code arrives by email instead.\nNeeds checkToken.",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "5 Email code, again at once: 429",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{checkToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/citizen/profile/email-code",
+            "description": "Expected: 429. code = too-many-requests, field = email, 'Please wait N seconds before asking for a new code.' Send it within 30 seconds of request 4.\nNeeds checkToken.",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "6 Email verify, not 6 digits: 400 code",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{checkToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/citizen/profile/email-verify",
+            "description": "Expected: 400. field = code, message 'Enter the 6-digit code.' This is not counted as a try.\nNeeds checkToken.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"abc\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "7 Email verify, wrong code: 400 code",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{checkToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/citizen/profile/email-verify",
+            "description": "Expected: 400. code = invalid, field = code, 'That code is not right or has expired. Check it, or ask for a new one.' Three wrong codes in a row give 423 locked, until a new code is asked for.\nNeeds checkToken.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"000000\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "8 Email verify: 200",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{checkToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/citizen/profile/email-verify",
+            "description": "Expected: 200. data.emailVerified = true and data.email is checkEmail. In dev mode the code is 123456. With EMAIL_MODE=smtp, type the code from the email.\nNeeds checkToken.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"123456\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "9 Email code, already verified: 409",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{checkToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/citizen/profile/email-code",
+            "description": "Expected: 409. code = conflict, 'Your email address is already verified.' Nothing is sent.\nNeeds checkToken after request 8.",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "10 Email verify, already verified: 200",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{checkToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/citizen/profile/email-verify",
+            "description": "Expected: 200. data.emailVerified = true. Nothing changes, and the wrong code sent here does not matter, because the address is already verified.\nNeeds checkToken after request 8.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"000000\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "11 The profile shows it: 200",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{checkToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/citizen/profile",
+            "description": "Expected: 200. data.emailVerified = true, data.phoneVerified = false and data.identity.status = not-submitted. This is the citizen profile endpoint, so the profile page will show the email as verified after a reload.\nNeeds checkToken after request 8."
+          }
+        }
+      ]
+    }
+  ]
+}

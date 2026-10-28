@@ -1,0 +1,1115 @@
+{
+  "info": {
+    "name": "Babylon: Admin panel",
+    "description": "Meheri's 15 admin endpoints, sent by hand one at a time. Before sending: run `npm run seed:admin`, start the server, then create three tokens with `npm run token -- admin admin@babylon.test`, `npm run token -- department roads@babylon.test \"Roads & Highways\"` and `npm run token -- citizen citizen@babylon.test`, and paste them into the variables adminToken, departmentToken and citizenToken. Copy ids from earlier answers by hand into the id variables. Each request's Description says the expected status and body. Send the folders in order, and re-run `npm run seed:admin` before sending them again.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:5000/api"
+    },
+    {
+      "key": "adminToken",
+      "value": ""
+    },
+    {
+      "key": "departmentToken",
+      "value": ""
+    },
+    {
+      "key": "citizenToken",
+      "value": ""
+    },
+    {
+      "key": "alertId",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "0. Setup: read the seeded data (run first, on a fresh npm run seed:admin)",
+      "item": [
+        {
+          "name": "Counts",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/counts",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "counts"
+              ]
+            },
+            "description": "Expected: 200. data.queue is 3 (fixes waiting) and data.reopened is 1 on a fresh `npm run seed:admin`. Send this first, on a freshly seeded database."
+          }
+        },
+        {
+          "name": "Queue (save ids)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/verification-queue",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "verification-queue"
+              ]
+            },
+            "description": "Expected: 200. data is a list of 3 fixes waiting for a check, newest first (by submittedAt). Copy the id of item 1, 2 and 3 by hand into the collection variables fixA, fixB and fixC."
+          }
+        },
+        {
+          "name": "Reopened (save id)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/reopened",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "reopened"
+              ]
+            },
+            "description": "Expected: 200. data is a list with 1 reopened issue. Copy its id by hand into the variable reopenedId."
+          }
+        },
+        {
+          "name": "Identity queue (save ids)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/identity",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "identity"
+              ]
+            },
+            "description": "Expected: 200. data is a list of 4 identity submissions, oldest first, showing only nidLast4 (4821, 9034, 7390, 1156) and no photo. Copy the id of item 1, 2 and 3 by hand into idPhoto, idNoPhoto and idOk."
+          }
+        }
+      ]
+    },
+    {
+      "name": "1. Access",
+      "item": [
+        {
+          "name": "No token: 401",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/counts",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "counts"
+              ]
+            },
+            "description": "No Authorization header. Expected: 401, code unauthorized."
+          }
+        },
+        {
+          "name": "Citizen token: 403",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{citizenToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/counts",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "counts"
+              ]
+            },
+            "description": "Uses a citizen token (`npm run token -- citizen`), pasted into citizenToken. Expected: 403, code forbidden."
+          }
+        },
+        {
+          "name": "Department token: 403",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{departmentToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/verification-queue",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "verification-queue"
+              ]
+            },
+            "description": "Uses a department token (`npm run token -- department`), pasted into departmentToken. Expected: 403, code forbidden."
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Verification",
+      "item": [
+        {
+          "name": "Approve fix A",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/issues/{{fixA}}/approve",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "issues",
+                "{{fixA}}",
+                "approve"
+              ]
+            },
+            "description": "Uses the id in fixA. Expected: 200. data.status is resolved, verification is verified, priority is fix-verified, and afterImg is a text (the approved photo)."
+          }
+        },
+        {
+          "name": "Approve fix A again: 409",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/issues/{{fixA}}/approve",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "issues",
+                "{{fixA}}",
+                "approve"
+              ]
+            },
+            "description": "Same request as the one above, sent a second time. Expected: 409, code conflict (already checked)."
+          }
+        },
+        {
+          "name": "Approve unknown id: 404",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/issues/64b7f0a1c2d3e4f5a6b7c8d9/approve",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "issues",
+                "64b7f0a1c2d3e4f5a6b7c8d9",
+                "approve"
+              ]
+            },
+            "description": "An id that does not exist. Expected: 404, code not-found."
+          }
+        },
+        {
+          "name": "Reject fix B without a reason: 400",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/admin/issues/{{fixB}}/reject",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "issues",
+                "{{fixB}}",
+                "reject"
+              ]
+            },
+            "description": "Uses the id in fixB with an empty body. Expected: 400, code invalid, field reason."
+          }
+        },
+        {
+          "name": "Reject fix B with a reason",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"The pothole is still there after the patch.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/admin/issues/{{fixB}}/reject",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "issues",
+                "{{fixB}}",
+                "reject"
+              ]
+            },
+            "description": "Uses the id in fixB with a reason. Expected: 200. data.verification is none and data.status is in-progress (back to the department). The rejected photo (pendingAfterImg) is not in the answer."
+          }
+        },
+        {
+          "name": "Reject fix B again: 409",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"Again\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/admin/issues/{{fixB}}/reject",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "issues",
+                "{{fixB}}",
+                "reject"
+              ]
+            },
+            "description": "Same issue, sent a second time. Expected: 409, code conflict."
+          }
+        },
+        {
+          "name": "Send fix C to queue (not reopened): 409",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/issues/{{fixC}}/send-to-queue",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "issues",
+                "{{fixC}}",
+                "send-to-queue"
+              ]
+            },
+            "description": "Uses the id in fixC, which is a normal waiting fix, not a reopened one. Expected: 409, code conflict."
+          }
+        },
+        {
+          "name": "Send the reopened issue to the queue",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/issues/{{reopenedId}}/send-to-queue",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "issues",
+                "{{reopenedId}}",
+                "send-to-queue"
+              ]
+            },
+            "description": "Uses the id in reopenedId. Expected: 200. data.verification is awaiting and data.priority is still reopened."
+          }
+        },
+        {
+          "name": "Counts after the decisions",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/counts",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "counts"
+              ]
+            },
+            "description": "Expected: 200. data.queue is 2 (fix C and the reopened one) and data.reopened is 0."
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Accountability",
+      "item": [
+        {
+          "name": "8 weeks",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/accountability?weeks=8",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "accountability"
+              ],
+              "query": [
+                {
+                  "key": "weeks",
+                  "value": "8"
+                }
+              ]
+            },
+            "description": "Expected: 200. data.departments has 4 rows; data.stats.received equals the sum of the rows' assigned and data.stats.resolved equals the sum of their resolved. data.weekly has 8 entries that add up to stats.received. data.waitingLongest is sorted longest first."
+          }
+        },
+        {
+          "name": "4 weeks",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/accountability?weeks=4",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "accountability"
+              ],
+              "query": [
+                {
+                  "key": "weeks",
+                  "value": "4"
+                }
+              ]
+            },
+            "description": "Expected: 200. data.weekly has 4 entries and data.label is 'Last 4 weeks'."
+          }
+        },
+        {
+          "name": "No period (defaults to 8)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/accountability",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "accountability"
+              ]
+            },
+            "description": "No weeks value. Expected: 200 and data.weeks is 8."
+          }
+        },
+        {
+          "name": "6 weeks: 400",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/accountability?weeks=6",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "accountability"
+              ],
+              "query": [
+                {
+                  "key": "weeks",
+                  "value": "6"
+                }
+              ]
+            },
+            "description": "Only 4 or 8 are allowed. Expected: 400, code invalid."
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Identity",
+      "item": [
+        {
+          "name": "Photo of a pending submission",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/identity/{{idPhoto}}/photo",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "identity",
+                "{{idPhoto}}",
+                "photo"
+              ]
+            },
+            "description": "Uses the id in idPhoto. Expected: 200, and the answer is a picture (Content-Type image/...), not JSON, with Cache-Control no-store. Use Send and look at the Preview tab."
+          }
+        },
+        {
+          "name": "Photo of a submission without one: 404",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/identity/{{idNoPhoto}}/photo",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "identity",
+                "{{idNoPhoto}}",
+                "photo"
+              ]
+            },
+            "description": "Uses the id in idNoPhoto. Expected: 404."
+          }
+        },
+        {
+          "name": "Reject with a 3-character reason: 400",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"decision\": \"reject\",\n  \"reason\": \"bad\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/admin/identity/{{idPhoto}}/review",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "identity",
+                "{{idPhoto}}",
+                "review"
+              ]
+            },
+            "description": "Body: decision reject, reason 'bad' (too short, the minimum is 5). Expected: 400, code invalid."
+          }
+        },
+        {
+          "name": "Reject with a reason",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"decision\": \"reject\",\n  \"reason\": \"The card photo is blurry.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/admin/identity/{{idPhoto}}/review",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "identity",
+                "{{idPhoto}}",
+                "review"
+              ]
+            },
+            "description": "Uses idPhoto with a good reason. Expected: 200. data.status is rejected and data.photoDeleted is true."
+          }
+        },
+        {
+          "name": "Photo after the review: 404",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/identity/{{idPhoto}}/photo",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "identity",
+                "{{idPhoto}}",
+                "photo"
+              ]
+            },
+            "description": "Same photo address as before, after the rejection. Expected: 404 (the photo was deleted)."
+          }
+        },
+        {
+          "name": "Review the same one again: 409",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"decision\": \"approve\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/admin/identity/{{idPhoto}}/review",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "identity",
+                "{{idPhoto}}",
+                "review"
+              ]
+            },
+            "description": "Uses idPhoto, which is already reviewed. Expected: 409, code conflict."
+          }
+        },
+        {
+          "name": "Approve one without a photo: 409",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"decision\": \"approve\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/admin/identity/{{idNoPhoto}}/review",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "identity",
+                "{{idNoPhoto}}",
+                "review"
+              ]
+            },
+            "description": "Uses idNoPhoto (it has no photo). Expected: 409."
+          }
+        },
+        {
+          "name": "Approve one with a photo",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"decision\": \"approve\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/admin/identity/{{idOk}}/review",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "identity",
+                "{{idOk}}",
+                "review"
+              ]
+            },
+            "description": "Uses idOk. Expected: 200 and data.status is verified."
+          }
+        },
+        {
+          "name": "Identity count",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/identity/count",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "identity",
+                "count"
+              ]
+            },
+            "description": "Expected: 200 and data.count is 2 (the no-photo one and the newest one are still waiting)."
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. Alerts",
+      "item": [
+        {
+          "name": "Alerts: list",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/admin/alerts",
+            "description": "Expected: 200. data.alerts is the signed-in admin's own notices, newest first (each has id, kind, text, link, issueId, createdAt, read). data.unreadCount is how many have read false. The list may be empty if nothing has notified this admin yet. If it has items, copy the id of one into the variable alertId by hand."
+          }
+        },
+        {
+          "name": "Alerts: unread count",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/admin/alerts/unread-count",
+            "description": "Expected: 200. data.unreadCount equals data.unreadCount in the list above."
+          }
+        },
+        {
+          "name": "Alerts: mark one read",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/admin/alerts/{{alertId}}/read",
+            "description": "Uses the id in alertId (copied by hand from the list). Expected: 200. data.read is true and data.id is the same id. If the list was empty, skip this one."
+          }
+        },
+        {
+          "name": "Alerts: mark an unknown alert read: 404",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/admin/alerts/000000000000000000000000/read",
+            "description": "An id that does not exist. Expected: 404, code not-found, message 'We could not find that notice.'"
+          }
+        },
+        {
+          "name": "Alerts: mark all read",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/admin/alerts/read-all",
+            "description": "Expected: 200. data.unreadCount is 0. Send 'Alerts: unread count' again to confirm it is 0."
+          }
+        },
+        {
+          "name": "Alerts: no token: 401",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/admin/alerts",
+            "description": "No Authorization header. Expected: 401, code unauthorized."
+          }
+        },
+        {
+          "name": "Alerts: citizen token: 403",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{citizenToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/admin/alerts",
+            "description": "Uses the citizen token in citizenToken. Expected: 403, code forbidden."
+          }
+        }
+      ]
+    },
+    {
+      "name": "6. Translate (F10)",
+      "item": [
+        {
+          "name": "Translate: valid text to Bangla",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"text\": \"Deep pothole near Wasa Circle\", \"to\": \"bn\"}"
+            },
+            "url": "{{baseUrl}}/translate",
+            "description": "Admin token. Needs Joyti's Gemini service and key to be working. Expected: 200, data { translation, to: \"bn\" }. With Gemini off: 503, code ai-unavailable."
+          }
+        },
+        {
+          "name": "Translate: department token also allowed",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{departmentToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"text\": \"Cracked railing\", \"to\": \"en\"}"
+            },
+            "url": "{{baseUrl}}/translate",
+            "description": "Department token in departmentToken. Expected: 200 (any signed-in role may translate), or 503 ai-unavailable if Gemini is off."
+          }
+        },
+        {
+          "name": "Translate: no token: 401",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"text\": \"Hello\", \"to\": \"en\"}"
+            },
+            "url": "{{baseUrl}}/translate",
+            "description": "No Authorization header. Expected: 401, code unauthorized."
+          }
+        },
+        {
+          "name": "Translate: empty text: 400",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"text\": \"   \", \"to\": \"en\"}"
+            },
+            "url": "{{baseUrl}}/translate",
+            "description": "Expected: 400, code invalid, field text."
+          }
+        },
+        {
+          "name": "Translate: over-long text: 400",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"text\": \"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\", \"to\": \"en\"}"
+            },
+            "url": "{{baseUrl}}/translate",
+            "description": "1001 characters (the limit is 1000). Expected: 400, code invalid, field text."
+          }
+        },
+        {
+          "name": "Translate: unsupported language: 400",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"text\": \"Hello\", \"to\": \"fr\"}"
+            },
+            "url": "{{baseUrl}}/translate",
+            "description": "Expected: 400, code invalid, field to."
+          }
+        },
+        {
+          "name": "Translate: rapid repeats: 429",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"text\": \"Hello\", \"to\": \"en\"}"
+            },
+            "url": "{{baseUrl}}/translate",
+            "description": "Send this one 11 times quickly. The limit is 10 per minute per user. Expected: after the 10th, 429, code too-many-requests. Wait a minute and it works again."
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -2,24 +2,37 @@
 
 @theme {
   /* Colors: from the plan. Mint is #E3F1E8, not the Figma's #DFF8EB. */
-  --color-navy: #011638;
-  --color-forest: #214E34;
-  --color-slate: #364156;
-  --color-mint: #E3F1E8;
-  --color-mint-deep: #C4E3D1;
-  --color-brand: #5BD6A0;
-  --color-amber: #FFB547;
-  --color-amber-dark: #E39F2E;
-  --color-danger: #A82E2E; /* Downvote and other "take back" actions */
-  --color-muted: #4A566C;
-  --color-page: #CDCDCD;
+  --color-navy: #101C2E; /* text and borders: it turns light in dark mode */
+  --color-ink: #101C2E; /* dark surfaces (bars, hero, buttons): the same in both modes */
+  --color-frost: #E6EEF6; /* light text on a dark surface: the same in both modes */
+  --color-paper: #FFFFFF; /* white text on a dark surface: the same in both modes */
+  --color-accent: #3E6990; /* links, labels, focus: turns light in dark mode */
+  --color-soft: #2C3E57; /* secondary text: turns light in dark mode */
+  --color-alert: #C8352C; /* red text and borders */
+  --color-good: #0B6B50; /* green text */
+  --color-warn: #A9801F; /* amber text */
+  --color-forest: #3E6990;
+  --color-slate: #2C3E57;
+  --color-mint: #E6EEF6;
+  --color-mint-deep: #CBDAEA;
+  --color-brand: #A9C8E8;
+  --color-amber: #E8BF6A;
+  --color-amber-dark: #A9801F;
+  --color-success: #0B6B50;
+  --color-success-soft: #CDE6DC;
+  --color-flag-green: #0B6B50; /* the logo's pin on light surfaces */
+  --color-flag-green-light: #4FC09A; /* the logo's pin on dark surfaces */
+  --color-flag-red: #E4463D; /* the logo's sun */
+  --color-danger: #C8352C; /* Downvote and other "take back" actions */
+  --color-muted: #556A85;
+  --color-page: #EEF2F6;
   --color-map-land: #F2EFE9;
   --color-map-park: #CDEBC0;
   --color-map-water: #AAD3DF;
 
   /* Fonts */
-  --font-heading: "Bricolage Grotesque", sans-serif;
-  --font-body: "Figtree", sans-serif;
+  --font-heading: "Bricolage Grotesque", "Noto Sans Bengali", sans-serif;
+  --font-body: "Figtree", "Noto Sans Bengali", sans-serif;
 
   /* Ticker scroll */
   --animate-marquee: marquee 45s linear infinite;
@@ -51,28 +64,60 @@
   --radius-hero: 32px;
 }
 
+/* How much brand blue tints the animated background (AnimatedBackground.jsx). */
+:root {
+  --bg-tint-a: 28%;
+  --bg-tint-b: 42%;
+}
+
+/* Dark mode: "Midnight blue". The page picks it by putting data-theme="dark" on
+   <html> (components/ui/ThemeToggle.jsx and the script in index.html). Only
+   the tokens that change meaning are redefined here: navy, soft and accent
+   become text colours, mint and white become the card and field surfaces.
+   Surfaces that stay dark (bg-ink) and light text on them (text-frost) are
+   separate tokens, so they never flip. */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --color-navy: #E6EEF6;
+  --color-soft: #B9C9DC;
+  --color-accent: #A9C8E8;
+  --color-muted: #AABCD2;
+  --color-page: #0B1320;
+  --color-mint: #15233A;
+  --color-mint-deep: #24344A;
+  --color-white: #1B2B45;
+  --color-alert: #FF8F86;
+  --color-good: #5FD3AE;
+  --color-warn: #F2C45A;
+  --color-success-soft: #123A30;
+  --bg-tint-a: 7%;
+  --bg-tint-b: 11%;
+}
+.bg-glow { opacity: 1; }
+:root[data-theme="dark"] .bg-glow { opacity: 0.3; }
+
 /* Cursors: the high-visibility set (a thick navy edge with a white line
-   inside), used on every page. Fixed artwork, like the favicon: an SVG in a
+   inside; the arrow is filled flag green, the pointing hand flag red), used on every page. Fixed artwork, like the favicon: an SVG in a
    data URI cannot read var(--color-navy), so the navy is written into each
-   image as #011638. Keep it in sync with --color-navy above.
+   image as #101C2E. Keep it in sync with --color-navy above.
    Each variable is a 28px image with its hot spot and the matching system
    cursor as the fallback. Browsers that support image-set() in cursor get a
    sharp 2x version from the @supports block below. */
 :root {
-  --cursor-arrow: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='-2 -2 28 28' fill='none' stroke-linecap='round' stroke-linejoin='round'%3E%3Cg stroke='%23011638' stroke-width='4'%3E%3Cpath d='M3 1v19l5-5 3.5 7.5 3-1.4L11 13.6h7z' /%3E%3C/g%3E%3Cg stroke='white' stroke-width='1.6' fill='%23011638'%3E%3Cpath d='M3 1v19l5-5 3.5 7.5 3-1.4L11 13.6h7z' /%3E%3C/g%3E%3C/svg%3E") 5 3, default;
-  --cursor-pointer: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='-2 -2 28 28' fill='none' stroke-linecap='round' stroke-linejoin='round'%3E%3Cg stroke='%23011638' stroke-width='5.5'%3E%3Cpath d='M10 9.5V4a2 2 0 0 0-4 0v10' /%3E%3Cpath d='M14 10V9a2 2 0 0 0-4 0v1' /%3E%3Cpath d='M18 11v-1a2 2 0 0 0-4 0' /%3E%3Cpath d='M18 11a2 2 0 1 1 4 0v3a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.9-6-2.3l-3.6-3.6a2 2 0 0 1 2.8-2.8L7 15' /%3E%3C/g%3E%3Cg stroke='white' stroke-width='2.2' fill='none'%3E%3Cpath d='M10 9.5V4a2 2 0 0 0-4 0v10' /%3E%3Cpath d='M14 10V9a2 2 0 0 0-4 0v1' /%3E%3Cpath d='M18 11v-1a2 2 0 0 0-4 0' /%3E%3Cpath d='M18 11a2 2 0 1 1 4 0v3a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.9-6-2.3l-3.6-3.6a2 2 0 0 1 2.8-2.8L7 15' /%3E%3C/g%3E%3C/svg%3E") 9 3, pointer;
-  --cursor-grab: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='-2 -2 28 28' fill='none' stroke-linecap='round' stroke-linejoin='round'%3E%3Cg stroke='%23011638' stroke-width='5.5'%3E%3Cpath d='M18 11V6a2 2 0 0 0-4 0' /%3E%3Cpath d='M14 10V4a2 2 0 0 0-4 0v2' /%3E%3Cpath d='M10 10.5V6a2 2 0 0 0-4 0v8' /%3E%3Cpath d='M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.9-6-2.3l-3.6-3.6a2 2 0 0 1 2.8-2.8L7 15' /%3E%3C/g%3E%3Cg stroke='white' stroke-width='2.2' fill='none'%3E%3Cpath d='M18 11V6a2 2 0 0 0-4 0' /%3E%3Cpath d='M14 10V4a2 2 0 0 0-4 0v2' /%3E%3Cpath d='M10 10.5V6a2 2 0 0 0-4 0v8' /%3E%3Cpath d='M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.9-6-2.3l-3.6-3.6a2 2 0 0 1 2.8-2.8L7 15' /%3E%3C/g%3E%3C/svg%3E") 14 14, grab;
-  --cursor-grabbing: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='-2 -2 28 28' fill='none' stroke-linecap='round' stroke-linejoin='round'%3E%3Cg stroke='%23011638' stroke-width='5.5'%3E%3Cpath d='M18 11.5V9a2 2 0 0 0-4 0v1.4' /%3E%3Cpath d='M14 10V8a2 2 0 0 0-4 0v2' /%3E%3Cpath d='M10 9.9V9a2 2 0 0 0-4 0v5' /%3E%3Cpath d='M6 14a2 2 0 0 0-4 0' /%3E%3Cpath d='M18 11a2 2 0 1 1 4 0v3a8 8 0 0 1-8 8h-4a8 8 0 0 1-8-8 2 2 0 1 1 4 0' /%3E%3C/g%3E%3Cg stroke='white' stroke-width='2.2' fill='none'%3E%3Cpath d='M18 11.5V9a2 2 0 0 0-4 0v1.4' /%3E%3Cpath d='M14 10V8a2 2 0 0 0-4 0v2' /%3E%3Cpath d='M10 9.9V9a2 2 0 0 0-4 0v5' /%3E%3Cpath d='M6 14a2 2 0 0 0-4 0' /%3E%3Cpath d='M18 11a2 2 0 1 1 4 0v3a8 8 0 0 1-8 8h-4a8 8 0 0 1-8-8 2 2 0 1 1 4 0' /%3E%3C/g%3E%3C/svg%3E") 14 14, grabbing;
-  --cursor-crosshair: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='-2 -2 28 28' fill='none' stroke-linecap='round' stroke-linejoin='round'%3E%3Cg stroke='%23011638' stroke-width='5.5'%3E%3Ccircle cx='12' cy='12' r='6' /%3E%3Cpath d='M12 1v6M12 17v6M1 12h6M17 12h6' /%3E%3C/g%3E%3Cg stroke='white' stroke-width='2.2' fill='none'%3E%3Ccircle cx='12' cy='12' r='6' /%3E%3Cpath d='M12 1v6M12 17v6M1 12h6M17 12h6' /%3E%3C/g%3E%3C/svg%3E") 14 14, crosshair;
+  --cursor-arrow: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='-2 -2 28 28' fill='none' stroke-linecap='round' stroke-linejoin='round'%3E%3Cg stroke='%23101C2E' stroke-width='4'%3E%3Cpath d='M3 1v19l5-5 3.5 7.5 3-1.4L11 13.6h7z' /%3E%3C/g%3E%3Cg stroke='white' stroke-width='1.6' fill='%230B6B50'%3E%3Cpath d='M3 1v19l5-5 3.5 7.5 3-1.4L11 13.6h7z' /%3E%3C/g%3E%3C/svg%3E") 5 3, default;
+  --cursor-pointer: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='-2 -2 28 28' fill='none' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 14V4a2 2 0 0 1 4 0V7.5a2 2 0 0 1 4 0V9a2 2 0 0 1 4 0V10a2 2 0 0 1 4 0v4a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.9-6-2.3l-3.6-3.6a2 2 0 0 1 2.8-2.8L6 14Z' stroke='%23101C2E' stroke-width='5.5' fill='%23101C2E' /%3E%3Cpath d='M6 14V4a2 2 0 0 1 4 0V7.5a2 2 0 0 1 4 0V9a2 2 0 0 1 4 0V10a2 2 0 0 1 4 0v4a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.9-6-2.3l-3.6-3.6a2 2 0 0 1 2.8-2.8L6 14Z' stroke='white' stroke-width='2.2' fill='%23E4463D' /%3E%3C/svg%3E") 9 3, pointer;
+  --cursor-grab: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='-2 -2 28 28' fill='none' stroke-linecap='round' stroke-linejoin='round'%3E%3Cg stroke='%23101C2E' stroke-width='5.5'%3E%3Cpath d='M18 11V6a2 2 0 0 0-4 0' /%3E%3Cpath d='M14 10V4a2 2 0 0 0-4 0v2' /%3E%3Cpath d='M10 10.5V6a2 2 0 0 0-4 0v8' /%3E%3Cpath d='M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.9-6-2.3l-3.6-3.6a2 2 0 0 1 2.8-2.8L7 15' /%3E%3C/g%3E%3Cg stroke='white' stroke-width='2.2' fill='none'%3E%3Cpath d='M18 11V6a2 2 0 0 0-4 0' /%3E%3Cpath d='M14 10V4a2 2 0 0 0-4 0v2' /%3E%3Cpath d='M10 10.5V6a2 2 0 0 0-4 0v8' /%3E%3Cpath d='M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.9-6-2.3l-3.6-3.6a2 2 0 0 1 2.8-2.8L7 15' /%3E%3C/g%3E%3C/svg%3E") 14 14, grab;
+  --cursor-grabbing: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='-2 -2 28 28' fill='none' stroke-linecap='round' stroke-linejoin='round'%3E%3Cg stroke='%23101C2E' stroke-width='5.5'%3E%3Cpath d='M18 11.5V9a2 2 0 0 0-4 0v1.4' /%3E%3Cpath d='M14 10V8a2 2 0 0 0-4 0v2' /%3E%3Cpath d='M10 9.9V9a2 2 0 0 0-4 0v5' /%3E%3Cpath d='M6 14a2 2 0 0 0-4 0' /%3E%3Cpath d='M18 11a2 2 0 1 1 4 0v3a8 8 0 0 1-8 8h-4a8 8 0 0 1-8-8 2 2 0 1 1 4 0' /%3E%3C/g%3E%3Cg stroke='white' stroke-width='2.2' fill='none'%3E%3Cpath d='M18 11.5V9a2 2 0 0 0-4 0v1.4' /%3E%3Cpath d='M14 10V8a2 2 0 0 0-4 0v2' /%3E%3Cpath d='M10 9.9V9a2 2 0 0 0-4 0v5' /%3E%3Cpath d='M6 14a2 2 0 0 0-4 0' /%3E%3Cpath d='M18 11a2 2 0 1 1 4 0v3a8 8 0 0 1-8 8h-4a8 8 0 0 1-8-8 2 2 0 1 1 4 0' /%3E%3C/g%3E%3C/svg%3E") 14 14, grabbing;
+  --cursor-crosshair: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='-2 -2 28 28' fill='none' stroke-linecap='round' stroke-linejoin='round'%3E%3Cg stroke='%23101C2E' stroke-width='5.5'%3E%3Ccircle cx='12' cy='12' r='6' /%3E%3Cpath d='M12 1v6M12 17v6M1 12h6M17 12h6' /%3E%3C/g%3E%3Cg stroke='white' stroke-width='2.2' fill='none'%3E%3Ccircle cx='12' cy='12' r='6' /%3E%3Cpath d='M12 1v6M12 17v6M1 12h6M17 12h6' /%3E%3C/g%3E%3C/svg%3E") 14 14, crosshair;
 }
 
 @supports (cursor: image-set(url("data:,x") 1x) 0 0, auto) {
   :root {
-    --cursor-arrow: image-set(url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='-2 -2 28 28' fill='none' stroke-linecap='round' stroke-linejoin='round'%3E%3Cg stroke='%23011638' stroke-width='4'%3E%3Cpath d='M3 1v19l5-5 3.5 7.5 3-1.4L11 13.6h7z' /%3E%3C/g%3E%3Cg stroke='white' stroke-width='1.6' fill='%23011638'%3E%3Cpath d='M3 1v19l5-5 3.5 7.5 3-1.4L11 13.6h7z' /%3E%3C/g%3E%3C/svg%3E") 1x, url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='56' viewBox='-2 -2 28 28' fill='none' stroke-linecap='round' stroke-linejoin='round'%3E%3Cg stroke='%23011638' stroke-width='4'%3E%3Cpath d='M3 1v19l5-5 3.5 7.5 3-1.4L11 13.6h7z' /%3E%3C/g%3E%3Cg stroke='white' stroke-width='1.6' fill='%23011638'%3E%3Cpath d='M3 1v19l5-5 3.5 7.5 3-1.4L11 13.6h7z' /%3E%3C/g%3E%3C/svg%3E") 2x) 5 3, default;
-    --cursor-pointer: image-set(url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='-2 -2 28 28' fill='none' stroke-linecap='round' stroke-linejoin='round'%3E%3Cg stroke='%23011638' stroke-width='5.5'%3E%3Cpath d='M10 9.5V4a2 2 0 0 0-4 0v10' /%3E%3Cpath d='M14 10V9a2 2 0 0 0-4 0v1' /%3E%3Cpath d='M18 11v-1a2 2 0 0 0-4 0' /%3E%3Cpath d='M18 11a2 2 0 1 1 4 0v3a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.9-6-2.3l-3.6-3.6a2 2 0 0 1 2.8-2.8L7 15' /%3E%3C/g%3E%3Cg stroke='white' stroke-width='2.2' fill='none'%3E%3Cpath d='M10 9.5V4a2 2 0 0 0-4 0v10' /%3E%3Cpath d='M14 10V9a2 2 0 0 0-4 0v1' /%3E%3Cpath d='M18 11v-1a2 2 0 0 0-4 0' /%3E%3Cpath d='M18 11a2 2 0 1 1 4 0v3a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.9-6-2.3l-3.6-3.6a2 2 0 0 1 2.8-2.8L7 15' /%3E%3C/g%3E%3C/svg%3E") 1x, url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='56' viewBox='-2 -2 28 28' fill='none' stroke-linecap='round' stroke-linejoin='round'%3E%3Cg stroke='%23011638' stroke-width='5.5'%3E%3Cpath d='M10 9.5V4a2 2 0 0 0-4 0v10' /%3E%3Cpath d='M14 10V9a2 2 0 0 0-4 0v1' /%3E%3Cpath d='M18 11v-1a2 2 0 0 0-4 0' /%3E%3Cpath d='M18 11a2 2 0 1 1 4 0v3a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.9-6-2.3l-3.6-3.6a2 2 0 0 1 2.8-2.8L7 15' /%3E%3C/g%3E%3Cg stroke='white' stroke-width='2.2' fill='none'%3E%3Cpath d='M10 9.5V4a2 2 0 0 0-4 0v10' /%3E%3Cpath d='M14 10V9a2 2 0 0 0-4 0v1' /%3E%3Cpath d='M18 11v-1a2 2 0 0 0-4 0' /%3E%3Cpath d='M18 11a2 2 0 1 1 4 0v3a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.9-6-2.3l-3.6-3.6a2 2 0 0 1 2.8-2.8L7 15' /%3E%3C/g%3E%3C/svg%3E") 2x) 9 3, pointer;
-    --cursor-grab: image-set(url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='-2 -2 28 28' fill='none' stroke-linecap='round' stroke-linejoin='round'%3E%3Cg stroke='%23011638' stroke-width='5.5'%3E%3Cpath d='M18 11V6a2 2 0 0 0-4 0' /%3E%3Cpath d='M14 10V4a2 2 0 0 0-4 0v2' /%3E%3Cpath d='M10 10.5V6a2 2 0 0 0-4 0v8' /%3E%3Cpath d='M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.9-6-2.3l-3.6-3.6a2 2 0 0 1 2.8-2.8L7 15' /%3E%3C/g%3E%3Cg stroke='white' stroke-width='2.2' fill='none'%3E%3Cpath d='M18 11V6a2 2 0 0 0-4 0' /%3E%3Cpath d='M14 10V4a2 2 0 0 0-4 0v2' /%3E%3Cpath d='M10 10.5V6a2 2 0 0 0-4 0v8' /%3E%3Cpath d='M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.9-6-2.3l-3.6-3.6a2 2 0 0 1 2.8-2.8L7 15' /%3E%3C/g%3E%3C/svg%3E") 1x, url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='56' viewBox='-2 -2 28 28' fill='none' stroke-linecap='round' stroke-linejoin='round'%3E%3Cg stroke='%23011638' stroke-width='5.5'%3E%3Cpath d='M18 11V6a2 2 0 0 0-4 0' /%3E%3Cpath d='M14 10V4a2 2 0 0 0-4 0v2' /%3E%3Cpath d='M10 10.5V6a2 2 0 0 0-4 0v8' /%3E%3Cpath d='M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.9-6-2.3l-3.6-3.6a2 2 0 0 1 2.8-2.8L7 15' /%3E%3C/g%3E%3Cg stroke='white' stroke-width='2.2' fill='none'%3E%3Cpath d='M18 11V6a2 2 0 0 0-4 0' /%3E%3Cpath d='M14 10V4a2 2 0 0 0-4 0v2' /%3E%3Cpath d='M10 10.5V6a2 2 0 0 0-4 0v8' /%3E%3Cpath d='M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.9-6-2.3l-3.6-3.6a2 2 0 0 1 2.8-2.8L7 15' /%3E%3C/g%3E%3C/svg%3E") 2x) 14 14, grab;
-    --cursor-grabbing: image-set(url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='-2 -2 28 28' fill='none' stroke-linecap='round' stroke-linejoin='round'%3E%3Cg stroke='%23011638' stroke-width='5.5'%3E%3Cpath d='M18 11.5V9a2 2 0 0 0-4 0v1.4' /%3E%3Cpath d='M14 10V8a2 2 0 0 0-4 0v2' /%3E%3Cpath d='M10 9.9V9a2 2 0 0 0-4 0v5' /%3E%3Cpath d='M6 14a2 2 0 0 0-4 0' /%3E%3Cpath d='M18 11a2 2 0 1 1 4 0v3a8 8 0 0 1-8 8h-4a8 8 0 0 1-8-8 2 2 0 1 1 4 0' /%3E%3C/g%3E%3Cg stroke='white' stroke-width='2.2' fill='none'%3E%3Cpath d='M18 11.5V9a2 2 0 0 0-4 0v1.4' /%3E%3Cpath d='M14 10V8a2 2 0 0 0-4 0v2' /%3E%3Cpath d='M10 9.9V9a2 2 0 0 0-4 0v5' /%3E%3Cpath d='M6 14a2 2 0 0 0-4 0' /%3E%3Cpath d='M18 11a2 2 0 1 1 4 0v3a8 8 0 0 1-8 8h-4a8 8 0 0 1-8-8 2 2 0 1 1 4 0' /%3E%3C/g%3E%3C/svg%3E") 1x, url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='56' viewBox='-2 -2 28 28' fill='none' stroke-linecap='round' stroke-linejoin='round'%3E%3Cg stroke='%23011638' stroke-width='5.5'%3E%3Cpath d='M18 11.5V9a2 2 0 0 0-4 0v1.4' /%3E%3Cpath d='M14 10V8a2 2 0 0 0-4 0v2' /%3E%3Cpath d='M10 9.9V9a2 2 0 0 0-4 0v5' /%3E%3Cpath d='M6 14a2 2 0 0 0-4 0' /%3E%3Cpath d='M18 11a2 2 0 1 1 4 0v3a8 8 0 0 1-8 8h-4a8 8 0 0 1-8-8 2 2 0 1 1 4 0' /%3E%3C/g%3E%3Cg stroke='white' stroke-width='2.2' fill='none'%3E%3Cpath d='M18 11.5V9a2 2 0 0 0-4 0v1.4' /%3E%3Cpath d='M14 10V8a2 2 0 0 0-4 0v2' /%3E%3Cpath d='M10 9.9V9a2 2 0 0 0-4 0v5' /%3E%3Cpath d='M6 14a2 2 0 0 0-4 0' /%3E%3Cpath d='M18 11a2 2 0 1 1 4 0v3a8 8 0 0 1-8 8h-4a8 8 0 0 1-8-8 2 2 0 1 1 4 0' /%3E%3C/g%3E%3C/svg%3E") 2x) 14 14, grabbing;
-    --cursor-crosshair: image-set(url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='-2 -2 28 28' fill='none' stroke-linecap='round' stroke-linejoin='round'%3E%3Cg stroke='%23011638' stroke-width='5.5'%3E%3Ccircle cx='12' cy='12' r='6' /%3E%3Cpath d='M12 1v6M12 17v6M1 12h6M17 12h6' /%3E%3C/g%3E%3Cg stroke='white' stroke-width='2.2' fill='none'%3E%3Ccircle cx='12' cy='12' r='6' /%3E%3Cpath d='M12 1v6M12 17v6M1 12h6M17 12h6' /%3E%3C/g%3E%3C/svg%3E") 1x, url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='56' viewBox='-2 -2 28 28' fill='none' stroke-linecap='round' stroke-linejoin='round'%3E%3Cg stroke='%23011638' stroke-width='5.5'%3E%3Ccircle cx='12' cy='12' r='6' /%3E%3Cpath d='M12 1v6M12 17v6M1 12h6M17 12h6' /%3E%3C/g%3E%3Cg stroke='white' stroke-width='2.2' fill='none'%3E%3Ccircle cx='12' cy='12' r='6' /%3E%3Cpath d='M12 1v6M12 17v6M1 12h6M17 12h6' /%3E%3C/g%3E%3C/svg%3E") 2x) 14 14, crosshair;
+    --cursor-arrow: image-set(url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='-2 -2 28 28' fill='none' stroke-linecap='round' stroke-linejoin='round'%3E%3Cg stroke='%23101C2E' stroke-width='4'%3E%3Cpath d='M3 1v19l5-5 3.5 7.5 3-1.4L11 13.6h7z' /%3E%3C/g%3E%3Cg stroke='white' stroke-width='1.6' fill='%230B6B50'%3E%3Cpath d='M3 1v19l5-5 3.5 7.5 3-1.4L11 13.6h7z' /%3E%3C/g%3E%3C/svg%3E") 1x, url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='56' viewBox='-2 -2 28 28' fill='none' stroke-linecap='round' stroke-linejoin='round'%3E%3Cg stroke='%23101C2E' stroke-width='4'%3E%3Cpath d='M3 1v19l5-5 3.5 7.5 3-1.4L11 13.6h7z' /%3E%3C/g%3E%3Cg stroke='white' stroke-width='1.6' fill='%230B6B50'%3E%3Cpath d='M3 1v19l5-5 3.5 7.5 3-1.4L11 13.6h7z' /%3E%3C/g%3E%3C/svg%3E") 2x) 5 3, default;
+    --cursor-pointer: image-set(url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='-2 -2 28 28' fill='none' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 14V4a2 2 0 0 1 4 0V7.5a2 2 0 0 1 4 0V9a2 2 0 0 1 4 0V10a2 2 0 0 1 4 0v4a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.9-6-2.3l-3.6-3.6a2 2 0 0 1 2.8-2.8L6 14Z' stroke='%23101C2E' stroke-width='5.5' fill='%23101C2E' /%3E%3Cpath d='M6 14V4a2 2 0 0 1 4 0V7.5a2 2 0 0 1 4 0V9a2 2 0 0 1 4 0V10a2 2 0 0 1 4 0v4a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.9-6-2.3l-3.6-3.6a2 2 0 0 1 2.8-2.8L6 14Z' stroke='white' stroke-width='2.2' fill='%23E4463D' /%3E%3C/svg%3E") 1x, url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='56' viewBox='-2 -2 28 28' fill='none' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 14V4a2 2 0 0 1 4 0V7.5a2 2 0 0 1 4 0V9a2 2 0 0 1 4 0V10a2 2 0 0 1 4 0v4a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.9-6-2.3l-3.6-3.6a2 2 0 0 1 2.8-2.8L6 14Z' stroke='%23101C2E' stroke-width='5.5' fill='%23101C2E' /%3E%3Cpath d='M6 14V4a2 2 0 0 1 4 0V7.5a2 2 0 0 1 4 0V9a2 2 0 0 1 4 0V10a2 2 0 0 1 4 0v4a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.9-6-2.3l-3.6-3.6a2 2 0 0 1 2.8-2.8L6 14Z' stroke='white' stroke-width='2.2' fill='%23E4463D' /%3E%3C/svg%3E") 2x) 9 3, pointer;
+    --cursor-grab: image-set(url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='-2 -2 28 28' fill='none' stroke-linecap='round' stroke-linejoin='round'%3E%3Cg stroke='%23101C2E' stroke-width='5.5'%3E%3Cpath d='M18 11V6a2 2 0 0 0-4 0' /%3E%3Cpath d='M14 10V4a2 2 0 0 0-4 0v2' /%3E%3Cpath d='M10 10.5V6a2 2 0 0 0-4 0v8' /%3E%3Cpath d='M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.9-6-2.3l-3.6-3.6a2 2 0 0 1 2.8-2.8L7 15' /%3E%3C/g%3E%3Cg stroke='white' stroke-width='2.2' fill='none'%3E%3Cpath d='M18 11V6a2 2 0 0 0-4 0' /%3E%3Cpath d='M14 10V4a2 2 0 0 0-4 0v2' /%3E%3Cpath d='M10 10.5V6a2 2 0 0 0-4 0v8' /%3E%3Cpath d='M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.9-6-2.3l-3.6-3.6a2 2 0 0 1 2.8-2.8L7 15' /%3E%3C/g%3E%3C/svg%3E") 1x, url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='56' viewBox='-2 -2 28 28' fill='none' stroke-linecap='round' stroke-linejoin='round'%3E%3Cg stroke='%23101C2E' stroke-width='5.5'%3E%3Cpath d='M18 11V6a2 2 0 0 0-4 0' /%3E%3Cpath d='M14 10V4a2 2 0 0 0-4 0v2' /%3E%3Cpath d='M10 10.5V6a2 2 0 0 0-4 0v8' /%3E%3Cpath d='M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.9-6-2.3l-3.6-3.6a2 2 0 0 1 2.8-2.8L7 15' /%3E%3C/g%3E%3Cg stroke='white' stroke-width='2.2' fill='none'%3E%3Cpath d='M18 11V6a2 2 0 0 0-4 0' /%3E%3Cpath d='M14 10V4a2 2 0 0 0-4 0v2' /%3E%3Cpath d='M10 10.5V6a2 2 0 0 0-4 0v8' /%3E%3Cpath d='M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.9-6-2.3l-3.6-3.6a2 2 0 0 1 2.8-2.8L7 15' /%3E%3C/g%3E%3C/svg%3E") 2x) 14 14, grab;
+    --cursor-grabbing: image-set(url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='-2 -2 28 28' fill='none' stroke-linecap='round' stroke-linejoin='round'%3E%3Cg stroke='%23101C2E' stroke-width='5.5'%3E%3Cpath d='M18 11.5V9a2 2 0 0 0-4 0v1.4' /%3E%3Cpath d='M14 10V8a2 2 0 0 0-4 0v2' /%3E%3Cpath d='M10 9.9V9a2 2 0 0 0-4 0v5' /%3E%3Cpath d='M6 14a2 2 0 0 0-4 0' /%3E%3Cpath d='M18 11a2 2 0 1 1 4 0v3a8 8 0 0 1-8 8h-4a8 8 0 0 1-8-8 2 2 0 1 1 4 0' /%3E%3C/g%3E%3Cg stroke='white' stroke-width='2.2' fill='none'%3E%3Cpath d='M18 11.5V9a2 2 0 0 0-4 0v1.4' /%3E%3Cpath d='M14 10V8a2 2 0 0 0-4 0v2' /%3E%3Cpath d='M10 9.9V9a2 2 0 0 0-4 0v5' /%3E%3Cpath d='M6 14a2 2 0 0 0-4 0' /%3E%3Cpath d='M18 11a2 2 0 1 1 4 0v3a8 8 0 0 1-8 8h-4a8 8 0 0 1-8-8 2 2 0 1 1 4 0' /%3E%3C/g%3E%3C/svg%3E") 1x, url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='56' viewBox='-2 -2 28 28' fill='none' stroke-linecap='round' stroke-linejoin='round'%3E%3Cg stroke='%23101C2E' stroke-width='5.5'%3E%3Cpath d='M18 11.5V9a2 2 0 0 0-4 0v1.4' /%3E%3Cpath d='M14 10V8a2 2 0 0 0-4 0v2' /%3E%3Cpath d='M10 9.9V9a2 2 0 0 0-4 0v5' /%3E%3Cpath d='M6 14a2 2 0 0 0-4 0' /%3E%3Cpath d='M18 11a2 2 0 1 1 4 0v3a8 8 0 0 1-8 8h-4a8 8 0 0 1-8-8 2 2 0 1 1 4 0' /%3E%3C/g%3E%3Cg stroke='white' stroke-width='2.2' fill='none'%3E%3Cpath d='M18 11.5V9a2 2 0 0 0-4 0v1.4' /%3E%3Cpath d='M14 10V8a2 2 0 0 0-4 0v2' /%3E%3Cpath d='M10 9.9V9a2 2 0 0 0-4 0v5' /%3E%3Cpath d='M6 14a2 2 0 0 0-4 0' /%3E%3Cpath d='M18 11a2 2 0 1 1 4 0v3a8 8 0 0 1-8 8h-4a8 8 0 0 1-8-8 2 2 0 1 1 4 0' /%3E%3C/g%3E%3C/svg%3E") 2x) 14 14, grabbing;
+    --cursor-crosshair: image-set(url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='-2 -2 28 28' fill='none' stroke-linecap='round' stroke-linejoin='round'%3E%3Cg stroke='%23101C2E' stroke-width='5.5'%3E%3Ccircle cx='12' cy='12' r='6' /%3E%3Cpath d='M12 1v6M12 17v6M1 12h6M17 12h6' /%3E%3C/g%3E%3Cg stroke='white' stroke-width='2.2' fill='none'%3E%3Ccircle cx='12' cy='12' r='6' /%3E%3Cpath d='M12 1v6M12 17v6M1 12h6M17 12h6' /%3E%3C/g%3E%3C/svg%3E") 1x, url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='56' viewBox='-2 -2 28 28' fill='none' stroke-linecap='round' stroke-linejoin='round'%3E%3Cg stroke='%23101C2E' stroke-width='5.5'%3E%3Ccircle cx='12' cy='12' r='6' /%3E%3Cpath d='M12 1v6M12 17v6M1 12h6M17 12h6' /%3E%3C/g%3E%3Cg stroke='white' stroke-width='2.2' fill='none'%3E%3Ccircle cx='12' cy='12' r='6' /%3E%3Cpath d='M12 1v6M12 17v6M1 12h6M17 12h6' /%3E%3C/g%3E%3C/svg%3E") 2x) 14 14, crosshair;
   }
 }
 
@@ -165,7 +210,7 @@
   @media (hover: hover) {
     &:hover {
       transform: translateY(-6px);
-      box-shadow: 0 20px 40px color-mix(in srgb, var(--color-navy) 25%, transparent);
+      box-shadow: 0 20px 40px color-mix(in srgb, var(--color-ink) 25%, transparent);
     }
   }
 }
@@ -334,11 +379,11 @@ textarea:not(:disabled),
   cursor: var(--cursor-crosshair, crosshair);
 }
 
-/* Two-tone focus ring: navy inside, brand outside.
+/* Two-tone focus ring: navy inside, flag green outside.
    It stays visible on both dark and light backgrounds. */
 :focus-visible {
   outline: 2px solid var(--color-navy);
-  box-shadow: 0 0 0 4px var(--color-brand);
+  box-shadow: 0 0 0 4px var(--color-flag-green-light);
 }
 
 /* Every map's Leaflet chrome, styled once. Two classes deep (or more) to beat
@@ -359,19 +404,92 @@ textarea:not(:disabled),
   color: var(--color-navy);
 }
 .leaflet-container .leaflet-tooltip {
-  background: var(--color-navy);
+  background: var(--color-ink);
   border: 0;
   border-radius: 9999px;
   box-shadow: none;
-  color: white;
+  color: var(--color-paper);
   font-size: 12px;
   font-weight: 600;
   padding: 6px 12px;
 }
-.leaflet-container .leaflet-tooltip-top::before { border-top-color: var(--color-navy); }
-.leaflet-container .leaflet-tooltip-bottom::before { border-bottom-color: var(--color-navy); }
-.leaflet-container .leaflet-tooltip-left::before { border-left-color: var(--color-navy); }
-.leaflet-container .leaflet-tooltip-right::before { border-right-color: var(--color-navy); }
+.leaflet-container .leaflet-tooltip-top::before { border-top-color: var(--color-ink); }
+.leaflet-container .leaflet-tooltip-bottom::before { border-bottom-color: var(--color-ink); }
+.leaflet-container .leaflet-tooltip-left::before { border-left-color: var(--color-ink); }
+.leaflet-container .leaflet-tooltip-right::before { border-right-color: var(--color-ink); }
+
+/* Dark mode on the maps: the street tiles are dimmed and inverted, and the
+   popups take the card colours. Pins and photos are left alone. */
+:root[data-theme="dark"] .leaflet-tile-pane {
+  filter: invert(1) hue-rotate(180deg) brightness(0.85) contrast(0.9) saturate(0.8);
+}
+:root[data-theme="dark"] .leaflet-container {
+  background: #0F1A2B;
+}
+:root[data-theme="dark"] .leaflet-container .leaflet-popup-content-wrapper,
+:root[data-theme="dark"] .leaflet-container .leaflet-popup-tip {
+  background: var(--color-mint);
+  color: var(--color-navy);
+}
+
+/* Small global touches: gentle colour changes on links and buttons, smooth
+   in-page scrolling and a branded text selection. The reduced-motion rule
+   below switches the movement off. */
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+  a,
+  button {
+    transition-property: color, background-color, border-color, opacity, box-shadow;
+    transition-duration: var(--duration-base, 200ms);
+    transition-timing-function: var(--ease-calm);
+  }
+  ::selection {
+    background: color-mix(in srgb, var(--color-flag-green-light) 45%, transparent);
+    color: var(--color-navy);
+  }
+  :focus-visible {
+    transition: outline-offset 150ms var(--ease-calm);
+  }
+}
+
+/* The hero line art (pages/Home/Alpona.jsx) draws itself in: each stroke has
+   pathLength="1", and each group sets --i so the pieces start one after
+   another. Dots fade in at the end. Reduced motion ends every animation at
+   once (the rule below), so the finished drawing just appears. */
+@keyframes alp-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+@keyframes alp-fade {
+  from {
+    opacity: 0;
+  }
+}
+.alp :is(path, circle):not(.dot, .soft) {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: alp-draw 2.4s var(--ease-calm) both;
+  animation-delay: calc(var(--i, 0) * 0.14s);
+}
+.alp .dot,
+.alp .soft {
+  animation: alp-fade 0.8s var(--ease-calm) both;
+  animation-delay: calc(var(--i, 0) * 0.14s + 1s);
+}
+.alp .soft {
+  stroke-dasharray: 0.004 0.01;
+}
+
+/* The bar along the greeting's bottom edge (pages/Home/Greeting.jsx) runs out
+   from right to left while the greeting is showing. */
+@keyframes greeting-run {
+  to {
+    transform: scaleX(0);
+  }
+}
 
 /* The one reduced-motion rule for the whole app: every CSS animation and
    transition ends at once. Motion started from JavaScript (element.animate,

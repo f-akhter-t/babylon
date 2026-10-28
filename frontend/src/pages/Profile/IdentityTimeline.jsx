@@ -1,13 +1,14 @@
 import clsx from 'clsx'
 import { CheckIcon } from '../IssueDetail/DetailIcons'
 import { DRAW_LINE, useEntrance } from '../IssueDetail/useEntrance'
-import { formatDate } from '../../utils/format'
+import { useT } from '../../i18n/useLanguage'
+import { useFormat } from '../../i18n/useFormat'
 
 // Submitted -> Under review -> Verified (or Rejected), drawn like the
 // Progress card on the Issue detail page. look: 'done' | 'current' | 'todo' | 'rejected'
-function buildSteps(identity) {
+function buildSteps(identity, sent) {
   const { status, submittedAt } = identity
-  const sentLine = submittedAt ? `Sent on ${formatDate(submittedAt)}` : ''
+  const sentLine = submittedAt ? sent(submittedAt) : ''
 
   if (status === 'not-submitted') {
     return [
@@ -38,10 +39,10 @@ function buildSteps(identity) {
 }
 
 const MARKERS = {
-  done: 'bg-forest text-white',
-  current: 'bg-navy',
-  todo: 'border-2 border-dashed border-navy/30 bg-white text-slate',
-  rejected: 'bg-danger text-white',
+  done: 'bg-forest text-paper',
+  current: 'bg-ink',
+  todo: 'border-2 border-dashed border-navy/30 bg-white text-soft',
+  rejected: 'bg-danger text-paper',
 }
 
 const SPOKEN = {
@@ -55,6 +56,7 @@ const LINE =
   'absolute left-5 top-12 bottom-2 w-0.5 -translate-x-1/2 rounded-full sm:left-12 sm:right-2 sm:top-5 sm:bottom-auto sm:h-0.5 sm:w-auto sm:translate-x-0 sm:-translate-y-1/2'
 
 function Step({ step, number, last, reachedNext }) {
+  const t = useT()
   // The green line draws towards the next step, one step after another.
   const lineRef = useEntrance(DRAW_LINE, { delay: 300 + number * 220, duration: 500 })
 
@@ -67,7 +69,7 @@ function Step({ step, number, last, reachedNext }) {
         <span
           ref={lineRef}
           aria-hidden="true"
-          className={clsx(LINE, reachedNext ? 'bg-forest' : 'bg-navy/15')}
+          className={clsx(LINE, reachedNext ? 'bg-forest' : 'bg-ink/15')}
         />
       )}
 
@@ -96,20 +98,22 @@ function Step({ step, number, last, reachedNext }) {
 
       <div className="min-w-0 pt-2 sm:pt-0">
         <h3 className="text-sm font-bold text-navy">
-          {step.label}
-          <span className="sr-only">{` ${SPOKEN[step.look]}`}</span>
+          {t(step.label)}
+          <span className="sr-only">{` ${t(SPOKEN[step.look])}`}</span>
         </h3>
-        {step.line && <p className="mt-1 text-xs leading-snug text-slate">{step.line}</p>}
+        {step.line && <p className="mt-1 text-xs leading-snug text-soft">{t(step.line)}</p>}
       </div>
     </li>
   )
 }
 
 export default function IdentityTimeline({ identity }) {
-  const steps = buildSteps(identity)
+  const t = useT()
+  const { date } = useFormat()
+  const steps = buildSteps(identity, (d) => t('Sent on {date}', { date: date(d) }))
 
   return (
-    <ol aria-label="Identity check progress" className="grid sm:grid-cols-3">
+    <ol aria-label={t('Identity check progress')} className="grid sm:grid-cols-3">
       {steps.map((step, index) => (
         <Step
           key={step.label}

@@ -1,5 +1,6 @@
 import clsx from 'clsx'
 import CountUp from '../../components/ui/CountUp'
+import { useLanguage } from '../../i18n/useLanguage'
 
 // value is a number (or undefined while loading).
 // decimals: digits after the point. suffix: text right after the number, like "%".
@@ -11,8 +12,9 @@ export default function StatCard({
   label,
   tone = 'navy',
 }) {
+  const { lang } = useLanguage()
   const format = (n) =>
-    `${n.toLocaleString('en-US', {
+    `${n.toLocaleString(lang === 'bn' ? 'bn-BD' : 'en-US', {
       minimumFractionDigits: decimals,
       maximumFractionDigits: decimals,
     })}${suffix}`
@@ -24,13 +26,13 @@ export default function StatCard({
       <p
         className={clsx(
           'origin-left font-heading text-4xl font-extrabold leading-none tracking-[-0.03em] tabular-nums transition-transform duration-300 group-hover:scale-105 sm:text-[50px]',
-          tone === 'forest' ? 'text-forest' : 'text-navy',
+          tone === 'forest' ? 'text-accent' : 'text-navy',
         )}
       >
         <CountUp value={value} format={format} />
         {unit && <span className="ml-1.5 text-xl tracking-normal">{unit}</span>}
       </p>
-      <p className="mt-1 text-sm font-semibold text-slate">{label}</p>
+      <p className="mt-1 text-sm font-semibold text-soft">{label}</p>
     </div>
   )
 }

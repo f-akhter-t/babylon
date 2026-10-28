@@ -4,12 +4,15 @@ import SliderDots from '../../components/ui/SliderDots'
 import HeroSlide from './HeroSlide'
 import HeroVideo from './HeroVideo'
 import HeroSearchCard from './HeroSearchCard'
+import Alpona from './Alpona'
 import useVideoAllowed from './useVideoAllowed'
+import { useT } from '../../i18n/useLanguage'
 
 // Clips are 8 seconds long, so each slide stays 8 seconds.
 const SLIDE_MS = 8000
 
 export default function HeroSlider({ slides = [], categories = [] }) {
+  const t = useT()
   const [index, setIndex] = useState(0)
   // People who turn on "reduce motion" start paused. They see the poster image.
   const [userPaused, setUserPaused] = useState(
@@ -28,13 +31,13 @@ export default function HeroSlider({ slides = [], categories = [] }) {
   }, [userPaused, hold, count, index])
 
   // Keeps the navy block in place while data loads.
-  if (count === 0) return <section className="min-h-[560px] bg-navy md:min-h-[720px]" />
+  if (count === 0) return <section className="min-h-[560px] bg-ink md:min-h-[720px]" />
 
   return (
     <section
       aria-roledescription="carousel"
-      aria-label="Babylon highlights"
-      className="relative isolate overflow-hidden bg-navy"
+      aria-label={t('Babylon highlights')}
+      className="relative isolate overflow-hidden bg-ink"
       onPointerEnter={(e) => e.pointerType === 'mouse' && setHold(true)}
       onPointerLeave={(e) => e.pointerType === 'mouse' && setHold(false)}
       onFocus={() => setHold(true)}
@@ -54,7 +57,8 @@ export default function HeroSlider({ slides = [], categories = [] }) {
             allowed={videoAllowed}
           />
         ))}
-        <div className="absolute inset-0 bg-navy/70 md:bg-transparent md:bg-linear-to-r md:from-navy/75 md:via-navy/35 md:to-navy/5" />
+        <div className="absolute inset-0 bg-ink/70 md:bg-transparent md:bg-linear-to-r md:from-ink/85 md:via-ink/50 md:to-ink/10" />
+        <Alpona />
       </div>
 
       <div className="px-5 pb-24 pt-8 md:px-10 md:pt-12 xl:px-18">
@@ -67,7 +71,7 @@ export default function HeroSlider({ slides = [], categories = [] }) {
                 key={slide.id}
                 role="group"
                 aria-roledescription="slide"
-                aria-label={`${i + 1} of ${count}`}
+                aria-label={t('{n} of {count}', { n: i + 1, count })}
                 inert={i !== index}
                 className={clsx(
                   'col-start-1 row-start-1 transition-opacity duration-500 motion-reduce:transition-none',
@@ -87,9 +91,9 @@ export default function HeroSlider({ slides = [], categories = [] }) {
           <button
             type="button"
             onClick={() => setUserPaused((p) => !p)}
-            className="min-h-11 px-2 text-sm font-semibold text-mint underline-offset-4 hover:underline"
+            className="min-h-11 px-2 text-sm font-semibold text-frost underline-offset-4 hover:underline"
           >
-            {userPaused ? 'Play slides' : 'Pause slides'}
+            {userPaused ? t('Play slides') : t('Pause slides')}
           </button>
         </div>
       </div>

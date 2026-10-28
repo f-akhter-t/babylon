@@ -3,6 +3,7 @@ import Button from '../../components/ui/Button'
 import Reveal from '../../components/ui/Reveal'
 import PreviewMap from './PreviewMap'
 import { ArrowRightIcon } from './HomeIcons'
+import { useNumber, useT } from '../../i18n/useLanguage'
 
 const legend = [
   { color: 'bg-amber', text: 'Open', key: 'open' },
@@ -18,7 +19,9 @@ function kind(issue) {
 }
 
 export default function MapPreviewSection({ issues }) {
+  const t = useT()
   // Only problems that still need work. Max 10 pins so the map stays clear.
+  const n = useNumber()
   const active = (issues ?? []).filter((i) => i.status !== 'resolved').slice(0, 10)
   const counts = active.reduce((sum, i) => ({ ...sum, [kind(i)]: (sum[kind(i)] ?? 0) + 1 }), {})
   return (
@@ -29,29 +32,28 @@ export default function MapPreviewSection({ issues }) {
           {/* Text: left side, never goes under the map */}
           <div className="p-6 md:p-10 xl:w-[42%] xl:py-16 xl:pl-14 xl:pr-8">
             <p className="text-[13px] font-bold uppercase tracking-widest text-brand">
-              Around you
+              {t('Around you')}
             </p>
-            <h2 className="mt-2 font-heading text-4xl font-extrabold leading-[1.02] tracking-[-0.03em] text-mint md:text-5xl">
-              Already reported? Upvote it.
+            <h2 className="mt-2 font-heading text-4xl font-extrabold leading-[1.02] tracking-[-0.03em] text-frost md:text-5xl">
+              {t('Already reported? Upvote it.')}
             </h2>
-            <p className="mt-4 max-w-[420px] text-lg leading-normal text-page">
-              See what is broken near you. Already on the map? Upvote it instead of
-              reporting it again.
+            <p className="mt-4 max-w-[420px] text-lg leading-normal text-frost">
+              {t('See what is broken near you. Already on the map? Upvote it instead of reporting it again.')}
             </p>
 
-            <ul className="mt-6 flex flex-wrap gap-x-6 gap-y-2 text-sm font-semibold text-mint">
+            <ul className="mt-6 flex flex-wrap gap-x-6 gap-y-2 text-sm font-semibold text-frost">
               {legend.map((item) => (
                 <li key={item.text} className="flex items-center gap-2">
-                  <span className={`size-3 rounded-full border-2 border-white ${item.color}`} />
-                  {counts[item.key] ?? 0} {item.text}
+                  <span className={`size-3 rounded-full border-2 border-paper ${item.color}`} />
+                  {n(counts[item.key] ?? 0)} {t(item.text)}
                 </li>
               ))}
             </ul>
-            <p className="mt-2 text-sm text-mint/70">Tap a pin to see the report.</p>
+            <p className="mt-2 text-sm text-frost/70">{t('Tap a pin to see the report.')}</p>
 
             <div className="mt-7">
               <Button variant="outline-light" to="/map">
-                Open full map <ArrowRightIcon className="size-4" />
+                {t('Open full map')} <ArrowRightIcon className="size-4" />
               </Button>
             </div>
           </div>

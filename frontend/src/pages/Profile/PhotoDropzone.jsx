@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react'
 import clsx from 'clsx'
 import Button from '../../components/ui/Button'
+import { useT } from '../../i18n/useLanguage'
 
 // Photo picker: drop a file or browse, like the Report form.
 // For the NID card (the default), the preview stays blurred until it is
@@ -18,6 +19,7 @@ export default function PhotoDropzone({
   alt = 'Preview of your NID card photo',
   busy = false,
 }) {
+  const t = useT()
   const inputRef = useRef(null)
   const [dragging, setDragging] = useState(false)
   const [revealed, setRevealed] = useState(false)
@@ -52,11 +54,11 @@ export default function PhotoDropzone({
           {avatar ? (
             <img
               src={photo.url}
-              alt={alt}
-              className="size-24 shrink-0 rounded-full bg-navy/10 object-cover"
+              alt={t(alt)}
+              className="size-24 shrink-0 rounded-full bg-ink/10 object-cover"
             />
           ) : (
-            <div className="group relative h-24 w-36 shrink-0 overflow-hidden rounded-chip bg-navy/10">
+            <div className="group relative h-24 w-36 shrink-0 overflow-hidden rounded-chip bg-ink/10">
               <img
                 src={photo.url}
                 alt={alt}
@@ -79,16 +81,16 @@ export default function PhotoDropzone({
                   type="button"
                   aria-pressed={revealed}
                   onClick={() => setRevealed((value) => !value)}
-                  className="rounded-full px-3 py-1 font-body text-xs font-semibold text-forest transition hover:bg-forest/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest/50"
+                  className="rounded-full px-3 py-1 font-body text-xs font-semibold text-accent transition hover:bg-forest/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50"
                 >
-                  {revealed ? 'Hide preview' : 'Show preview'}
+                  {revealed ? t('Hide preview') : t('Show preview')}
                 </button>
               )}
               <Button variant="outline" disabled={busy} onClick={() => inputRef.current?.click()}>
-                {avatar ? 'Choose another photo' : 'Choose another'}
+                {avatar ? t('Choose another photo') : t('Choose another')}
               </Button>
               <Button variant="outline" disabled={busy} onClick={onRemove}>
-                {avatar ? 'Remove photo' : 'Remove'}
+                {avatar ? t('Remove photo') : t('Remove')}
               </Button>
             </div>
           </div>
@@ -106,13 +108,13 @@ export default function PhotoDropzone({
           onDragLeave={() => setDragging(false)}
           onDrop={handleDrop}
           className={clsx(
-            'lift flex h-28 w-full flex-col items-center justify-center gap-1 rounded-tile border-2 border-dashed px-4 text-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest/50 sm:max-w-sm',
-            dragging ? 'scale-[1.02] border-forest bg-white' : 'border-forest/60 bg-white/70 hover:border-forest hover:bg-white',
+            'lift flex h-28 w-full flex-col items-center justify-center gap-1 rounded-tile border-2 border-dashed px-4 text-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 sm:max-w-sm',
+            dragging ? 'scale-[1.02] border-accent bg-white' : 'border-accent/60 bg-white/70 hover:border-accent hover:bg-white',
           )}
         >
           <svg
             viewBox="0 0 24 24"
-            className="h-7 w-7 text-forest"
+            className="h-7 w-7 text-accent"
             fill="none"
             stroke="currentColor"
             strokeWidth="1.8"
@@ -125,14 +127,14 @@ export default function PhotoDropzone({
             <path d="M14 10h4M14 13h3M6 16h6" />
           </svg>
           <span className="font-body text-sm font-semibold text-navy">
-            {dragging ? 'Drop it here' : 'Drop a photo here or browse'}
+            {dragging ? t('Drop it here') : t('Drop a photo here or browse')}
           </span>
-          <span className="font-body text-xs text-muted">JPG, PNG or WebP, up to 5 MB</span>
+          <span className="font-body text-xs text-muted">{t('JPG, PNG or WebP, up to 5 MB')}</span>
         </button>
       )}
 
       {error && (
-        <p role="alert" className="font-body text-xs font-semibold text-danger">
+        <p role="alert" className="font-body text-xs font-semibold text-alert">
           {error}
         </p>
       )}

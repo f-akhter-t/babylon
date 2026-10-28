@@ -4,12 +4,13 @@ import AuthShell, { DemoHint, Field, FormError, SubmitButton, authLinkClass } fr
 import {
   DEMO_ACCOUNTS,
   DEMO_PASSWORD,
-  DEMO_STAFF_CODE,
   homePathFor,
   login,
+  SHOW_DEMO_ACCOUNTS,
 } from '../../services/auth'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import GuestOnly from './GuestOnly'
+import { useT } from '../../i18n/useLanguage'
 
 // Sign-in for department and admin accounts. The role comes from the account.
 export default function StaffLogin() {
@@ -21,6 +22,7 @@ export default function StaffLogin() {
 }
 
 function StaffLoginPage() {
+  const t = useT()
   useDocumentTitle('Staff sign in')
   const navigate = useNavigate()
   const location = useLocation()
@@ -29,12 +31,15 @@ function StaffLoginPage() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState(null) // { message, code }
   const [busy, setBusy] = useState(false)
+  // Set when the password was just reset, so the person knows to log in with it.
+  const [notice, setNotice] = useState(location.state?.notice ?? '')
 
   const ready = email.trim() && password
 
   async function handleSubmit(event) {
     event.preventDefault()
     setError(null)
+    setNotice('')
     setBusy(true)
     try {
       const user = await login({ email, password, door: 'staff' })
@@ -53,19 +58,24 @@ function StaffLoginPage() {
       subtitle="For government departments and Babylon administrators."
       footer={
         <>
-          Need a staff account?{' '}
+          {t('Need a staff account?')}{' '}
           <Link to="/staff/signup" className={authLinkClass}>
-            Create a staff account
+            {t('Create a staff account')}
           </Link>
         </>
       }
       extra={
         <Link to="/login" className={authLinkClass}>
-          Not staff? Go to the citizen log-in page.
+          {t('Not staff? Go to the citizen log-in page.')}
         </Link>
       }
     >
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+        {notice && (
+          <p role="status" className="font-body text-sm font-bold text-accent">
+            {t(notice)}
+          </p>
+        )}
         <Field
           id="email"
           label="Work email"
@@ -84,13 +94,20 @@ function StaffLoginPage() {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
         />
+        <Link
+          to="/forgot-password"
+          state={{ email, door: 'staff' }}
+          className={`${authLinkClass} self-start`}
+        >
+          {t('Forgot password?')}
+        </Link>
 
         <FormError
           message={error?.message}
           action={
             error?.code === 'citizen-account' && (
               <Link to="/login" state={{ email }} className={authLinkClass}>
-                Go to the citizen log-in page.
+                {t('Go to the citizen log-in page.')}
               </Link>
             )
           }
@@ -100,10 +117,12 @@ function StaffLoginPage() {
       </form>
 
       <DemoHint
-        accounts={DEMO_ACCOUNTS.staff}
+        accounts={SHOW_DEMO_ACCOUNTS ? DEMO_ACCOUNTS.staff : []}
         lines={[
-          `Both demo accounts use the password ${DEMO_PASSWORD}.`,
-          `To create a staff account, use the demo access code ${DEMO_STAFF_CODE}.`,
+          ...(SHOW_DEMO_ACCOUNTS
+            ? [t('Both demo accounts use the password {password}.', { password: DEMO_PASSWORD })]
+            : []),
+          'To create a staff account, ask your administrator for the staff access code.',
         ]}
       />
     </AuthShell>

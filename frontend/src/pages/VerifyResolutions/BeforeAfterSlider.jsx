@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react'
+import { useT } from '../../i18n/useLanguage'
 
 // Keys for the divider: arrows move it 5 points, Page Up and Page Down 10,
 // Home and End to either side.
@@ -19,6 +20,7 @@ const clamp = (value) => Math.min(100, Math.max(0, value))
 // Each photo is announced once, by its alt text: the BEFORE and AFTER badges
 // and the placeholder labels are hidden from screen readers.
 export default function BeforeAfterSlider({ before, after, title }) {
+  const t = useT()
   const ref = useRef(null)
   const [pos, setPos] = useState(50)
   const percent = Math.round(pos)
@@ -60,16 +62,16 @@ export default function BeforeAfterSlider({ before, after, title }) {
         {after ? (
           <img
             src={after}
-            alt={`The department’s photo of “${title}” after the fix.`}
+            alt={t('The department’s photo of “{title}” after the fix.', { title })}
             draggable={false}
             className="h-full w-full select-none object-cover"
           />
         ) : (
           <span
             aria-hidden="true"
-            className="absolute left-3/4 top-1/2 -translate-x-1/2 -translate-y-1/2 font-body text-sm font-semibold text-mint"
+            className="absolute left-3/4 top-1/2 -translate-x-1/2 -translate-y-1/2 font-body text-sm font-semibold text-frost"
           >
-            Department after-photo
+            {t('Department after-photo')}
           </span>
         )}
       </div>
@@ -81,31 +83,31 @@ export default function BeforeAfterSlider({ before, after, title }) {
         {before ? (
           <img
             src={before}
-            alt={`The citizen’s photo of “${title}” before the fix.`}
+            alt={t('The citizen’s photo of “{title}” before the fix.', { title })}
             draggable={false}
             className="h-full w-full select-none object-cover"
           />
         ) : (
           <span
             aria-hidden="true"
-            className="absolute left-1/4 top-1/2 -translate-x-1/2 -translate-y-1/2 font-body text-sm font-semibold text-mint"
+            className="absolute left-1/4 top-1/2 -translate-x-1/2 -translate-y-1/2 font-body text-sm font-semibold text-frost"
           >
-            Citizen photo
+            {t('Citizen photo')}
           </span>
         )}
       </div>
 
       <span
         aria-hidden="true"
-        className="absolute left-4 top-4 rounded-full bg-navy px-3 py-1 font-body text-xs font-bold tracking-widest text-mint"
+        className="absolute left-4 top-4 rounded-full bg-ink px-3 py-1 font-body text-xs font-bold tracking-widest text-frost"
       >
-        BEFORE
+        {t('Before').toUpperCase()}
       </span>
       <span
         aria-hidden="true"
-        className="absolute right-4 top-4 rounded-full bg-brand px-3 py-1 font-body text-xs font-bold tracking-widest text-navy"
+        className="absolute right-4 top-4 rounded-full bg-brand px-3 py-1 font-body text-xs font-bold tracking-widest text-ink"
       >
-        AFTER
+        {t('After').toUpperCase()}
       </span>
 
       <div
@@ -116,11 +118,11 @@ export default function BeforeAfterSlider({ before, after, title }) {
         <div
           role="slider"
           tabIndex={0}
-          aria-label="Divider between the before and after photos"
+          aria-label={t('Divider between the before and after photos')}
           aria-valuemin={0}
           aria-valuemax={100}
           aria-valuenow={percent}
-          aria-valuetext={`The before photo fills ${percent} percent of the view.`}
+          aria-valuetext={t('The before photo fills {percent} percent of the view.', { percent })}
           onKeyDown={onKeyDown}
           className="absolute left-1/2 top-1/2 flex h-11 w-11 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border-2 border-navy bg-mint font-body text-sm font-bold text-navy outline-offset-2"
         >

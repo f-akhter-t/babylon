@@ -7,8 +7,13 @@ import AdminSignOut from './AdminSignOut'
 import Logo from './Logo'
 import NotificationBell from './NotificationBell'
 import { useViewer } from '../../pages/Map/useViewer'
-import { homePathFor, isOnboarded } from '../../services/auth'
+import { homePathFor, isSetupPending } from '../../services/auth'
+import FlagStripe from './FlagStripe'
 import { fit } from './staffFit'
+import { useT } from '../../i18n/useLanguage'
+import PhotoBackdrop from '../ui/CityPhoto'
+import ThemeToggle from '../ui/ThemeToggle'
+import LanguageToggle from './LanguageToggle'
 
 const LG_QUERY = '(min-width: 64rem)'
 const MENU_ID = 'staff-menu'
@@ -29,18 +34,19 @@ const LOGO_LABELS = {
 }
 
 function NavItem({ item, isActive, onSelect, onNavigate }) {
+  const t = useT()
   const classes = clsx(
     'flex min-h-11 w-full items-center justify-between rounded-tile px-4 py-3',
     'font-body text-base font-semibold transition-colors text-left motion-reduce:transition-none',
-    'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-mint',
-    isActive ? 'bg-mint text-navy' : 'text-mint/80 hover:bg-mint/10',
+    'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-frost',
+    isActive ? 'bg-mint text-navy' : 'text-frost/80 hover:bg-frost/10',
   )
 
   const badge = item.count ? (
     <span
       className={clsx(
         'flex h-6 min-w-6 items-center justify-center rounded-full px-2 text-sm font-bold',
-        item.tone === 'amber' ? 'bg-amber text-navy' : 'bg-slate text-mint',
+        item.tone === 'amber' ? 'bg-amber text-ink' : 'bg-slate text-frost',
       )}
     >
       {item.count}
@@ -55,7 +61,7 @@ function NavItem({ item, isActive, onSelect, onNavigate }) {
         onClick={onNavigate}
         className={classes}
       >
-        {item.label}
+        {t(item.label)}
         {badge}
       </Link>
     )
@@ -71,7 +77,7 @@ function NavItem({ item, isActive, onSelect, onNavigate }) {
       }}
       className={classes}
     >
-      {item.label}
+      {t(item.label)}
       {badge}
     </button>
   )
@@ -82,34 +88,37 @@ function NavItem({ item, isActive, onSelect, onNavigate }) {
 // locked: the account has not finished its profile, so only Profile and
 // Log out are offered (the logo is not a link and there is no bell).
 function StaffNav({ variant, active, onSelect, department, note, counts, onNavigate, bell, locked }) {
+  const t = useT()
   const config = ADMIN_NAV[variant]
   const items = locked ? config.items.filter((item) => item.label === 'Profile') : config.items
 
   return (
     <>
-      <div className="px-2">
-        <div className="flex items-center justify-between gap-2">
-          <Logo
-            size="lg"
-            to={locked ? null : homePathFor(variant)}
-            label={locked ? undefined : LOGO_LABELS[variant]}
-            onClick={onNavigate}
-          />
+      <div className="flex flex-col items-center gap-3 px-2 text-center">
+        <Logo
+          size="lg"
+          to={locked ? null : homePathFor(variant)}
+          label={locked ? undefined : t(LOGO_LABELS[variant])}
+          onClick={onNavigate}
+        />
+        <p className="font-body text-xs font-bold uppercase tracking-widest text-brand">
+          {t(config.label)}
+        </p>
+        <LanguageToggle />
+        <div className="flex items-center justify-center gap-3">
+          <ThemeToggle />
           {!locked && bell}
         </div>
-        <p className="mt-1 font-body text-xs font-bold uppercase tracking-widest text-brand">
-          {config.label}
-        </p>
       </div>
 
       {variant === 'department' && department && (
-        <div className="mt-6 rounded-tile border border-mint/15 bg-mint/5 px-4 py-3">
-          <p className="text-xs text-mint/70">Signed in as</p>
-          <p className="font-heading text-base font-bold text-mint">{department}</p>
+        <div className="mt-6 rounded-tile border border-frost/15 bg-frost/5 px-4 py-3">
+          <p className="text-xs text-frost/70">{t('Signed in as')}</p>
+          <p className="font-heading text-base font-bold text-frost">{t(department)}</p>
         </div>
       )}
 
-      <nav aria-label={config.label} className="mt-6 flex flex-col gap-2">
+      <nav aria-label={t(config.label)} className="mt-6 flex flex-col gap-2">
         {items.map((item) => (
           <NavItem
             key={item.label}
@@ -121,7 +130,7 @@ function StaffNav({ variant, active, onSelect, department, note, counts, onNavig
         ))}
       </nav>
 
-      <p className="mt-auto px-2 pt-6 text-sm text-mint/70">{note ?? config.note}</p>
+      <p className="mt-auto px-2 pt-6 text-sm text-frost/70">{t(note ?? config.note)}</p>
       <AdminSignOut className="mt-4" />
     </>
   )
@@ -146,13 +155,19 @@ export default function AdminLayout({
   note,
   children,
 }) {
+  const t = useT()
   const config = ADMIN_NAV[variant]
   const counts = useAdminCounts(variant, department)
   const { session } = useViewer()
-  const locked = Boolean(session) && !isOnboarded(session.email)
+  const locked = Boolean(session) && isSetupPending()
   // The same bell as the citizen's, for this staff account; its last link opens the panel.
-  const bell = session && !locked ? (
-    <NotificationBell email={session.email} homeLink={homePathFor(variant)} homeLabel="Open your panel" />
+    const bell = session && !locked ? (
+    <NotificationBell
+      email={session.email}
+      alertsPath={variant === 'admin' ? '/admin/alerts' : '/department/alerts'}
+      homeLink={homePathFor(variant)}
+      homeLabel="Open your panel"
+    />
   ) : null
   const location = useLocation()
   // The drawer belongs to the page it was opened on: moving to another page
@@ -241,23 +256,26 @@ export default function AdminLayout({
 
   return (
     // break-words: with very large text, long words wrap instead of widening the page.
-    <div ref={layoutRef} className="min-h-screen break-words bg-page font-body lg:flex">
+    <div ref={layoutRef} className="min-h-screen break-words font-body lg:flex">
+      <PhotoBackdrop />
       {/* The banner landmark on phones and tablets. From lg up it is hidden and the
           sidebar takes over, so there is only ever one banner. */}
       <header
         ref={topBarRef}
-        className="top-0 z-20 flex flex-wrap items-center justify-between gap-3 bg-navy px-4 py-3 max-lg:[@media(min-height:30rem)]:sticky lg:hidden"
+        className="relative top-0 z-20 flex flex-wrap items-center justify-between gap-3 bg-ink px-4 pb-4 pt-3 max-lg:[@media(min-height:30rem)]:sticky lg:hidden"
       >
         <div className="min-w-0">
           <Logo
             to={locked ? null : homePathFor(variant)}
-            label={locked ? undefined : LOGO_LABELS[variant]}
+            label={locked ? undefined : t(LOGO_LABELS[variant])}
           />
           <p className="font-body text-xs font-bold uppercase tracking-widest text-brand">
-            {config.label}
+            {t(config.label)}
           </p>
         </div>
-        <div className="flex shrink-0 items-center gap-2">
+        <div className="flex shrink-0 flex-wrap items-center justify-end gap-2">
+          <LanguageToggle />
+          <ThemeToggle />
           {bell}
           <button
             ref={menuButtonRef}
@@ -265,47 +283,51 @@ export default function AdminLayout({
             aria-expanded={menuOpen}
             aria-controls={MENU_ID}
             onClick={() => setOpenOn(location.key)}
-            className="flex min-h-11 min-w-11 shrink-0 items-center gap-2 rounded-full border border-mint/40 px-4 font-body text-sm font-bold text-mint transition-colors hover:bg-mint/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-mint motion-reduce:transition-none"
+            className="flex min-h-11 min-w-11 shrink-0 items-center gap-2 rounded-full border border-frost/40 px-4 font-body text-sm font-bold text-frost transition-colors hover:bg-frost/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-frost motion-reduce:transition-none"
           >
             <MenuIcon />
-            Menu
+            {t('Menu')}
           </button>
         </div>
+        <FlagStripe className="absolute inset-x-0 bottom-0" />
       </header>
 
       <dialog
         ref={dialogRef}
         id={MENU_ID}
-        aria-label={config.label}
+        aria-label={t(config.label)}
         onClose={handleClose}
         onClick={(e) => {
           if (e.target === e.currentTarget) dialogRef.current?.close() // the backdrop
         }}
-        className="motion-dialog motion-drawer m-0 h-dvh max-h-none w-full max-w-none bg-transparent p-0 backdrop:bg-navy/60 lg:hidden"
+        className="motion-dialog motion-drawer m-0 h-dvh max-h-none w-full max-w-none bg-transparent p-0 backdrop:bg-ink/60 lg:hidden"
       >
-        <div className="motion-drawer-panel flex h-full w-[min(20rem,85vw)] flex-col overflow-y-auto bg-navy px-3.5 py-6">
+        <div className="motion-drawer-panel flex h-full w-[min(20rem,85vw)] flex-col overflow-y-auto bg-ink px-3.5 py-6">
           <button
             type="button"
             onClick={() => dialogRef.current?.close()}
-            className="mb-4 min-h-11 self-end rounded-full border border-mint/40 px-4 font-body text-sm font-bold text-mint transition-colors hover:bg-mint/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-mint motion-reduce:transition-none"
+            className="mb-4 min-h-11 self-end rounded-full border border-frost/40 px-4 font-body text-sm font-bold text-frost transition-colors hover:bg-frost/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-frost motion-reduce:transition-none"
           >
-            Close menu
+            {t('Close menu')}
           </button>
           <StaffNav {...navProps} onNavigate={handleNavigate} />
         </div>
       </dialog>
 
-      <aside aria-label="Staff menu" className="hidden w-[250px] shrink-0 flex-col overflow-y-auto bg-navy px-3.5 py-6 lg:sticky lg:top-0 lg:flex lg:h-dvh">
+      <aside aria-label={t('Staff menu')} className="hidden w-[250px] shrink-0 flex-col overflow-y-auto overflow-x-hidden bg-ink px-3.5 py-6 lg:sticky lg:top-0 lg:flex lg:h-dvh">
         <StaffNav {...navProps} bell={bell} />
       </aside>
 
       {/* Fields scrolled into view keep clear of the sticky action bars. */}
       <main
         className={clsx(
-          'min-w-0 flex-1 [&_:is(a,button,input,select,textarea)]:scroll-mb-28',
+          // relative: hidden (sr-only) lines stay inside this scroll area. Left out, one near
+          // the bottom makes the whole window scroll and carries the sidebar away.
+          'relative min-w-0 flex-1 [&_:is(a,button,input,select,textarea)]:scroll-mb-28',
           fit.screen,
         )}
       >
+        <FlagStripe className="max-lg:hidden" />
         {children}
       </main>
     </div>

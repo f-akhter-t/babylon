@@ -1,14 +1,16 @@
 import clsx from 'clsx'
 import StaircaseIcon from '../../components/ui/StaircaseIcon'
+import { useT } from '../../i18n/useLanguage'
 
 // Same colours and step counts as the pins in statusPin.js.
 const items = [
-  { label: 'Open', level: 1, color: 'text-amber-dark' },
-  { label: 'In progress', level: 2, color: 'text-slate' },
-  { label: 'Resolved', level: 3, color: 'text-forest' },
+  { label: 'Open', level: 1, color: 'text-warn' },
+  { label: 'In progress', level: 2, color: 'text-soft' },
+  { label: 'Resolved', level: 3, color: 'text-good' },
 ]
 
 export default function MapLegend({ className }) {
+  const t = useT()
   return (
     <div
       className={clsx(
@@ -19,10 +21,10 @@ export default function MapLegend({ className }) {
       {items.map((item) => (
         <span key={item.label} className="flex items-center gap-1.5">
           <StaircaseIcon level={item.level} className={item.color} />
-          {item.label}
+          {t(item.label)}
         </span>
       ))}
-      <span className="text-slate">More steps = closer to fixed</span>
+      <span className="text-soft">{t('More steps = closer to fixed')}</span>
     </div>
   )
 }

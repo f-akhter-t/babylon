@@ -1,21 +1,21 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import AuthShell, {
-  DemoHint,
   Field,
   FormError,
   RoleRadioGroup,
   SubmitButton,
   authLinkClass,
 } from './AuthShell'
-import { DEMO_STAFF_CODE, STAFF_ROLES, profilePathFor, signup } from '../../services/auth'
-import { departments } from '../../mock/departments'
+import { STAFF_ROLES, profilePathFor, staffSignup } from '../../services/auth'
+import { DEPARTMENTS } from '../../utils/departments'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import GuestOnly from './GuestOnly'
 import { validateNewAccount } from './validateNewAccount'
+import { useT } from '../../i18n/useLanguage'
 
-// Sign-up for department and admin accounts. Needs the staff access code,
-// which signup() checks.
+// Sign-up for department and admin accounts. Needs the staff access code; the
+// server checks it (it is not in this app).
 export default function StaffSignup() {
   return (
     <GuestOnly>
@@ -25,12 +25,13 @@ export default function StaffSignup() {
 }
 
 function StaffSignupPage() {
+  const t = useT()
   useDocumentTitle('Staff sign up')
   const navigate = useNavigate()
   const [role, setRole] = useState('department')
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
-  const [department, setDepartment] = useState(departments[0].name)
+  const [department, setDepartment] = useState(DEPARTMENTS[0])
   const [accessCode, setAccessCode] = useState('')
   const [password, setPassword] = useState('')
   const [confirm, setConfirm] = useState('')
@@ -48,7 +49,7 @@ function StaffSignupPage() {
 
     setBusy(true)
     try {
-      const user = await signup({ name, email, password, role, department, accessCode })
+      const user = await staffSignup({ name, email, password, role, department, accessCode })
       // New staff start with their profile setup.
       navigate(profilePathFor(user.role), { replace: true })
     } catch (err) {
@@ -65,15 +66,15 @@ function StaffSignupPage() {
       subtitle="Create a department or admin account with your staff access code."
       footer={
         <>
-          Already have a staff account?{' '}
+          {t('Already have a staff account?')}{' '}
           <Link to="/staff/login" className={authLinkClass}>
-            Sign in
+            {t('Sign in')}
           </Link>
         </>
       }
       extra={
         <Link to="/signup" className={authLinkClass}>
-          Not staff? Create a citizen account instead.
+          {t('Not staff? Create a citizen account instead.')}
         </Link>
       }
     >
@@ -109,9 +110,9 @@ function StaffSignupPage() {
             value={department}
             onChange={(e) => setDepartment(e.target.value)}
           >
-            {departments.map((d) => (
-              <option key={d.name} value={d.name}>
-                {d.name}
+            {DEPARTMENTS.map((name) => (
+              <option key={name} value={name}>
+                {t(name)}
               </option>
             ))}
           </Field>
@@ -152,7 +153,6 @@ function StaffSignupPage() {
         </SubmitButton>
       </form>
 
-      <DemoHint lines={[`For this demo, the staff access code is ${DEMO_STAFF_CODE}.`]} />
     </AuthShell>
   )
 }

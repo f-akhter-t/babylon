@@ -3,6 +3,7 @@ import Button from '../../components/ui/Button'
 import ProfileCard from '../Profile/ProfileCard'
 import TextField from '../Profile/TextField'
 import VerifyBadge from '../Profile/VerifyBadge'
+import { useT } from '../../i18n/useLanguage'
 
 // One code to type and check, for the staff profile: the department code and
 // the Employee ID. Once it matches, the badge stays and the field is replaced
@@ -26,6 +27,7 @@ export default function VerifyCodeCard({
   onDirtyChange,
   announce,
 }) {
+  const t = useT()
   const [code, setCode] = useState('')
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
@@ -54,7 +56,7 @@ export default function VerifyCodeCard({
       const value = await verify(code)
       setJustVerified({ value })
       setCode('')
-      announce(successText, { toast: true })
+      announce(t(successText), { toast: true })
       setFocusRequest({ target: 'done', n: Date.now() })
     } catch (err) {
       setError(err.message || 'We could not check that. Please try again.')
@@ -80,17 +82,17 @@ export default function VerifyCodeCard({
         <div
           ref={doneRef}
           tabIndex={-1}
-          className="rounded-tile bg-white/70 px-4 py-3 focus:outline-none focus-visible:ring-2 focus-visible:ring-forest/50"
+          className="rounded-tile bg-white/70 px-4 py-3 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/50"
         >
-          <p className="font-body text-xs text-slate">{done.label}</p>
+          <p className="font-body text-xs text-soft">{t(done.label)}</p>
           <p className="font-heading text-lg font-bold text-navy">
-            {done.value || justVerified?.value}
+            {t(done.value || justVerified?.value)}
           </p>
         </div>
       ) : (
         <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-3">
-          {note && <p className="font-body text-sm font-semibold text-navy">{note}</p>}
-          {prompt && <p className="font-body text-sm text-navy">{prompt}</p>}
+          {note && <p className="font-body text-sm font-semibold text-navy">{t(note)}</p>}
+          {prompt && <p className="font-body text-sm text-navy">{t(prompt)}</p>}
           <div className="flex flex-wrap items-start gap-3">
             <TextField
               ref={inputRef}
@@ -111,7 +113,7 @@ export default function VerifyCodeCard({
               className="min-w-0 flex-1 basis-56"
             />
             <Button type="submit" variant="dark" disabled={busy} className="min-h-11 sm:mt-7">
-              {busy ? 'Checking…' : 'Verify'}
+              {busy ? t('Checking…') : t('Verify')}
             </Button>
           </div>
         </form>
