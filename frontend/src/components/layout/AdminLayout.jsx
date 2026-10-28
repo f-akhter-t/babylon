@@ -112,7 +112,7 @@ function StaffNav({ variant, active, onSelect, department, note, counts, onNavig
       {variant === 'department' && department && (
         <div className="mt-6 rounded-tile border border-frost/15 bg-frost/5 px-4 py-3">
           <p className="text-xs text-frost/70">{t('Signed in as')}</p>
-          <p className="font-heading text-base font-bold text-frost">{department}</p>
+          <p className="font-heading text-base font-bold text-frost">{t(department)}</p>
         </div>
       )}
 

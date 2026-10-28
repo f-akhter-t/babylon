@@ -25,7 +25,7 @@ export default function LanguageToggle({ className }) {
           aria-pressed={lang === option.code}
           onClick={() => setLang(option.code)}
           className={clsx(
-            'rounded-full px-3 py-1.5 transition-colors max-lg:py-2',
+            'rounded-full px-3 py-1.5 transition-colors max-lg:py-2.5',
             lang === option.code ? 'bg-frost text-ink' : 'text-paper/80 hover:text-paper',
           )}
         >

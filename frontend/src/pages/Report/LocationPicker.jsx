@@ -364,7 +364,7 @@ export default function LocationPicker({
         >
           {hintVisible && (
             <Tooltip permanent direction="top" offset={[0, 0]} className="drag-hint">
-              Drag the pin to adjust
+              {t('Drag the pin to adjust')}
             </Tooltip>
           )}
         </Marker>
@@ -484,7 +484,7 @@ export default function LocationPicker({
             style={enter('rise-in', 0, 'var(--duration-base)')}
           >
             {t(label)}
-            {ward ? `, ${ward}` : ''}
+            {ward ? `, ${t(ward)}` : ''}
           </p>
           <p className="font-body text-xs text-muted">
             {division ? t('{division} division', { division: t(division) }) : t('Checking the division…')}

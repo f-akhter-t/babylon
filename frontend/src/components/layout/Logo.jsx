@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import clsx from 'clsx'
+import { useT } from '../../i18n/useLanguage'
 
 const sizes = {
   sm: { mark: 'size-7', word: 'text-xl' },
@@ -35,6 +36,7 @@ export default function Logo({
   className,
   ...linkProps
 }) {
+  const tr = useT()
   const s = sizes[size]
   const t = tones[tone]
   const isLink = to !== null
@@ -74,7 +76,7 @@ export default function Logo({
   return (
     <Link
       to={to}
-      aria-label={label}
+      aria-label={tr(label)}
       // The ::before strip makes the tap target 44px tall without changing the layout.
       className={clsx(
         "group relative rounded-full before:absolute before:inset-x-0 before:top-1/2 before:h-11 before:-translate-y-1/2 before:content-['']",

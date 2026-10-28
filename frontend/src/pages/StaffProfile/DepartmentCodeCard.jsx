@@ -12,11 +12,11 @@ export default function DepartmentCodeCard({ profile, onDirtyChange, announce })
       title={t('Department')}
       intro={t('Enter your department\'s code once, so citizens know you really work there.')}
       badgeLabel="Department verified"
-      prompt={t('You signed up for {department}.', { department: profile.department })}
+      prompt={t('You signed up for {department}.', { department: t(profile.department) })}
       label={t('Department code')}
       hint={t('Ask your department head for the code.')}
       verified={profile.departmentVerified}
-      done={{ label: 'You work for', value: profile.department }}
+      done={{ label: 'You work for', value: t(profile.department) }}
       verify={async (code) => {
         await verifyDepartmentCode(profile.email, code)
         return profile.department
