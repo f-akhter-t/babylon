@@ -61,7 +61,7 @@ export default function ReviewPanel({ issue, onApprove, onReject, busy = false }
   }
 
   // The details scroll inside the panel in fit mode; the buttons stay pinned
-  // below them. When the page scrolls, the buttons stick to the window instead.
+  // below them.
   return (
     <div className={clsx('flex min-w-0 flex-col rounded-panel bg-mint', fit.column)}>
       <div
@@ -160,7 +160,7 @@ export default function ReviewPanel({ issue, onApprove, onReject, busy = false }
         </div>
       </div>
 
-      <div data-toast-clearance className="sticky bottom-0 rounded-b-panel border-t border-navy/10 bg-mint px-4 py-3 sm:px-6 sm:py-4">
+      <div data-toast-clearance className="rounded-b-panel border-t border-navy/10 bg-mint px-4 py-3 sm:px-6 sm:py-4">
         <div className="grid grid-cols-2 gap-3 sm:gap-4">
           <button
             type="button"

@@ -2,6 +2,8 @@ import { useCallback, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import clsx from 'clsx'
 import CountUp from '../../components/ui/CountUp'
+import DivisionSelect from '../../components/ui/DivisionSelect'
+import { useDivisionParam } from '../../hooks/useDivisionParam'
 import StaircaseIcon from '../../components/ui/StaircaseIcon'
 import { useAsync } from '../../hooks/useAsync'
 import {
@@ -23,10 +25,12 @@ const PRIORITY_LABEL = {
 }
 const PRIORITY_BAR = { urgent: 'bg-flag-red', high: 'bg-amber', medium: 'bg-brand' }
 
-function Tile({ label, value, hint, tone = 'text-frost', delay = 0 }) {
+// to: the list behind this number, so one click starts the work.
+function Tile({ label, value, hint, to, tone = 'text-frost', delay = 0 }) {
   return (
-    <div
-      className="lift rounded-tile bg-white/[0.07] px-5 py-5 ring-1 ring-paper/10 backdrop-blur-sm motion-safe:animate-[rise-in_0.5s_var(--ease-calm)_both]"
+    <Link
+      to={to}
+      className="lift block rounded-tile bg-white/[0.07] px-5 py-5 ring-1 ring-paper/10 backdrop-blur-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-mint motion-safe:animate-[rise-in_0.5s_var(--ease-calm)_both]"
       style={{ animationDelay: `${delay}s` }}
     >
       <p className="font-body text-sm font-semibold uppercase tracking-wider text-frost/70">{label}</p>
@@ -34,8 +38,16 @@ function Tile({ label, value, hint, tone = 'text-frost', delay = 0 }) {
         {typeof value === 'number' ? <CountUp value={value} /> : value}
       </p>
       {hint && <p className="mt-3 font-body text-sm text-frost/65">{hint}</p>}
-    </div>
+    </Link>
   )
+}
+
+// A path with the chosen division kept: path('/department', { status: 'open' }).
+function withDivision(path, division, extra = {}) {
+  const q = new URLSearchParams(extra)
+  if (division) q.set('division', division)
+  const text = q.toString()
+  return text ? `${path}?${text}` : path
 }
 
 // A ring that fills to `percent` once it appears.
@@ -170,13 +182,15 @@ function Loading() {
 function DepartmentOverview({ department }) {
   const t = useT()
   const num = useNumber()
+  const [division, setDivision] = useDivisionParam()
   const load = useCallback(() => loadDepartmentPanel(department), [department])
   const { data, error, loading, retry } = useAsync(load)
 
   const actions = (
     <>
-      <ActionLink to="/department" primary>{t('Open department panel')}</ActionLink>
-      <ActionLink to="/department?status=awaiting">{t('Awaiting verification')}</ActionLink>
+      <DivisionSelect value={division} onChange={setDivision} onDark />
+      <ActionLink to={withDivision('/department', division)} primary>{t('Open department panel')}</ActionLink>
+      <ActionLink to={withDivision('/department', division, { status: 'awaiting' })}>{t('Awaiting verification')}</ActionLink>
     </>
   )
   const title = t('Your department at a glance')
@@ -190,11 +204,12 @@ function DepartmentOverview({ department }) {
     )
   }
 
-  const assigned = data.assigned
+  const inDivision = (list) => (division ? list.filter((i) => i.division === division) : list)
+  const assigned = inDivision(data.assigned)
   const open = assigned.filter((i) => i.status === 'open').length
   const awaiting = assigned.filter((i) => i.verification === 'awaiting').length
   const inProgress = assigned.filter((i) => i.status === 'in-progress' && i.verification !== 'awaiting').length
-  const completed = data.completed.length
+  const completed = inDivision(data.completed).length
   const total = assigned.length + completed
   const percent = total ? Math.round((completed / total) * 100) : 0
   const byPriority = PRIORITY_ORDER.map((key) => ({
@@ -210,10 +225,10 @@ function DepartmentOverview({ department }) {
   return (
     <Shell title={title} subtitle={subtitle} actions={actions}>
       <div className="grid gap-4 [grid-template-columns:repeat(auto-fit,minmax(min(100%,8rem),1fr))]">
-        <Tile label={t('Open')} value={open} hint={t('Waiting for work to start')} tone="text-amber" delay={0} />
-        <Tile label={t('In progress')} value={inProgress} hint={t('Being fixed now')} delay={0.06} />
-        <Tile label={t('Awaiting verification')} value={awaiting} hint={t('With the admin')} delay={0.12} />
-        <Tile label={t('Completed')} value={completed} hint={t('Closed and verified')} tone="text-flag-green-light" delay={0.18} />
+        <Tile to={withDivision('/department', division, { status: 'open' })} label={t('Open')} value={open} hint={t('Waiting for work to start')} tone="text-amber" delay={0} />
+        <Tile to={withDivision('/department', division, { status: 'in-progress' })} label={t('In progress')} value={inProgress} hint={t('Being fixed now')} delay={0.06} />
+        <Tile to={withDivision('/department', division, { status: 'awaiting' })} label={t('Awaiting verification')} value={awaiting} hint={t('With the admin')} delay={0.12} />
+        <Tile to={withDivision('/department', division, { status: 'completed' })} label={t('Completed')} value={completed} hint={t('Closed and verified')} tone="text-flag-green-light" delay={0.18} />
       </div>
 
       <div className="mt-5 grid gap-5 [grid-template-columns:repeat(auto-fit,minmax(min(100%,17rem),1fr))]">
@@ -228,6 +243,7 @@ function DepartmentOverview({ department }) {
           <ul className="flex flex-col gap-4">
             {byPriority.map((p) => (
               <li key={p.key}>
+                <Link to={withDivision('/department', division, { priority: p.key })} className="block rounded-tile focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-mint">
                 <div className="flex justify-between font-body text-sm text-frost/80">
                   <span>{t(PRIORITY_LABEL[p.key])}</span>
                   <span className="font-bold text-frost">{num(p.count)}</span>
@@ -238,6 +254,7 @@ function DepartmentOverview({ department }) {
                     style={{ width: `${(p.count / topPriority) * 100}%` }}
                   />
                 </div>
+                </Link>
               </li>
             ))}
           </ul>
@@ -248,7 +265,7 @@ function DepartmentOverview({ department }) {
               {next.map((issue) => (
                 <li key={issue.id} className="flex items-start gap-3 font-body text-base">
                   <span aria-hidden="true" className={clsx('mt-1.5 size-2 shrink-0 rounded-full', PRIORITY_BAR[issue.priority] ?? 'bg-brand')} />
-                  <span className="min-w-0 break-words text-frost">{issue.title}</span>
+                  <Link to={`/issues/${issue.id}`} className="min-w-0 break-words text-frost underline-offset-2 hover:underline">{issue.title}</Link>
                 </li>
               ))}
             </ul>
@@ -264,20 +281,22 @@ function DepartmentOverview({ department }) {
 function AdminOverview() {
   const t = useT()
   const num = useNumber()
+  const [division, setDivision] = useDivisionParam()
   const load = useCallback(async () => {
     const [counts, identity, figures] = await Promise.all([
-      getAdminCounts(),
+      getAdminCounts(division),
       getIdentityQueueCount(),
-      loadAccountability(8),
+      loadAccountability(8, division),
     ])
     return { counts, identity, figures }
-  }, [])
+  }, [division])
   const { data, error, loading, retry } = useAsync(load)
 
   const actions = (
     <>
-      <ActionLink to="/admin/verify" primary>{t('Open verification queue')}</ActionLink>
-      <ActionLink to="/admin/accountability">{t('Accountability')}</ActionLink>
+      <DivisionSelect value={division} onChange={setDivision} onDark />
+      <ActionLink to={withDivision('/admin/verify', division)} primary>{t('Open verification queue')}</ActionLink>
+      <ActionLink to={withDivision('/admin/accountability', division)}>{t('Accountability')}</ActionLink>
     </>
   )
   const title = t('Platform at a glance')
@@ -301,10 +320,11 @@ function AdminOverview() {
   return (
     <Shell title={title} subtitle={subtitle} actions={actions}>
       <div className="grid gap-4 [grid-template-columns:repeat(auto-fit,minmax(min(100%,8rem),1fr))]">
-        <Tile label={t('Fixes to check')} value={counts.queue} hint={t('Waiting for your decision')} tone="text-amber" delay={0} />
-        <Tile label={t('Reopened issues')} value={counts.reopened} hint={t('A closed problem came back')} delay={0.06} />
-        <Tile label={t('Identity checks')} value={identity} hint={t('Citizens waiting for a badge')} delay={0.12} />
+        <Tile to={withDivision('/admin/verify', division)} label={t('Fixes to check')} value={counts.queue} hint={t('Waiting for your decision')} tone="text-amber" delay={0} />
+        <Tile to={withDivision('/admin/verify', division, { view: 'reopened' })} label={t('Reopened issues')} value={counts.reopened} hint={t('A closed problem came back')} delay={0.06} />
+        <Tile to="/admin/identity" label={t('Identity checks')} value={identity} hint={t('Citizens waiting for a badge')} delay={0.12} />
         <Tile
+          to={withDivision('/admin/accountability', division)}
           label={t('Average days to resolve')}
           value={
             <>

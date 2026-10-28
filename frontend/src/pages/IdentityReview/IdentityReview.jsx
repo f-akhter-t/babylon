@@ -8,6 +8,9 @@ import IdentityReviewPanel from './IdentityReviewPanel'
 import RequireRole from '../Auth/RequireRole'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import { fit } from '../../components/layout/staffFit'
+import ListToolbar from '../../components/ui/ListToolbar'
+import Pager from '../../components/ui/Pager'
+import { useListView } from '../../hooks/useListView'
 import {
   ALREADY_REVIEWED,
   getIdentityQueue,
@@ -20,11 +23,21 @@ import { useT } from '../../i18n/useLanguage'
 // sends again after a rejection shows up as a fresh card.
 const keyOf = (submission) => `${submission.id}|${submission.submittedAt}`
 
+// Search and sort for the list (see hooks/useListView.js). Module level, so they never change.
+const NONE = []
+const submissionText = (item) => `${item.name} ${item.email}`
+const sentAt = (item) => Date.parse(item.submittedAt) || 0
+const SORTS = {
+  oldest: { label: 'Oldest first', compare: null }, // the server's order
+  newest: { label: 'Newest first', compare: (a, b) => sentAt(b) - sentAt(a) },
+  name: { label: 'Name', compare: (a, b) => String(a.name).localeCompare(String(b.name)) },
+}
+
 const PHOTO_NOT_DELETED =
   'The card photo could not be deleted yet. It will be removed automatically the next time this queue loads.'
 
 // The submissions list, in its own section beside (or above) the review panel.
-// Its list scrolls inside the section: sideways on small screens, down on large ones.
+// Its list scrolls down inside the section.
 function QueueSection({ label, children }) {
   const t = useT()
   return (
@@ -58,6 +71,7 @@ function IdentityReviewPage() {
   const t = useT()
   useDocumentTitle('Identity checks')
   const [queue, setQueue] = useState(null) // null while loading
+  const list = useListView(queue ?? NONE, { searchText: submissionText, sorts: SORTS, defaultSort: 'oldest', pageSize: 20 })
   const [selectedKey, setSelectedKey] = useState(null)
   const [notice, setNotice] = useState(null) // { tone, text }
   const [focusPanel, setFocusPanel] = useState(false)
@@ -208,19 +222,28 @@ function IdentityReviewPage() {
                   : t('{n} submissions are waiting, oldest first.', { n: queue.length })
               }
             >
+              <ListToolbar
+                view={list}
+                sorts={SORTS}
+                onDark
+                searchLabel={t('Search submissions')}
+                placeholder={t('Search name or email')}
+              />
               <ul
                 ref={listRef}
                 aria-labelledby="identity-queue-heading"
                 className={clsx(
-                  'relative flex gap-3 overflow-x-auto p-1 pb-3',
-                  'lg:max-h-160 lg:flex-col lg:overflow-x-hidden lg:overflow-y-auto lg:pb-1',
+                  'relative mt-3 flex max-h-96 flex-col gap-3 overflow-y-auto p-1 lg:max-h-160',
                   fit.noMaxHeight,
                   fit.grow,
                   fit.min32,
                 )}
               >
-                {queue.map((item) => (
-                  <li key={keyOf(item)} className="w-56 shrink-0 lg:w-auto">
+                {list.total === 0 && (
+                  <li className="px-1 font-body text-sm text-frost/80">{t('No issues match your search.')}</li>
+                )}
+                {list.pageItems.map((item) => (
+                  <li key={keyOf(item)}>
                     <IdentityQueueCard
                       submission={item}
                       selected={selected ? keyOf(selected) === keyOf(item) : false}
@@ -229,6 +252,7 @@ function IdentityReviewPage() {
                   </li>
                 ))}
               </ul>
+              <Pager view={list} onDark />
             </QueueSection>
 
             <div ref={panelRef} className={clsx('min-w-0 flex-1 scroll-mt-4', fit.column)}>

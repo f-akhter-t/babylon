@@ -1,18 +1,36 @@
 import clsx from 'clsx'
 import StatusPill from '../../components/ui/StatusPill'
 import StaircaseIcon from '../../components/ui/StaircaseIcon'
-import { sentBackMessage } from './departmentFilters'
+import { sentBackMessage, waitingDays } from './departmentFilters'
 import { useNumber, useT } from '../../i18n/useLanguage'
 
 // A table where the list is at least 48rem wide; stacked cards when it is narrower
 // (a phone, or the Resolve panel open beside it). Container queries, so it
 // follows the list's own width.
-const COLUMNS = '@3xl:grid-cols-[56px_minmax(0,1fr)_80px_150px_170px]'
+const COLUMNS = '@3xl:grid-cols-[56px_minmax(0,1fr)_96px_72px_150px_170px]'
 
 const PRIORITY_LABEL = {
   urgent: 'Urgent priority',
   high: 'High priority',
   medium: 'Medium priority',
+}
+
+// How long the report has been waiting. Closed issues have no wait. Two weeks
+// or more is shown in red, so the oldest problems stand out.
+function WaitingCell({ issue }) {
+  const t = useT()
+  const n = useNumber()
+  const days = issue.status === 'resolved' ? null : waitingDays(issue)
+  let text = '—'
+  if (days === 0) text = t('Today')
+  else if (days === 1) text = t('1 day')
+  else if (days !== null) text = t('{days} days', { days: n(days) })
+  return (
+    <span className={clsx('font-body text-sm font-semibold', days >= 14 ? 'text-alert' : 'text-muted')}>
+      <span className="@3xl:hidden">{days === null ? '' : `${t('Waiting')}: `}</span>
+      {text}
+    </span>
+  )
 }
 
 // The issue's title. Open and in-progress issues: a button that picks the issue
@@ -150,6 +168,7 @@ export default function IssueTable({
       >
         <span>{t('Rank')}</span>
         <span>{t('Issue')}</span>
+        <span>{t('Waiting')}</span>
         <span>{t('Votes')}</span>
         <span>{t('Status')}</span>
         <span>{t('Action')}</span>
@@ -198,6 +217,7 @@ export default function IssueTable({
 
           {/* Cards: one wrapping line under the title. Table: three columns. */}
           <div className="col-start-2 flex flex-wrap items-center gap-3 @3xl:contents">
+            <WaitingCell issue={issue} />
             {/* The arrow is decoration; screen readers hear "48 votes". The row
                 is relative so that text stays inside the scrolling list. */}
             <span className="font-body text-base font-bold text-navy">

@@ -16,8 +16,8 @@ export async function loadVerification() {
 }
 
 // { queue, reopened } as numbers, for the badges.
-export async function getAdminCounts() {
-  return get('/admin/counts')
+export async function getAdminCounts(division = '') {
+  return get('/admin/counts', { query: { division } })
 }
 
 // The fix is real: the issue closes and the after-photo becomes public.
@@ -38,8 +38,8 @@ export async function sendReopenedToQueue(id) {
 // ---------- Accountability ----------
 
 // Everything the Accountability page shows for one period (4 or 8 weeks).
-export async function loadAccountability(weeks = 8) {
-  return get('/admin/accountability', { query: { weeks } })
+export async function loadAccountability(weeks = 8, division = '') {
+  return get('/admin/accountability', { query: { weeks, division } })
 }
 
 // ---------- Identity review ----------
