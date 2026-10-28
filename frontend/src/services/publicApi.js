@@ -61,12 +61,13 @@ function failLoadsForTesting() {
 // value; search matches the title or the street. The viewer is always measured
 // from MAP_CENTER, so every issue has distanceM. A signed-in citizen's token
 // is sent by http.js, which adds voted and mine to each issue.
+// division: one of the 8 division names, or '' for all of Bangladesh.
 // The map pages and pickers need a position to draw a pin, so an issue without
 // coordinates is left out unless includeUnlocated is true (the Feed lists them all).
-export async function getIssues({ category = 'All', status = 'All', search = '', includeUnlocated = false } = {}) {
+export async function getIssues({ category = 'All', status = 'All', search = '', division = '', includeUnlocated = false } = {}) {
   failLoadsForTesting()
   const list = await get('/issues', {
-    query: { category, status, search: search.trim(), lat: MAP_CENTER[0], lng: MAP_CENTER[1] },
+    query: { category, status, search: search.trim(), division, lat: MAP_CENTER[0], lng: MAP_CENTER[1] },
   })
   return includeUnlocated ? list : list.filter(hasPosition)
 }

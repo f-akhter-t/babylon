@@ -2,9 +2,9 @@ import { useEffect, useRef } from 'react'
 import { useMap } from 'react-leaflet'
 import { DomEvent } from 'leaflet'
 import clsx from 'clsx'
-import { MAP_CENTER } from '../../utils/geo'
+import { BANGLADESH_BOUNDS } from '../../utils/geo'
 import { LocateIcon, MinusIcon, PinIcon, PlusIcon } from './MapIcons'
-import { flyTo, prefersLessMotion } from '../../components/ui/motion'
+import { flyToBounds, prefersLessMotion } from '../../components/ui/motion'
 import { useT } from '../../i18n/useLanguage'
 
 const TILE =
@@ -52,10 +52,9 @@ export default function MapControls({ report, dropping, onToggleDrop }) {
 
       <button
         type="button"
-        aria-label={t('Back to my area')}
-        title={t('Back to my area')}
-        // Keep the current zoom: only move, don't zoom out.
-        onClick={() => flyTo(map, MAP_CENTER, map.getZoom(), { duration: 0.8 })}
+        aria-label={t('Show all of Bangladesh')}
+        title={t('Show all of Bangladesh')}
+        onClick={() => flyToBounds(map, BANGLADESH_BOUNDS, { duration: 0.8 })}
         className={clsx(TILE, IDLE, SINGLE)}
       >
         <LocateIcon />

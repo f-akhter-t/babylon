@@ -1,3 +1,9 @@
+// All of Bangladesh, south-west to north-east: the maps open on this.
+export const BANGLADESH_BOUNDS = [
+  [20.6, 88.0],
+  [26.7, 92.7],
+]
+
 // Wasa Circle, Chattogram: where the maps open before the person's own position is known.
 export const MAP_CENTER = [22.354, 91.824]
 
