@@ -63,9 +63,10 @@ export const env = {
   emailUser,
   emailAppPassword,
 
-  // CLIP photo severity (F1). Off by default: a host that cannot hold the model
-  // leaves it off, and reports are created without an AI priority.
-  clipEnabled: process.env.CLIP_ENABLED === 'true',
+  // CLIP photo severity (F1). On for everyone by default, whatever the .env says
+  // (or does not say). Only the exact word 'false' turns it off, which the tests
+  // use so they never load the model.
+  clipEnabled: process.env.CLIP_ENABLED !== 'false',
 
   // Staff accounts (D21). Read only by auth/service/staffRoster.service.js.
   //   STAFF_ACCESS_CODE  the one code a new staff member needs to sign up.
