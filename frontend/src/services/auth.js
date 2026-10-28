@@ -54,7 +54,7 @@ export function profilePathFor(role) {
 export function homePathFor(role) {
   if (role === 'department') return '/department/dashboard'
   if (role === 'admin') return '/admin/dashboard'
-  return '/map'
+  return '/' // citizens land on the home page, where the greeting is
 }
 
 // A session needs a token as well as the saved account: one without the other

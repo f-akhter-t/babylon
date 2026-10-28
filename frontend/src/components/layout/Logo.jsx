@@ -62,7 +62,7 @@ export default function Logo({
         />
         <circle cx="16" cy="12" r="5" className="fill-flag-red" />
         {SKYLINE.map((b) => (
-          <rect key={b.x} x={b.x} y={b.y} width={b.w} height={b.h} rx="0.5" className="fill-white" />
+          <rect key={b.x} x={b.x} y={b.y} width={b.w} height={b.h} rx="0.5" className="fill-paper" />
         ))}
       </svg>
       <span className="flex flex-col">
