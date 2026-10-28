@@ -71,10 +71,11 @@ export default function Logo({
         </span>
         {s.tag && (
           <>
-            {/* The flag as a thin line: green, then red. */}
+            {/* The flag as a thin line: green, a short red middle, green. */}
             <span aria-hidden="true" className="mt-1.5 flex h-[2px] w-full">
               <span className={clsx('flex-1', t.line)} />
-              <span className="flex-1 bg-flag-red" />
+              <span className="w-[26%] bg-flag-red" />
+              <span className={clsx('flex-1', t.line)} />
             </span>
             {/* English is set in small capitals; Bangla keeps its normal letters. */}
             {/* Bangla is set larger so it is as wide as the name and the flag line. */}
