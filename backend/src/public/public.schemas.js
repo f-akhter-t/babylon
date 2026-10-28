@@ -2,6 +2,7 @@
 // arrive as text; an empty value counts as "not sent".
 import { z } from 'zod'
 import { CATEGORIES, STATUSES } from '../constants/limits.js'
+import { DIVISIONS } from '../constants/divisions.js'
 import { HOME_LIMITS } from '../constants/home.js'
 import { PUBLIC_MESSAGES as M } from '../constants/messages/public.js'
 
@@ -30,6 +31,7 @@ export const issuesQuery = z
     category: optional(z.enum(['All', ...CATEGORIES], { error: M.categoryInvalid })),
     status: optional(z.enum(['All', ...STATUSES], { error: M.statusInvalid })),
     search: optional(z.string({ error: M.searchTooLong }).trim().max(100, M.searchTooLong)),
+    division: optional(z.enum(DIVISIONS, { error: M.divisionInvalid })),
     ...position,
   })
   .superRefine(needBoth)

@@ -103,20 +103,22 @@ export function periodFor(weeks) {
 
 // ---------- Database ----------
 
-async function loadIssues() {
+// division: one of the 8 divisions, or '' for all of Bangladesh.
+async function loadIssues(division = '') {
   return Issue.find(
-    {},
+    division ? { division } : {},
     'title category status priority verification createdAt resolvedAt reopenedAt',
   ).lean()
 }
 
 // Everything the Accountability page shows for one period, in one load.
-export async function getPeriodReport(weeks = DEFAULT_PERIOD_WEEKS, now = new Date()) {
+export async function getPeriodReport(weeks = DEFAULT_PERIOD_WEEKS, now = new Date(), division = '') {
   const period = periodFor(weeks)
-  const issues = await loadIssues()
+  const issues = await loadIssues(division)
   const rows = departmentRows(issues, weeks, now)
   return {
     weeks,
+    division,
     label: period.label,
     stats: statsFrom(rows),
     departments: rows,

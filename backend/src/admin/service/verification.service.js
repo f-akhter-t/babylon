@@ -76,10 +76,11 @@ export async function getReopened() {
   return issues.map(staffView)
 }
 
-export async function getCounts() {
+export async function getCounts(division = '') {
+  const where = division ? { division } : {}
   const [queue, reopened] = await Promise.all([
-    Issue.countDocuments({ verification: 'awaiting' }),
-    Issue.countDocuments({ verification: 'reopened' }),
+    Issue.countDocuments({ ...where, verification: 'awaiting' }),
+    Issue.countDocuments({ ...where, verification: 'reopened' }),
   ])
   return { queue, reopened }
 }

@@ -12,7 +12,7 @@ export async function getReopened(req, res) {
 }
 
 export async function getCounts(req, res) {
-  success(res, MSG.countsLoaded, await verification.getCounts())
+  success(res, MSG.countsLoaded, await verification.getCounts(req.valid.query.division))
 }
 
 export async function approve(req, res) {

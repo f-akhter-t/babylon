@@ -2,6 +2,6 @@
 // stats service, because Home shows the same figures.
 import { getPeriodReport } from '../../shared/service/stats.service.js'
 
-export function getAccountability(weeks) {
-  return getPeriodReport(weeks)
+export function getAccountability(weeks, division = '') {
+  return getPeriodReport(weeks, new Date(), division)
 }

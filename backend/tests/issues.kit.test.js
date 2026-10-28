@@ -187,6 +187,12 @@ test('buildIssueFilter: All or nothing means no filter', () => {
   assert.deepEqual(buildIssueFilter({ category: '', status: '' }), {})
 })
 
+test('buildIssueFilter: division limits the list, blank means all of Bangladesh', () => {
+  assert.equal(buildIssueFilter({ division: 'Dhaka' }).division, 'Dhaka')
+  assert.deepEqual(buildIssueFilter({ division: '' }), {})
+  assert.deepEqual(buildIssueFilter({ division: { $ne: 'x' } }), {})
+})
+
 test('buildIssueFilter: filters combine', () => {
   const filter = buildIssueFilter({ category: 'Roads', status: 'open', search: 'pothole' })
   assert.equal(filter.category, 'Roads')

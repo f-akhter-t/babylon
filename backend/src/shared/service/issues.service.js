@@ -49,12 +49,12 @@ export async function findIssueById(id, fields = PUBLIC_FIELDS) {
   return issue
 }
 
-// The ranked public list. Filters: category, status, search (see buildIssueFilter).
+// The ranked public list. Filters: category, status, search, division (see buildIssueFilter).
 //   from         [lat, lng] of the viewer: adds distanceM to every item
 //   viewerEmail  from the token (optional): adds voted and mine
 // Every item gets its rank (1 to n), the way the Feed shows it.
-export async function listIssues({ category, status, search, from, viewerEmail } = {}) {
-  const issues = await Issue.find(buildIssueFilter({ category, status, search }))
+export async function listIssues({ category, status, search, division, from, viewerEmail } = {}) {
+  const issues = await Issue.find(buildIssueFilter({ category, status, search, division }))
     .select(PUBLIC_FIELDS)
     .lean()
 

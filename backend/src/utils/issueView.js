@@ -78,12 +78,14 @@ export function toIssueJSON(issue, extras = {}) {
 const escapeRegex = (text) => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 const isAll = (value) => value === undefined || value === null || value === '' || value === 'All'
 
-// category and status: 'All' (or nothing) means no filter. search matches the
+// category and status: 'All' (or nothing) means no filter. division limits the list to one division. search matches the
 // title or the street, ignoring case; what is typed is escaped, so "(" or "*"
 // is just a character. String() means an object smuggled into the query can
 // never act as a Mongo operator.
-export function buildIssueFilter({ category, status, search } = {}) {
+export function buildIssueFilter({ category, status, search, division } = {}) {
   const filter = {}
+  // division: one of the 8 divisions. A blank value means all of Bangladesh.
+  if (typeof division === 'string' && division.trim()) filter.division = division.trim()
   if (!isAll(category)) filter.category = String(category)
   if (!isAll(status)) filter.status = String(status)
   const text = typeof search === 'string' ? search.trim() : ''
