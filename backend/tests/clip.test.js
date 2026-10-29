@@ -71,6 +71,30 @@ test('a failed load is forgotten, so the next photo tries again', async () => {
   assert.deepEqual(await clip.embedImage(PIXEL), [0.6, 0.8])
 })
 
+test('the model cache folder is set before the model loads, when one is given', async () => {
+  const fake = fakeTransformers()
+  fake.module.env = { cacheDir: '/default' }
+  const clip = createClipService({
+    enabled: () => true,
+    loadTransformers: async () => fake.module,
+    cacheDir: '/tmp/hf-cache',
+  })
+  await clip.embedImage(PIXEL)
+  assert.equal(fake.module.env.cacheDir, '/tmp/hf-cache')
+})
+
+test('without a cache folder the library keeps its own', async () => {
+  const fake = fakeTransformers()
+  fake.module.env = { cacheDir: '/default' }
+  const clip = createClipService({
+    enabled: () => true,
+    loadTransformers: async () => fake.module,
+    cacheDir: null,
+  })
+  await clip.embedImage(PIXEL)
+  assert.equal(fake.module.env.cacheDir, '/default')
+})
+
 test('something that is not an image data URL is refused', async () => {
   const clip = make(fakeTransformers())
   await assert.rejects(clip.embedImage('not a photo'), TypeError)
