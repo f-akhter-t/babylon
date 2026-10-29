@@ -15,6 +15,10 @@ export function createClipService({
   loadTransformers = () => import('@huggingface/transformers'),
   modelId = CLIP_LIMITS.model,
   dtype = CLIP_LIMITS.dtype,
+  // Vercel lets a function write only to /tmp. The library's own cache folder is
+  // read-only there, so the model could never be saved and CLIP always failed.
+  // Elsewhere (null) the library keeps its default folder.
+  cacheDir = process.env.VERCEL ? '/tmp/hf-cache' : null,
 } = {}) {
   let loading = null
 
@@ -23,6 +27,7 @@ export function createClipService({
   function load() {
     loading ??= (async () => {
       const t = await loadTransformers()
+      if (cacheDir && t.env) t.env.cacheDir = cacheDir
       const [processor, vision, tokenizer, text] = await Promise.all([
         t.AutoProcessor.from_pretrained(modelId),
         t.CLIPVisionModelWithProjection.from_pretrained(modelId, { dtype }),
